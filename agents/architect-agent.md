@@ -95,13 +95,15 @@ Show the JSON to the user and ask:
 Do NOT pass output to the next phase until the user explicitly approves.
 
 ### 2. Write to Project
-Save output to `.kairos/02-architecture.json` in the project root.
+Save output to `.kairos/<feature_folder>/02-architecture.json`.
+
+> `feature_folder` is provided by the orchestrator in the context (e.g. `issue-42_add-stripe-payments` or `feature_add-stripe-payments`).
 
 ### 3. GitHub Issue Comment (optional)
 If the user provides a GitHub issue number, format the output as markdown and post it:
 
 ```bash
-gh issue comment <issue-number> --body "## Architecture Design\n\n$(cat .kairos/02-architecture.json)"
+gh issue comment <issue-number> --body "## Architecture Design\n\n$(cat .kairos/<feature_folder>/02-architecture.json)"
 ```
 
 ## Important Notes

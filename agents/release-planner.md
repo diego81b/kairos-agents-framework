@@ -84,13 +84,15 @@ Show the deployment plan to the user and ask:
 This is the final phase. User approval closes the KAIROS run.
 
 ### 2. Write to Project
-Save output to `.kairos/06-deployment-plan.json` in the project root.
+Save output to `.kairos/<feature_folder>/06-deployment-plan.json`.
+
+> `feature_folder` is provided by the orchestrator in the context (e.g. `issue-42_add-stripe-payments` or `feature_add-stripe-payments`).
 
 ### 3. GitHub Issue Comment (optional)
 If the user provides a GitHub issue number, post the full plan:
 
 ```bash
-gh issue comment <issue-number> --body "## Deployment Plan\n\n$(cat .kairos/06-deployment-plan.json)"
+gh issue comment <issue-number> --body "## Deployment Plan\n\n$(cat .kairos/<feature_folder>/06-deployment-plan.json)"
 ```
 
 ## Important Notes

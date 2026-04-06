@@ -87,13 +87,15 @@ Show the review report to the user and ask:
 Do NOT pass output to the next phase until the user explicitly approves.
 
 ### 2. Write to Project
-Save output to `.kairos/04-review.json` in the project root.
+Save output to `.kairos/<feature_folder>/04-review.json`.
+
+> `feature_folder` is provided by the orchestrator in the context (e.g. `issue-42_add-stripe-payments` or `feature_add-stripe-payments`).
 
 ### 3. GitHub Issue Comment (optional)
 If the user provides a GitHub issue number, post the review:
 
 ```bash
-gh issue comment <issue-number> --body "## Code Review\n\n$(cat .kairos/04-review.json)"
+gh issue comment <issue-number> --body "## Code Review\n\n$(cat .kairos/<feature_folder>/04-review.json)"
 ```
 
 ## Important Notes

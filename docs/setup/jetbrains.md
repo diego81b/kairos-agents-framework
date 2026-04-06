@@ -78,7 +78,9 @@ Reply with your choice. The orchestrator will not proceed without your explicit 
 JetBrains Copilot Chat does not write files automatically. After each approved phase:
 
 1. Copy the JSON output from the chat
-2. Save to `.kairos/01-requirements.json`, `.kairos/02-architecture.json`, etc.
+2. Save to `.kairos/<feature_folder>/01-requirements.json`, `.kairos/<feature_folder>/02-architecture.json`, etc.
+
+> `feature_folder` is derived by the orchestrator at pipeline start (e.g. `issue-42_add-stripe-payments` or `feature_add-stripe-payments`).
 
 Or instruct the agent to save it directly if `edit`/`write` tools are available.
 

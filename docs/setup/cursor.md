@@ -97,16 +97,17 @@ You must respond with your choice. The orchestrator will not call the next agent
 
 ## Step 5 — `.kairos/` persistence
 
-Each KAIROS agent writes its validated JSON output to `.kairos/` via the `write_file` tool listed in its frontmatter — automatic when you approve.
+Each KAIROS agent writes its validated JSON output to `.kairos/<feature_folder>/` via the `write_file` tool listed in its frontmatter — automatic when you approve. The orchestrator derives `feature_folder` from the issue number and feature title at the start of every pipeline run.
 
 ```
 .kairos/
-├── 01-requirements.json
-├── 02-architecture.json
-├── 03-implementation.json
-├── 04-review.json
-├── 05-test-verification.json
-└── 06-deployment-plan.json
+└── issue-42_add-stripe-payments/   ← one subfolder per feature
+    ├── 01-requirements.json
+    ├── 02-architecture.json
+    ├── 03-implementation.json
+    ├── 04-review.json
+    ├── 05-test-verification.json
+    └── 06-deployment-plan.json
 ```
 
 ## Parallel execution

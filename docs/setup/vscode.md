@@ -105,7 +105,7 @@ The orchestrator delegates to PM Agent. After PM Agent responds, the handoff but
 VS Code agents with `edit` in their `tools` list can write files. Add to each agent's instructions:
 
 ```markdown
-After the user approves, save the output to `.kairos/01-requirements.json`.
+After the user approves, save the output to `.kairos/<feature_folder>/01-requirements.json`.
 ```
 
 Or save manually by copying the JSON from the chat after each approved phase.

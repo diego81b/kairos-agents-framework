@@ -35,8 +35,8 @@ _Output: routed pipeline start_
 - Define acceptance criteria
 
 _Input: feature description + project context_
-_Output: structured JSON â€” scope, constraints, risks, success criteria_
-_Saved to: `.kairos/01-requirements.json`_
+_Output: structured JSON — scope, constraints, risks, success criteria_
+_Saved to: `.kairos/<feature_folder>/01-requirements.json`_
 
 ::: info HITL checkpoint
 User reviews requirements, constraints and risks before any design work begins.
@@ -51,8 +51,8 @@ User reviews requirements, constraints and risks before any design work begins.
 - Define error handling and integration patterns
 
 _Input: PM analysis JSON_
-_Output: architecture JSON â€” selected option, tech choices, DB changes, API contracts_
-_Saved to: `.kairos/02-architecture.json`_
+_Output: architecture JSON — selected option, tech choices, DB changes, API contracts_
+_Saved to: `.kairos/<feature_folder>/02-architecture.json`_
 
 ::: info HITL checkpoint
 User reviews the selected design option and API contracts before any code is written.
@@ -68,7 +68,7 @@ User reviews the selected design option and API contracts before any code is wri
 
 _Input: architecture JSON + project profile_
 _Output: code files + test files + coverage report_
-_Saved to: project paths + `.kairos/03-implementation.json`_
+_Saved to: project paths + `.kairos/<feature_folder>/03-implementation.json`_
 
 ::: info HITL checkpoint
 User reviews generated code and test coverage before the review phase.
@@ -85,7 +85,7 @@ User reviews generated code and test coverage before the review phase.
 
 _Input: generated code + test files_
 _Output: status READY or NEEDS\_FIXES + issues list with severity_
-_Saved to: `.kairos/04-review.json`_
+_Saved to: `.kairos/<feature_folder>/04-review.json`_
 
 ::: info HITL checkpoint
 User reviews quality report. NEEDS\_FIXES sends the issue list back to the Implementer.
@@ -101,7 +101,7 @@ User reviews quality report. NEEDS\_FIXES sends the issue list back to the Imple
 
 _Input: test code + coverage report_
 _Output: coverage status PASS/FAIL + quality assessment + gaps_
-_Saved to: `.kairos/05-test-verification.json`_
+_Saved to: `.kairos/<feature_folder>/05-test-verification.json`_
 
 ::: info HITL checkpoint
 User confirms coverage is adequate. FAIL sends gap list back to the Implementer.
@@ -116,8 +116,8 @@ User confirms coverage is adequate. FAIL sends gap list back to the Implementer.
 - Define monitoring metrics and alert thresholds
 
 _Input: verified code + architecture + identified risks_
-_Output: deployment plan JSON â€” steps, risk mitigation, rollback, monitoring_
-_Saved to: `.kairos/06-deployment-plan.json`_
+_Output: deployment plan JSON — steps, risk mitigation, rollback, monitoring_
+_Saved to: `.kairos/<feature_folder>/06-deployment-plan.json`_
 
 ::: info HITL checkpoint
 User approves the deployment plan. This is the final checkpoint â€” approval closes the KAIROS run.
