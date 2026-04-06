@@ -1,457 +1,218 @@
-# KAIROS Deployment Guide
+﻿# KAIROS Deployment Guide
 
-Deploy KAIROS documentation on web. Choose one option.
+KAIROS documentation is a **VitePress site**. Every deployment platform must run the build step first.
 
-## Option 1: Vercel (Recommended - 5 min)
+```
+Build command:    npm run docs:build
+Output directory: docs/.vitepress/dist
+Node version:     20
+```
 
-**Best for:** Private repos, custom domains, auto-deploy
+`vercel.json` and `netlify.toml` at the repo root already encode these settings — no manual configuration needed on either platform.
+
+---
+
+## Local Development
 
 ```bash
-# 1. Install Vercel CLI
+npm install
+npm run docs:dev       # dev server at http://localhost:5173
+npm run docs:build     # production build → docs/.vitepress/dist
+npm run docs:preview   # preview the production build locally
+```
+
+---
+
+## Option 1: Vercel (Recommended — 5 min)
+
+**Best for:** Private repos, custom domains, auto-deploy on push
+
+`vercel.json` is already present with the correct settings.
+
+### Via CLI
+
+```bash
 npm install -g vercel
-
-# 2. Setup GitHub repo
-git init
-git add .
-git commit -m "feat: KAIROS Framework v2.0"
-git remote add origin https://github.com/comm-it/kairos.git
-git push -u origin main
-
-# 3. Deploy
 vercel --prod
 ```
 
-**When Vercel prompts you, answer:**
+Vercel reads `vercel.json` automatically — accept all defaults when prompted.
+
+### Via Web (No CLI)
 
 ```
-? Which existing project do you want to connect?
-→ Create a new project
-
-? What's your project's name?
-→ kairos
-
-? In which directory is your code located?
-→ docs
-
-? Want to modify these settings?
-→ N (press N, don't modify)
-
-? Automatically detected project settings
-→ Y (yes, deploy with these settings)
+1. Go to vercel.com → New Project
+2. Import your GitHub repository
+3. Vercel detects vercel.json and pre-fills all settings:
+   - Build Command:      npm run docs:build
+   - Output Directory:   docs/.vitepress/dist
+   - Install Command:    npm install
+4. Click Deploy
 ```
 
-**Key Points:**
-- **Root Directory: `docs`** (where the documentation is)
-- **Build Command:** Leave blank
-- **Output Directory:** Leave blank
-
-Vercel will serve the site from the `docs/` folder.
-
-**Result:** Site on Vercel (kairos-xxx.vercel.app)
-**Custom domain:** Yes, add kairos.dev in Vercel dashboard after deployment
+**Result:** Live at `kairos-xxx.vercel.app`
+**Auto-deploy:** Yes — every push to `main` triggers a new deployment
+**Custom domain:** Vercel Dashboard → Settings → Domains
 
 ---
 
-## Option 1b: Vercel Web Import (No CLI)
+## Option 2: Netlify (Free + Flexible)
 
-If you prefer not to use CLI:
+**Best for:** Any repo type, flexible redirects, form handling
+
+`netlify.toml` is already present with the correct settings.
+
+### Via Web
 
 ```
-1. Go to vercel.com
-2. Sign in with GitHub
-3. Click "New Project"
-4. Click "Import Git Repository"
-5. Find and select: comm-it/kairos
-6. Project settings appear:
-   - Root Directory: docs
-   - Build Command: (leave blank)
-   - Output Directory: (leave blank)
-7. Click "Deploy"
-8. Wait 1-2 minutes
-9. Site is live!
+1. Go to netlify.com → Add new site → Import an existing project
+2. Choose GitHub → Select your kairos repository
+3. Netlify detects netlify.toml and pre-fills all settings:
+   - Build command:   npm run docs:build
+   - Publish dir:     docs/.vitepress/dist
+   - Node version:    20
+4. Click Deploy site
 ```
 
-**Key:** Set Root Directory to `docs`
+**Result:** Live at `kairos-xxx.netlify.app`
+**Auto-deploy:** Yes — every push to `main`
+**Custom domain:** Netlify Dashboard → Domain settings
 
 ---
 
-## Option 2: GitHub Pages (Free but LIMITED)
+## Option 3: GitHub Pages (Free, Public Repos)
 
-**Limitations:**
-- Only works with PUBLIC repositories
-- Free for public repos
-- Private repos require GitHub Pro ($4/month)
+GitHub Pages does not run build commands natively, so deployment uses a GitHub Actions workflow.
 
-**If your repo is PUBLIC:**
+### Setup
 
-```bash
-# 1. Setup repo
-git init
-git add .
-git commit -m "feat: KAIROS Framework v2.0"
-git remote add origin https://github.com/comm-it/kairos.git
-git push -u origin main
+Create the file `.github/workflows/deploy.yml` in your repository:
 
-# 2. Enable Pages (repo must be PUBLIC)
-# In GitHub repo:
-# Settings → Pages
-# Source: Deploy from a branch
-# Branch: main
-# Folder: /docs
-# Click Save
+```yaml
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run docs:build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/.vitepress/dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment
 ```
 
-**Cost:** Free (only for public repos)
-**Result:** Site on GitHub Pages (comm-it.github.io/kairos)
-**Custom domain:** Yes (add in Pages settings)
-**Works with:** Public repos ONLY
-
----
-
-## Option 3: Netlify (Free + Flexible)
-
-**Best for:** Any repo type, custom domains
-
-```bash
-# 1. Setup repo
-git init
-git add .
-git commit -m "feat: KAIROS Framework v2.0"
-git remote add origin https://github.com/comm-it/kairos.git
-git push -u origin main
-
-# 2. Connect to Netlify
-# - Go to netlify.com
-# - Click "Add new site"
-# - Select "Import an existing project"
-# - Choose GitHub
-# - Select your kairos repository
-```
-
-**When Netlify asks about build settings:**
-- Base directory: docs
-- Build command: (leave blank)
-- Publish directory: (leave blank)
-- Click Deploy
-
-**Cost:** Free
-**Result:** Site on Netlify (with custom domain support)
-**Custom domain:** Yes
-**Works with:** Public AND private repos
-
----
-
-## Comparison Table
-
-| Option | Cost | Time | Private Repos | Custom Domain |
-|--------|------|------|---------------|---------------|
-| **Vercel** | Free | 5 min | ✅ Yes | ✅ Yes |
-| **GitHub Pages** | Free* | 10 min | ❌ No (needs Pro) | ✅ Yes |
-| **Netlify** | Free | 10 min | ✅ Yes | ✅ Yes |
-
-*GitHub Pages is free only for public repos
-
----
-
-## Which Should I Choose?
-
-**If repo is PUBLIC:**
-→ Use GitHub Pages (simplest)
-
-**If repo is PRIVATE:**
-→ Use Vercel (recommended) or Netlify
-
-**Want fastest/simplest overall:**
-→ Use Vercel
-
----
-
-## Step-by-Step: Vercel CLI
-
-```bash
-# 1. Install Node.js (if not installed)
-# Download from nodejs.org
-
-# 2. Install Vercel CLI
-npm install -g vercel
-
-# 3. Extract and navigate to kairos folder
-unzip kairos-framework-v2.0.zip
-cd kairos
-
-# 4. Create GitHub repo
-git init
-git add .
-git commit -m "feat: KAIROS Framework v2.0"
-
-# 5. Create repo on GitHub (private or public)
-# Get URL: https://github.com/comm-it/kairos.git
-
-# 6. Connect to GitHub
-git remote add origin https://github.com/comm-it/kairos.git
-git branch -M main
-git push -u origin main
-
-# 7. Deploy with Vercel
-vercel --prod
-
-# 8. When prompted:
-#    Root directory: docs
-#    Build: (leave blank)
-#    Output: (leave blank)
-#    Deploy: Y
-
-# 9. Wait 1-2 minutes
-# Your site is live at: kairos-xxx.vercel.app
-```
-
----
-
-## Step-by-Step: GitHub Pages (Public Repos Only)
+Then enable Pages in the repo:
 
 ```
-1. Extract ZIP
-   unzip kairos-framework-v2.0.zip
-   cd kairos
-
-2. Create PUBLIC repo on GitHub
-
-3. Push code:
-   git init
-   git add .
-   git commit -m "feat: KAIROS v2.0"
-   git remote add origin https://github.com/comm-it/kairos.git
-   git push -u origin main
-
-4. In GitHub repo, go to Settings
-5. Click "Pages"
-6. Set:
-   - Source: Deploy from a branch
-   - Branch: main
-   - Folder: /docs
-7. Click Save
-8. Wait 1-2 minutes
-9. Your site is at: comm-it.github.io/kairos
+GitHub Repo → Settings → Pages
+Source: GitHub Actions (not "Deploy from a branch")
 ```
+
+**Result:** Live at `username.github.io/kairos`
+**Limitation:** Public repos only (private repos require GitHub Pro)
+**Auto-deploy:** Yes — on every push to `main`
 
 ---
 
-## Step-by-Step: Netlify
+## Comparison
 
-```
-1. Extract ZIP
-   unzip kairos-framework-v2.0.zip
-   cd kairos
+| Platform | Cost | Setup | Private Repos | Auto-Deploy | Config file |
+|----------|------|-------|---------------|-------------|-------------|
+| **Vercel** | Free | 5 min | ✅ Yes | ✅ Yes | `vercel.json` |
+| **Netlify** | Free | 5 min | ✅ Yes | ✅ Yes | `netlify.toml` |
+| **GitHub Pages** | Free | 10 min | ❌ No* | ✅ Yes | `.github/workflows/deploy.yml` |
 
-2. Create repo on GitHub (public or private)
-
-3. Push code:
-   git init
-   git add .
-   git commit -m "feat: KAIROS v2.0"
-   git remote add origin https://github.com/comm-it/kairos.git
-   git push -u origin main
-
-4. Go to netlify.com
-
-5. Click "Add new site"
-
-6. Select "Import an existing project"
-
-7. Choose GitHub
-
-8. Select your kairos repo
-
-9. When asked for settings:
-   - Base directory: docs
-   - Build command: (leave blank)
-   - Publish directory: (leave blank)
-
-10. Click Deploy
-
-11. Wait 1-2 minutes
-
-12. Your site is live!
-```
+*Free only for public repositories. Private repos need GitHub Pro ($4/month).
 
 ---
 
-## Key Settings Summary
+## Which to Choose
 
-| Platform | Root/Base Directory | Build Command | Output Directory |
-|----------|-------------------|----------------|------------------|
-| **Vercel** | `docs` | (blank) | (blank) |
-| **GitHub Pages** | /docs (in settings) | N/A | N/A |
-| **Netlify** | `docs` | (blank) | (blank) |
-
----
-
-## After Deployment
-
-1. Visit your deployed site
-2. Verify documentation loads (should show KAIROS-FRAMEWORK-DOCUMENTATION.md)
-3. Add custom domain (optional):
-   - Vercel: Settings → Domains
-   - GitHub Pages: Settings → Pages → Custom domain
-   - Netlify: Domain Settings
-4. Start using KAIROS! 🚀
+| Situation | Recommendation |
+|-----------|----------------|
+| Quickest start, private repo | **Vercel** |
+| Already using Netlify ecosystem | **Netlify** |
+| Repo is public, no extra accounts | **GitHub Pages** |
 
 ---
 
 ## Troubleshooting
 
-**Vercel - "404 Not Found"**
-→ Check Root Directory is set to `docs`
-→ Verify docs/KAIROS-FRAMEWORK-DOCUMENTATION.md exists
+**Build fails — "vitepress not found"**
+→ Make sure the build runs `npm install` before `npm run docs:build`
+→ On Vercel/Netlify this is automatic; on manual servers run `npm ci` first
 
-**GitHub Pages - "Site not deploying"**
-→ Repo MUST be PUBLIC
-→ Folder in Pages settings MUST be /docs
+**404 on all pages after deploy**
+→ Vercel/Netlify: confirm the output directory is `docs/.vitepress/dist`, not `docs/`
+→ GitHub Pages: confirm the workflow uploads from `docs/.vitepress/dist`
 
-**Netlify - "Page not found"**
-→ Check Base directory is `docs`
-→ Verify docs/ folder exists with markdown files
+**Agents pages return 404 (`/agents/orchestrator` etc.)**
+→ VitePress generates clean URLs — the platform must serve `index.html` for unknown paths
+→ Vercel and Netlify handle this automatically
+→ GitHub Pages: add a `404.html` redirect or use hash-based routing if issues persist
+
+**CSS/JS not loading (blank white page)**
+→ Check `base` option in `docs/.vitepress/config.js`:
+  - Vercel/Netlify (root domain): no `base` needed (default `/`)
+  - GitHub Pages subdirectory (e.g. `username.github.io/kairos`): add `base: '/kairos/'`
 
 ---
 
-## File Structure in ZIP
-
-The ZIP contains this structure, ready to deploy:
+## Repository Structure
 
 ```
 kairos/
-├─ README.md                  (Project overview)
-├─ DEPLOYMENT.md              (This file)
-├─ agents/                    (7 subagent files)
-│  ├─ orchestrator.md
-│  ├─ pm-agent.md
-│  ├─ architect-agent.md
-│  ├─ implementer-agent.md
-│  ├─ code-reviewer.md
-│  ├─ test-verifier.md
-│  └─ release-planner.md
-└─ docs/
-   └─ KAIROS-FRAMEWORK-DOCUMENTATION.md  (Full documentation)
+├── agents/                    ← 7 subagent definitions (served as /agents/*)
+│   ├── orchestrator.md
+│   ├── pm-agent.md
+│   ├── architect-agent.md
+│   ├── implementer-agent.md
+│   ├── code-reviewer.md
+│   ├── test-verifier.md
+│   └── release-planner.md
+├── docs/
+│   ├── .vitepress/
+│   │   ├── config.js          ← VitePress config (srcDir: '..')
+│   │   └── dist/              ← Build output (gitignored)
+│   ├── index.md               ← Home page
+│   ├── overview.md
+│   ├── agents.md
+│   ├── setup.md
+│   ├── workflow.md
+│   ├── metrics.md
+│   ├── roadmap.md
+│   └── faq.md
+├── package.json               ← npm scripts (docs:dev, docs:build, docs:preview)
+├── vercel.json                ← Vercel build config (pre-configured)
+└── netlify.toml               ← Netlify build config (pre-configured)
 ```
-
-When deploying to Vercel/Netlify:
-- **Set Root Directory to: `docs`**
-- Vercel will serve from `docs/` folder
-- Documentation will be at root of your site
-
-
----
-
-
-| Option | Cost | Time | Private | Auto-Deploy | Features |
-|--------|------|------|---------|-------------|----------|
-| **Vercel** | Free | 5 min | ✅ Yes | ✅ Yes | Fast, Custom domain |
-| **GitHub Pages** | Free* | 10 min | ❌ No | ✅ Yes | Simple, Built-in |
-| **Netlify** | Free | 10 min | ✅ Yes | ✅ Yes | Flexible, Custom domain |
-| **Gitbook** | Free | 10 min | ✅ Yes | ✅ Yes | Beautiful UI, Search, Analytics |
-
-*GitHub Pages free only for public repos
-
----
-
-## Recommended Strategy
-
-**Best Setup:**
-1. **Vercel** - Main site (kairos.dev) - fast, professional
-2. **Gitbook** - Interactive docs (kairos.gitbook.io) - beautiful, searchable
-3. **GitHub** - Source code - all history, collaboration
-
-**Workflow:**
-```
-Edit markdown in GitHub
-        ↓
-Vercel auto-deploys site
-Gitbook auto-syncs docs
-Both use same source files
-```
-
-
----
-
-## Option 4: Gitbook (Interactive Documentation - Free)
-
-**Best for:** Beautiful interactive documentation, team collaboration, auto-sync from GitHub
-
-Gitbook syncs directly from your GitHub repo and reads SUMMARY.md to build navigation.
-
-### Step 1: Create Gitbook Space
-
-1. Go to gitbook.com
-2. Sign up or log in
-3. Click "Create a space"
-4. Name: KAIROS
-5. Template: Documentation
-
-### Step 2: Connect GitHub Repository
-
-```
-In Gitbook Space:
-1. Settings → Integrations
-2. Click "GitHub"
-3. Authorize GitHub
-4. Select repository: comm-it/kairos
-5. Sync directory: /docs
-6. Enable auto-sync
-```
-
-### Step 3: Clean Up Gitbook
-
-Gitbook creates default pages (Home, Getting Started, etc.) that are empty:
-
-1. In Gitbook editor, delete empty pages
-2. Keep only the content synced from GitHub (docs/SUMMARY.md)
-3. Your KAIROS-FRAMEWORK-DOCUMENTATION.md will appear automatically
-
-### Step 4: Auto-Sync is Now Active
-
-Gitbook automatically:
-- Reads your markdown files from GitHub
-- Updates navigation from SUMMARY.md
-- Syncs on every GitHub push
-- Provides search, versioning, analytics, team collaboration
-
-**Result:** Beautiful docs at gitbook.io/kairos
-**Cost:** Free
-**Works with:** Public AND private repos
-**Auto-deploy:** Yes (on push to main)
-
----
-
-## Four Deployment Options Comparison
-
-| Option | Cost | Time | Private | Auto-Deploy | Best For |
-|--------|------|------|---------|-------------|----------|
-| **Vercel** | Free | 5 min | ✅ Yes | ✅ Yes | Fast, professional site |
-| **GitHub Pages** | Free* | 10 min | ❌ No | ✅ Yes | Simple, built-in |
-| **Netlify** | Free | 10 min | ✅ Yes | ✅ Yes | Flexible, custom domain |
-| **Gitbook** | Free | 10 min | ✅ Yes | ✅ Yes | Beautiful docs, team collab |
-
-*GitHub Pages free only for public repos
-
----
-
-## Recommended Strategy
-
-**Complete Setup:**
-1. **Vercel** - Main site (kairos.dev) - fast, modern
-2. **Gitbook** - Interactive docs (kairos.gitbook.io) - beautiful, searchable
-3. **GitHub** - Source code - history, collaboration
-
-**Workflow:**
-```
-Edit docs/KAIROS-FRAMEWORK-DOCUMENTATION.md
-        ↓
-Git push to GitHub
-        ↓
-Vercel auto-deploys site
-Gitbook auto-syncs docs
-Both use same source files
-```
-
-**IMPORTANT:** The SUMMARY.md file in docs/ tells Gitbook what pages to include. Edit it to customize your Gitbook navigation.
-

@@ -122,15 +122,15 @@ Always output structured JSON:
 ```markdown
 ---
 name: orchestrator
-description: "Master coordinator for SDLC framework. Routes feature requests to specialist subagents and orchestrates the workflow."
+description: "Master coordinator for KAIROS Framework. Routes feature requests to specialist subagents and orchestrates the workflow."
 tools: [read, write, bash, grep]
 model: claude-opus-4-6
 ---
 
-# SDLC Framework Orchestrator
+# KAIROS Framework Orchestrator
 
 ## Your Role
-You are the Master Orchestrator of the SDLC Framework.
+You are the Master Orchestrator of the KAIROS Framework.
 
 Your job: Take feature requests and orchestrate a workflow
 of specialist subagents to generate complete, production-ready code.
@@ -855,7 +855,7 @@ Each subagent has a description:
 ```markdown
 ---
 name: orchestrator
-description: "Master coordinator for SDLC framework. Routes feature requests to specialist subagents and orchestrates the workflow."
+description: "Master coordinator for KAIROS Framework. Routes feature requests to specialist subagents and orchestrates the workflow."
 ---
 ```
 
@@ -938,4 +938,3 @@ BENEFITS:  - Context isolation (cheap!)
 
 THIS IS THE REAL ARCHITECTURE
 ```
-
