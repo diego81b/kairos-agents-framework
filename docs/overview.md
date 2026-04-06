@@ -115,4 +115,4 @@ Each `.md` file is a self-contained subagent definition with YAML frontmatter an
 
 ---
 
-Ready to get started? See [Setup by Tool](./setup) to configure KAIROS with your preferred IDE, or dive into [The 7 Agents](./agents) to understand what each one does.
+Ready to get started? See [Setup by Tool](./setup/) to configure KAIROS with your preferred IDE, or dive into [The 7 Agents](./agents) to understand what each one does.
