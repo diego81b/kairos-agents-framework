@@ -1,6 +1,28 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
+  srcDir: '..',
+  srcExclude: [
+    '**/node_modules/**',
+    'docs/.vitepress/**',
+    'README.md',
+    'DEPLOYMENT.md',
+    'LICENSE',
+    'netlify.toml',
+    'vercel.json',
+    'package.json',
+    'START-HERE-SIMPLE.txt',
+    'docs/index.html',
+    'docs/convert.ps1',
+    'docs/convert.py',
+    'docs/SUMMARY.md',
+    'docs/KAIROS-FRAMEWORK-DOCUMENTATION.md'
+  ],
+
+  rewrites: {
+    'docs/:slug*': ':slug*'
+  },
+
   title: 'KAIROS Framework',
   description: 'Intelligent multi-agent SDLC orchestration by Comm.it',
   lang: 'en-US',
@@ -39,13 +61,13 @@ export default defineConfig({
         collapsed: false,
         items: [
           { text: 'All Agents Overview', link: '/agents' },
-          { text: 'Orchestrator', link: '/agents#orchestrator' },
-          { text: 'PM Agent', link: '/agents#pm-agent' },
-          { text: 'Architect Agent', link: '/agents#architect-agent' },
-          { text: 'Implementer Agent', link: '/agents#implementer-agent' },
-          { text: 'Code Reviewer', link: '/agents#code-reviewer' },
-          { text: 'Test Verifier', link: '/agents#test-verifier' },
-          { text: 'Release Planner', link: '/agents#release-planner' }
+          { text: 'Orchestrator', link: '/agents/orchestrator' },
+          { text: 'PM Agent', link: '/agents/pm-agent' },
+          { text: 'Architect Agent', link: '/agents/architect-agent' },
+          { text: 'Implementer Agent', link: '/agents/implementer-agent' },
+          { text: 'Code Reviewer', link: '/agents/code-reviewer' },
+          { text: 'Test Verifier', link: '/agents/test-verifier' },
+          { text: 'Release Planner', link: '/agents/release-planner' }
         ]
       },
       {
@@ -74,7 +96,7 @@ export default defineConfig({
     },
 
     editLink: {
-      pattern: 'https://github.com/diego81b/kairos-agents-framework/edit/main/docs/:path',
+      pattern: 'https://github.com/diego81b/kairos-agents-framework/edit/main/:path',
       text: 'Edit this page on GitHub'
     },
 
