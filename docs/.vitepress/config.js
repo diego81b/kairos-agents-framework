@@ -37,7 +37,17 @@ export default defineConfig({
     nav: [
       { text: 'Overview', link: '/overview' },
       { text: 'Agents', link: '/agents' },
-      { text: 'Setup', link: '/setup' },
+      {
+        text: 'Setup',
+        items: [
+          { text: 'Setup Overview', link: '/setup/' },
+          { text: 'Claude Code', link: '/setup/claude-code' },
+          { text: 'Cursor IDE', link: '/setup/cursor' },
+          { text: 'VS Code', link: '/setup/vscode' },
+          { text: 'JetBrains', link: '/setup/jetbrains' },
+          { text: 'OpenAI Codex CLI', link: '/setup/codex' }
+        ]
+      },
       { text: 'Workflow', link: '/workflow' },
       {
         text: 'v2.0',
@@ -52,8 +62,19 @@ export default defineConfig({
       {
         text: 'Getting Started',
         items: [
-          { text: 'What is KAIROS?', link: '/overview' },
-          { text: 'Setup by Tool', link: '/setup' }
+          { text: 'What is KAIROS?', link: '/overview' }
+        ]
+      },
+      {
+        text: 'Setup',
+        collapsed: false,
+        items: [
+          { text: 'Overview', link: '/setup/' },
+          { text: 'Claude Code', link: '/setup/claude-code' },
+          { text: 'Cursor IDE', link: '/setup/cursor' },
+          { text: 'VS Code', link: '/setup/vscode' },
+          { text: 'JetBrains', link: '/setup/jetbrains' },
+          { text: 'OpenAI Codex CLI', link: '/setup/codex' }
         ]
       },
       {

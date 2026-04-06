@@ -1,0 +1,146 @@
+# Claude Code Setup
+
+Claude Code is the **recommended tool** for KAIROS. It is the only tool with native subagent support: each agent runs in an isolated context with its own model, tools list, and memory — exactly as KAIROS is designed.
+
+## Prerequisites
+
+- [Claude Code](https://claude.ai/code) installed (CLI or desktop)
+- A project you want to develop with KAIROS
+- Git (optional, for `gh issue comment` integration)
+
+## Step 1 — Copy agents to `.claude/agents/`
+
+Claude Code discovers subagents from the `.claude/agents/` directory inside your project.
+
+```bash
+# From your project root
+mkdir -p .claude/agents
+cp path/to/kairos/agents/*.md .claude/agents/
+```
+
+Your project structure should look like:
+
+```
+your-project/
+├── .claude/
+│   └── agents/
+│       ├── orchestrator.md
+│       ├── pm-agent.md
+│       ├── architect-agent.md
+│       ├── implementer-agent.md
+│       ├── code-reviewer.md
+│       ├── test-verifier.md
+│       └── release-planner.md
+├── src/
+└── ...
+```
+
+::: tip Keep agents in sync
+If you maintain KAIROS as a submodule or copy, remember to re-copy after updates. The source of truth is always `agents/` in the KAIROS repository.
+:::
+
+## Step 2 — Understand how subagents are loaded
+
+When Claude Code starts, it reads every `.md` file in `.claude/agents/` and parses the YAML frontmatter:
+
+```yaml
+---
+name: PM Agent
+description: Collects and structures requirements. Use at the START of a new feature.
+tools:
+  - read_file
+  - write_file
+model: claude-sonnet-4-6
+---
+```
+
+The `description` field is critical: the **orchestrator** reads all descriptions and decides automatically which subagent to delegate to, without you needing to say `@pm-agent`.
+
+## Step 3 — Start a KAIROS session
+
+Open Claude Code in your project directory and type:
+
+```
+Help me add [your feature] using the KAIROS framework
+```
+
+The orchestrator agent picks this up, reads the task, and begins delegating to the appropriate subagent starting with the PM Agent.
+
+## Step 4 — The HITL loop in practice
+
+After each phase you will see output like:
+
+```
+## PM Agent — Requirements Output
+
+{
+  "feature": "...",
+  "user_stories": [...],
+  "acceptance_criteria": [...],
+  ...
+}
+
+✅ Approve and continue to Architecture
+✏️  Request changes (describe what to fix)
+⛔  Stop here
+```
+
+**You must choose before the orchestrator proceeds.** This is the HITL checkpoint — it prevents downstream agents from working on bad requirements.
+
+Validated output is saved automatically to `.kairos/01-requirements.json`.
+
+## Step 5 — Check `.kairos/` outputs
+
+After each approved phase, a JSON file is written:
+
+```
+.kairos/
+├── 01-requirements.json     ← after PM Agent approval
+├── 02-architecture.json     ← after Architect approval
+├── 03-implementation.json   ← after Implementer approval
+├── 04-review.json           ← after Code Reviewer approval
+├── 05-test-verification.json ← after Test Verifier approval
+└── 06-deployment-plan.json  ← after Release Planner approval
+```
+
+These files are the audit trail of the session. You can commit them to git to track what was decided and why.
+
+## Optional — GitHub Issue integration
+
+If you track work in GitHub Issues, add the issue number at the start:
+
+```
+Help me implement issue #42 using the KAIROS framework
+```
+
+Each agent will post its validated output as a comment on the issue:
+
+```bash
+gh issue comment 42 --body "$(cat .kairos/01-requirements.json)"
+```
+
+This requires `gh` CLI authenticated (`gh auth login`).
+
+## Troubleshooting
+
+| Problem | Fix |
+|---------|-----|
+| Agent not found | Check `.claude/agents/` exists and contains `.md` files with valid YAML frontmatter |
+| Wrong model used | Verify the `model:` field in each agent's frontmatter |
+| Orchestrator not delegating | The `description:` field must clearly describe when to use the agent |
+| `.kairos/` not created | The implementer-agent creates it on first write — ensure `write_file` is in its `tools:` list |
+
+## Full pipeline
+
+```
+You ──► Orchestrator
+         │
+         ├─[HITL]─► PM Agent         → .kairos/01-requirements.json
+         ├─[HITL]─► Architect Agent  → .kairos/02-architecture.json
+         ├─[HITL]─► Implementer Agent → .kairos/03-implementation.json
+         ├─[HITL]─► Code Reviewer    → .kairos/04-review.json
+         ├─[HITL]─► Test Verifier    → .kairos/05-test-verification.json
+         └─[HITL]─► Release Planner  → .kairos/06-deployment-plan.json
+```
+
+Each `[HITL]` gate is a pause where **you** review and approve before the next agent runs.
