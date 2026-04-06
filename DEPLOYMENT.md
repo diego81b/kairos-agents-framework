@@ -342,47 +342,6 @@ When deploying to Vercel/Netlify:
 
 ---
 
-## Option 4: Gitbook (Interactive Documentation - Free)
-
-**Best for:** Beautiful interactive documentation, team collaboration
-
-Gitbook syncs directly from your GitHub repo.
-
-### Step 1: Create Gitbook Space
-
-1. Go to gitbook.com
-2. Sign up or log in
-3. Click "Create a space"
-4. Name: KAIROS
-5. Template: Documentation
-
-### Step 2: Connect GitHub Repository
-
-```
-In Gitbook Space:
-1. Settings → Integrations
-2. Click "GitHub"
-3. Authorize GitHub
-4. Select repository: comm-it/kairos
-5. Sync directory: / (root)
-```
-
-### Step 3: Gitbook Will Auto-Sync
-
-Gitbook automatically:
-- Reads your markdown files
-- Creates navigation from SUMMARY.md
-- Updates on every GitHub push
-- Provides search, versioning, analytics
-
-**Result:** Beautiful docs at gitbook.io/kairos
-**Cost:** Free
-**Works with:** Public AND private repos
-**Auto-deploy:** Yes (on push to main)
-
----
-
-## Four Deployment Options Comparison
 
 | Option | Cost | Time | Private | Auto-Deploy | Features |
 |--------|------|------|---------|-------------|----------|
@@ -410,4 +369,89 @@ Vercel auto-deploys site
 Gitbook auto-syncs docs
 Both use same source files
 ```
+
+
+---
+
+## Option 4: Gitbook (Interactive Documentation - Free)
+
+**Best for:** Beautiful interactive documentation, team collaboration, auto-sync from GitHub
+
+Gitbook syncs directly from your GitHub repo and reads SUMMARY.md to build navigation.
+
+### Step 1: Create Gitbook Space
+
+1. Go to gitbook.com
+2. Sign up or log in
+3. Click "Create a space"
+4. Name: KAIROS
+5. Template: Documentation
+
+### Step 2: Connect GitHub Repository
+
+```
+In Gitbook Space:
+1. Settings → Integrations
+2. Click "GitHub"
+3. Authorize GitHub
+4. Select repository: comm-it/kairos
+5. Sync directory: /docs
+6. Enable auto-sync
+```
+
+### Step 3: Clean Up Gitbook
+
+Gitbook creates default pages (Home, Getting Started, etc.) that are empty:
+
+1. In Gitbook editor, delete empty pages
+2. Keep only the content synced from GitHub (docs/SUMMARY.md)
+3. Your KAIROS-FRAMEWORK-DOCUMENTATION.md will appear automatically
+
+### Step 4: Auto-Sync is Now Active
+
+Gitbook automatically:
+- Reads your markdown files from GitHub
+- Updates navigation from SUMMARY.md
+- Syncs on every GitHub push
+- Provides search, versioning, analytics, team collaboration
+
+**Result:** Beautiful docs at gitbook.io/kairos
+**Cost:** Free
+**Works with:** Public AND private repos
+**Auto-deploy:** Yes (on push to main)
+
+---
+
+## Four Deployment Options Comparison
+
+| Option | Cost | Time | Private | Auto-Deploy | Best For |
+|--------|------|------|---------|-------------|----------|
+| **Vercel** | Free | 5 min | ✅ Yes | ✅ Yes | Fast, professional site |
+| **GitHub Pages** | Free* | 10 min | ❌ No | ✅ Yes | Simple, built-in |
+| **Netlify** | Free | 10 min | ✅ Yes | ✅ Yes | Flexible, custom domain |
+| **Gitbook** | Free | 10 min | ✅ Yes | ✅ Yes | Beautiful docs, team collab |
+
+*GitHub Pages free only for public repos
+
+---
+
+## Recommended Strategy
+
+**Complete Setup:**
+1. **Vercel** - Main site (kairos.dev) - fast, modern
+2. **Gitbook** - Interactive docs (kairos.gitbook.io) - beautiful, searchable
+3. **GitHub** - Source code - history, collaboration
+
+**Workflow:**
+```
+Edit docs/KAIROS-FRAMEWORK-DOCUMENTATION.md
+        ↓
+Git push to GitHub
+        ↓
+Vercel auto-deploys site
+Gitbook auto-syncs docs
+Both use same source files
+```
+
+**IMPORTANT:** The SUMMARY.md file in docs/ tells Gitbook what pages to include. Edit it to customize your Gitbook navigation.
 
