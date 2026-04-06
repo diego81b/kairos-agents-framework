@@ -45,7 +45,8 @@ export default defineConfig({
           { text: 'Cursor IDE', link: '/setup/cursor' },
           { text: 'VS Code', link: '/setup/vscode' },
           { text: 'JetBrains', link: '/setup/jetbrains' },
-          { text: 'OpenAI Codex CLI', link: '/setup/codex' }
+          { text: 'OpenAI Codex CLI', link: '/setup/codex' },
+          { text: 'Pipeline Templates', link: '/setup/templates' }
         ]
       },
       { text: 'Workflow', link: '/workflow' },
@@ -74,7 +75,8 @@ export default defineConfig({
           { text: 'Cursor IDE', link: '/setup/cursor' },
           { text: 'VS Code', link: '/setup/vscode' },
           { text: 'JetBrains', link: '/setup/jetbrains' },
-          { text: 'OpenAI Codex CLI', link: '/setup/codex' }
+          { text: 'OpenAI Codex CLI', link: '/setup/codex' },
+          { text: 'Pipeline Templates', link: '/setup/templates' }
         ]
       },
       {

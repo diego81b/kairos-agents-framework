@@ -9,22 +9,27 @@ Release Planner â† [HITL] â† Test Verifier â† [HITL] â† Code
 ```
 
 At each HITL checkpoint the user can:
-- âœ… **Approve** â€” continue to the next phase
-- âœï¸ **Request changes** â€” agent revises and re-presents
-- â›” **Stop** â€” abort the pipeline
+- ✅ **Approve** — continue to the next active agent
+- ✏️ **Request changes** — agent revises and re-presents
+- ⏭️ **Skip next** — approve this output, jump past the next active agent
+- ⛔ **Stop** — abort the pipeline
 
-No steps are skipped. No order is changed.
+Only selected agents run. Order is never changed.
 
 ---
 
-## Phase 0: Context Extraction
+## Phase 0: Context Extraction & Agent Selection
 
-- Developer provides a natural-language feature request
-- System reads the `agents/` files
-- Orchestrator analyzes scope and selects the pipeline
+- Developer provides a natural-language feature request (with optional issue reference)
+- Orchestrator reads the `## KAIROS Pipeline` section from the issue body (if present), or shows an interactive numbered list — **no automatic inference**
+- User confirms or adjusts the agent selection; orchestrator announces the active pipeline before Phase 1
 
-_Input: free-text feature request_
-_Output: routed pipeline start_
+_Input: free-text feature request + optional issue reference_
+_Output: confirmed `active_agents` list + `feature_folder` path_
+
+::: tip Selective pipeline
+Only agents explicitly selected in Phase 0 will run. Phases for inactive agents are skipped automatically. Use [Pipeline Templates](/setup/templates) to pre-configure agent selection in your issue tracker.
+:::
 
 ---
 
@@ -40,6 +45,8 @@ _Saved to: `.kairos/<feature_folder>/01-requirements.json`_
 
 ::: info HITL checkpoint
 User reviews requirements, constraints and risks before any design work begins.
+
+`✅ Approve` · `✏️ Request changes` · `⏭️ Skip next` · `⛔ Stop`
 :::
 
 ---
@@ -56,6 +63,8 @@ _Saved to: `.kairos/<feature_folder>/02-architecture.json`_
 
 ::: info HITL checkpoint
 User reviews the selected design option and API contracts before any code is written.
+
+`✅ Approve` · `✏️ Request changes` · `⏭️ Skip next` · `⛔ Stop`
 :::
 
 ---
@@ -79,10 +88,14 @@ _Saved to: project paths + `.kairos/<feature_folder>/03-implementation.json`_
 
 ::: info HITL checkpoint — Plan gate
 User reviews the implementation plan (files, test cases, approach) **before any code is written**. Reject at zero cost.
+
+`✅ Approve plan` · `✏️ Revise plan` · `⛔ Stop`
 :::
 
 ::: info HITL checkpoint — Code gate
 User reviews generated code and test coverage before the review phase.
+
+`✅ Approve` · `✏️ Request changes` · `⏭️ Skip next` · `⛔ Stop`
 :::
 
 ---
@@ -100,6 +113,8 @@ _Saved to: `.kairos/<feature_folder>/04-review.json`_
 
 ::: info HITL checkpoint
 User reviews quality report. NEEDS\_FIXES sends the issue list back to the Implementer.
+
+`✅ Approve` · `✏️ Request changes` · `⏭️ Skip next` · `⛔ Stop`
 :::
 
 ---
@@ -116,6 +131,8 @@ _Saved to: `.kairos/<feature_folder>/05-test-verification.json`_
 
 ::: info HITL checkpoint
 User confirms coverage is adequate. FAIL sends gap list back to the Implementer.
+
+`✅ Approve` · `✏️ Request changes` · `⏭️ Skip next` · `⛔ Stop`
 :::
 
 ---
@@ -131,7 +148,9 @@ _Output: deployment plan JSON — steps, risk mitigation, rollback, monitoring_
 _Saved to: `.kairos/<feature_folder>/06-deployment-plan.json`_
 
 ::: info HITL checkpoint
-User approves the deployment plan. This is the final checkpoint â€” approval closes the KAIROS run.
+User approves the deployment plan. This is the final checkpoint — approval closes the KAIROS run.
+
+`✅ Approve` · `✏️ Request changes` · `⛔ Stop`
 :::
 
 ---
