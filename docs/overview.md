@@ -111,14 +111,12 @@ A typical KAIROS feature run produces:
 - ✅ Deployment plan with rollback procedure
 - ✅ Full issue tracker comment trail (Jira / GitLab / Bitbucket)
 
-**Typical economics per feature:**
+**Typical time savings per feature:**
 
 | Metric | Value |
 |--------|-------|
-| API cost | ~$5–8 |
-| Time saved | 75–80% |
-| Speed improvement | 40–50% faster |
-| ROI | 70–180× |
+| Developer time saved | 75–80% |
+| Feature delivery speed | 40–50% faster |
 
 ---
 

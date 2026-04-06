@@ -97,7 +97,7 @@ export default defineConfig({
         text: 'Development',
         items: [
           { text: 'Workflow', link: '/workflow' },
-          { text: 'Metrics & ROI', link: '/metrics' }
+          { text: 'Metrics', link: '/metrics' }
         ]
       },
       {

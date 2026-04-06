@@ -1,45 +1,59 @@
 # Roadmap
 
-## v2.0 (Current — April 2026)
+## v2.0 — Current (April 2026)
 
-- 7-agent orchestration
-- Real TDD implementation
-- Multi-tool support (Claude, Cursor, Copilot, CodeWhisperer, JetBrains)
-- Quality assurance framework
-- Deployment planning
-- Open source (AGPL-3.0)
+**Core framework**
+- 7-agent orchestration: Orchestrator + PM + Architect + Implementer + Code Reviewer + Test Verifier + Release Planner
+- Selective pipeline — explicit agent selection at run start, no automatic inference
+- 4-option HITL gate at every phase (Approve / Request changes / Skip next / Stop)
+- Pipeline Templates — preset checkboxes for Feature, Bug Fix, Hotfix, Refactor, Docs
 
----
+**Implementer two-stage gate**
+- Phase 0: structured implementation plan (files, test cases, TDD order, risks) before any file is written
+- Phase 1: TDD cycle — tests first, implementation after, coverage >80% enforced
 
-## v2.1 (June 2026)
+**Multi-tool support**
+- Claude Code (`.claude/agents/`)
+- Cursor IDE (`.cursor/agents/`)
+- VS Code Copilot (`.github/agents/` + native HITL handoffs)
+- JetBrains AI Assistant
+- OpenAI Codex CLI (`.codex/agents/` TOML format)
 
-- Skills integration (custom prompts per team)
-- Advanced error handling
-- Performance optimization
+**Issue tracker integration**
+- Jira (`jira-cli`) — auto-reads `## KAIROS Pipeline` from issue description
+- GitLab Issues (`glab`) — supports `.gitlab/issue_templates/`
+- Bitbucket Issues (REST API)
 
----
+**Artifact isolation**
+- `.kairos/<feature_folder>/` per feature — named from issue reference (`PROJ-42_add-stripe-payments`)
+- One JSON file per phase, never overwritten across features
 
-## v2.2 (August 2026)
-
-- HITL (Human-in-the-Loop) scoring
-- UI for agent monitoring
-- Real-time collaboration
-
----
-
-## v2.3 (October 2026)
-
-- Multi-language support
-- Advanced analytics
-- Enterprise features
+**Open source** — AGPL-3.0
 
 ---
 
-## v3.0 (Q1 2027)
+## v2.1 — Planned (Q3 2026)
 
-- Plugin marketplace
-- Team licensing
-- Cloud SaaS option
+- **MCP server integration** — first-class support for `sequential-thinking`, `context7`, and project-specific MCP tools declared per agent  
+- **GitHub Issues support** — complete the tracker trio alongside Jira / GitLab / Bitbucket  
+- **Re-run single phase** — resume a pipeline from any phase without re-running the full sequence  
+- **VS Code HITL improvements** — richer handoff buttons with artifact preview inline
+
+---
+
+## v2.2 — Planned (Q4 2026)
+
+- **Pipeline metrics dashboard** — per-team velocity tracking across runs (phases completed, skip rates, revision counts)
+- **Team template registry** — share and version `## KAIROS Pipeline` presets across a repository or organization
+- **Parallel subagent execution** — allow independent phases (e.g. Architect + PM) to run concurrently where there are no dependencies
+
+---
+
+## v3.0 — Exploration (2027)
+
+- **Custom agent composition** — define project-specific agents alongside the core 7, registered in the orchestrator
+- **Cross-repo knowledge** — agents can query a shared codebase index for patterns and conventions without bloating context
+- **Audit log UI** — browsable history of all KAIROS runs with phase diffs, approval decisions, and issue links
 
 ---
 
