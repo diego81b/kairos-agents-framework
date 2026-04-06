@@ -1,118 +1,143 @@
-# Overview
+# What is KAIROS?
 
-**"The Right Moment for Development"**
-
-By Comm.it - Intelligent multi-agent SDLC orchestration
-
----
-
-KAIROS is an intelligent framework that orchestrates 7 specialized AI agents to accelerate software development.
-
-**Key Numbers:**
-- 40-50% faster development
-- 80-90% quality output
-- 70-180x ROI per feature
-- $5-8 in API costs per feature
-- 75-80% time saved per developer
+> **"The Right Moment for Development"**  
+> Intelligent multi-agent SDLC orchestration — by [Comm.it](https://comm.it)
 
 ---
 
-## How It Works: Subagents
+KAIROS is a framework that wires 7 specialized AI agents into a single, human-controlled pipeline. You describe what you want to build; KAIROS breaks it into phases — requirements, design, code, review, tests, deployment — and produces production-ready output at every step.
 
-KAIROS is built on the **subagent** model — not a team of agents that chat with each other, but specialized Claude instances each with their own isolated context.
-
-| Subagents ✅ | Agent Teams ❌ |
-|---|---|
-| Isolated, fresh context per task | Cross-session coordination |
-| Specialized prompt per role | Agents communicating each other |
-| Defined as `.md` files in `agents/` | Not needed for KAIROS |
-| Claude knows when to use them | — |
-
-Each subagent:
-1. Receives **only** what the orchestrator passes it (fresh context)
-2. Works in **isolation** — no access to the parent conversation
-3. Returns **only the final result** — intermediate thinking stays local
-4. Keeps token usage low and costs down
+The human never loses control: every phase ends at a checkpoint where you approve, redirect, or skip before anything moves forward.
 
 ---
 
-## Context Isolation Benefit
+## The Problem It Solves
 
-Without subagents, all intermediate analysis accumulates in the main conversation:
+A single AI conversation accumulates context fast. Feed it a feature request and by the time it writes code, it's also carrying the requirements analysis, the architecture discussion, every revision you made — thousands of tokens that inflate every subsequent call and blur focus.
+
+KAIROS solves this with **subagents**: isolated Claude instances, each with a focused role and a fresh context window.
 
 ```
 WITHOUT SUBAGENTS:
-PM analysis  →  10KB stays in main context
-Arch design  →   8KB stays in main context
-             ──────────────────────────────
-             18KB+ bloating every token call
+  PM analysis  → stays in main context  (+10 KB)
+  Arch design  → stays in main context  (+8 KB)
+  Code draft   → stays in main context  (+20 KB)
+                 ─────────────────────────────
+                 38 KB+ bloating every token call
 
 WITH SUBAGENTS:
-PM analysis  → stays inside pm-agent context  → only summary returned
-Arch design  → stays inside architect context → only summary returned
-             ──────────────────────────────────────────
-             Main context stays clean and cheap
+  PM analysis  → pm-agent context      → only JSON summary returned
+  Arch design  → architect context     → only JSON summary returned
+  Code draft   → implementer context   → only files + coverage returned
+                 ─────────────────────────────
+                 Main context stays small and cheap
 ```
+
+Each subagent:
+- Receives **only** what the orchestrator passes it
+- Works in **isolation** — no access to the parent conversation
+- Returns **only the final artifact** — intermediate reasoning stays local
+
+---
+
+## The 7-Agent Pipeline
+
+| # | Agent | Role | Output |
+|---|-------|------|--------|
+| 0 | **Orchestrator** | Coordinates the pipeline, manages HITL | Routes & aggregates |
+| 1 | **PM Agent** | Requirements, constraints, acceptance criteria | `01-requirements.json` |
+| 2 | **Architect Agent** | 3 design options → recommended choice, API contracts, DB schema | `02-architecture.json` |
+| 3 | **Implementer Agent** | Implementation plan → TDD cycle (tests first, then code) | Code + `03-implementation.json` |
+| 4 | **Code Reviewer** | Standards, security, performance, contract compliance | `04-review.json` |
+| 5 | **Test Verifier** | Coverage adequacy (>80%), edge cases, assertion quality | `05-test-verification.json` |
+| 6 | **Release Planner** | Deployment steps, rollback strategy, monitoring thresholds | `06-deployment-plan.json` |
+
+All output files are saved to `.kairos/<feature-folder>/` — one subfolder per feature, named from the issue reference (e.g. `PROJ-42_add-stripe-payments`).
 
 ---
 
 ## Human-in-the-Loop (HITL)
 
-KAIROS is not a fully automated pipeline — it is a **HITL pipeline**. After each phase the agent presents its output, waits for explicit user approval, and only then passes the result to the next agent.
+KAIROS is **not** fully automated. Every active agent presents its output and waits for your decision before the pipeline moves forward.
 
 ```
-Agent produces output
-        ↓
-Presents to user for review
-        ↓
-  ✅ Approve → next phase
-  ✏️  Changes → agent revises
-  ⛔ Stop    → abort
+Agent completes its phase
+         ↓
+Presents artifact to user
+         ↓
+  ✅ Approve     → pass artifact to next active agent
+  ✏️  Changes    → agent revises based on your feedback
+  ⏭️  Skip next → approve this, jump past the next agent
+  ⛔ Stop        → abort and keep everything so far
 ```
 
-This means:
-- **No surprises** — you see every decision before code is written
-- **Full control** — you can steer direction at any phase
-- **Auditability** — every phase output is saved to `.kairos/` and optionally posted as an issue tracker comment (Jira, GitLab, or Bitbucket)
+This gives you:
+- **Zero surprises** — you review every decision before code is written
+- **Course correction at any point** — steer direction without restarting
+- **Full audit trail** — every artifact is saved locally and optionally posted as a comment to the issue (Jira, GitLab, Bitbucket)
 
 ---
 
-## Implicit Delegation
+## Selective Pipeline
 
-You never need to invoke an agent by name. Just describe what you want:
+Not every task needs all six agents. When you start a KAIROS run, the orchestrator asks you to choose which agents should run — no automatic inference, no hidden defaults.
 
 ```
-YOU:        "Add Stripe payment processing"
+📋 Which agents should run for this task?
+Reply with numbers (e.g. "1 3 4") or paste a KAIROS template block:
 
-KAIROS:     Matches description → calls orchestrator
-ORCHESTR:   Calls pm-agent     → gets requirements JSON
-ORCHESTR:   Calls architect    → gets design JSON
-ORCHESTR:   Calls implementer  → gets code + tests
-ORCHESTR:   Calls code-reviewer → gets quality report
-ORCHESTR:   Calls test-verifier → validates coverage
-ORCHESTR:   Calls release-planner → deployment plan
-ORCHESTR:   Presents everything to you
+1. pm-agent          — Requirements analysis
+2. architect-agent   — System design
+3. implementer-agent — TDD code generation
+4. code-reviewer     — Quality assurance
+5. test-verifier     — Test quality & coverage
+6. release-planner   — Deployment planning
 ```
 
-Claude reads each agent's `description:` field and routes automatically.
+If the issue already contains a `## KAIROS Pipeline` checklist block (placed there by you or a team template), the orchestrator reads it automatically and just asks you to confirm.
+
+Pre-built presets for common task types — Feature, Bug Fix, Hotfix, Refactor, Docs — are available in [Pipeline Templates](./setup/templates).
 
 ---
 
-## File Structure
+## What You Get
+
+A typical KAIROS feature run produces:
+
+- ✅ Production-ready code following your project's patterns
+- ✅ Comprehensive test suite with coverage >80%
+- ✅ Architecture decision record
+- ✅ Code review report (security, performance, standards)
+- ✅ Deployment plan with rollback procedure
+- ✅ Full issue tracker comment trail (Jira / GitLab / Bitbucket)
+
+**Typical economics per feature:**
+
+| Metric | Value |
+|--------|-------|
+| API cost | ~$5–8 |
+| Time saved | 75–80% |
+| Speed improvement | 40–50% faster |
+| ROI | 70–180× |
+
+---
+
+## How Files Are Organized
 
 ```
 agents/
-├── orchestrator.md        ← Main coordinator (claude-opus-4-6)
-├── pm-agent.md            ← Requirement analysis
-├── architect-agent.md     ← System design
-├── implementer-agent.md   ← Code + TDD
-├── code-reviewer.md       ← Quality check
-├── test-verifier.md       ← Test quality
-└── release-planner.md     ← Deployment plan
+├── orchestrator.md        ← Coordinator (claude-opus-4-6)
+├── pm-agent.md            ← Requirements (claude-sonnet-4-6)
+├── architect-agent.md     ← System design (claude-sonnet-4-6)
+├── implementer-agent.md   ← TDD code generation (claude-opus-4-6)
+├── code-reviewer.md       ← Quality review (claude-sonnet-4-6)
+├── test-verifier.md       ← Test quality (claude-sonnet-4-6)
+└── release-planner.md     ← Deployment planning (claude-sonnet-4-6)
 ```
 
-Each `.md` file is a self-contained subagent definition with YAML frontmatter and a markdown prompt. Copy the folder into `.claude/agents/`, `.cursor/agents/`, or `.github/agents/` depending on your tool.
+Each file is a self-contained subagent definition — YAML frontmatter for tool and model configuration, markdown body for the agent prompt. Copy the `agents/` folder into the right directory for your tool and you're ready.
 
 ---
 
-Ready to get started? See [Setup by Tool](./setup/) to configure KAIROS with your preferred IDE, or dive into [The 7 Agents](./agents) to understand what each one does.
+Ready to start? → [Set up KAIROS with your IDE](./setup/)  
+Want the full picture? → [Workflow walkthrough](./workflow) · [The 7 Agents](./agents)
