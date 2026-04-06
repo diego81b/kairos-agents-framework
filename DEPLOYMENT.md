@@ -339,3 +339,75 @@ When deploying to Vercel/Netlify:
 - Vercel will serve from `docs/` folder
 - Documentation will be at root of your site
 
+
+---
+
+## Option 4: Gitbook (Interactive Documentation - Free)
+
+**Best for:** Beautiful interactive documentation, team collaboration
+
+Gitbook syncs directly from your GitHub repo.
+
+### Step 1: Create Gitbook Space
+
+1. Go to gitbook.com
+2. Sign up or log in
+3. Click "Create a space"
+4. Name: KAIROS
+5. Template: Documentation
+
+### Step 2: Connect GitHub Repository
+
+```
+In Gitbook Space:
+1. Settings → Integrations
+2. Click "GitHub"
+3. Authorize GitHub
+4. Select repository: comm-it/kairos
+5. Sync directory: / (root)
+```
+
+### Step 3: Gitbook Will Auto-Sync
+
+Gitbook automatically:
+- Reads your markdown files
+- Creates navigation from SUMMARY.md
+- Updates on every GitHub push
+- Provides search, versioning, analytics
+
+**Result:** Beautiful docs at gitbook.io/kairos
+**Cost:** Free
+**Works with:** Public AND private repos
+**Auto-deploy:** Yes (on push to main)
+
+---
+
+## Four Deployment Options Comparison
+
+| Option | Cost | Time | Private | Auto-Deploy | Features |
+|--------|------|------|---------|-------------|----------|
+| **Vercel** | Free | 5 min | ✅ Yes | ✅ Yes | Fast, Custom domain |
+| **GitHub Pages** | Free* | 10 min | ❌ No | ✅ Yes | Simple, Built-in |
+| **Netlify** | Free | 10 min | ✅ Yes | ✅ Yes | Flexible, Custom domain |
+| **Gitbook** | Free | 10 min | ✅ Yes | ✅ Yes | Beautiful UI, Search, Analytics |
+
+*GitHub Pages free only for public repos
+
+---
+
+## Recommended Strategy
+
+**Best Setup:**
+1. **Vercel** - Main site (kairos.dev) - fast, professional
+2. **Gitbook** - Interactive docs (kairos.gitbook.io) - beautiful, searchable
+3. **GitHub** - Source code - all history, collaboration
+
+**Workflow:**
+```
+Edit markdown in GitHub
+        ↓
+Vercel auto-deploys site
+Gitbook auto-syncs docs
+Both use same source files
+```
+
