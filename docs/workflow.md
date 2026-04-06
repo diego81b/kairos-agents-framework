@@ -62,15 +62,26 @@ User reviews the selected design option and API contracts before any code is wri
 
 ## Phase 3: Implementation (Implementer Agent)
 
+This phase has **two HITL checkpoints** — a plan gate before any file is written, and a code gate after TDD is complete.
+
+**Step 3a — Implementation Plan (no files written yet)**
+- Analyse existing codebase patterns via `grep`
+- Output structured plan: files to create/modify, full test case list, TDD order, dependencies, risks
+
+**Step 3b — TDD Cycle (after plan approval)**
 - Write tests FIRST (RED phase)
 - Implement code to pass tests (GREEN phase)
 - Refactor and verify coverage >80%
 
 _Input: architecture JSON + project profile_
-_Output: code files + test files + coverage report_
+_Output: implementation plan → (approval) → code files + test files + coverage report_
 _Saved to: project paths + `.kairos/<feature_folder>/03-implementation.json`_
 
-::: info HITL checkpoint
+::: info HITL checkpoint — Plan gate
+User reviews the implementation plan (files, test cases, approach) **before any code is written**. Reject at zero cost.
+:::
+
+::: info HITL checkpoint — Code gate
 User reviews generated code and test coverage before the review phase.
 :::
 

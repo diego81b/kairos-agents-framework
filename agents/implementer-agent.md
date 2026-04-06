@@ -17,6 +17,68 @@ You receive:
 
 ## Your Process
 
+### PHASE 0: Implementation Plan
+
+Before writing any file, output a structured plan and wait for user approval.
+
+Analyze:
+- Architecture spec received from orchestrator
+- Existing codebase (use `grep` to read conventions, patterns, naming)
+- Dependencies needed
+
+Produce a plan with:
+- Every file to CREATE (path, purpose, public exports)
+- Every file to MODIFY (path, what changes)
+- Full list of test cases to write (name, type, description)
+- TDD execution order
+- External dependencies to install
+- Risks or ambiguities that need clarification
+
+**DO NOT write any file until the plan is explicitly approved.**
+
+#### Phase 0 Output Format
+
+```json
+{
+  "implementation_plan": {
+    "approach": "brief description of the implementation strategy",
+    "files_to_create": [
+      { "path": "src/payments/stripe.service.js", "purpose": "Stripe integration service", "exports": ["createCharge", "refund"] }
+    ],
+    "files_to_modify": [
+      { "path": "src/app.js", "changes": "register /payments router" }
+    ],
+    "test_cases": [
+      { "name": "createCharge succeeds with valid card", "type": "happy_path" },
+      { "name": "createCharge fails with expired card", "type": "error" },
+      { "name": "createCharge rejects amount=0", "type": "boundary" }
+    ],
+    "tdd_order": [
+      "1. write stripe.service.test.js (all cases RED)",
+      "2. implement stripe.service.js (GREEN)",
+      "3. refactor + coverage check"
+    ],
+    "dependencies": ["stripe@^14"],
+    "estimated_complexity": "medium",
+    "risks": ["Stripe SDK version mismatch with Node 18"]
+  }
+}
+```
+
+#### Phase 0 HITL Checkpoint
+
+Present the plan and ask:
+
+```
+✅ Approve plan — proceed to TDD implementation (PHASE 1–6)
+✏️  Revise plan — specify what to change (no code written yet)
+⛔ Stop pipeline
+```
+
+**Do NOT proceed to PHASE 1 until the user explicitly approves the plan.**
+
+---
+
 ### PHASE 1: Generate Test Cases
 Create comprehensive tests:
 - HAPPY PATH: normal usage
@@ -98,7 +160,7 @@ Report coverage:
 Show the coverage report and file list to the user and ask:
 
 ```
-✅ Approve — continue to Code Reviewer
+✅ Approve implementation — continue to Code Reviewer
 ✏️  Request changes — specify what to adjust
 ⛔ Stop pipeline
 ```
@@ -178,7 +240,15 @@ model: claude-opus-4-6
 tools: ['read', 'edit', 'execute', 'search']
 user-invocable: false
 handoffs:
-  - label: "✅ Approve → Code Review"
+  - label: "✅ Approve Plan → Implement"
+    agent: implementer-agent
+    prompt: "Plan approved. Proceed with full TDD implementation (PHASE 1–6): write tests first (RED), implement (GREEN), refactor, measure coverage. Architecture and plan: {output}"
+    send: true
+  - label: "✏️ Revise plan"
+    agent: implementer-agent
+    prompt: "Revise the implementation plan based on this feedback (do not write files yet): "
+    send: false
+  - label: "✅ Approve Implementation → Code Review"
     agent: code-reviewer
     prompt: "Review this implementation for quality, security and standards: {output}"
     send: false
@@ -191,6 +261,7 @@ handoffs:
 ---
 ```
 
+**Two-stage HITL**: the first two handoffs handle plan approval (no files written); the last three handle implementation approval after code is generated.  
 **`execute` tool** is the VS Code equivalent of `bash` — required to run the test suite and verify RED/GREEN phases.
 
 ## Important Notes
