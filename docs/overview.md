@@ -73,7 +73,7 @@ Presents to user for review
 This means:
 - **No surprises** — you see every decision before code is written
 - **Full control** — you can steer direction at any phase
-- **Auditability** — every phase output is saved to `.kairos/` and optionally posted as a GitHub issue comment
+- **Auditability** — every phase output is saved to `.kairos/` and optionally posted as an issue tracker comment (Jira, GitLab, or Bitbucket)
 
 ---
 

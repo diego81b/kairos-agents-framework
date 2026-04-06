@@ -109,14 +109,89 @@ Do NOT pass output to the next phase until the user explicitly approves.
 - Write code files directly to their target paths in the project
 - Save the coverage + TDD summary to `.kairos/<feature_folder>/03-implementation.json`
 
-> `feature_folder` is provided by the orchestrator in the context (e.g. `issue-42_add-stripe-payments` or `feature_add-stripe-payments`).
+> `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
 
-### 3. GitHub Issue Comment (optional)
-If the user provides a GitHub issue number, post a summary:
+### 3. Issue Tracker Comment (optional)
+If the user provides an issue reference, post the output after approval.
 
+**Jira** (`jira-cli`):
 ```bash
-gh issue comment <issue-number> --body "## Implementation\n\n$(cat .kairos/<feature_folder>/03-implementation.json)"
+jira issue comment add PROJ-42 "## Implementation\n\n$(cat .kairos/<feature_folder>/03-implementation.json)"
 ```
+
+**GitLab** (`glab`):
+```bash
+glab issue note <issue-id> --body "## Implementation\n\n$(cat .kairos/<feature_folder>/03-implementation.json)"
+```
+
+**Bitbucket** (REST API):
+```bash
+curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issues/<id>/comments" \
+  -u "${BITBUCKET_USER}:${BITBUCKET_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d "{\"content\":{\"raw\":\"## Implementation\"}}"
+```
+
+## Platform Configuration
+
+The implementer is the most resource-intensive agent — TDD cycle, code generation, test execution. Always use `claude-opus-4-6`.
+
+### Claude Code
+
+```yaml
+---
+name: implementer-agent
+description: "Generates code and tests using TDD. Use after architecture design."
+model: claude-opus-4-6
+tools: [read, write, bash, grep]
+---
+```
+
+**`bash` tool** is mandatory — without it the TDD RED/GREEN cycle cannot be verified (cannot run `npm test`, `pytest`, etc.).  
+**`grep` tool** is critical for reading existing code patterns before generating new files.  
+**MCP** (optional):
+- `context7`: fetches up-to-date library documentation — prevents hallucinating outdated API signatures
+- `sequential-thinking`: enforces step-by-step TDD reasoning (write test → RED → implement → GREEN → refactor)
+
+### Cursor
+
+```yaml
+---
+name: implementer-agent
+description: "Generates code and tests using TDD. Use after architecture design."
+model: claude-opus-4-6
+tools: [read, write, bash, grep]
+readonly: false
+is_background: false
+---
+```
+
+Never set `readonly: true` — the implementer must write source and test files. Never set `is_background: true` — TDD requires interactive feedback between test runs and implementation.
+
+### VS Code
+
+```yaml
+---
+name: implementer-agent
+description: "Generates code and tests using TDD. Use after architecture design."
+model: claude-opus-4-6
+tools: ['read', 'edit', 'execute', 'search']
+user-invocable: false
+handoffs:
+  - label: "✅ Approve → Code Review"
+    agent: code-reviewer
+    prompt: "Review this implementation for quality, security and standards: {output}"
+    send: false
+  - label: "✏️ Request changes"
+    agent: implementer-agent
+    prompt: "Fix the implementation based on this feedback: "
+    send: false
+  - label: "⛔ Stop pipeline"
+    agent: ""
+---
+```
+
+**`execute` tool** is the VS Code equivalent of `bash` — required to run the test suite and verify RED/GREEN phases.
 
 ## Important Notes
 - Follow project's conventions EXACTLY

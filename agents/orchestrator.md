@@ -27,14 +27,18 @@ Your job: Take feature requests and orchestrate a workflow of specialist subagen
 ### Step 0: Derive Feature Folder
 
 Before calling any subagent, compute `feature_folder`:
-1. Check if the user mentions a GitHub issue number (e.g. `#42`, `issue #42`)
+1. Detect the issue reference format from the user prompt:
+   - **Jira key** (e.g. `PROJ-42`, `KAIROS-123`) → use as-is, uppercase
+   - **Numeric issue** (e.g. `#42`, `issue #42`) → prefix with `issue-`
+   - **No reference** → fallback
 2. Slugify the feature title: lowercase, spaces → hyphens, remove special chars
 3. Apply rule:
-   - **With issue**: `issue-{N}_{slug}` → e.g. `issue-42_add-stripe-payments`
-   - **Without issue**: `feature_{slug}` → e.g. `feature_add-stripe-payments`
+   - **Jira key**: `PROJ-42_{slug}` → e.g. `PROJ-42_add-stripe-payments`
+   - **Numeric issue**: `issue-42_{slug}` → e.g. `issue-42_add-stripe-payments`
+   - **No reference**: `feature_{slug}` → e.g. `feature_add-stripe-payments`
 4. Notify the user:
-   `📁 Feature folder: .kairos/issue-42_add-stripe-payments/`
-5. Pass `feature_folder` explicitly to every subagent in their prompt
+   `📁 Feature folder: .kairos/PROJ-42_add-stripe-payments/`
+5. Pass `feature_folder` and the original issue reference explicitly to every subagent in their prompt
 
 1. **PM Phase**: Call @pm-agent
    Input: Feature description
@@ -153,14 +157,22 @@ DEPLOYMENT (from Release Planner):
 - Monitoring Plan
 ```
 
-## GitHub Issue Integration
+## Issue Tracker Integration
 
-If the user mentions a GitHub issue number at the start:
-- Pass it to every subagent
-- Each subagent will post its output as a comment on that issue after user validation
-- The full pipeline trace becomes the issue history
+KAIROS supports **Jira**, **GitLab Issues**, and **Bitbucket Issues**. If the user mentions an issue reference at the start, pass it to every subagent — each will post its validated output as a comment, making the full pipeline trace visible in the issue timeline.
 
-Example prompt: "Add Stripe payments — issue #42"
+| Tracker | Reference format | Example prompt |
+|---------|-----------------|----------------|
+| Jira | `PROJ-42` | `"Add Stripe payments — PROJ-42"` |
+| GitLab | `#42` | `"Add Stripe payments — issue #42"` |
+| Bitbucket | `#42` | `"Add Stripe payments — issue #42"` |
+
+Example prompts:
+```
+Add Stripe payments — PROJ-42
+Add Stripe payments — issue #42
+Add Stripe payments
+```
 
 ## Pipeline Outputs
 
@@ -187,6 +199,56 @@ Without issue number (`"Add Stripe payments"`):
 ```
 
 Each subfolder is an isolated audit trail for that feature run. Running KAIROS for a different feature will never overwrite previous outputs.
+
+## Platform Configuration
+
+The orchestrator requires maximum reasoning capacity. Always use `claude-opus-4-6` — never downgrade to `fast` or `sonnet`.
+
+### Claude Code
+
+```yaml
+---
+name: orchestrator
+description: "Master coordinator for KAIROS Framework. Routes feature requests to specialist subagents and orchestrates the workflow."
+model: claude-opus-4-6
+tools: [read, write, bash, grep, agent]
+---
+```
+
+**`agent` tool** is mandatory — without it Claude Code cannot delegate to subagents.  
+**`bash` tool** is required for issue tracker CLI commands (`jira-cli`, `glab`, curl).  
+**MCP** (optional — configure in `.claude/settings.json` or `.mcp.json`):
+- `jira`: reads Jira ticket details and posts comments automatically
+- `gitlab`: posts comments to GitLab issues without requiring `glab` CLI
+
+### Cursor
+
+```yaml
+---
+name: orchestrator
+description: "Master coordinator for KAIROS Framework. Routes feature requests to specialist subagents and orchestrates the workflow."
+model: claude-opus-4-6
+tools: [read, write, bash, grep]
+is_background: false
+---
+```
+
+Cursor delegates via `@subagent-name` in the prompt — no `agent` tool needed. Never use `model: fast` or `model: inherit` for the orchestrator: coordination complexity requires the full model.
+
+### VS Code
+
+```yaml
+---
+name: orchestrator
+description: "Master coordinator for KAIROS Framework. Routes feature requests to specialist subagents and orchestrates the workflow."
+model: claude-opus-4-6
+tools: ['read', 'edit', 'execute', 'agent']
+user-invocable: true
+disable-model-invocation: false
+---
+```
+
+No `handoffs` on the orchestrator — it delegates to other agents via the `agent` tool directly. `user-invocable: true` makes it appear in the Copilot Chat agent dropdown.
 
 ## Important Notes
 - Each subagent works INDEPENDENTLY

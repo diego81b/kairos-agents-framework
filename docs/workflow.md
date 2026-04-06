@@ -125,15 +125,29 @@ User approves the deployment plan. This is the final checkpoint â€” approva
 
 ---
 
-## GitHub Issue Integration
+## Issue Tracker Integration
 
-If you provide a GitHub issue number at the start of the request (e.g. `"Add Stripe payments â€” issue #42"`), each agent posts its validated output as a comment on that issue. The full pipeline trace becomes the issue history.
+KAIROS supports **Jira**, **GitLab Issues**, and **Bitbucket Issues**. Provide an issue reference at the start of your request — each agent will post its validated output as a comment, building the full pipeline trace in the ticket history.
+
+| Tracker | Reference format | Example |
+|---------|-----------------|--------|
+| Jira | `PROJ-42` | `"Add Stripe payments — PROJ-42"` |
+| GitLab | `#42` | `"Add Stripe payments — issue #42"` |
+| Bitbucket | `#42` | `"Add Stripe payments — issue #42"` |
 
 ```bash
-# What each agent runs after your approval:
-gh issue comment 42 --body "## PM Analysis\n\n..."
-gh issue comment 42 --body "## Architecture Design\n\n..."
-# ... and so on for each phase
+# Jira (jira-cli):
+jira issue comment add PROJ-42 "## PM Analysis\n\n..."
+jira issue comment add PROJ-42 "## Architecture Design\n\n..."
+
+# GitLab (glab):
+glab issue note 42 --body "## PM Analysis\n\n..."
+
+# Bitbucket (REST API):
+curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issues/42/comments" \
+  -u "${BITBUCKET_USER}:${BITBUCKET_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{"content":{"raw":"## PM Analysis\n\n..."}}"
 ```
 
 ---

@@ -106,14 +106,85 @@ Do NOT pass output to the next phase until the user explicitly approves.
 ### 2. Write to Project
 Save output to `.kairos/<feature_folder>/01-requirements.json`.
 
-> `feature_folder` is provided by the orchestrator in the context (e.g. `issue-42_add-stripe-payments` or `feature_add-stripe-payments`).
+> `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
 
-### 3. GitHub Issue Comment (optional)
-If the user provides a GitHub issue number, format the output as markdown and post it:
+### 3. Issue Tracker Comment (optional)
+If the user provides an issue reference, post the output after approval.
 
+**Jira** (`jira-cli`):
 ```bash
-gh issue comment <issue-number> --body "## PM Analysis\n\n$(cat .kairos/<feature_folder>/01-requirements.json)"
+jira issue comment add PROJ-42 "## PM Analysis\n\n$(cat .kairos/<feature_folder>/01-requirements.json)"
 ```
+
+**GitLab** (`glab`):
+```bash
+glab issue note <issue-id> --body "## PM Analysis\n\n$(cat .kairos/<feature_folder>/01-requirements.json)"
+```
+
+**Bitbucket** (REST API):
+```bash
+curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issues/<id>/comments" \
+  -u "${BITBUCKET_USER}:${BITBUCKET_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d "{\"content\":{\"raw\":\"## PM Analysis\"}}"
+```
+
+## Platform Configuration
+
+### Claude Code
+
+```yaml
+---
+name: pm-agent
+description: "Analyzes feature requirements and elicits constraints. Use when you have a vague feature request that needs structured analysis."
+model: claude-sonnet-4-6
+tools: [read, write]
+---
+```
+
+**Model**: Sonnet is sufficient for requirements analysis. Upgrade to `claude-opus-4-6` for enterprise features with many competing constraints (compliance, multi-region, strict SLAs).  
+**MCP** (optional):
+- `jira`: reads Jira ticket description and acceptance criteria automatically when a Jira key is passed
+- `gitlab`: reads GitLab issue body when a GitLab issue number is passed
+
+### Cursor
+
+```yaml
+---
+name: pm-agent
+description: "Analyzes feature requirements and elicits constraints. Use when you have a vague feature request that needs structured analysis."
+model: claude-sonnet-4-6
+tools: [read, write]
+readonly: false
+---
+```
+
+Use `model: fast` if you just need quick requirement sketches and cost matters. Stick with `claude-sonnet-4-6` for thorough constraint elicitation.
+
+### VS Code
+
+```yaml
+---
+name: pm-agent
+description: "Analyzes feature requirements and elicits constraints. Use when you have a vague feature request that needs structured analysis."
+model: claude-sonnet-4-6
+tools: ['read', 'edit']
+user-invocable: false
+handoffs:
+  - label: "✅ Approve → Architecture"
+    agent: architect-agent
+    prompt: "Design the architecture based on these requirements: {output}"
+    send: false
+  - label: "✏️ Request changes"
+    agent: pm-agent
+    prompt: "Revise the requirements based on this feedback: "
+    send: false
+  - label: "⛔ Stop pipeline"
+    agent: ""
+---
+```
+
+`user-invocable: false` — the PM Agent should only be invoked by the orchestrator, not directly by the user.
 
 ## Important Notes
 - You have FRESH context (no parent conversation)

@@ -6,7 +6,7 @@ Claude Code is the **recommended tool** for KAIROS. It is the only tool with nat
 
 - [Claude Code](https://claude.ai/code) installed (CLI or desktop)
 - A project you want to develop with KAIROS
-- Git (optional, for `gh issue comment` integration)
+- Git (optional, for issue tracker integration — Jira, GitLab, Bitbucket)
 
 ## Step 1 — Copy agents to `.claude/agents/`
 
@@ -105,21 +105,35 @@ After each approved phase, a JSON file is written:
 
 These files are the audit trail of the session. You can commit them to git to track what was decided and why.
 
-## Optional — GitHub Issue integration
+## Optional — Issue tracker integration
 
-If you track work in GitHub Issues, add the issue number at the start:
+KAIROS supports **Jira**, **GitLab Issues**, and **Bitbucket Issues**. Add the issue reference at the start of your prompt:
 
 ```
+# Jira
+Help me implement PROJ-42 using the KAIROS framework
+
+# GitLab / Bitbucket
 Help me implement issue #42 using the KAIROS framework
 ```
 
-Each agent will post its validated output as a comment on the issue:
+Each agent posts its validated output as a comment after your approval:
 
 ```bash
-gh issue comment 42 --body "$(cat .kairos/01-requirements.json)"
+# Jira (jira-cli — https://github.com/ankitpokhrel/jira-cli)
+jira issue comment add PROJ-42 "$(cat .kairos/PROJ-42_my-feature/01-requirements.json)"
+
+# GitLab (glab CLI — https://gitlab.com/gitlab-org/cli)
+glab issue note 42 --body "$(cat .kairos/issue-42_my-feature/01-requirements.json)"
+
+# Bitbucket (REST API)
+curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issues/42/comments" \
+  -u "${BITBUCKET_USER}:${BITBUCKET_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{"content":{"raw":"..."}}"
 ```
 
-This requires `gh` CLI authenticated (`gh auth login`).
+Requires the respective CLI authenticated: `jira init`, `glab auth login`, or a Bitbucket app password in `BITBUCKET_TOKEN`.
 
 ## Troubleshooting
 

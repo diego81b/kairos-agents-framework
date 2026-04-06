@@ -61,14 +61,84 @@ Do NOT pass output to the next phase until the user explicitly approves.
 ### 2. Write to Project
 Save output to `.kairos/<feature_folder>/05-test-verification.json`.
 
-> `feature_folder` is provided by the orchestrator in the context (e.g. `issue-42_add-stripe-payments` or `feature_add-stripe-payments`).
+> `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
 
-### 3. GitHub Issue Comment (optional)
-If the user provides a GitHub issue number, post the report:
+### 3. Issue Tracker Comment (optional)
+If the user provides an issue reference, post the output after approval.
 
+**Jira** (`jira-cli`):
 ```bash
-gh issue comment <issue-number> --body "## Test Verification\n\n$(cat .kairos/<feature_folder>/05-test-verification.json)"
+jira issue comment add PROJ-42 "## Test Verification\n\n$(cat .kairos/<feature_folder>/05-test-verification.json)"
 ```
+
+**GitLab** (`glab`):
+```bash
+glab issue note <issue-id> --body "## Test Verification\n\n$(cat .kairos/<feature_folder>/05-test-verification.json)"
+```
+
+**Bitbucket** (REST API):
+```bash
+curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issues/<id>/comments" \
+  -u "${BITBUCKET_USER}:${BITBUCKET_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d "{\"content\":{\"raw\":\"## Test Verification\"}}"
+```
+
+## Platform Configuration
+
+### Claude Code
+
+```yaml
+---
+name: test-verifier
+description: "Verifies test quality and coverage adequacy."
+model: claude-sonnet-4-6
+tools: [read, write, bash, grep]
+---
+```
+
+**`bash` tool** is recommended — allows running `jest --coverage`, `pytest --cov`, or `go test -cover` to produce a live coverage report rather than relying on static file inspection.  
+**`write` tool** is required to save `05-test-verification.json` — currently missing from the default frontmatter, add it.  
+**`grep` tool** helps locate untested code paths.
+
+### Cursor
+
+```yaml
+---
+name: test-verifier
+description: "Verifies test quality and coverage adequacy."
+model: claude-sonnet-4-6
+tools: [read, write, bash, grep]
+readonly: false
+---
+```
+
+With `bash` available, instruct the agent to run the project's coverage command and parse the output directly rather than reading pre-generated reports.
+
+### VS Code
+
+```yaml
+---
+name: test-verifier
+description: "Verifies test quality and coverage adequacy."
+model: claude-sonnet-4-6
+tools: ['read', 'edit', 'execute', 'search']
+user-invocable: false
+handoffs:
+  - label: "✅ Approve → Release Planning"
+    agent: release-planner
+    prompt: "Create the deployment plan for this verified implementation: {output}"
+    send: false
+  - label: "✏️ Send back to Implementer"
+    agent: implementer-agent
+    prompt: "Increase test coverage for these gaps: {output}"
+    send: false
+  - label: "⛔ Stop pipeline"
+    agent: ""
+---
+```
+
+**`execute`** maps to `bash` — run the coverage CLI directly from the agent to get a live report.
 
 ## Important Notes
 - Focus on quality not just coverage

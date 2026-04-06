@@ -97,14 +97,86 @@ Do NOT pass output to the next phase until the user explicitly approves.
 ### 2. Write to Project
 Save output to `.kairos/<feature_folder>/02-architecture.json`.
 
-> `feature_folder` is provided by the orchestrator in the context (e.g. `issue-42_add-stripe-payments` or `feature_add-stripe-payments`).
+> `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
 
-### 3. GitHub Issue Comment (optional)
-If the user provides a GitHub issue number, format the output as markdown and post it:
+### 3. Issue Tracker Comment (optional)
+If the user provides an issue reference, post the output after approval.
 
+**Jira** (`jira-cli`):
 ```bash
-gh issue comment <issue-number> --body "## Architecture Design\n\n$(cat .kairos/<feature_folder>/02-architecture.json)"
+jira issue comment add PROJ-42 "## Architecture Design\n\n$(cat .kairos/<feature_folder>/02-architecture.json)"
 ```
+
+**GitLab** (`glab`):
+```bash
+glab issue note <issue-id> --body "## Architecture Design\n\n$(cat .kairos/<feature_folder>/02-architecture.json)"
+```
+
+**Bitbucket** (REST API):
+```bash
+curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issues/<id>/comments" \
+  -u "${BITBUCKET_USER}:${BITBUCKET_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d "{\"content\":{\"raw\":\"## Architecture Design\"}}"
+```
+
+## Platform Configuration
+
+### Claude Code
+
+```yaml
+---
+name: architect-agent
+description: "Designs system architecture based on requirements and constraints. Use after PM analysis."
+model: claude-sonnet-4-6
+tools: [read, write, grep]
+---
+```
+
+**Model**: Sonnet covers most architectures. Upgrade to `claude-opus-4-6` for distributed systems, complex multi-database designs, or non-trivial scaling requirements.  
+**`grep` tool** is critical — the architect must scan existing code to understand current patterns and avoid proposing contradictory designs.  
+**MCP** (optional):
+- `sequential-thinking`: enforces structured multi-step reasoning for complex design decisions
+- `context7`: provides up-to-date library documentation for technology choices (prevents recommending outdated APIs)
+
+### Cursor
+
+```yaml
+---
+name: architect-agent
+description: "Designs system architecture based on requirements and constraints. Use after PM analysis."
+model: claude-sonnet-4-6
+tools: [read, write, grep]
+readonly: false
+---
+```
+
+For large codebases, add `is_background: false` explicitly to ensure the architect has the full context window available for scanning existing patterns.
+
+### VS Code
+
+```yaml
+---
+name: architect-agent
+description: "Designs system architecture based on requirements and constraints. Use after PM analysis."
+model: claude-sonnet-4-6
+tools: ['read', 'edit', 'search']
+user-invocable: false
+handoffs:
+  - label: "✅ Approve → Implementation"
+    agent: implementer-agent
+    prompt: "Implement using TDD based on this architecture: {output}"
+    send: false
+  - label: "✏️ Request changes"
+    agent: architect-agent
+    prompt: "Revise the architecture based on this feedback: "
+    send: false
+  - label: "⛔ Stop pipeline"
+    agent: ""
+---
+```
+
+`search` maps to `grep` — essential for exploring the codebase before proposing a design.
 
 ## Important Notes
 - You have FRESH context

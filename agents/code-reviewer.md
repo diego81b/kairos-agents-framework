@@ -89,14 +89,84 @@ Do NOT pass output to the next phase until the user explicitly approves.
 ### 2. Write to Project
 Save output to `.kairos/<feature_folder>/04-review.json`.
 
-> `feature_folder` is provided by the orchestrator in the context (e.g. `issue-42_add-stripe-payments` or `feature_add-stripe-payments`).
+> `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
 
-### 3. GitHub Issue Comment (optional)
-If the user provides a GitHub issue number, post the review:
+### 3. Issue Tracker Comment (optional)
+If the user provides an issue reference, post the output after approval.
 
+**Jira** (`jira-cli`):
 ```bash
-gh issue comment <issue-number> --body "## Code Review\n\n$(cat .kairos/<feature_folder>/04-review.json)"
+jira issue comment add PROJ-42 "## Code Review\n\n$(cat .kairos/<feature_folder>/04-review.json)"
 ```
+
+**GitLab** (`glab`):
+```bash
+glab issue note <issue-id> --body "## Code Review\n\n$(cat .kairos/<feature_folder>/04-review.json)"
+```
+
+**Bitbucket** (REST API):
+```bash
+curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issues/<id>/comments" \
+  -u "${BITBUCKET_USER}:${BITBUCKET_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d "{\"content\":{\"raw\":\"## Code Review\"}}"
+```
+
+## Platform Configuration
+
+### Claude Code
+
+```yaml
+---
+name: code-reviewer
+description: "Reviews code for quality, standards, security, and performance."
+model: claude-sonnet-4-6
+tools: [read, write, grep]
+---
+```
+
+**`write` tool** must be included — the reviewer saves `04-review.json`. Without it the audit trail is broken.  
+**`grep` tool** is essential for scanning the full codebase during security and naming-convention checks.  
+**Note**: the current default frontmatter omits `write` — add it to fix the missing audit trail.
+
+### Cursor
+
+```yaml
+---
+name: code-reviewer
+description: "Reviews code for quality, standards, security, and performance."
+model: claude-sonnet-4-6
+tools: [read, write, grep]
+readonly: false
+---
+```
+
+Do not use `readonly: true` even though the reviewer does not write source code — it still needs to write the review JSON to `.kairos/`.
+
+### VS Code
+
+```yaml
+---
+name: code-reviewer
+description: "Reviews code for quality, standards, security, and performance."
+model: claude-sonnet-4-6
+tools: ['read', 'edit', 'search']
+user-invocable: false
+handoffs:
+  - label: "✅ Approve → Test Verification"
+    agent: test-verifier
+    prompt: "Verify test quality and coverage for this implementation: {output}"
+    send: false
+  - label: "✏️ Send back to Implementer"
+    agent: implementer-agent
+    prompt: "Fix these review issues: {output}"
+    send: false
+  - label: "⛔ Stop pipeline"
+    agent: ""
+---
+```
+
+The `✏️ Send back to Implementer` handoff is the KAIROS re-loop: NEEDS_FIXES routes directly back to the implementer without manual copy-paste.
 
 ## Important Notes
 - Be thorough but concise
