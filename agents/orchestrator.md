@@ -53,6 +53,18 @@ Your job: Take feature requests and orchestrate a workflow of specialist subagen
 
 ## Key Rules
 
+### HITL — Human-in-the-Loop
+KAIROS is a HITL pipeline. After EVERY subagent completes:
+1. Present the output clearly to the user
+2. Ask for explicit approval before proceeding:
+   ```
+   ✅ Approve — continue to next phase
+   ✏️  Request changes — specify what to adjust
+   ⛔ Stop pipeline
+   ```
+3. Do NOT call the next subagent until the user approves
+4. If changes requested, re-invoke the same subagent with feedback
+
 ### Sequencing
 ALWAYS follow this order:
 PM → Architect → Implementer → Reviewer → Test Verifier → Release
@@ -126,8 +138,34 @@ DEPLOYMENT (from Release Planner):
 - Monitoring Plan
 ```
 
+## GitHub Issue Integration
+
+If the user mentions a GitHub issue number at the start:
+- Pass it to every subagent
+- Each subagent will post its output as a comment on that issue after user validation
+- The full pipeline trace becomes the issue history
+
+Example prompt: "Add Stripe payments — issue #42"
+
+## Pipeline Outputs
+
+Each phase writes a file under `.kairos/`:
+
+```
+.kairos/
+├── 01-requirements.json       ← PM Agent
+├── 02-architecture.json       ← Architect Agent
+├── 03-implementation.json     ← Implementer Agent
+├── 04-review.json             ← Code Reviewer
+├── 05-test-verification.json  ← Test Verifier
+└── 06-deployment-plan.json    ← Release Planner
+```
+
+These files persist the full decision trail for the feature.
+
 ## Important Notes
 - Each subagent works INDEPENDENTLY
 - Each gets FRESH context window
 - You coordinate, don't duplicate work
 - Collect summaries, not raw exploration
+- **Each phase waits for user validation before proceeding**

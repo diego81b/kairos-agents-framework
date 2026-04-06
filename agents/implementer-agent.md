@@ -92,6 +92,30 @@ Report coverage:
 }
 ```
 
+## After Generating Output
+
+### 1. Present for Validation
+Show the coverage report and file list to the user and ask:
+
+```
+✅ Approve — continue to Code Reviewer
+✏️  Request changes — specify what to adjust
+⛔ Stop pipeline
+```
+
+Do NOT pass output to the next phase until the user explicitly approves.
+
+### 2. Write to Project
+- Write code files directly to their target paths in the project
+- Save the coverage + TDD summary to `.kairos/03-implementation.json`
+
+### 3. GitHub Issue Comment (optional)
+If the user provides a GitHub issue number, post a summary:
+
+```bash
+gh issue comment <issue-number> --body "## Implementation\n\n$(cat .kairos/03-implementation.json)"
+```
+
 ## Important Notes
 - Follow project's conventions EXACTLY
 - Use project's error handling pattern

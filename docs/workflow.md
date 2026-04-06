@@ -1,73 +1,184 @@
-# Development Workflow
+﻿# Development Workflow
 
-KAIROS runs a structured 6-phase pipeline for every feature. Each phase is handled by a specialist agent and produces a concrete output before the next phase begins.
+KAIROS is a **Human-in-the-Loop (HITL)** pipeline. Every phase produces a concrete artifact that the user validates before the next phase begins. The AI does the work; the human controls the gate.
+
+```
+PM Agent â†’ [HITL] â†’ Architect â†’ [HITL] â†’ Implementer â†’ [HITL]
+                                                             â†“
+Release Planner â† [HITL] â† Test Verifier â† [HITL] â† Code Reviewer
+```
+
+At each HITL checkpoint the user can:
+- âœ… **Approve** â€” continue to the next phase
+- âœï¸ **Request changes** â€” agent revises and re-presents
+- â›” **Stop** â€” abort the pipeline
+
+No steps are skipped. No order is changed.
 
 ---
 
 ## Phase 0: Context Extraction
 
-- Developer provides feature request
-- System reads agent files
-- Orchestrator analyzes scope and routes to the right agents
+- Developer provides a natural-language feature request
+- System reads the `agents/` files
+- Orchestrator analyzes scope and selects the pipeline
+
+_Input: free-text feature request_
+_Output: routed pipeline start_
 
 ---
 
 ## Phase 1: Requirements Analysis (PM Agent)
 
-- Break down requirements
-- Identify edge cases
-- Create acceptance criteria
-- **Output:** Detailed specification
+- Break down the feature into scope, constraints, and risks
+- Identify edge cases and integration points
+- Define acceptance criteria
+
+_Input: feature description + project context_
+_Output: structured JSON â€” scope, constraints, risks, success criteria_
+_Saved to: `.kairos/01-requirements.json`_
+
+::: info HITL checkpoint
+User reviews requirements, constraints and risks before any design work begins.
+:::
 
 ---
 
 ## Phase 2: System Design (Architect Agent)
 
-- Design database schema
-- Plan API contracts
-- Define error handling patterns
-- **Output:** Architecture document
+- Propose 3 design options, recommend one
+- Design database schema and API contracts
+- Define error handling and integration patterns
+
+_Input: PM analysis JSON_
+_Output: architecture JSON â€” selected option, tech choices, DB changes, API contracts_
+_Saved to: `.kairos/02-architecture.json`_
+
+::: info HITL checkpoint
+User reviews the selected design option and API contracts before any code is written.
+:::
 
 ---
 
 ## Phase 3: Implementation (Implementer Agent)
 
-- Write tests FIRST (TDD)
-- Implement code to pass tests
-- Apply team patterns
-- **Output:** Code + unit tests
+- Write tests FIRST (RED phase)
+- Implement code to pass tests (GREEN phase)
+- Refactor and verify coverage >80%
+
+_Input: architecture JSON + project profile_
+_Output: code files + test files + coverage report_
+_Saved to: project paths + `.kairos/03-implementation.json`_
+
+::: info HITL checkpoint
+User reviews generated code and test coverage before the review phase.
+:::
 
 ---
 
 ## Phase 4: Code Review (Code Reviewer)
 
-- Check code standards
-- Verify pattern compliance
-- Review architecture alignment
-- **Output:** Quality report + feedback
+- Check standards, naming, file structure
+- Verify security (no hardcoded secrets, input validation, auth checks)
+- Verify architecture and API contract compliance
+- Check performance (N+1 queries, memory leaks)
+
+_Input: generated code + test files_
+_Output: status READY or NEEDS\_FIXES + issues list with severity_
+_Saved to: `.kairos/04-review.json`_
+
+::: info HITL checkpoint
+User reviews quality report. NEEDS\_FIXES sends the issue list back to the Implementer.
+:::
 
 ---
 
 ## Phase 5: Test Verification (Test Verifier)
 
-- Analyze test quality
-- Verify coverage >80%
-- Check assertion quality
-- **Output:** Coverage report
+- Verify test comprehensiveness (edge cases, error scenarios)
+- Check coverage adequacy (>80% required)
+- Assess assertion quality
+
+_Input: test code + coverage report_
+_Output: coverage status PASS/FAIL + quality assessment + gaps_
+_Saved to: `.kairos/05-test-verification.json`_
+
+::: info HITL checkpoint
+User confirms coverage is adequate. FAIL sends gap list back to the Implementer.
+:::
 
 ---
 
 ## Phase 6: Deployment Planning (Release Planner)
 
-- Plan deployment steps
-- Create rollback procedure
-- Identify risks
-- **Output:** Deployment checklist
+- Define deployment steps (pre-checks â†’ staging â†’ canary 10% â†’ full rollout)
+- Create rollback strategy with estimated time
+- Define monitoring metrics and alert thresholds
+
+_Input: verified code + architecture + identified risks_
+_Output: deployment plan JSON â€” steps, risk mitigation, rollback, monitoring_
+_Saved to: `.kairos/06-deployment-plan.json`_
+
+::: info HITL checkpoint
+User approves the deployment plan. This is the final checkpoint â€” approval closes the KAIROS run.
+:::
 
 ---
 
-::: tip Final Output
-Every KAIROS run produces:
+## GitHub Issue Integration
+
+If you provide a GitHub issue number at the start of the request (e.g. `"Add Stripe payments â€” issue #42"`), each agent posts its validated output as a comment on that issue. The full pipeline trace becomes the issue history.
+
+```bash
+# What each agent runs after your approval:
+gh issue comment 42 --body "## PM Analysis\n\n..."
+gh issue comment 42 --body "## Architecture Design\n\n..."
+# ... and so on for each phase
+```
+
+---
+
+## Error Handling
+
+If any agent reports issues during its phase, the Orchestrator:
+
+1. Flags the problem to the user
+2. Asks whether to retry, skip, or abort the step
+3. Provides recommendations based on severity
+4. Continues to the next step when appropriate
+
+---
+
+## Final Output
+
+After all phases complete, the Orchestrator presents a consolidated summary:
+
+```
+ANALYSIS (from PM Agent):
+  - Scope, Constraints, Risks, Success Criteria
+
+ARCHITECTURE (from Architect Agent):
+  - Design Option Selected, Technology Choices
+  - Integration Points, Database Changes, API Contracts
+
+IMPLEMENTATION (from Implementer Agent):
+  - Code Files Generated, Test Files Generated
+  - Coverage Report, TDD Verification
+
+QUALITY (from Code Reviewer):
+  - Standards Compliance, Security Check
+  - Performance Analysis, Issues Found (if any)
+
+TEST QUALITY (from Test Verifier):
+  - Coverage Status, Test Quality Assessment
+  - Missing Coverage (if any)
+
+DEPLOYMENT (from Release Planner):
+  - Deployment Steps, Risk Mitigation
+  - Rollback Strategy, Monitoring Plan
+```
+
+::: tip Every KAIROS run produces
 - Production-ready code
 - Comprehensive test suite (>80% coverage)
 - Quality assurance report

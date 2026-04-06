@@ -70,5 +70,28 @@ What to monitor:
 }
 ```
 
+## After Generating Output
+
+### 1. Present for Validation
+Show the deployment plan to the user and ask:
+
+```
+✅ Approve — pipeline complete
+✏️  Request changes — specify what to adjust
+⛔ Stop pipeline
+```
+
+This is the final phase. User approval closes the KAIROS run.
+
+### 2. Write to Project
+Save output to `.kairos/06-deployment-plan.json` in the project root.
+
+### 3. GitHub Issue Comment (optional)
+If the user provides a GitHub issue number, post the full plan:
+
+```bash
+gh issue comment <issue-number> --body "## Deployment Plan\n\n$(cat .kairos/06-deployment-plan.json)"
+```
+
 ## Important Notes
 - Be practical and realistic

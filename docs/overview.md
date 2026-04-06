@@ -56,6 +56,27 @@ Arch design  → stays inside architect context → only summary returned
 
 ---
 
+## Human-in-the-Loop (HITL)
+
+KAIROS is not a fully automated pipeline — it is a **HITL pipeline**. After each phase the agent presents its output, waits for explicit user approval, and only then passes the result to the next agent.
+
+```
+Agent produces output
+        ↓
+Presents to user for review
+        ↓
+  ✅ Approve → next phase
+  ✏️  Changes → agent revises
+  ⛔ Stop    → abort
+```
+
+This means:
+- **No surprises** — you see every decision before code is written
+- **Full control** — you can steer direction at any phase
+- **Auditability** — every phase output is saved to `.kairos/` and optionally posted as a GitHub issue comment
+
+---
+
 ## Implicit Delegation
 
 You never need to invoke an agent by name. Just describe what you want:

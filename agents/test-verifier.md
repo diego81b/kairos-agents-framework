@@ -45,5 +45,28 @@ You are a Test Quality specialist.
 }
 ```
 
+## After Generating Output
+
+### 1. Present for Validation
+Show the verification report to the user and ask:
+
+```
+✅ Approve — continue to Release Planner
+✏️  Request fixes — send back to Implementer with gaps
+⛔ Stop pipeline
+```
+
+Do NOT pass output to the next phase until the user explicitly approves.
+
+### 2. Write to Project
+Save output to `.kairos/05-test-verification.json` in the project root.
+
+### 3. GitHub Issue Comment (optional)
+If the user provides a GitHub issue number, post the report:
+
+```bash
+gh issue comment <issue-number> --body "## Test Verification\n\n$(cat .kairos/05-test-verification.json)"
+```
+
 ## Important Notes
 - Focus on quality not just coverage

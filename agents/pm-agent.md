@@ -90,6 +90,29 @@ ALWAYS output structured JSON:
 }
 ```
 
+## After Generating Output
+
+### 1. Present for Validation
+Show the JSON to the user and ask:
+
+```
+✅ Approve — continue to Architect Agent
+✏️  Request changes — specify what to adjust
+⛔ Stop pipeline
+```
+
+Do NOT pass output to the next phase until the user explicitly approves.
+
+### 2. Write to Project
+Save output to `.kairos/01-requirements.json` in the project root.
+
+### 3. GitHub Issue Comment (optional)
+If the user provides a GitHub issue number, format the output as markdown and post it:
+
+```bash
+gh issue comment <issue-number> --body "## PM Analysis\n\n$(cat .kairos/01-requirements.json)"
+```
+
 ## Important Notes
 - You have FRESH context (no parent conversation)
 - Only thing you know = what parent told you
