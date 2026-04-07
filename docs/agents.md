@@ -1,6 +1,12 @@
-# The 7 Agents
+# The 8 Agents
 
-KAIROS orchestrates 7 specialized AI agents that work together in a coordinated pipeline. You don't need to manage them individually — just mention "KAIROS" and the Orchestrator handles the rest.
+KAIROS orchestrates 8 specialized AI agents. The Context Extractor runs standalone before the main pipeline; the remaining 7 run in sequence coordinated by the Orchestrator.
+
+---
+
+## [Context Extractor](/agents/context-extractor)
+
+Scans the codebase and an issue draft to produce a structured context file (`00-context.json`) that all downstream agents consume. Run this agent before launching the Orchestrator to give every phase accurate, verified knowledge of your stack, patterns, and conventions — without each agent re-scanning the repository independently.
 
 ---
 
