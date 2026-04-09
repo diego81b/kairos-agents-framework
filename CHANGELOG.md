@@ -6,6 +6,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ---
 
+## [v2.0.6] — 2026-04-09
+
+### Added
+
+- Version number displayed dynamically in nav bar (`v2.0.6` dropdown) and footer, read from `package.json` — updating the version in one place propagates everywhere automatically
+
+---
+
 ## [v2.0.5] — 2026-04-09
 
 ### Changed

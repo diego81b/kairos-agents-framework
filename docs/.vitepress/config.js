@@ -1,5 +1,9 @@
 import { defineConfig } from 'vitepress'
 import { withMermaid } from 'vitepress-plugin-mermaid'
+import { createRequire } from 'module'
+
+const require = createRequire(import.meta.url)
+const { version } = require('../../package.json')
 
 export default withMermaid(defineConfig({
   srcDir: '..',
@@ -53,7 +57,7 @@ export default withMermaid(defineConfig({
       },
       { text: 'Workflow', link: '/workflow' },
       {
-        text: 'v2.0',
+        text: `v${version}`,
         items: [
           { text: 'Roadmap', link: '/roadmap' },
           { text: 'Changelog', link: '/changelog' }
@@ -128,7 +132,7 @@ export default withMermaid(defineConfig({
     ],
 
     footer: {
-      message: 'Released under the AGPL-3.0 License.',
+      message: `KAIROS Framework v${version} — Released under the AGPL-3.0 License.`,
       copyright: 'Copyright © 2026 Comm.it - Florence, Italy'
     },
 

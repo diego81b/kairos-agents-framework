@@ -4,6 +4,14 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v2.0.6 — April 9, 2026
+
+### Added
+
+- Version number shown dynamically in the nav bar and footer, read from `package.json` — updating the version in one place propagates everywhere automatically
+
+---
+
 ## v2.0.5 — April 9, 2026
 
 ### Changed
