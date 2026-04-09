@@ -6,6 +6,17 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ---
 
+## [v2.0.5] — 2026-04-09
+
+### Changed
+
+- `docs/setup/claude-code.md` — added Team Mode setup section:
+  - Step 1 now includes `implementer-lead.md` and `teammates/` in the copy command and directory tree
+  - New "Team Mode — additional setup" section: why Claude Code only (tool comparison table), how to activate, the RED/GREEN/REFACTOR spawn sequence with HITL test-plan gate, `agent` tool verification
+  - Full pipeline diagram updated to show both implementation paths
+
+---
+
 ## [v2.0.4] — 2026-04-09
 
 ### Changed

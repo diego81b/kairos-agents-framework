@@ -14,8 +14,9 @@ Claude Code discovers subagents from the `.claude/agents/` directory inside your
 
 ```bash
 # From your project root
-mkdir -p .claude/agents
+mkdir -p .claude/agents/teammates
 cp path/to/kairos/agents/*.md .claude/agents/
+cp path/to/kairos/agents/teammates/*.md .claude/agents/teammates/
 ```
 
 Your project structure should look like:
@@ -25,18 +26,29 @@ your-project/
 ├── .claude/
 │   └── agents/
 │       ├── orchestrator.md
+│       ├── context-extractor.md
 │       ├── pm-agent.md
 │       ├── architect-agent.md
-│       ├── implementer-agent.md
+│       ├── implementer-agent.md       ← default, works everywhere
+│       ├── implementer-lead.md        ← Team Mode coordinator
 │       ├── code-reviewer.md
 │       ├── test-verifier.md
-│       └── release-planner.md
+│       ├── release-planner.md
+│       └── teammates/                 ← Team Mode specialists
+│           ├── teammate-tests.md
+│           ├── teammate-backend.md
+│           ├── teammate-frontend.md
+│           └── teammate-database.md
 ├── src/
 └── ...
 ```
 
 ::: tip Keep agents in sync
 If you maintain KAIROS as a submodule or copy, remember to re-copy after updates. The source of truth is always `agents/` in the KAIROS repository.
+:::
+
+::: info Team Mode agents are optional
+The `implementer-lead.md` and `teammates/` folder are only needed if you plan to use Team Mode. For most projects, `implementer-agent.md` alone is sufficient.
 :::
 
 ## Step 2 — Understand how subagents are loaded
@@ -144,17 +156,88 @@ Requires the respective CLI authenticated: `jira init`, `glab auth login`, or a 
 | Orchestrator not delegating | The `description:` field must clearly describe when to use the agent |
 | `.kairos/` not created | The implementer-agent creates it on first write — ensure `write_file` is in its `tools:` list |
 
+## Team Mode — additional setup
+
+Team Mode activates a coordinated team of 5 specialists in place of the single Implementer Agent. It is available **only in Claude Code** because it requires the `agent` tool — the ability for one agent to spawn other agents programmatically at runtime.
+
+### Why Claude Code only?
+
+| Tool | Agent spawning | Team Mode |
+| --- | --- | --- |
+| **Claude Code** | `agent` tool — spawns agents at runtime | ✅ |
+| Cursor | `@agent-name` — user-triggered only | ❌ |
+| VS Code / JetBrains / others | No agent-to-agent spawning | ❌ |
+
+### How to activate Team Mode
+
+Team Mode is never activated automatically. When you select `implementer-lead` in Phase 0 agent selection, the Orchestrator shows a cost warning and asks for confirmation:
+
+```
+⚠️  TEAM MODE — COST WARNING
+
+Single Agent:  ~$0.068/feature  ✅ Recommended
+Team Mode:     ~$0.242/feature  (3.5× more)
+
+✅ Confirm Team Mode
+↩️  Switch to Single Agent
+⛔ Cancel
+```
+
+### What the Lead spawns and when
+
+The Implementer Lead applies real TDD across the team in three sequential phases:
+
+```
+Implementer Lead
+│
+├── RED phase ──► teammate-tests        (spawned first, alone)
+│                  Writes all tests before any implementation.
+│                  All tests fail — this is correct.
+│
+│   [HITL: test plan gate — you review the test suite here]
+│
+├── GREEN phase ─► teammate-backend     ┐
+│                  teammate-frontend    ├── spawned in parallel
+│                  teammate-database    ┘
+│                  Goal: make the pre-existing tests pass.
+│
+└── REFACTOR ───► all three teammates   (quality improvements,
+                                         tests must stay green)
+```
+
+### Verify the `agent` tool is enabled
+
+Check that `implementer-lead.md` has `agent` in its `tools:` list:
+
+```yaml
+---
+name: implementer-lead
+tools: [read, write, agent]
+model: claude-opus-4-6
+---
+```
+
+Without the `agent` tool, the Lead cannot spawn teammates and Team Mode will not work.
+
+---
+
 ## Full pipeline
 
 ```
 You ──► Orchestrator
          │
-         ├─[HITL]─► PM Agent         → .kairos/01-requirements.json
-         ├─[HITL]─► Architect Agent  → .kairos/02-architecture.json
-         ├─[HITL]─► Implementer Agent → .kairos/03-implementation.json
-         ├─[HITL]─► Code Reviewer    → .kairos/04-review.json
-         ├─[HITL]─► Test Verifier    → .kairos/05-test-verification.json
-         └─[HITL]─► Release Planner  → .kairos/06-deployment-plan.json
+         ├─[HITL]─► PM Agent              → .kairos/01-requirements.json
+         ├─[HITL]─► Architect Agent       → .kairos/02-architecture.json
+         ├─[HITL]─► Implementer Agent     → .kairos/03-implementation.json
+         │           or
+         │          Implementer Lead (Team Mode)
+         │           ├── teammate-tests   [HITL: test plan gate]
+         │           ├── teammate-backend ┐
+         │           ├── teammate-frontend├── parallel
+         │           └── teammate-database┘
+         ├─[HITL]─► Code Reviewer         → .kairos/04-review.json
+         ├─[HITL]─► Test Verifier         → .kairos/05-test-verification.json
+         └─[HITL]─► Release Planner       → .kairos/06-deployment-plan.json
 ```
 
 Each `[HITL]` gate is a pause where **you** review and approve before the next agent runs.

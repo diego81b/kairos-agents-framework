@@ -4,6 +4,20 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v2.0.5 — April 9, 2026
+
+### Changed
+
+- **[Claude Code Setup](/setup/claude-code)** — added complete Team Mode setup instructions:
+  - Copy command and directory tree now include `implementer-lead.md` and `teammates/`
+  - New section explaining why Team Mode requires Claude Code (agent spawning comparison table vs Cursor, VS Code, etc.)
+  - Step-by-step activation flow with the Orchestrator cost warning
+  - Visual diagram of the RED → HITL → GREEN (parallel) → REFACTOR spawn sequence
+  - `agent` tool verification for `implementer-lead.md`
+  - Full pipeline diagram updated to show both implementation paths
+
+---
+
 ## v2.0.4 — April 9, 2026
 
 ### Changed
