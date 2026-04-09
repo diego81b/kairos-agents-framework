@@ -1,6 +1,6 @@
-# The 8 Agents
+# The KAIROS Agents
 
-KAIROS orchestrates 8 specialized AI agents. The Context Extractor runs standalone before the main pipeline; the remaining 7 run in sequence coordinated by the Orchestrator.
+KAIROS orchestrates a core pipeline of 8 specialized AI agents, plus an optional team of 5 specialists for Team Mode. The Context Extractor runs standalone before the main pipeline; the remaining core agents run in sequence coordinated by the Orchestrator. Team Mode agents are Claude Code only and activated on explicit request.
 
 ---
 
@@ -30,7 +30,37 @@ Designs system architecture, plans database schema, designs API contracts, consi
 
 ## [Implementer Agent](/agents/implementer-agent)
 
-Implements code using **real TDD** (tests written before code). Runs tests iteratively until they pass, applies team coding patterns, and handles error cases explicitly.
+Implements code using **real TDD** (tests written before code). Runs tests iteratively until they pass, applies team coding patterns, and handles error cases explicitly. This is the **default implementer for all features** — works with Claude Code, API, and local models.
+
+---
+
+## Implementer Team — Team Mode (Claude Code only, optional)
+
+For complex multi-layer features, the Orchestrator can activate a coordinated team of specialists instead of the single Implementer Agent. Team Mode must be **explicitly requested** — the Orchestrator will show a cost warning (~$0.242 vs ~$0.068) before proceeding.
+
+**Why Claude Code only?** Team Mode requires one agent to spawn other agents programmatically at runtime. Claude Code provides this via the native `agent` tool. Other tools (Cursor, VS Code, JetBrains, Codex CLI) only support user-triggered agent calls — an agent cannot autonomously instantiate teammates during its own execution.
+
+The [Implementer Lead](/agents/implementer-lead) acts as coordinator (not a coder). It creates binding contracts (API, database, test, pattern) and spawns four parallel teammates:
+
+### [Implementer Lead](/agents/implementer-lead)
+
+Team coordinator — analyzes the Architect output, defines binding contracts for all layers, spawns teammates in parallel, monitors contract compliance, and aggregates the final output. Does not write code itself.
+
+### [Teammate Tests](/agents/teammates/teammate-tests)
+
+Test specialist — generates the full test suite following the RED phase of TDD (failing tests first). Covers happy paths, error cases, edge cases, and integration tests. Target: >80% coverage.
+
+### [Teammate Backend](/agents/teammates/teammate-backend)
+
+Backend specialist — implements API routes and business logic exactly per the API contract defined by the Lead. Validates input, calls services, returns responses, and handles errors as specified.
+
+### [Teammate Frontend](/agents/teammates/teammate-frontend)
+
+Frontend specialist — implements UI components and client code that calls the Backend APIs exactly per the API contract. Handles all response and error codes defined in the contract.
+
+### [Teammate Database](/agents/teammates/teammate-database)
+
+Database specialist — creates schema migrations and rollback scripts exactly per the database contract. Adds indexes and constraints as specified.
 
 ---
 

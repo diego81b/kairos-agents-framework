@@ -2,10 +2,78 @@
 
 KAIROS is a **Human-in-the-Loop (HITL)** pipeline. Every phase produces a concrete artifact that the user validates before the next phase begins. The AI does the work; the human controls the gate.
 
-```
-PM Agent â†’ [HITL] â†’ Architect â†’ [HITL] â†’ Implementer â†’ [HITL]
-                                                             â†“
-Release Planner â† [HITL] â† Test Verifier â† [HITL] â† Code Reviewer
+```mermaid
+flowchart TD
+    A([Feature Request]) --> P0
+
+    subgraph P0["Phase 0 — Context & Agent Selection"]
+        direction TB
+        O[Orchestrator] --> SEL[User selects active agents]
+    end
+
+    P0 -->|HITL: confirm pipeline| P1
+
+    subgraph P1["Phase 1 — Requirements"]
+        PM[PM Agent]
+    end
+
+    P1 -->|"HITL ✅ / ✏️ / ⏭️ / ⛔"| P2
+
+    subgraph P2["Phase 2 — System Design"]
+        ARCH[Architect Agent]
+    end
+
+    P2 -->|"HITL ✅ / ✏️ / ⏭️ / ⛔"| P3
+
+    subgraph P3["Phase 3 — Implementation"]
+        direction TB
+        ROUTE{Which implementer?}
+        ROUTE -->|default — works everywhere| SA
+        ROUTE -->|"explicit request + ⚠️ cost warning"| TM
+
+        subgraph SA["Single Agent (default)"]
+            direction TB
+            PLAN["Step 3a: Plan
+files · tests · TDD order"]
+            PLAN -->|"HITL: plan gate"| TDD
+            TDD["Step 3b: TDD Cycle
+RED → GREEN → REFACTOR"]
+        end
+
+        subgraph TM["Team Mode — Claude Code only"]
+            direction TB
+            LEAD["Implementer Lead
+creates binding contracts"]
+            LEAD --> PAR
+            subgraph PAR["Parallel"]
+                direction LR
+                T1[Tests] ~~~ T2[Backend] ~~~ T3[Frontend] ~~~ T4[Database]
+            end
+            PAR --> AGG["Lead: verify compliance
+& aggregate output"]
+        end
+    end
+
+    P3 -->|"HITL ✅ / ✏️ / ⏭️ / ⛔"| P4
+
+    subgraph P4["Phase 4 — Code Review"]
+        REV[Code Reviewer]
+    end
+
+    P4 -->|"HITL ✅ / ✏️ / ⏭️ / ⛔"| P5
+
+    subgraph P5["Phase 5 — Test Verification"]
+        TV[Test Verifier]
+    end
+
+    P5 -->|"HITL ✅ / ✏️ / ⏭️ / ⛔"| P6
+
+    subgraph P6["Phase 6 — Deployment"]
+        RP[Release Planner]
+    end
+
+    P6 -->|"HITL ✅ / ✏️ / ⛔"| OUT(["Production code
+Tests · Review · Deploy plan"])
 ```
 
 At each HITL checkpoint the user can:
@@ -69,7 +137,13 @@ User reviews the selected design option and API contracts before any code is wri
 
 ---
 
-## Phase 3: Implementation (Implementer Agent)
+## Phase 3: Implementation
+
+At the start of this phase, the Orchestrator routes to one of two modes based on the agent selection confirmed in Phase 0.
+
+### Default: Implementer Agent
+
+Works everywhere (Claude Code, API, local models). Recommended for all features.
 
 This phase has **two HITL checkpoints** — a plan gate before any file is written, and a code gate after TDD is complete.
 
@@ -96,6 +170,43 @@ User reviews the implementation plan (files, test cases, approach) **before any 
 User reviews generated code and test coverage before the review phase.
 
 `✅ Approve` · `✏️ Request changes` · `⏭️ Skip next` · `⛔ Stop`
+:::
+
+### Team Mode: Implementer Lead + 4 Teammates (Claude Code only, optional)
+
+Activated only when explicitly requested. The Orchestrator shows a cost warning (~$0.068 single vs ~$0.242 team) and waits for confirmation before proceeding.
+
+**How it works:**
+
+1. **Implementer Lead** analyzes the Architect output and creates four binding contracts: API, database, test, and pattern contracts that all teammates must follow exactly
+2. Four specialists execute **in parallel**:
+   - **Teammate Tests** — generates the full test suite (RED phase first)
+   - **Teammate Backend** — implements APIs per contract
+   - **Teammate Frontend** — implements UI per contract
+   - **Teammate Database** — creates schema and migrations per contract
+3. **Implementer Lead** monitors contract compliance, flags mismatches, requests corrections, and aggregates all outputs
+
+_Input: architecture JSON + project profile_
+_Output: all layer files + contract compliance report + coverage report_
+_Saved to: project paths + `.kairos/<feature_folder>/03-implementation.json`_
+
+::: warning Team Mode — Claude Code only
+Team Mode requires the ability for one agent to **spawn other agents programmatically at runtime**. Claude Code provides this via the native `agent` tool, which lets the Implementer Lead instantiate the four teammates in parallel during its own execution.
+
+Other tools do not support this:
+
+| Tool | Agent mechanism | Team Mode |
+| --- | --- | --- |
+| **Claude Code** | `agent` tool — an agent can spawn other agents at runtime | ✅ |
+| **Cursor** | `@agent-name` — always user-triggered, never agent-triggered | ❌ |
+| **VS Code Copilot** | `handoffs` — pre-defined transitions activated by the user | ❌ |
+| **JetBrains / Codex CLI / others** | No agent-to-agent spawning mechanism | ❌ |
+
+Use the single Implementer Agent in all non-Claude Code environments.
+:::
+
+::: tip When is Team Mode worth it?
+Team Mode eliminates frontend/backend contract mismatches through binding contracts. It's worth the extra cost only for critical systems where perfect layer alignment cannot be verified manually. For the vast majority of features, the single agent is sufficient.
 :::
 
 ---

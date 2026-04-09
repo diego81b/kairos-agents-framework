@@ -1,7 +1,7 @@
 ---
 name: implementer-agent
 description: "Generates code and tests using TDD. Use after architecture design."
-tools: [read, write, bash]
+tools: [read, write, bash, grep]
 model: claude-opus-4-6
 ---
 

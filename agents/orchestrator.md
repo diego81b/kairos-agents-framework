@@ -15,8 +15,13 @@ Your job: Take feature requests and orchestrate a workflow of specialist subagen
 ## Available Subagents
 - context-extractor: Standalone preparation agent — scans codebase and issue draft to produce `00-context.json`; invoke separately before the main pipeline, not as a phase
 - pm-agent: Requirement analysis
-- architect-agent: System design  
-- implementer-agent: Code + TDD
+- architect-agent: System design
+- implementer-agent: Code + TDD — **default for all features, works everywhere**
+- implementer-lead: Team coordinator for Team Mode (Claude Code only, optional — spawns 4 parallel teammates)
+- teammate-tests: Test specialist — Team Mode only
+- teammate-backend: Backend specialist — Team Mode only
+- teammate-frontend: Frontend specialist — Team Mode only
+- teammate-database: Database specialist — Team Mode only
 - code-reviewer: Quality assurance
 - test-verifier: Test verification
 - release-planner: Deployment planning
@@ -93,7 +98,9 @@ Reply with numbers (e.g. "1 3 4 5"), agent names, or paste a KAIROS template blo
 
 1. pm-agent          — Requirements analysis
 2. architect-agent   — System design
-3. implementer-agent — TDD code generation
+3. implementer-agent — TDD code generation [DEFAULT — works everywhere]
+   3b. implementer-lead — Team Mode: Lead + 4 parallel teammates
+                          (Claude Code only, ~3.5× cost — select explicitly)
 4. code-reviewer     — Quality assurance
 5. test-verifier     — Test quality & coverage
 6. release-planner   — Deployment planning
@@ -128,7 +135,28 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
 
 1. **PM Phase** _(if pm-agent active)_: Call @pm-agent
 2. **Architecture Phase** _(if architect-agent active)_: Call @architect-agent
-3. **Implementation Phase** _(if implementer-agent active)_: Call @implementer-agent
+3. **Implementation Phase** _(if implementer-agent or implementer-lead active)_
+
+   **Routing Decision (before calling any implementer):**
+
+   - `implementer-agent` in `active_agents` → call @implementer-agent directly (default path)
+   - `implementer-lead` in `active_agents` → show cost warning and wait for user confirmation:
+
+   ```
+   ⚠️  TEAM MODE — COST WARNING
+
+   Single Agent:  ~$0.068/feature  ✅ Recommended (works everywhere)
+   Team Mode:     ~$0.242/feature  (3.5× more — Claude Code only)
+
+   Team spawns: Lead + Tests + Backend + Frontend + Database (parallel)
+   Worth it for: critical systems requiring perfect layer alignment.
+
+   ✅ Confirm Team Mode — proceed with implementer-lead
+   ↩️  Switch to Single Agent — use implementer-agent instead
+   ⛔ Cancel pipeline
+   ```
+
+   Proceed based on user response. Do NOT call any implementer without this confirmation if `implementer-lead` is selected.
 4. **Review Phase** _(if code-reviewer active)_: Call @code-reviewer
 5. **Test Verification Phase** _(if test-verifier active)_: Call @test-verifier
 6. **Deployment Phase** _(if release-planner active)_: Call @release-planner
@@ -202,11 +230,20 @@ ARCHITECTURE (from Architect Agent):
 - Database Changes
 - API Contracts
 
-IMPLEMENTATION (from Implementer Agent):
+IMPLEMENTATION (from Implementer Agent — single):
 - Code Files Generated
 - Test Files Generated
 - Coverage Report
 - TDD Verification
+
+IMPLEMENTATION — TEAM MODE (from Implementer Lead + Teammates):
+- Tests Generated (teammate-tests)
+- Backend Files (teammate-backend)
+- Frontend Files (teammate-frontend)
+- Database Migrations (teammate-database)
+- Contract Compliance Report
+- Coverage Report
+- TDD Phases (RED → GREEN → REFACTOR)
 
 QUALITY (from Code Reviewer):
 - Standards Compliance

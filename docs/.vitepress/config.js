@@ -1,11 +1,13 @@
 import { defineConfig } from 'vitepress'
+import { withMermaid } from 'vitepress-plugin-mermaid'
 
-export default defineConfig({
+export default withMermaid(defineConfig({
   srcDir: '..',
   srcExclude: [
     '**/node_modules/**',
     'docs/.vitepress/**',
     'README.md',
+    'CHANGELOG.md',
     'DEPLOYMENT.md',
     'LICENSE',
     'netlify.toml',
@@ -54,7 +56,7 @@ export default defineConfig({
         text: 'v2.0',
         items: [
           { text: 'Roadmap', link: '/roadmap' },
-          { text: 'Changelog', link: '/roadmap#v20-current---april-2026' }
+          { text: 'Changelog', link: '/changelog' }
         ]
       }
     ],
@@ -80,7 +82,7 @@ export default defineConfig({
         ]
       },
       {
-        text: 'The 7 Agents',
+        text: 'Core Agents',
         collapsed: false,
         items: [
           { text: 'All Agents Overview', link: '/agents' },
@@ -94,6 +96,17 @@ export default defineConfig({
         ]
       },
       {
+        text: 'Team Mode (optional)',
+        collapsed: true,
+        items: [
+          { text: 'Implementer Lead', link: '/agents/implementer-lead' },
+          { text: 'Teammate Tests', link: '/agents/teammates/teammate-tests' },
+          { text: 'Teammate Backend', link: '/agents/teammates/teammate-backend' },
+          { text: 'Teammate Frontend', link: '/agents/teammates/teammate-frontend' },
+          { text: 'Teammate Database', link: '/agents/teammates/teammate-database' }
+        ]
+      },
+      {
         text: 'Development',
         items: [
           { text: 'Workflow', link: '/workflow' },
@@ -104,6 +117,7 @@ export default defineConfig({
         text: 'Project',
         items: [
           { text: 'Roadmap', link: '/roadmap' },
+          { text: 'Changelog', link: '/changelog' },
           { text: 'FAQ', link: '/faq' }
         ]
       }
@@ -126,5 +140,10 @@ export default defineConfig({
     search: {
       provider: 'local'
     }
+  },
+
+  mermaid: {},
+  mermaidPlugin: {
+    class: 'mermaid my-class'
   }
-})
+}))

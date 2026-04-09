@@ -6,15 +6,15 @@ Intelligent multi-agent SDLC orchestration by Comm.it
 
 ## What's Included
 
-- **agents/** - 7 specialized subagent definitions
-- **docs/** - Complete documentation + converter scripts
-- **DEPLOYMENT.md** - How to deploy (4 options)
+- **agents/** - 8 core agent definitions + 5 optional Team Mode specialists
+- **docs/** - Complete documentation site (VitePress)
+- **CHANGELOG.md** - Version history
 
 ## Quick Start
 
 1. Copy `agents/` to your project
 2. Use in Claude Code: "Help me add X feature with KAIROS"
-3. All 7 agents orchestrate automatically
+3. The Orchestrator coordinates the pipeline automatically
 
 ## Generating the Website (Windows, Mac, Linux)
 
@@ -53,22 +53,26 @@ See `DEPLOYMENT.md` for complete instructions:
 
 ## Files
 
-- `agents/` - 7 subagent markdown files
-- `docs/KAIROS-FRAMEWORK-DOCUMENTATION.md` - Complete docs (5000+ lines)
-- `docs/SUMMARY.md` - Table of contents for Gitbook
-- `docs/convert.ps1` - PowerShell converter (Windows)
-- `docs/convert.py` - Python converter (Mac/Linux)
-- `docs/index.html` - Generated website
-- `DEPLOYMENT.md` - Deployment instructions (4 options)
+- `agents/` - Core agents + `teammates/` folder (Team Mode specialists)
+- `docs/` - VitePress documentation site
+- `CHANGELOG.md` - Version history
+- `internal/` - Internal guides (cost analysis, routing logic, provider specifics)
 
 ## Workflow
 
-1. **Edit markdown** → `docs/KAIROS-FRAMEWORK-DOCUMENTATION.md`
-2. **Generate HTML** → Run converter (Windows: `.\convert.ps1`, Mac/Linux: `python3 convert.py`)
-3. **Test locally** → Open `docs/index.html` in browser
-4. **Deploy** → Git push (all platforms auto-deploy)
+1. **Edit docs** → modify files in `docs/`
+2. **Preview locally** → `npm run docs:dev`
+3. **Build** → `npm run docs:build`
+4. **Deploy** → Git push (Vercel/Netlify auto-deploy)
 
-**Bonus:** Gitbook auto-syncs from GitHub - your docs are always up-to-date
+## Implementation Modes
+
+| Mode | Cost | Works on | When to use |
+| --- | --- | --- | --- |
+| Single Agent (default) | ~$0.068/feature | Everywhere | All features |
+| Team Mode (optional) | ~$0.242/feature | Claude Code only | Critical systems, explicit request |
+
+Team Mode activates a Lead + 4 parallel specialists (Tests, Backend, Frontend, Database). The Orchestrator always shows a cost warning before enabling it.
 
 ## License
 

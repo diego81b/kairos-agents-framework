@@ -15,8 +15,8 @@ hero:
 
 features:
   - icon: 🤖
-    title: 7 Specialized Agents
-    details: Orchestrator, PM Agent, Architect, Implementer, Code Reviewer, Test Verifier, and Release Planner work in concert on every feature.
+    title: 8 Core Agents + Team Mode
+    details: Orchestrator, PM Agent, Architect, Implementer, Code Reviewer, Test Verifier, and Release Planner as the core pipeline. Optional Team Mode adds 5 parallel specialists for complex features (Claude Code only).
   - icon: ⚡
     title: 40-50% Faster Development
     details: From 8 hours per feature down to 2-3 hours with 5-8 API calls. Real TDD enforced at every step.

@@ -3,10 +3,20 @@
 ## v2.0 — Current (April 2026)
 
 **Core framework**
-- 7-agent orchestration: Orchestrator + PM + Architect + Implementer + Code Reviewer + Test Verifier + Release Planner
+
+- 8-agent ecosystem: Orchestrator + Context Extractor + PM + Architect + Implementer + Code Reviewer + Test Verifier + Release Planner
 - Selective pipeline — explicit agent selection at run start, no automatic inference
 - 4-option HITL gate at every phase (Approve / Request changes / Skip next / Stop)
 - Pipeline Templates — preset checkboxes for Feature, Bug Fix, Hotfix, Refactor, Docs
+
+**Implementer Team Pattern** (Claude Code only, optional)
+
+- `implementer-lead` — team coordinator: creates binding contracts (API, DB, test, pattern), spawns 4 parallel teammates
+- `teammate-tests` — test specialist (RED phase first, >80% coverage)
+- `teammate-backend` — backend specialist (APIs per contract)
+- `teammate-frontend` — frontend specialist (UI per contract)
+- `teammate-database` — database specialist (schema + migrations per contract)
+- Team Mode routing in Orchestrator with explicit cost warning (~$0.068 single vs ~$0.242 team)
 
 **Implementer two-stage gate**
 - Phase 0: structured implementation plan (files, test cases, TDD order, risks) before any file is written

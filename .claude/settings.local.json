@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(python3 -c ':*)",
+      "Bash(node -e ':*)",
+      "Bash(node)",
+      "Bash(grep -l \"mermaid\" c:/progetti/kairos/docs/.vitepress/dist/*.js)"
     ]
   }
 }

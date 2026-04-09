@@ -5,7 +5,7 @@
 
 ---
 
-KAIROS is a framework that wires 7 specialized AI agents into a single, human-controlled pipeline. You describe what you want to build; KAIROS breaks it into phases — requirements, design, code, review, tests, deployment — and produces production-ready output at every step.
+KAIROS is a framework that wires specialized AI agents into a single, human-controlled pipeline. You describe what you want to build; KAIROS breaks it into phases — requirements, design, code, review, tests, deployment — and produces production-ready output at every step.
 
 The human never loses control: every phase ends at a checkpoint where you approve, redirect, or skip before anything moves forward.
 
@@ -15,7 +15,7 @@ The human never loses control: every phase ends at a checkpoint where you approv
 
 A single AI conversation accumulates context fast. Feed it a feature request and by the time it writes code, it's also carrying the requirements analysis, the architecture discussion, every revision you made — thousands of tokens that inflate every subsequent call and blur focus.
 
-KAIROS solves this with **subagents**: isolated Claude instances, each with a focused role and a fresh context window.
+KAIROS solves this with **subagents**: isolated AI agent instances, each with a focused role and a fresh context window.
 
 ```
 WITHOUT SUBAGENTS:
@@ -40,19 +40,33 @@ Each subagent:
 
 ---
 
-## The 7-Agent Pipeline
+## The Core Pipeline
 
 | # | Agent | Role | Output |
-|---|-------|------|--------|
+| --- | --- | --- | --- |
 | 0 | **Orchestrator** | Coordinates the pipeline, manages HITL | Routes & aggregates |
 | 1 | **PM Agent** | Requirements, constraints, acceptance criteria | `01-requirements.json` |
 | 2 | **Architect Agent** | 3 design options → recommended choice, API contracts, DB schema | `02-architecture.json` |
-| 3 | **Implementer Agent** | Implementation plan → TDD cycle (tests first, then code) | Code + `03-implementation.json` |
+| 3 | **Implementer Agent** | Implementation plan → TDD cycle (tests first, then code) — **default for all features** | Code + `03-implementation.json` |
 | 4 | **Code Reviewer** | Standards, security, performance, contract compliance | `04-review.json` |
 | 5 | **Test Verifier** | Coverage adequacy (>80%), edge cases, assertion quality | `05-test-verification.json` |
 | 6 | **Release Planner** | Deployment steps, rollback strategy, monitoring thresholds | `06-deployment-plan.json` |
 
 All output files are saved to `.kairos/<feature-folder>/` — one subfolder per feature, named from the issue reference (e.g. `PROJ-42_add-stripe-payments`).
+
+### Team Mode — optional extension (Claude Code only)
+
+For complex multi-layer features, you can explicitly request **Team Mode**. The Orchestrator replaces the single Implementer Agent with a coordinated team:
+
+| Agent | Role |
+| --- | --- |
+| **Implementer Lead** | Creates binding contracts, spawns and monitors 4 parallel teammates |
+| **Teammate Tests** | Generates full test suite (RED phase first) |
+| **Teammate Backend** | Implements APIs per contract |
+| **Teammate Frontend** | Implements UI per contract |
+| **Teammate Database** | Creates schema and migrations per contract |
+
+Team Mode is ~3.5× more expensive (~$0.242 vs ~$0.068 per feature) and available only in Claude Code. The technical reason: Team Mode requires one agent to spawn other agents programmatically at runtime — Claude Code supports this via the `agent` tool; Cursor, VS Code, JetBrains and other tools do not. The Orchestrator shows a cost warning and requires explicit confirmation before activating it.
 
 ---
 
@@ -124,13 +138,13 @@ A typical KAIROS feature run produces:
 
 ```
 agents/
-├── orchestrator.md        ← Coordinator (claude-opus-4-6)
-├── pm-agent.md            ← Requirements (claude-sonnet-4-6)
-├── architect-agent.md     ← System design (claude-sonnet-4-6)
-├── implementer-agent.md   ← TDD code generation (claude-opus-4-6)
-├── code-reviewer.md       ← Quality review (claude-sonnet-4-6)
-├── test-verifier.md       ← Test quality (claude-sonnet-4-6)
-└── release-planner.md     ← Deployment planning (claude-sonnet-4-6)
+├── orchestrator.md        ← Coordinator
+├── pm-agent.md            ← Requirements
+├── architect-agent.md     ← System design
+├── implementer-agent.md   ← TDD code generation
+├── code-reviewer.md       ← Quality review
+├── test-verifier.md       ← Test quality
+└── release-planner.md     ← Deployment planning
 ```
 
 Each file is a self-contained subagent definition — YAML frontmatter for tool and model configuration, markdown body for the agent prompt. Copy the `agents/` folder into the right directory for your tool and you're ready.
@@ -138,4 +152,4 @@ Each file is a self-contained subagent definition — YAML frontmatter for tool 
 ---
 
 Ready to start? → [Set up KAIROS with your IDE](./setup/)  
-Want the full picture? → [Workflow walkthrough](./workflow) · [The 7 Agents](./agents)
+Want the full picture? → [Workflow walkthrough](./workflow) · [All Agents](./agents)
