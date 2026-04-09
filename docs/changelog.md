@@ -4,6 +4,19 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v2.0.4 — April 9, 2026
+
+### Changed
+
+- **Implementer Lead** — restructured to apply real TDD methodology across the team:
+  - **RED phase** — `teammate-tests` is spawned first; the full test suite is written against the binding contracts before any implementation exists
+  - **HITL test-plan gate** — user reviews and approves the test plan before backend/frontend/database are spawned
+  - **GREEN phase** — `teammate-backend`, `teammate-frontend`, `teammate-database` spawn in parallel with the explicit goal of making the pre-existing tests pass
+  - **REFACTOR phase** — quality improvements coordinated across all layers, tests must remain green
+- [Workflow](/workflow) and [Agents](/agents) documentation updated to reflect the three-phase TDD flow
+
+---
+
 ## v2.0.3 — April 9, 2026
 
 ### Changed

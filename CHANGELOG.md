@@ -6,6 +6,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ---
 
+## [v2.0.4] — 2026-04-09
+
+### Changed
+
+- `agents/implementer-lead.md` — restructured to apply real TDD methodology: RED phase (teammate-tests spawned first, all tests written before any implementation), HITL test-plan gate before GREEN phase, GREEN phase (backend + frontend + database spawned in parallel to make tests pass), REFACTOR phase. Added `agent` tool to frontmatter.
+- `docs/workflow.md` — Team Mode description updated to reflect the three-phase TDD flow with the additional HITL gate between RED and GREEN
+- `docs/agents.md` — Implementer Lead description updated to reflect RED/GREEN/REFACTOR coordination
+
+---
+
 ## [v2.0.3] — 2026-04-09
 
 ### Changed

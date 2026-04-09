@@ -44,7 +44,13 @@ The [Implementer Lead](/agents/implementer-lead) acts as coordinator (not a code
 
 ### [Implementer Lead](/agents/implementer-lead)
 
-Team coordinator — analyzes the Architect output, defines binding contracts for all layers, spawns teammates in parallel, monitors contract compliance, and aggregates the final output. Does not write code itself.
+Team coordinator — applies the full TDD discipline across specialized teammates. Defines four binding contracts (API, database, test, pattern) before anyone starts. Then orchestrates three distinct phases:
+
+- **RED** — spawns `teammate-tests` first; tests are written against the contracts before any implementation exists. Presents the test plan to the user (HITL gate) before proceeding.
+- **GREEN** — spawns `teammate-backend`, `teammate-frontend`, and `teammate-database` in parallel; their goal is to make the pre-existing tests pass.
+- **REFACTOR** — coordinates quality improvements across all layers while keeping tests green.
+
+Monitors contract compliance throughout, flags mismatches, and aggregates the final output. Does not write code itself.
 
 ### [Teammate Tests](/agents/teammates/teammate-tests)
 

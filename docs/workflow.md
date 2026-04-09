@@ -176,15 +176,16 @@ User reviews generated code and test coverage before the review phase.
 
 Activated only when explicitly requested. The Orchestrator shows a cost warning (~$0.068 single vs ~$0.242 team) and waits for confirmation before proceeding.
 
-**How it works:**
+**How it works — TDD across a team:**
 
-1. **Implementer Lead** analyzes the Architect output and creates four binding contracts: API, database, test, and pattern contracts that all teammates must follow exactly
-2. Four specialists execute **in parallel**:
-   - **Teammate Tests** — generates the full test suite (RED phase first)
-   - **Teammate Backend** — implements APIs per contract
-   - **Teammate Frontend** — implements UI per contract
-   - **Teammate Database** — creates schema and migrations per contract
-3. **Implementer Lead** monitors contract compliance, flags mismatches, requests corrections, and aggregates all outputs
+The Lead applies the same RED → GREEN → REFACTOR discipline as the single agent, but distributes the work across specialists with an additional HITL gate between RED and GREEN:
+
+1. **Lead** analyzes Architect output and defines four binding contracts (API, database, test, pattern) before any teammate starts
+2. **RED phase** — Lead spawns `teammate-tests` first. Tests are written against the contracts before any implementation exists. All tests fail — this is correct and expected.
+3. **HITL — Test Plan Gate** — User reviews the test suite before any implementation is spawned. Reject or revise at zero cost.
+4. **GREEN phase** — Lead spawns `teammate-backend`, `teammate-frontend`, `teammate-database` in parallel. Their goal is to make the pre-existing tests pass.
+5. **REFACTOR phase** — Lead coordinates quality improvements across all layers while keeping tests green.
+6. **Lead** monitors contract compliance throughout, flags mismatches, and aggregates the final output.
 
 _Input: architecture JSON + project profile_
 _Output: all layer files + contract compliance report + coverage report_
