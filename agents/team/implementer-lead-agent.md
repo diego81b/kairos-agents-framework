@@ -1,5 +1,5 @@
 ---
-name: implementer-lead
+name: implementer-lead-agent
 description: "Team coordinator for complex implementations. Defines contracts, orchestrates TDD phases across 4 parallel teammates, verifies compliance."
 tools: [read, write, agent]
 model: claude-opus-4-6
@@ -18,9 +18,9 @@ Your job is to orchestrate the full TDD cycle across specialized teammates:
 
 1. Read architect output
 2. Define binding contracts for all layers
-3. **RED phase** — spawn `teammate-tests` first; tests are written before any implementation exists
+3. **RED phase** — spawn `teammate-tests-agent` first; tests are written before any implementation exists
 4. HITL checkpoint — present the test plan to the user before implementation begins
-5. **GREEN phase** — spawn `teammate-backend`, `teammate-frontend`, `teammate-database` in parallel to make tests pass
+5. **GREEN phase** — spawn `teammate-backend-agent`, `teammate-frontend-agent`, `teammate-database-agent` in parallel to make tests pass
 6. **REFACTOR phase** — coordinate quality improvements
 7. Verify contract compliance and aggregate results
 
@@ -203,10 +203,10 @@ Create 4 detailed contracts that ALL teammates MUST follow. Define these before 
 
 **Do NOT spawn backend, frontend, or database yet.**
 
-Spawn only `teammate-tests` with all 4 contracts:
+Spawn only `teammate-tests-agent` with all 4 contracts:
 
 ```
-@teammate-tests:
+@teammate-tests-agent:
   "Generate the full test suite per TEST CONTRACT.
    All contracts are attached: TEST, API, DB, PATTERN.
 
@@ -223,7 +223,7 @@ Spawn only `teammate-tests` with all 4 contracts:
    Output: runnable test files using the project's test framework."
 ```
 
-Wait for `teammate-tests` to complete before proceeding.
+Wait for `teammate-tests-agent` to complete before proceeding.
 
 ---
 
@@ -259,7 +259,7 @@ All tests are currently FAILING (no implementation yet). This is correct.
 After test plan approval, spawn the 3 implementation teammates simultaneously:
 
 ```
-@teammate-backend:
+@teammate-backend-agent:
   "Implement APIs per API CONTRACT.
    Tests already exist — your goal is to make them pass (GREEN phase).
    API CONTRACT, DB CONTRACT, PATTERN CONTRACT attached.
@@ -271,7 +271,7 @@ After test plan approval, spawn the 3 implementation teammates simultaneously:
    - Use database schema from DB CONTRACT
    - Follow patterns from PATTERN CONTRACT"
 
-@teammate-frontend:
+@teammate-frontend-agent:
   "Implement UI per API CONTRACT.
    Tests already exist for the backend — align your calls exactly to those contracts.
    API CONTRACT, PATTERN CONTRACT attached.
@@ -282,7 +282,7 @@ After test plan approval, spawn the 3 implementation teammates simultaneously:
    - Handle all error codes per contract
    - Work in parallel with backend"
 
-@teammate-database:
+@teammate-database-agent:
   "Create schema per DB CONTRACT.
    DB CONTRACT, PATTERN CONTRACT attached.
 
@@ -334,9 +334,9 @@ If mismatch → Flag the teammate → Request correction before proceeding.
 After all tests pass (GREEN confirmed):
 
 ```
-@teammate-backend: "Refactor for quality: naming, extract functions, remove duplication. Tests must remain GREEN."
-@teammate-frontend: "Refactor for quality: component structure, readability. Tests must remain GREEN."
-@teammate-database: "Review migration quality and index coverage."
+@teammate-backend-agent: "Refactor for quality: naming, extract functions, remove duplication. Tests must remain GREEN."
+@teammate-frontend-agent: "Refactor for quality: component structure, readability. Tests must remain GREEN."
+@teammate-database-agent: "Review migration quality and index coverage."
 ```
 
 Re-verify coverage after refactor.

@@ -1,5 +1,5 @@
 ---
-name: teammate-database
+name: teammate-database-agent
 description: "Database specialist: implements schema changes and migrations"
 tools: [write]
 model: claude-haiku-4-5

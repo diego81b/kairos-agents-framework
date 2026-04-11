@@ -1,5 +1,5 @@
 ---
-name: teammate-frontend
+name: teammate-frontend-agent
 description: "Frontend specialist: implements UI components and client code"
 tools: [write]
 model: claude-haiku-4-5

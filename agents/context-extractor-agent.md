@@ -1,5 +1,5 @@
 ---
-name: context-extractor
+name: context-extractor-agent
 description: "Scans a codebase and an issue draft to produce 00-context.json for downstream agents. Use before orchestrator to prepare LLM context."
 tools: [read, grep]
 model: claude-sonnet-4-6
@@ -101,7 +101,7 @@ curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issu
 
 ```yaml
 ---
-name: context-extractor
+name: context-extractor-agent
 description: "Scans a codebase and an issue draft to produce 00-context.json for downstream agents. Use before orchestrator to prepare LLM context."
 model: claude-sonnet-4-6
 tools: [read, grep, write]
@@ -114,7 +114,7 @@ tools: [read, grep, write]
 
 ```yaml
 ---
-name: context-extractor
+name: context-extractor-agent
 description: "Scans a codebase and an issue draft to produce 00-context.json for downstream agents. Use before orchestrator to prepare LLM context."
 model: claude-sonnet-4-6
 tools: [read, grep, write]
@@ -126,18 +126,18 @@ readonly: false
 
 ```yaml
 ---
-name: context-extractor
+name: context-extractor-agent
 description: "Scans a codebase and an issue draft to produce 00-context.json for downstream agents. Use before orchestrator to prepare LLM context."
 model: claude-sonnet-4-6
 tools: ['read', 'search', 'edit']
 user-invocable: true
 handoffs:
   - label: "✅ Approve — save and launch pipeline"
-    agent: orchestrator
+    agent: orchestrator-agent
     prompt: "Run the KAIROS pipeline. Context file is ready at .kairos/{feature_folder}/00-context.json"
     send: false
   - label: "✏️ Request changes"
-    agent: context-extractor
+    agent: context-extractor-agent
     prompt: "Revise the context based on this feedback: "
     send: false
   - label: "⛔ Stop"

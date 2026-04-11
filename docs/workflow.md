@@ -181,9 +181,9 @@ Activated only when explicitly requested. The Orchestrator shows a cost warning 
 The Lead applies the same RED → GREEN → REFACTOR discipline as the single agent, but distributes the work across specialists with an additional HITL gate between RED and GREEN:
 
 1. **Lead** analyzes Architect output and defines four binding contracts (API, database, test, pattern) before any teammate starts
-2. **RED phase** — Lead spawns `teammate-tests` first. Tests are written against the contracts before any implementation exists. All tests fail — this is correct and expected.
+2. **RED phase** — Lead spawns `teammate-tests-agent` first. Tests are written against the contracts before any implementation exists. All tests fail — this is correct and expected.
 3. **HITL — Test Plan Gate** — User reviews the test suite before any implementation is spawned. Reject or revise at zero cost.
-4. **GREEN phase** — Lead spawns `teammate-backend`, `teammate-frontend`, `teammate-database` in parallel. Their goal is to make the pre-existing tests pass.
+4. **GREEN phase** — Lead spawns `teammate-backend-agent`, `teammate-frontend-agent`, `teammate-database-agent` in parallel. Their goal is to make the pre-existing tests pass.
 5. **REFACTOR phase** — Lead coordinates quality improvements across all layers while keeping tests green.
 6. **Lead** monitors contract compliance throughout, flags mismatches, and aggregates the final output.
 

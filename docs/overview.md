@@ -138,13 +138,20 @@ A typical KAIROS feature run produces:
 
 ```
 agents/
-├── orchestrator.md        ← Coordinator
-├── pm-agent.md            ← Requirements
-├── architect-agent.md     ← System design
-├── implementer-agent.md   ← TDD code generation
-├── code-reviewer.md       ← Quality review
-├── test-verifier.md       ← Test quality
-└── release-planner.md     ← Deployment planning
+├── orchestrator-agent.md   ← Coordinator
+├── context-extractor-agent.md ← Pre-pipeline context
+├── pm-agent.md             ← Requirements
+├── architect-agent.md      ← System design
+├── implementer-agent.md    ← TDD code generation
+├── code-reviewer-agent.md  ← Quality review
+├── test-verifier-agent.md  ← Test quality
+├── release-planner-agent.md ← Deployment planning
+└── team/                   ← Team Mode specialists
+    ├── implementer-lead-agent.md
+    ├── teammate-tests-agent.md
+    ├── teammate-backend-agent.md
+    ├── teammate-frontend-agent.md
+    └── teammate-database-agent.md
 ```
 
 Each file is a self-contained subagent definition — YAML frontmatter for tool and model configuration, markdown body for the agent prompt. Copy the `agents/` folder into the right directory for your tool and you're ready.

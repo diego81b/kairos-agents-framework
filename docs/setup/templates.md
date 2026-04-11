@@ -19,9 +19,9 @@ Copy this block into any issue description or paste it directly in the chat:
 - [ ] pm-agent
 - [ ] architect-agent
 - [ ] implementer-agent
-- [ ] code-reviewer
-- [ ] test-verifier
-- [ ] release-planner
+- [ ] code-reviewer-agent
+- [ ] test-verifier-agent
+- [ ] release-planner-agent
 ```
 
 Check (`[x]`) only the agents you want to activate.
@@ -38,9 +38,9 @@ Full pipeline — new functionality going to production.
 - [x] pm-agent
 - [x] architect-agent
 - [x] implementer-agent
-- [x] code-reviewer
-- [x] test-verifier
-- [x] release-planner
+- [x] code-reviewer-agent
+- [x] test-verifier-agent
+- [x] release-planner-agent
 ```
 
 ---
@@ -55,9 +55,9 @@ Skip design and deployment planning; focus on fix + verification.
 - [x] pm-agent
 - [ ] architect-agent
 - [x] implementer-agent
-- [x] code-reviewer
-- [x] test-verifier
-- [ ] release-planner
+- [x] code-reviewer-agent
+- [x] test-verifier-agent
+- [ ] release-planner-agent
 ```
 
 ---
@@ -72,9 +72,9 @@ Minimal pipeline — urgent production fix, skip analysis and planning.
 - [ ] pm-agent
 - [ ] architect-agent
 - [x] implementer-agent
-- [x] code-reviewer
-- [ ] test-verifier
-- [ ] release-planner
+- [x] code-reviewer-agent
+- [ ] test-verifier-agent
+- [ ] release-planner-agent
 ```
 
 ---
@@ -89,9 +89,9 @@ All phases except deployment — improving existing code without a new release.
 - [x] pm-agent
 - [x] architect-agent
 - [x] implementer-agent
-- [x] code-reviewer
-- [x] test-verifier
-- [ ] release-planner
+- [x] code-reviewer-agent
+- [x] test-verifier-agent
+- [ ] release-planner-agent
 ```
 
 ---
@@ -106,9 +106,9 @@ Analysis and writing only — no code, no deployment.
 - [x] pm-agent
 - [ ] architect-agent
 - [ ] implementer-agent
-- [ ] code-reviewer
-- [ ] test-verifier
-- [ ] release-planner
+- [ ] code-reviewer-agent
+- [ ] test-verifier-agent
+- [ ] release-planner-agent
 ```
 
 ---
@@ -146,6 +146,6 @@ When the orchestrator shows the Case B selection prompt, paste the entire templa
 | 1 | `pm-agent` | Requirements analysis, acceptance criteria, risks |
 | 2 | `architect-agent` | System design, API contracts, DB schema |
 | 3 | `implementer-agent` | TDD code generation (plan gate + code gate) |
-| 4 | `code-reviewer` | Standards, security, performance review |
-| 5 | `test-verifier` | Test coverage and assertion quality |
-| 6 | `release-planner` | Deployment steps, rollback, monitoring |
+| 4 | `code-reviewer-agent` | Standards, security, performance review |
+| 5 | `test-verifier-agent` | Test coverage and assertion quality |
+| 6 | `release-planner-agent` | Deployment steps, rollback, monitoring |

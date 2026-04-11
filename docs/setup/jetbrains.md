@@ -71,7 +71,7 @@ Since `handoffs` are not available, the HITL gate relies on agent prompt wording
 ⛔  Stop here
 ```
 
-Reply with your choice. The orchestrator will not proceed without your explicit approval (as defined in `agents/orchestrator.md`).
+Reply with your choice. The orchestrator will not proceed without your explicit approval (as defined in `agents/orchestrator-agent.md`).
 
 ## Step 6 — Save `.kairos/` outputs
 

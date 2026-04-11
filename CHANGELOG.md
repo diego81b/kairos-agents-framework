@@ -6,6 +6,23 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ---
 
+## [v2.0.7] — 2026-04-11
+
+### Added
+
+- `docs/agent-files.md` — new **Agent Files** page: embeds the full raw content of every agent file as copy-ready code blocks using VitePress code-snippet imports. Auto-synced from source files at build time.
+- Contributor rule: every modification to any agent file must produce an entry in `CHANGELOG.md`.
+- Sidebar restructured: **Agent Files (copy)** collapsible parent per agent, **Team Files (copy)** collapsible parent in Team Mode section.
+
+### Changed
+
+- `agents/teammates/` renamed to `agents/team/`.
+- `agents/implementer-lead.md` moved into `agents/team/` — Team Mode specific.
+- All agent files renamed with consistent `-agent` suffix: `orchestrator-agent.md`, `context-extractor-agent.md`, `code-reviewer-agent.md`, `test-verifier-agent.md`, `release-planner-agent.md`, `implementer-lead-agent.md`, `teammate-*-agent.md`. Already-correct names (`pm-agent`, `architect-agent`, `implementer-agent`) unchanged.
+- All `name:` frontmatter fields, `@agent-call` references, and path/link references updated across all files.
+
+---
+
 ## [v2.0.6] — 2026-04-09
 
 ### Added

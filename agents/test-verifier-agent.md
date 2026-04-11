@@ -1,5 +1,5 @@
 ---
-name: test-verifier
+name: test-verifier-agent
 description: "Verifies test quality and coverage adequacy."
 tools: [read]
 model: claude-sonnet-4-6
@@ -90,7 +90,7 @@ curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issu
 
 ```yaml
 ---
-name: test-verifier
+name: test-verifier-agent
 description: "Verifies test quality and coverage adequacy."
 model: claude-sonnet-4-6
 tools: [read, write, bash, grep]
@@ -105,7 +105,7 @@ tools: [read, write, bash, grep]
 
 ```yaml
 ---
-name: test-verifier
+name: test-verifier-agent
 description: "Verifies test quality and coverage adequacy."
 model: claude-sonnet-4-6
 tools: [read, write, bash, grep]
@@ -119,14 +119,14 @@ With `bash` available, instruct the agent to run the project's coverage command 
 
 ```yaml
 ---
-name: test-verifier
+name: test-verifier-agent
 description: "Verifies test quality and coverage adequacy."
 model: claude-sonnet-4-6
 tools: ['read', 'edit', 'execute', 'search']
 user-invocable: false
 handoffs:
   - label: "✅ Approve → Release Planning"
-    agent: release-planner
+    agent: release-planner-agent
     prompt: "Create the deployment plan for this verified implementation: {output}"
     send: false
   - label: "✏️ Send back to Implementer"

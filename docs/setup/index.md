@@ -53,20 +53,20 @@ HITL = Human-in-the-Loop. After each phase, the agent:
 2. Asks: `✅ Approve / ✏️ Request changes / ⛔ Stop`
 3. Waits for your explicit choice before calling the next agent
 
-This is automatic in Claude Code (defined in `agents/orchestrator.md`). In other tools you enforce it manually by reading the output and deciding when to continue.
+This is automatic in Claude Code (defined in `agents/orchestrator-agent.md`). In other tools you enforce it manually by reading the output and deciding when to continue.
 
 ## Repository layout
 
 ```
 your-project/
 ├── agents/              ← KAIROS agent definitions (source of truth)
-│   ├── orchestrator.md
+│   ├── orchestrator-agent.md
 │   ├── pm-agent.md
 │   ├── architect-agent.md
 │   ├── implementer-agent.md
-│   ├── code-reviewer.md
-│   ├── test-verifier.md
-│   └── release-planner.md
+│   ├── code-reviewer-agent.md
+│   ├── test-verifier-agent.md
+│   └── release-planner-agent.md
 └── .kairos/             ← Created at runtime, holds JSON phase outputs
     └── issue-42_add-stripe/   ← one subfolder per feature
         ├── 01-requirements.json

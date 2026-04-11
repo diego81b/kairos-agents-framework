@@ -32,13 +32,13 @@ Project layout with native VS Code format:
 your-project/
 ├── .github/
 │   └── agents/
-│       ├── orchestrator.agent.md
+│       ├── orchestrator-agent.agent.md
 │       ├── pm-agent.agent.md
 │       ├── architect-agent.agent.md
 │       ├── implementer-agent.agent.md
-│       ├── code-reviewer.agent.md
-│       ├── test-verifier.agent.md
-│       └── release-planner.agent.md
+│       ├── code-reviewer-agent.agent.md
+│       ├── test-verifier-agent.agent.md
+│       └── release-planner-agent.agent.md
 ```
 
 ## Step 2 — Agent file format

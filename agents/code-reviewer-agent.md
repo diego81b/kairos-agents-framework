@@ -1,5 +1,5 @@
 ---
-name: code-reviewer
+name: code-reviewer-agent
 description: "Reviews code for quality, standards, security, and performance."
 tools: [read, grep]
 model: claude-sonnet-4-6
@@ -118,7 +118,7 @@ curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issu
 
 ```yaml
 ---
-name: code-reviewer
+name: code-reviewer-agent
 description: "Reviews code for quality, standards, security, and performance."
 model: claude-sonnet-4-6
 tools: [read, write, grep]
@@ -133,7 +133,7 @@ tools: [read, write, grep]
 
 ```yaml
 ---
-name: code-reviewer
+name: code-reviewer-agent
 description: "Reviews code for quality, standards, security, and performance."
 model: claude-sonnet-4-6
 tools: [read, write, grep]
@@ -147,14 +147,14 @@ Do not use `readonly: true` even though the reviewer does not write source code 
 
 ```yaml
 ---
-name: code-reviewer
+name: code-reviewer-agent
 description: "Reviews code for quality, standards, security, and performance."
 model: claude-sonnet-4-6
 tools: ['read', 'edit', 'search']
 user-invocable: false
 handoffs:
   - label: "✅ Approve → Test Verification"
-    agent: test-verifier
+    agent: test-verifier-agent
     prompt: "Verify test quality and coverage for this implementation: {output}"
     send: false
   - label: "✏️ Send back to Implementer"

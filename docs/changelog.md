@@ -4,6 +4,25 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v2.0.7 — April 11, 2026
+
+### Added
+
+- **[Agent Files](/agent-files)** — new page that embeds the full raw content of every agent file (13 agents) as ready-to-copy code blocks. Content is auto-synced from source files at build time via VitePress code-snippet imports — no manual drift possible.
+- **Changelog contribution rule** — every modification to any agent file must produce an entry in `CHANGELOG.md`. Rule enforced via warning admonitions on the Agent Files page and the Agents overview page.
+- Navigation updated: `Agents` top-nav entry is now a dropdown; sidebar adds **Agent Files (copy)** as a collapsible parent per agent and **Team Files (copy)** for the Team Mode section.
+
+### Changed
+
+- `agents/teammates/` folder renamed to `agents/team/`.
+- `agents/implementer-lead.md` moved into `agents/team/` — it is Team Mode specific.
+- All agent files renamed to include the `-agent` suffix consistently: `orchestrator-agent.md`, `context-extractor-agent.md`, `code-reviewer-agent.md`, `test-verifier-agent.md`, `release-planner-agent.md`, `implementer-lead-agent.md`, `teammate-*-agent.md`. Files already named correctly (`pm-agent`, `architect-agent`, `implementer-agent`) are unchanged.
+- All `name:` frontmatter fields updated to match new file names.
+- All `@agent-call` references inside agent files updated.
+- All path and link references updated across docs and setup guides.
+
+---
+
 ## v2.0.6 — April 9, 2026
 
 ### Added
@@ -78,11 +97,11 @@ A new optional execution mode for complex multi-layer features. When explicitly 
 
 | Agent | Role |
 |---|---|
-| [Implementer Lead](/agents/implementer-lead) | Team coordinator — creates binding contracts, spawns and monitors teammates |
-| [Teammate Tests](/agents/teammates/teammate-tests) | Test specialist — generates full test suite (RED phase first) |
-| [Teammate Backend](/agents/teammates/teammate-backend) | Backend specialist — implements APIs per contract |
-| [Teammate Frontend](/agents/teammates/teammate-frontend) | Frontend specialist — implements UI per contract |
-| [Teammate Database](/agents/teammates/teammate-database) | Database specialist — creates schema and migrations per contract |
+| [Implementer Lead](/agents/team/implementer-lead-agent) | Team coordinator — creates binding contracts, spawns and monitors teammates |
+| [Teammate Tests](/agents/team/teammate-tests-agent) | Test specialist — generates full test suite (RED phase first) |
+| [Teammate Backend](/agents/team/teammate-backend-agent) | Backend specialist — implements APIs per contract |
+| [Teammate Frontend](/agents/team/teammate-frontend-agent) | Frontend specialist — implements UI per contract |
+| [Teammate Database](/agents/team/teammate-database-agent) | Database specialist — creates schema and migrations per contract |
 
 Also added:
 

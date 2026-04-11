@@ -28,13 +28,13 @@ Project layout:
 your-project/
 ├── .cursor/
 │   └── agents/
-│       ├── orchestrator.md
+│       ├── orchestrator-agent.md
 │       ├── pm-agent.md
 │       ├── architect-agent.md
 │       ├── implementer-agent.md
-│       ├── code-reviewer.md
-│       ├── test-verifier.md
-│       └── release-planner.md
+│       ├── code-reviewer-agent.md
+│       ├── test-verifier-agent.md
+│       └── release-planner-agent.md
 ```
 
 ## Step 2 — How subagents are loaded

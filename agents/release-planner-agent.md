@@ -1,5 +1,5 @@
 ---
-name: release-planner
+name: release-planner-agent
 description: "Plans deployment strategy and rollback procedures."
 tools: [read]
 model: claude-sonnet-4-6
@@ -115,7 +115,7 @@ curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issu
 
 ```yaml
 ---
-name: release-planner
+name: release-planner-agent
 description: "Plans deployment strategy and rollback procedures."
 model: claude-sonnet-4-6
 tools: [read, write, bash]
@@ -132,7 +132,7 @@ tools: [read, write, bash]
 
 ```yaml
 ---
-name: release-planner
+name: release-planner-agent
 description: "Plans deployment strategy and rollback procedures."
 model: claude-sonnet-4-6
 tools: [read, write, bash]
@@ -146,7 +146,7 @@ readonly: false
 
 ```yaml
 ---
-name: release-planner
+name: release-planner-agent
 description: "Plans deployment strategy and rollback procedures."
 model: claude-sonnet-4-6
 tools: ['read', 'edit', 'execute']
@@ -157,7 +157,7 @@ handoffs:
     prompt: ""
     send: false
   - label: "✏️ Request changes"
-    agent: release-planner
+    agent: release-planner-agent
     prompt: "Revise the deployment plan based on this feedback: "
     send: false
 ---

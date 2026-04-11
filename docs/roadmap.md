@@ -11,11 +11,11 @@
 
 **Implementer Team Pattern** (Claude Code only, optional)
 
-- `implementer-lead` — team coordinator: creates binding contracts (API, DB, test, pattern), spawns 4 parallel teammates
-- `teammate-tests` — test specialist (RED phase first, >80% coverage)
-- `teammate-backend` — backend specialist (APIs per contract)
-- `teammate-frontend` — frontend specialist (UI per contract)
-- `teammate-database` — database specialist (schema + migrations per contract)
+- `implementer-lead-agent` — team coordinator: creates binding contracts (API, DB, test, pattern), spawns 4 parallel teammates
+- `teammate-tests-agent` — test specialist (RED phase first, >80% coverage)
+- `teammate-backend-agent` — backend specialist (APIs per contract)
+- `teammate-frontend-agent` — frontend specialist (UI per contract)
+- `teammate-database-agent` — database specialist (schema + migrations per contract)
 - Team Mode routing in Orchestrator with explicit cost warning (~$0.068 single vs ~$0.242 team)
 
 **Implementer two-stage gate**

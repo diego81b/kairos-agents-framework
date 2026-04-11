@@ -1,5 +1,5 @@
 ---
-name: teammate-backend
+name: teammate-backend-agent
 description: "Backend specialist: implements API routes and business logic"
 tools: [write]
 model: claude-haiku-4-5

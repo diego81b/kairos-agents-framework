@@ -42,7 +42,13 @@ export default withMermaid(defineConfig({
   themeConfig: {
     nav: [
       { text: 'Overview', link: '/overview' },
-      { text: 'Agents', link: '/agents' },
+      {
+        text: 'Agents',
+        items: [
+          { text: 'All Agents', link: '/agents' },
+          { text: 'Agent Files (copy)', link: '/agent-files' }
+        ]
+      },
       {
         text: 'Setup',
         items: [
@@ -90,24 +96,52 @@ export default withMermaid(defineConfig({
         collapsed: false,
         items: [
           { text: 'All Agents Overview', link: '/agents' },
-          { text: 'Orchestrator', link: '/agents/orchestrator' },
+          {
+            text: 'Agent Files (copy)',
+            link: '/agent-files',
+            collapsed: true,
+            items: [
+              { text: 'Context Extractor', link: '/agents/context-extractor-agent' },
+              { text: 'Orchestrator', link: '/agents/orchestrator-agent' },
+              { text: 'PM Agent', link: '/agents/pm-agent' },
+              { text: 'Architect Agent', link: '/agents/architect-agent' },
+              { text: 'Implementer Agent', link: '/agents/implementer-agent' },
+              { text: 'Code Reviewer', link: '/agents/code-reviewer-agent' },
+              { text: 'Test Verifier', link: '/agents/test-verifier-agent' },
+              { text: 'Release Planner', link: '/agents/release-planner-agent' }
+            ]
+          },
+          { text: 'Context Extractor', link: '/agents/context-extractor-agent' },
+          { text: 'Orchestrator', link: '/agents/orchestrator-agent' },
           { text: 'PM Agent', link: '/agents/pm-agent' },
           { text: 'Architect Agent', link: '/agents/architect-agent' },
           { text: 'Implementer Agent', link: '/agents/implementer-agent' },
-          { text: 'Code Reviewer', link: '/agents/code-reviewer' },
-          { text: 'Test Verifier', link: '/agents/test-verifier' },
-          { text: 'Release Planner', link: '/agents/release-planner' }
+          { text: 'Code Reviewer', link: '/agents/code-reviewer-agent' },
+          { text: 'Test Verifier', link: '/agents/test-verifier-agent' },
+          { text: 'Release Planner', link: '/agents/release-planner-agent' }
         ]
       },
       {
         text: 'Team Mode (optional)',
         collapsed: true,
         items: [
-          { text: 'Implementer Lead', link: '/agents/implementer-lead' },
-          { text: 'Teammate Tests', link: '/agents/teammates/teammate-tests' },
-          { text: 'Teammate Backend', link: '/agents/teammates/teammate-backend' },
-          { text: 'Teammate Frontend', link: '/agents/teammates/teammate-frontend' },
-          { text: 'Teammate Database', link: '/agents/teammates/teammate-database' }
+          {
+            text: 'Team Files (copy)',
+            link: '/agent-files#implementer-lead-team-mode',
+            collapsed: true,
+            items: [
+              { text: 'Implementer Lead', link: '/agents/team/implementer-lead-agent' },
+              { text: 'Teammate Tests', link: '/agents/team/teammate-tests-agent' },
+              { text: 'Teammate Backend', link: '/agents/team/teammate-backend-agent' },
+              { text: 'Teammate Frontend', link: '/agents/team/teammate-frontend-agent' },
+              { text: 'Teammate Database', link: '/agents/team/teammate-database-agent' }
+            ]
+          },
+          { text: 'Implementer Lead', link: '/agents/team/implementer-lead-agent' },
+          { text: 'Teammate Tests', link: '/agents/team/teammate-tests-agent' },
+          { text: 'Teammate Backend', link: '/agents/team/teammate-backend-agent' },
+          { text: 'Teammate Frontend', link: '/agents/team/teammate-frontend-agent' },
+          { text: 'Teammate Database', link: '/agents/team/teammate-database-agent' }
         ]
       },
       {

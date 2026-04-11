@@ -1,5 +1,5 @@
 ---
-name: teammate-tests
+name: teammate-tests-agent
 description: "Test specialist: generates comprehensive test suite (RED phase first)"
 tools: [write]
 model: claude-haiku-4-5
