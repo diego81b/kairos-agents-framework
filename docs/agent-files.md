@@ -31,11 +31,8 @@ No exceptions. A pull request that modifies an agent without a matching changelo
 | [Code Reviewer](#code-reviewer) | `agents/code-reviewer-agent.md` |
 | [Test Verifier](#test-verifier) | `agents/test-verifier-agent.md` |
 | [Release Planner](#release-planner) | `agents/release-planner-agent.md` |
-| [Implementer Lead *(Team Mode)*](#implementer-lead-team-mode) | `agents/team/implementer-lead-agent.md` |
-| [Teammate Tests *(Team Mode)*](#teammate-tests-team-mode) | `agents/team/teammate-tests-agent.md` |
-| [Teammate Backend *(Team Mode)*](#teammate-backend-team-mode) | `agents/team/teammate-backend-agent.md` |
-| [Teammate Frontend *(Team Mode)*](#teammate-frontend-team-mode) | `agents/team/teammate-frontend-agent.md` |
-| [Teammate Database *(Team Mode)*](#teammate-database-team-mode) | `agents/team/teammate-database-agent.md` |
+
+> Team Mode agent files are on a [separate page](/agent-files-team).
 
 ---
 
@@ -100,43 +97,3 @@ Test quality verification — coverage, assertion quality, edge-case coverage.
 Deployment planning — rollback procedures, monitoring, canary strategy.
 
 <<< @/agents/release-planner-agent.md{md}
-
----
-
-## Implementer Lead *(Team Mode)*
-
-Team coordinator for complex multi-layer features. Claude Code only. Spawns four parallel specialists.
-
-<<< @/agents/team/implementer-lead-agent.md{md}
-
----
-
-## Teammate Tests *(Team Mode)*
-
-RED phase specialist — writes the full test suite before any implementation exists.
-
-<<< @/agents/team/teammate-tests-agent.md{md}
-
----
-
-## Teammate Backend *(Team Mode)*
-
-Backend specialist — API routes and business logic per the Lead's contracts.
-
-<<< @/agents/team/teammate-backend-agent.md{md}
-
----
-
-## Teammate Frontend *(Team Mode)*
-
-Frontend specialist — UI components and client code per the Lead's contracts.
-
-<<< @/agents/team/teammate-frontend-agent.md{md}
-
----
-
-## Teammate Database *(Team Mode)*
-
-Database specialist — schema migrations and rollback scripts per the Lead's contracts.
-
-<<< @/agents/team/teammate-database-agent.md{md}

@@ -4,6 +4,17 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v2.0.8 — April 11, 2026
+
+### Changed
+
+- **[Agent Files](/agent-files)** — now contains only the 8 Core Agents. Team Mode entries removed; a note links to the new dedicated page.
+- **[Team Mode Files](/agent-files-team)** — new standalone page for the 5 Team Mode agent files, with its own quick-jump table, Claude Code info callout, and mandatory changelog warning. Fully separate from the Core Agents page.
+- Sidebar and nav updated: **Team Files (copy)** links to `/agent-files-team`; top-nav `Agents` dropdown gains a **Team Mode Files (copy)** entry.
+- **Team Mode (optional)** sidebar section expanded by default (`collapsed: false`) — visually distinct from Core Agents.
+
+---
+
 ## v2.0.7 — April 11, 2026
 
 ### Added
