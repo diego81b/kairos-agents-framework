@@ -94,7 +94,13 @@ Backend will query these tables.
 Frontend sends data for these fields.
 Tests verify these constraints.
 
-If schema unclear: Signal Team Lead.
+If the schema contract is unclear:
+
+```
+message [lead]: "Clarification needed on schema: [specific ambiguity in contract]."
+```
+
+When your migrations are complete and checklist verified, mark your task as completed on the shared task list.
 
 ## Contract Compliance Checklist
 

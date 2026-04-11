@@ -158,15 +158,35 @@ Requires the respective CLI authenticated: `jira init`, `glab auth login`, or a 
 
 ## Team Mode — additional setup
 
-Team Mode activates a coordinated team of 5 specialists in place of the single Implementer Agent. It is available **only in Claude Code** because it requires the `agent` tool — the ability for one agent to spawn other agents programmatically at runtime.
+Team Mode activates a coordinated team of 5 specialists in place of the single Implementer Agent. It uses Claude Code’s **experimental Agent Teams feature**, available only in Claude Code.
+
+### Enable Agent Teams
+
+Create or update `.claude/settings.json` in your project root:
+
+```json
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  }
+}
+```
+
+Requires Claude Code v2.1.32 or later:
+
+```bash
+claude --version
+```
 
 ### Why Claude Code only?
 
-| Tool | Agent spawning | Team Mode |
+| Tool | Agent Teams support | Team Mode |
 | --- | --- | --- |
-| **Claude Code** | `agent` tool — spawns agents at runtime | ✅ |
-| Cursor | `@agent-name` — user-triggered only | ❌ |
-| VS Code / JetBrains / others | No agent-to-agent spawning | ❌ |
+| **Claude Code v2.1.32+** | Experimental Agent Teams — separate sessions, peer messaging | ✅ |
+| Cursor | No inter-session coordination | ❌ |
+| VS Code / JetBrains / others | No inter-session coordination | ❌ |
+
+With Agent Teams, each teammate runs in its **own Claude Code session** with its own context window. Teammates communicate peer-to-peer via a shared mailbox and coordinate work via a shared task list — not just reporting results back to the lead. This is fundamentally different from the single Implementer Agent, which uses the `agent` tool for direct subagent spawning within a single session.
 
 ### How to activate Team Mode
 
@@ -176,7 +196,9 @@ Team Mode is never activated automatically. When you select `implementer-lead-ag
 ⚠️  TEAM MODE — COST WARNING
 
 Single Agent:  ~$0.068/feature  ✅ Recommended
-Team Mode:     ~$0.242/feature  (3.5× more)
+Team Mode:     ~$0.242/feature  (3.5× more — experimental, Claude Code only)
+
+Requires: CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 in .claude/settings.json
 
 ✅ Confirm Team Mode
 ↩️  Switch to Single Agent
@@ -205,19 +227,25 @@ Implementer Lead
                                          tests must stay green)
 ```
 
-### Verify the `agent` tool is enabled
+### Verify Agent Teams is enabled
 
-Check that `agents/team/implementer-lead-agent.md` has `agent` in its `tools:` list:
+Check that `Claude Code v2.1.32+` is installed and the env var is set:
 
-```yaml
----
-name: implementer-lead-agent
-tools: [read, write, agent]
-model: claude-opus-4-6
----
+```bash
+claude --version
 ```
 
-Without the `agent` tool, the Lead cannot spawn teammates and Team Mode will not work.
+You can also verify the setting is active by looking at `.claude/settings.json`:
+
+```json
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  }
+}
+```
+
+Without this flag, the Lead cannot create a team and Team Mode will not work.
 
 ---
 

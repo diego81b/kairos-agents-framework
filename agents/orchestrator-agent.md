@@ -146,9 +146,10 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
    ⚠️  TEAM MODE — COST WARNING
 
    Single Agent:  ~$0.068/feature  ✅ Recommended (works everywhere)
-   Team Mode:     ~$0.242/feature  (3.5× more — Claude Code only)
+   Team Mode:     ~$0.242/feature  (3.5× more — Claude Code only, experimental)
 
-   Team spawns: Lead + Tests + Backend + Frontend + Database (parallel)
+   Team spawns: Lead + Tests + Backend + Frontend + Database (Agent Teams)
+   Requires: CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 in .claude/settings.json
    Worth it for: critical systems requiring perfect layer alignment.
 
    ✅ Confirm Team Mode — proceed with implementer-lead-agent

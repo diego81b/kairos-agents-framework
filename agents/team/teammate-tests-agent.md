@@ -74,7 +74,11 @@ For EACH api_contract endpoint:
 ### GREEN Phase
 
 As Backend generates code, tests become GREEN.
-Your job: Monitor and report when they pass.
+When all tests pass, message the Lead directly:
+
+```
+message [lead]: "GREEN confirmed. All [N] tests passing. Coverage at [X]%. Task complete."
+```
 
 ### Coverage Target
 
@@ -117,4 +121,10 @@ Verify Backend implements EXACTLY per contract:
 - Error codes match contract
 - Database interactions match contract
 
-If mismatch: Signal Team Lead for correction.
+If mismatch found:
+
+```
+message [lead]: "Contract mismatch in [endpoint]: [expected] vs [found]. Correction needed."
+```
+
+When your task is complete, mark it as completed on the shared task list.

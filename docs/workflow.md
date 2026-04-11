@@ -191,17 +191,17 @@ _Input: architecture JSON + project profile_
 _Output: all layer files + contract compliance report + coverage report_
 _Saved to: project paths + `.kairos/<feature_folder>/03-implementation.json`_
 
-::: warning Team Mode — Claude Code only
-Team Mode requires the ability for one agent to **spawn other agents programmatically at runtime**. Claude Code provides this via the native `agent` tool, which lets the Implementer Lead instantiate the four teammates in parallel during its own execution.
+::: warning Team Mode — Claude Code only (experimental)
+Team Mode requires **Claude Code's experimental Agent Teams feature**. Enable it by setting `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in `.claude/settings.json`. Requires Claude Code v2.1.32+.
 
-Other tools do not support this:
+Unlike the single Implementer Agent (which uses the `agent` tool for direct subagent spawning), Agent Teams run each teammate as a **separate Claude Code session** with its own context window. Teammates communicate peer-to-peer via a shared mailbox and coordinate via a shared task list — not just reporting back to the lead.
 
-| Tool | Agent mechanism | Team Mode |
+| Tool | Agent Teams support | Team Mode |
 | --- | --- | --- |
-| **Claude Code** | `agent` tool — an agent can spawn other agents at runtime | ✅ |
-| **Cursor** | `@agent-name` — always user-triggered, never agent-triggered | ❌ |
-| **VS Code Copilot** | `handoffs` — pre-defined transitions activated by the user | ❌ |
-| **JetBrains / Codex CLI / others** | No agent-to-agent spawning mechanism | ❌ |
+| **Claude Code v2.1.32+** | Experimental Agent Teams — separate sessions, peer messaging | ✅ |
+| **Cursor** | No inter-session coordination | ❌ |
+| **VS Code Copilot** | No inter-session coordination | ❌ |
+| **JetBrains / Codex CLI / others** | No inter-session coordination | ❌ |
 
 Use the single Implementer Agent in all non-Claude Code environments.
 :::

@@ -114,7 +114,13 @@ src/hooks/
 - Handle errors per contract
 - Tests will verify contract compliance
 
-If endpoint not available: Signal Team Lead.
+If an expected endpoint or contract point is unclear:
+
+```
+message [lead]: "Clarification needed: [specific issue with endpoint or contract]."
+```
+
+When your implementation is complete and checklist verified, mark your task as completed on the shared task list.
 
 ## Contract Compliance Checklist
 

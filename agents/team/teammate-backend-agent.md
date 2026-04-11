@@ -114,7 +114,13 @@ src/
 - Do NOT use different error codes
 - Tests will verify contract compliance
 
-If contract unclear: Signal Team Lead for clarification.
+If contract is unclear:
+
+```
+message [lead]: "Clarification needed on [specific contract point]: [what is ambiguous]."
+```
+
+When your implementation is complete and checklist verified, mark your task as completed on the shared task list.
 
 ## Contract Compliance Checklist
 

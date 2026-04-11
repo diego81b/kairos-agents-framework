@@ -46,7 +46,7 @@ Implements code using **real TDD** (tests written before code). Runs tests itera
 
 For complex multi-layer features, the Orchestrator can activate a coordinated team of specialists instead of the single Implementer Agent. Team Mode must be **explicitly requested** — the Orchestrator will show a cost warning (~$0.242 vs ~$0.068) before proceeding.
 
-**Why Claude Code only?** Team Mode requires one agent to spawn other agents programmatically at runtime. Claude Code provides this via the native `agent` tool. Other tools (Cursor, VS Code, JetBrains, Codex CLI) only support user-triggered agent calls — an agent cannot autonomously instantiate teammates during its own execution.
+**Why Claude Code only?** Team Mode uses Claude Code's **experimental Agent Teams feature** (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`, requires v2.1.32+). Each teammate runs as a separate Claude Code session with its own context window; teammates communicate peer-to-peer via a shared mailbox and coordinate via a shared task list. Other tools (Cursor, VS Code, JetBrains, Codex CLI) have no equivalent inter-session coordination mechanism.
 
 The [Implementer Lead](/agents/team/implementer-lead-agent) acts as coordinator (not a coder). It creates binding contracts (API, database, test, pattern) and spawns four parallel teammates:
 
