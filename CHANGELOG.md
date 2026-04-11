@@ -4,6 +4,24 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v2.1.2 — April 11, 2026
+
+### Changed
+
+- **`orchestrator-agent` — orchestrator collapse prevention** — addresses a failure mode where the orchestrator bypassed subagent delegation and the HITL gates, writing code directly.
+  - **"Your Role" strengthened**: explicit statement that the orchestrator does NOT write source code, test files, architecture documents, or any project file. "You are a coordinator, not an implementer."
+  - **New `## Hard Constraints` section** with 4 absolute prohibitions:
+    1. Never write source code (with a file-extension list as a trigger check).
+    2. Never self-implement — specific collapse phrases ("I'll proceed with implementation", "proceeding with implementation") identified as failure signals requiring immediate redirection to the correct subagent.
+    3. Never skip a HITL gate — silence or ambiguity from the user = do nothing and wait.
+    4. Never auto-invoke `context-extractor-agent` from inside a pipeline run.
+  - **HITL section — "STOP" language added**: step 3 now reads "STOP. Do not read files, do not prepare the next prompt, do not take any action." to prevent the orchestrator from queuing work while waiting for approval.
+  - **New `### Collapse Detection` rule**: before writing any response, the orchestrator self-checks whether it is about to produce implementation output; if so, it emits a visible warning (`⚠️ Orchestrator self-check`) and delegates immediately.
+  - **Step 0a clarified**: the prohibition on invoking `context-extractor-agent` is now a standalone bolded statement — "You have no authority to trigger it."
+  - **Important Notes**: added "If you are unsure which subagent to call, call none and ask the user — never guess and proceed."
+
+---
+
 ## v2.1.1 — April 11, 2026
 
 ### Added
