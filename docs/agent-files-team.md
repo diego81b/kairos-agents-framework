@@ -6,19 +6,6 @@ These five agents are used exclusively in **Team Mode** — activated on explici
 
 > **How this stays in sync** — Each block is imported directly from the source file in the repository at build time. Any edit to the source agent file is automatically reflected here on the next build. No manual copy-paste between source and documentation is needed.
 
-::: warning Contributor rule — mandatory changelog entry
-**Every modification to any agent file must produce an entry in [`CHANGELOG.md`](/changelog).**
-
-Format:
-```
-## [vX.Y.Z] — YYYY-MM-DD
-
-### Changed
-- `agents/<filename>.md` — describe what changed and why
-```
-No exceptions. A pull request that modifies an agent without a matching changelog entry will be rejected.
-:::
-
 ---
 
 ## Quick jump

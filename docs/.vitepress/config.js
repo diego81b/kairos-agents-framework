@@ -11,7 +11,6 @@ export default withMermaid(defineConfig({
     '**/node_modules/**',
     'docs/.vitepress/**',
     'README.md',
-    'CHANGELOG.md',
     'DEPLOYMENT.md',
     'LICENSE',
     'netlify.toml',
@@ -22,11 +21,13 @@ export default withMermaid(defineConfig({
     'docs/convert.ps1',
     'docs/convert.py',
     'docs/SUMMARY.md',
-    'docs/KAIROS-FRAMEWORK-DOCUMENTATION.md'
+    'docs/KAIROS-FRAMEWORK-DOCUMENTATION.md',
+    'docs/changelog.md'
   ],
 
   rewrites: {
-    'docs/:slug*': ':slug*'
+    'docs/:slug*': ':slug*',
+    'CHANGELOG.md': 'changelog.md'
   },
 
   title: 'KAIROS Framework',
