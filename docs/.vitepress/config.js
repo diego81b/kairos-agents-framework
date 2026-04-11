@@ -97,7 +97,6 @@ export default withMermaid(defineConfig({
         collapsed: false,
         items: [
           { text: 'All Agents Overview', link: '/agents' },
-          { text: 'Agent Files (copy) →', link: '/agent-files' },
           {
             text: 'Agent Files (copy)',
             link: '/agent-files',
