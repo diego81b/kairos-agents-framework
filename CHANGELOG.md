@@ -4,6 +4,27 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v2.1.1 — April 11, 2026
+
+### Added
+
+- **Open in Editor after each phase** — all 7 writing agents now run `code ".kairos/$feature_folder/<phase>.json"` immediately after saving the output file, so the JSON is opened in the editor for inspection before the user approves — mirroring the plan-mode diff-preview pattern. Affected agents: `context-extractor-agent`, `pm-agent`, `architect-agent`, `implementer-agent`, `code-reviewer-agent`, `test-verifier-agent`, `release-planner-agent`.
+- **Orchestrator HITL updated** — the HITL loop now includes an explicit "open in editor" step (step 2) with the full phase-to-filename mapping (`01-requirements.json` → … → `06-deployment-plan.json`), acting as fallback if the sub-agent cannot run the command itself.
+
+### Changed
+
+- **Agent frontmatter — `bash` and `write` tools added** where previously missing, required by the new `code` open command:
+  - `pm-agent`: `[read, write]` → `[read, write, bash]`
+  - `architect-agent`: `[read, write]` → `[read, write, bash, grep]`
+  - `code-reviewer-agent`: `[read, grep]` → `[read, write, bash, grep]`
+  - `test-verifier-agent`: `[read]` → `[read, write, bash, grep]`
+  - `release-planner-agent`: `[read]` → `[read, write, bash]`
+  - `context-extractor-agent`: `[read, grep]` → `[read, write, bash, grep]`
+  - Platform-specific config blocks in each agent updated to match.
+- **`Open in Editor` path syntax** — uses `$feature_folder` (shell variable) instead of `<feature_folder>` (ambiguous placeholder that conflicts with the bash redirection operator `<`). Each step is annotated with "Run from the project root, substituting the actual `feature_folder` value received from the orchestrator".
+
+---
+
 ## v2.1.0 — April 11, 2026
 
 ### Changed
