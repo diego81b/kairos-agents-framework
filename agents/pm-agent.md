@@ -1,7 +1,7 @@
 ---
 name: pm-agent
 description: "Analyzes feature requirements and elicits constraints. Use when you have a vague feature request that needs structured analysis."
-tools: [read, write]
+tools: [read, write, bash]
 model: claude-sonnet-4-6
 ---
 
@@ -108,7 +108,15 @@ Save output to `.kairos/<feature_folder>/01-requirements.json`.
 
 > `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
 
-### 3. Issue Tracker Comment (optional)
+### 3. Open in Editor
+After writing, open the output file in the editor so the user can inspect it directly.
+Run from the project root, substituting the actual `feature_folder` value received from the orchestrator:
+
+```bash
+code ".kairos/$feature_folder/01-requirements.json"
+```
+
+### 4. Issue Tracker Comment (optional)
 If the user provides an issue reference, post the output after approval.
 
 **Jira** (`jira-cli`):
@@ -138,7 +146,7 @@ curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issu
 name: pm-agent
 description: "Analyzes feature requirements and elicits constraints. Use when you have a vague feature request that needs structured analysis."
 model: claude-sonnet-4-6
-tools: [read, write]
+tools: [read, write, bash]
 ---
 ```
 
@@ -154,7 +162,7 @@ tools: [read, write]
 name: pm-agent
 description: "Analyzes feature requirements and elicits constraints. Use when you have a vague feature request that needs structured analysis."
 model: claude-sonnet-4-6
-tools: [read, write]
+tools: [read, write, bash]
 readonly: false
 ---
 ```
@@ -168,7 +176,7 @@ Use `model: fast` if you just need quick requirement sketches and cost matters. 
 name: pm-agent
 description: "Analyzes feature requirements and elicits constraints. Use when you have a vague feature request that needs structured analysis."
 model: claude-sonnet-4-6
-tools: ['read', 'edit']
+tools: ['read', 'edit', 'execute']
 user-invocable: false
 handoffs:
   - label: "✅ Approve → Architecture"

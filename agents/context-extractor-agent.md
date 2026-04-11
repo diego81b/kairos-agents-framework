@@ -1,7 +1,7 @@
 ---
 name: context-extractor-agent
 description: "Scans a codebase and an issue draft to produce 00-context.json for downstream agents. Use before orchestrator to prepare LLM context."
-tools: [read, grep]
+tools: [read, write, bash, grep]
 model: claude-sonnet-4-6
 ---
 
@@ -74,7 +74,15 @@ Save output to `.kairos/<feature_folder>/00-context.json`.
 
 > `feature_folder` is provided by the user or derived from the issue reference (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
 
-### 3. Issue Tracker Comment (optional)
+### 3. Open in Editor
+After writing, open the output file in the editor so the user can inspect it directly.
+Run from the project root, substituting the actual `feature_folder` value derived from the issue reference:
+
+```bash
+code ".kairos/$feature_folder/00-context.json"
+```
+
+### 4. Issue Tracker Comment (optional)
 If the user provides an issue reference, post the `issue_tech_section` after approval.
 
 **Jira** (`jira-cli`):
@@ -104,7 +112,7 @@ curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issu
 name: context-extractor-agent
 description: "Scans a codebase and an issue draft to produce 00-context.json for downstream agents. Use before orchestrator to prepare LLM context."
 model: claude-sonnet-4-6
-tools: [read, grep, write]
+tools: [read, grep, write, bash]
 ---
 ```
 

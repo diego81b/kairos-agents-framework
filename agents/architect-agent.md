@@ -1,7 +1,7 @@
 ---
 name: architect-agent
 description: "Designs system architecture based on requirements and constraints. Use after PM analysis."
-tools: [read, write]
+tools: [read, write, bash, grep]
 model: claude-sonnet-4-6
 ---
 
@@ -99,7 +99,15 @@ Save output to `.kairos/<feature_folder>/02-architecture.json`.
 
 > `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
 
-### 3. Issue Tracker Comment (optional)
+### 3. Open in Editor
+After writing, open the output file in the editor so the user can inspect it directly.
+Run from the project root, substituting the actual `feature_folder` value received from the orchestrator:
+
+```bash
+code ".kairos/$feature_folder/02-architecture.json"
+```
+
+### 4. Issue Tracker Comment (optional)
 If the user provides an issue reference, post the output after approval.
 
 **Jira** (`jira-cli`):
@@ -129,7 +137,7 @@ curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issu
 name: architect-agent
 description: "Designs system architecture based on requirements and constraints. Use after PM analysis."
 model: claude-sonnet-4-6
-tools: [read, write, grep]
+tools: [read, write, bash, grep]
 ---
 ```
 
@@ -146,7 +154,7 @@ tools: [read, write, grep]
 name: architect-agent
 description: "Designs system architecture based on requirements and constraints. Use after PM analysis."
 model: claude-sonnet-4-6
-tools: [read, write, grep]
+tools: [read, write, bash, grep]
 readonly: false
 ---
 ```
@@ -160,7 +168,7 @@ For large codebases, add `is_background: false` explicitly to ensure the archite
 name: architect-agent
 description: "Designs system architecture based on requirements and constraints. Use after PM analysis."
 model: claude-sonnet-4-6
-tools: ['read', 'edit', 'search']
+tools: ['read', 'edit', 'execute', 'search']
 user-invocable: false
 handoffs:
   - label: "✅ Approve → Implementation"

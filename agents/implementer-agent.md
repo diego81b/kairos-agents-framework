@@ -173,7 +173,15 @@ Do NOT pass output to the next phase until the user explicitly approves.
 
 > `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
 
-### 3. Issue Tracker Comment (optional)
+### 3. Open in Editor
+After writing, open the summary file in the editor so the user can inspect it directly.
+Run from the project root, substituting the actual `feature_folder` value received from the orchestrator:
+
+```bash
+code ".kairos/$feature_folder/03-implementation.json"
+```
+
+### 4. Issue Tracker Comment (optional)
 If the user provides an issue reference, post the output after approval.
 
 **Jira** (`jira-cli`):

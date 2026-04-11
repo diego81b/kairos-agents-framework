@@ -1,7 +1,7 @@
 ---
 name: code-reviewer-agent
 description: "Reviews code for quality, standards, security, and performance."
-tools: [read, grep]
+tools: [read, write, bash, grep]
 model: claude-sonnet-4-6
 ---
 
@@ -91,7 +91,15 @@ Save output to `.kairos/<feature_folder>/04-review.json`.
 
 > `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
 
-### 3. Issue Tracker Comment (optional)
+### 3. Open in Editor
+After writing, open the output file in the editor so the user can inspect it directly.
+Run from the project root, substituting the actual `feature_folder` value received from the orchestrator:
+
+```bash
+code ".kairos/$feature_folder/04-review.json"
+```
+
+### 4. Issue Tracker Comment (optional)
 If the user provides an issue reference, post the output after approval.
 
 **Jira** (`jira-cli`):
@@ -121,7 +129,7 @@ curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issu
 name: code-reviewer-agent
 description: "Reviews code for quality, standards, security, and performance."
 model: claude-sonnet-4-6
-tools: [read, write, grep]
+tools: [read, write, bash, grep]
 ---
 ```
 
@@ -136,7 +144,7 @@ tools: [read, write, grep]
 name: code-reviewer-agent
 description: "Reviews code for quality, standards, security, and performance."
 model: claude-sonnet-4-6
-tools: [read, write, grep]
+tools: [read, write, bash, grep]
 readonly: false
 ---
 ```
@@ -150,7 +158,7 @@ Do not use `readonly: true` even though the reviewer does not write source code 
 name: code-reviewer-agent
 description: "Reviews code for quality, standards, security, and performance."
 model: claude-sonnet-4-6
-tools: ['read', 'edit', 'search']
+tools: ['read', 'edit', 'execute', 'search']
 user-invocable: false
 handoffs:
   - label: "✅ Approve → Test Verification"

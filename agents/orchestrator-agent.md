@@ -169,16 +169,22 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
 ### HITL — Human-in-the-Loop
 KAIROS is a HITL pipeline. After EVERY active subagent completes:
 1. Present the output clearly to the user
-2. Ask for explicit approval before proceeding:
+2. Open the output file in the editor so the user can inspect it.
+   Run from the project root using the actual `feature_folder` and the phase file name:
+   ```bash
+   code ".kairos/$feature_folder/<output_file>"
+   ```
+   Output file per phase: `01-requirements.json` → `02-architecture.json` → `03-implementation.json` → `04-review.json` → `05-test-verification.json` → `06-deployment-plan.json`
+3. Ask for explicit approval before proceeding:
    ```
    ✅ Approve — continue to next active agent
    ✏️  Request changes — re-run this agent with feedback
    ⏭️  Skip next — approve this output, skip the next agent in the pipeline
    ⛔ Stop pipeline
    ```
-3. Do NOT call the next subagent until the user responds
-4. If changes requested, re-invoke the same subagent with feedback
-5. If **Skip next**: mark the next active agent as `[SKIPPED]` and proceed to the one after it
+4. Do NOT call the next subagent until the user responds
+5. If changes requested, re-invoke the same subagent with feedback
+6. If **Skip next**: mark the next active agent as `[SKIPPED]` and proceed to the one after it
 
 ### Sequencing
 ALWAYS follow the order:
