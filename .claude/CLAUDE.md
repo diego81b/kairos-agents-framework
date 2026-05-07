@@ -38,3 +38,35 @@ Closes #38
 ```
 
 After making changes to this repository, generate a commit message following the above rules and present it in a fenced code block ready to copy and paste.
+
+## Versioning & Changelog
+
+Every change must bump the version in `package.json`
+and add a matching entry to `CHANGELOG.md`.
+
+**Rules:**
+
+- Follow [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
+  - `fix`, `docs`, `chore`, `refactor`, `test`, `ci`, `perf` → bump PATCH.
+  - `feat` → bump MINOR.
+  - Breaking change (`BREAKING CHANGE:` footer or `!` after type) → bump MAJOR.
+- Update `version` in [package.json](../package.json) to the new value.
+- Prepend a new section to [CHANGELOG.md](../CHANGELOG.md)
+  using the existing format:
+
+  ```markdown
+  ## vX.Y.Z — Month D, YYYY
+
+  ### Added | Changed | Fixed | Removed
+
+  - **`path/to/file`** — short description of the change.
+  ```
+
+- Group entries under `Added`, `Changed`, `Fixed`, or `Removed`
+  (omit empty groups).
+- Use the current date (today) for the entry header.
+- Reference impacted files with backtick-wrapped paths
+  and explain the user-visible effect, not the implementation detail.
+
+After making changes, present both the bumped `package.json` version
+and the new changelog block alongside the commit message.
