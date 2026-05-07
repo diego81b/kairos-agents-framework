@@ -1,0 +1,13 @@
+name: Deploy docs to Netlify on tag
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Netlify deploy hook
+        run: curl -s -X POST "${{ secrets.NETLIFY_DEPLOY_HOOK }}"
