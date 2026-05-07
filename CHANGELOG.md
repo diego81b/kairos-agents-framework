@@ -4,6 +4,14 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v3.0.1 — May 7, 2026
+
+### Changed
+
+- **`agents/test-verifier-agent.md`** — rewritten to match the depth of `code-reviewer-agent`. The agent now executes the project's test+coverage command (Jest, Vitest, pytest, Go) instead of inferring results from code, and audits seven distinct dimensions: comprehensiveness, coverage (line + branch + function), assertion strength, determinism / flakiness, hygiene (`.only` / `.skip` / empty bodies), mocking discipline, and TDD reality (cross-checks `red_phase_verified` from `03-implementation.json`). Output schema now includes `status: READY|NEEDS_FIXES`, an `execution` block, an `ac_mapping` array against architecture acceptance criteria, and an `issues[]` list with `severity`, `category`, `file`, `line`, `description`, and `fix` — directly consumable by `implementer-tdd-agent` on the "Request fixes" HITL path.
+
+---
+
 ## v3.0.0 — May 7, 2026
 
 ### Added
