@@ -1,7 +1,7 @@
 ---
 name: teammate-frontend-agent
 description: "Frontend specialist: implements UI components and client code"
-tools: [write]
+tools: Read, Write, Edit, Bash, Grep, Glob
 model: haiku
 model_note: "Implementation-only - use cheap model, follows precise instructions"
 ---

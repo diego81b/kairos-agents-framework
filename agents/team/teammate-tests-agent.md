@@ -1,7 +1,7 @@
 ---
 name: teammate-tests-agent
 description: "Test specialist: generates comprehensive test suite (RED phase first)"
-tools: [write]
+tools: Read, Write, Edit, Bash, Grep, Glob
 model: haiku
 model_note: "Implementation-only - use cheap model, follows precise instructions"
 ---

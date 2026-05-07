@@ -1,7 +1,7 @@
 ---
 name: teammate-backend-agent
 description: "Backend specialist: implements API routes and business logic"
-tools: [write]
+tools: Read, Write, Edit, Bash, Grep, Glob
 model: haiku
 model_note: "Implementation-only - use cheap model, follows precise instructions"
 ---

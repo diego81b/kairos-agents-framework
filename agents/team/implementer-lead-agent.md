@@ -1,7 +1,7 @@
 ---
 name: implementer-lead-agent
 description: "Team coordinator for complex implementations. Defines contracts, orchestrates TDD phases across 4 parallel teammates via Agent Teams, verifies compliance. Requires CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1."
-tools: [read, write]
+tools: Read, Write, Edit, Bash, Grep, Glob
 model: opus
 model_note: "Reasoning-heavy role - use premium model for contract coordination"
 ---

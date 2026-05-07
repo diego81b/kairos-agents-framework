@@ -1,7 +1,7 @@
 ---
 name: teammate-database-agent
 description: "Database specialist: implements schema changes and migrations"
-tools: [write]
+tools: Read, Write, Edit, Bash, Grep, Glob
 model: haiku
 model_note: "Implementation-only - use cheap model, follows precise instructions"
 ---

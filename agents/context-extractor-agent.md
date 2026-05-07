@@ -1,7 +1,7 @@
 ---
 name: context-extractor-agent
 description: "Scans a codebase and an issue draft to produce 00-context.json for downstream agents. Use before orchestrator to prepare LLM context."
-tools: [read, write, bash, grep]
+tools: Read, Write, Edit, Bash, Grep, Glob
 model: opus
 ---
 
