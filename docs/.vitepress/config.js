@@ -10,6 +10,7 @@ export default withMermaid(defineConfig({
   srcExclude: [
     '**/node_modules/**',
     'docs/.vitepress/**',
+    'AGENTS.md',
     'README.md',
     'DEPLOYMENT.md',
     'LICENSE',
