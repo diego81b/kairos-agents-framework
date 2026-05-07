@@ -36,9 +36,17 @@ Designs system architecture, plans database schema, designs API contracts, consi
 
 ---
 
-## [Implementer Agent](/agents/implementer-agent)
+## [Implementer Agent — TDD](/agents/implementer-tdd-agent)
 
 Implements code using **real TDD** (tests written before code). Runs tests iteratively until they pass, applies team coding patterns, and handles error cases explicitly. This is the **default implementer for all features** — works with Claude Code, API, and local models.
+
+---
+
+## [Implementer Agent — Code Only](/agents/implementer-coder-agent)
+
+Generates production-ready code **without a TDD cycle**. Use this agent when the project has no test suite or when writing tests is explicitly out of scope for the task. Follows the same two-gate workflow as the TDD Implementer (plan approval + implementation approval) but skips all TDD phases, coverage measurement, and test-file generation. Compatible with all platforms.
+
+> **Note:** If your project has a test suite, prefer `implementer-tdd-agent` — TDD catches design issues that pure code generation does not.
 
 ---
 

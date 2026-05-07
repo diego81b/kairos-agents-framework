@@ -2,7 +2,7 @@
 name: pm-agent
 description: "Analyzes feature requirements and elicits constraints. Use when you have a vague feature request that needs structured analysis."
 tools: [read, write, bash]
-model: claude-sonnet-4-6
+model: sonnet
 ---
 
 # PM Agent - Requirement Analysis
@@ -136,63 +136,6 @@ curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issu
   -H "Content-Type: application/json" \
   -d "{\"content\":{\"raw\":\"## PM Analysis\"}}"
 ```
-
-## Platform Configuration
-
-### Claude Code
-
-```yaml
----
-name: pm-agent
-description: "Analyzes feature requirements and elicits constraints. Use when you have a vague feature request that needs structured analysis."
-model: claude-sonnet-4-6
-tools: [read, write, bash]
----
-```
-
-**Model**: Sonnet is sufficient for requirements analysis. Upgrade to `claude-opus-4-6` for enterprise features with many competing constraints (compliance, multi-region, strict SLAs).  
-**MCP** (optional):
-- `jira`: reads Jira ticket description and acceptance criteria automatically when a Jira key is passed
-- `gitlab`: reads GitLab issue body when a GitLab issue number is passed
-
-### Cursor
-
-```yaml
----
-name: pm-agent
-description: "Analyzes feature requirements and elicits constraints. Use when you have a vague feature request that needs structured analysis."
-model: claude-sonnet-4-6
-tools: [read, write, bash]
-readonly: false
----
-```
-
-Use `model: fast` if you just need quick requirement sketches and cost matters. Stick with `claude-sonnet-4-6` for thorough constraint elicitation.
-
-### VS Code
-
-```yaml
----
-name: pm-agent
-description: "Analyzes feature requirements and elicits constraints. Use when you have a vague feature request that needs structured analysis."
-model: claude-sonnet-4-6
-tools: ['read', 'edit', 'execute']
-user-invocable: false
-handoffs:
-  - label: "✅ Approve → Architecture"
-    agent: architect-agent
-    prompt: "Design the architecture based on these requirements: {output}"
-    send: false
-  - label: "✏️ Request changes"
-    agent: pm-agent
-    prompt: "Revise the requirements based on this feedback: "
-    send: false
-  - label: "⛔ Stop pipeline"
-    agent: ""
----
-```
-
-`user-invocable: false` — the PM Agent should only be invoked by the orchestrator, not directly by the user.
 
 ## Important Notes
 - You have FRESH context (no parent conversation)

@@ -2,11 +2,13 @@
 name: teammate-frontend-agent
 description: "Frontend specialist: implements UI components and client code"
 tools: [write]
-model: claude-haiku-4-5
+model: haiku
 model_note: "Implementation-only - use cheap model, follows precise instructions"
 ---
 
 # Teammate Frontend
+
+> ⚠️ **Claude Code only** — This agent is part of KAIROS Team Mode, which uses Claude Code's [Agent Teams](https://docs.anthropic.com/en/docs/claude-code/agent-teams) feature. It does not work with other AI assistants.
 
 ## Your Role
 

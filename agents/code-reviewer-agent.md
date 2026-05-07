@@ -2,7 +2,7 @@
 name: code-reviewer-agent
 description: "Reviews code for quality, standards, security, and performance."
 tools: [read, write, bash, grep]
-model: claude-sonnet-4-6
+model: sonnet
 ---
 
 # Code Reviewer - Quality Assurance
@@ -120,61 +120,6 @@ curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issu
   -d "{\"content\":{\"raw\":\"## Code Review\"}}"
 ```
 
-## Platform Configuration
-
-### Claude Code
-
-```yaml
----
-name: code-reviewer-agent
-description: "Reviews code for quality, standards, security, and performance."
-model: claude-sonnet-4-6
-tools: [read, write, bash, grep]
----
-```
-
-**`write` tool** must be included — the reviewer saves `04-review.json`. Without it the audit trail is broken.  
-**`grep` tool** is essential for scanning the full codebase during security and naming-convention checks.  
-**Note**: the current default frontmatter omits `write` — add it to fix the missing audit trail.
-
-### Cursor
-
-```yaml
----
-name: code-reviewer-agent
-description: "Reviews code for quality, standards, security, and performance."
-model: claude-sonnet-4-6
-tools: [read, write, bash, grep]
-readonly: false
----
-```
-
-Do not use `readonly: true` even though the reviewer does not write source code — it still needs to write the review JSON to `.kairos/`.
-
-### VS Code
-
-```yaml
----
-name: code-reviewer-agent
-description: "Reviews code for quality, standards, security, and performance."
-model: claude-sonnet-4-6
-tools: ['read', 'edit', 'execute', 'search']
-user-invocable: false
-handoffs:
-  - label: "✅ Approve → Test Verification"
-    agent: test-verifier-agent
-    prompt: "Verify test quality and coverage for this implementation: {output}"
-    send: false
-  - label: "✏️ Send back to Implementer"
-    agent: implementer-agent
-    prompt: "Fix these review issues: {output}"
-    send: false
-  - label: "⛔ Stop pipeline"
-    agent: ""
----
-```
-
-The `✏️ Send back to Implementer` handoff is the KAIROS re-loop: NEEDS_FIXES routes directly back to the implementer without manual copy-paste.
 
 ## Important Notes
 - Be thorough but concise

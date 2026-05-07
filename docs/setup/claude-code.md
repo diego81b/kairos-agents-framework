@@ -29,7 +29,8 @@ your-project/
 │       ├── context-extractor-agent.md
 │       ├── pm-agent.md
 │       ├── architect-agent.md
-│       ├── implementer-agent.md       ← default, works everywhere
+│       ├── implementer-tdd-agent.md       ← TDD implementer (default — use when project has a test suite)
+│       ├── implementer-coder-agent.md     ← Code-only implementer (no TDD — use when project has NO test suite)
 │       ├── code-reviewer-agent.md
 │       ├── test-verifier-agent.md
 │       ├── release-planner-agent.md
@@ -47,8 +48,12 @@ your-project/
 If you maintain KAIROS as a submodule or copy, remember to re-copy after updates. The source of truth is always `agents/` in the KAIROS repository.
 :::
 
-::: info Team Mode agents are optional
-The `team/` folder (including `implementer-lead-agent.md`) is only needed if you plan to use Team Mode. For most projects, `implementer-agent.md` alone is sufficient.
+::: info Choosing an implementer
+Copy **both** `implementer-tdd-agent.md` and `implementer-coder-agent.md`. During a KAIROS run the orchestrator asks which to use.
+- `implementer-tdd-agent` — **default**. Full TDD cycle (RED → GREEN → REFACTOR). Use when the project has a test suite.
+- `implementer-coder-agent` — **code-only**. No TDD, no test files, no coverage. Use only when the project has no test suite or tests are explicitly out of scope.
+
+The `team/` folder (`implementer-lead-agent.md` + teammates) is only needed if you plan to use Team Mode.
 :::
 
 ## Step 2 — Understand how subagents are loaded
@@ -62,7 +67,7 @@ description: Collects and structures requirements. Use at the START of a new fea
 tools:
   - read_file
   - write_file
-model: claude-sonnet-4-6
+model: sonnet
 ---
 ```
 
@@ -154,11 +159,11 @@ Requires the respective CLI authenticated: `jira init`, `glab auth login`, or a 
 | Agent not found | Check `.claude/agents/` exists and contains `.md` files with valid YAML frontmatter |
 | Wrong model used | Verify the `model:` field in each agent's frontmatter |
 | Orchestrator not delegating | The `description:` field must clearly describe when to use the agent |
-| `.kairos/` not created | The implementer-agent creates it on first write — ensure `write_file` is in its `tools:` list |
+| `.kairos/` not created | The implementer-tdd-agent or implementer-coder-agent creates it on first write — ensure `write_file` is in its `tools:` list |
 
 ## Team Mode — additional setup
 
-Team Mode activates a coordinated team of 5 specialists in place of the single Implementer Agent. It uses Claude Code’s **experimental Agent Teams feature**, available only in Claude Code.
+Team Mode activates a coordinated team of 5 specialists in place of the single implementer agent (`implementer-tdd-agent` or `implementer-coder-agent`). It uses Claude Code’s **experimental Agent Teams feature**, available only in Claude Code.
 
 ### Enable Agent Teams
 
@@ -186,7 +191,7 @@ claude --version
 | Cursor | No inter-session coordination | ❌ |
 | VS Code / JetBrains / others | No inter-session coordination | ❌ |
 
-With Agent Teams, each teammate runs in its **own Claude Code session** with its own context window. Teammates communicate peer-to-peer via a shared mailbox and coordinate work via a shared task list — not just reporting results back to the lead. This is fundamentally different from the single Implementer Agent, which uses the `agent` tool for direct subagent spawning within a single session.
+With Agent Teams, each teammate runs in its **own Claude Code session** with its own context window. Teammates communicate peer-to-peer via a shared mailbox and coordinate work via a shared task list — not just reporting results back to the lead. This is fundamentally different from the single `implementer-tdd-agent` or `implementer-coder-agent`, which uses the `agent` tool for direct subagent spawning within a single session.
 
 ### How to activate Team Mode
 
@@ -256,7 +261,9 @@ You ──► Orchestrator
          │
          ├─[HITL]─► PM Agent              → .kairos/01-requirements.json
          ├─[HITL]─► Architect Agent       → .kairos/02-architecture.json
-         ├─[HITL]─► Implementer Agent     → .kairos/03-implementation.json
+         ├─[HITL]─► implementer-tdd-agent    → .kairos/03-implementation.json
+         │           or
+         │          implementer-coder-agent (code-only, no TDD)
          │           or
          │          Implementer Lead-agent (Team Mode)
          │           ├── teammate-tests-agent    [HITL: test plan gate]
@@ -269,3 +276,36 @@ You ──► Orchestrator
 ```
 
 Each `[HITL]` gate is a pause where **you** review and approve before the next agent runs.
+
+---
+
+## Suggested Models
+
+Claude Code accepts short aliases that always resolve to the latest model in each family, or full versioned IDs (e.g. `claude-sonnet-4-6`) to pin a specific release.
+
+| Alias | Resolves to | Use for |
+|-------|------------|--------|
+| `sonnet` | Latest Sonnet | Most agents — good balance of quality and speed |
+| `opus` | Latest Opus | Orchestrator, TDD Implementer — highest reasoning capability |
+| `haiku` | Latest Haiku | Team Mode teammates — fast and cost-efficient |
+
+### Per-agent defaults
+
+| Agent | Default | Upgrade trigger |
+|-------|---------|----------------|
+| `orchestrator-agent` | `opus` | Never downgrade — coordination requires full reasoning |
+| `implementer-tdd-agent` | `opus` | Never downgrade — TDD cycle is the most resource-intensive phase |
+| `implementer-coder-agent` | `sonnet` | Upgrade to `opus` for complex codebases; no TDD overhead |
+| `architect-agent` | `sonnet` | Upgrade to `opus` for distributed systems, complex multi-db, or non-trivial scaling |
+| `pm-agent` | `sonnet` | Upgrade to `opus` for enterprise features with competing constraints (compliance, multi-region, strict SLAs) |
+| `context-extractor-agent` | `sonnet` | Rarely needs upgrading |
+| `code-reviewer-agent` | `sonnet` | Upgrade to `opus` for deep security audits |
+| `test-verifier-agent` | `sonnet` | Sufficient for coverage analysis |
+| `release-planner-agent` | `sonnet` | Sufficient for deployment planning |
+
+### Team Mode agents
+
+| Agent | Model | Notes |
+|-------|-------|-------|
+| `implementer-lead-agent` | `opus` | Coordinates teammates — same tier as implementer |
+| `teammate-*-agent` (×4) | `haiku` | Scoped, single-responsibility tasks — optimised for speed and cost |

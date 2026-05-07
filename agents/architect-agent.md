@@ -2,7 +2,7 @@
 name: architect-agent
 description: "Designs system architecture based on requirements and constraints. Use after PM analysis."
 tools: [read, write, bash, grep]
-model: claude-sonnet-4-6
+model: opus
 ---
 
 # Architect Agent - System Design
@@ -128,63 +128,6 @@ curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issu
   -d "{\"content\":{\"raw\":\"## Architecture Design\"}}"
 ```
 
-## Platform Configuration
-
-### Claude Code
-
-```yaml
----
-name: architect-agent
-description: "Designs system architecture based on requirements and constraints. Use after PM analysis."
-model: claude-sonnet-4-6
-tools: [read, write, bash, grep]
----
-```
-
-**Model**: Sonnet covers most architectures. Upgrade to `claude-opus-4-6` for distributed systems, complex multi-database designs, or non-trivial scaling requirements.  
-**`grep` tool** is critical — the architect must scan existing code to understand current patterns and avoid proposing contradictory designs.  
-**MCP** (optional):
-- `sequential-thinking`: enforces structured multi-step reasoning for complex design decisions
-- `context7`: provides up-to-date library documentation for technology choices (prevents recommending outdated APIs)
-
-### Cursor
-
-```yaml
----
-name: architect-agent
-description: "Designs system architecture based on requirements and constraints. Use after PM analysis."
-model: claude-sonnet-4-6
-tools: [read, write, bash, grep]
-readonly: false
----
-```
-
-For large codebases, add `is_background: false` explicitly to ensure the architect has the full context window available for scanning existing patterns.
-
-### VS Code
-
-```yaml
----
-name: architect-agent
-description: "Designs system architecture based on requirements and constraints. Use after PM analysis."
-model: claude-sonnet-4-6
-tools: ['read', 'edit', 'execute', 'search']
-user-invocable: false
-handoffs:
-  - label: "✅ Approve → Implementation"
-    agent: implementer-agent
-    prompt: "Implement using TDD based on this architecture: {output}"
-    send: false
-  - label: "✏️ Request changes"
-    agent: architect-agent
-    prompt: "Revise the architecture based on this feedback: "
-    send: false
-  - label: "⛔ Stop pipeline"
-    agent: ""
----
-```
-
-`search` maps to `grep` — essential for exploring the codebase before proposing a design.
 
 ## Important Notes
 - You have FRESH context

@@ -1,7 +1,7 @@
 # What is KAIROS?
 
 > **"The Right Moment for Development"**  
-> Intelligent multi-agent SDLC orchestration — by [Comm.it](https://comm.it)
+> Intelligent multi-agent SDLC orchestration
 
 ---
 
@@ -100,12 +100,13 @@ Not every task needs all six agents. When you start a KAIROS run, the orchestrat
 📋 Which agents should run for this task?
 Reply with numbers (e.g. "1 3 4") or paste a KAIROS template block:
 
-1. pm-agent          — Requirements analysis
-2. architect-agent   — System design
-3. implementer-agent — TDD code generation
-4. code-reviewer     — Quality assurance
-5. test-verifier     — Test quality & coverage
-6. release-planner   — Deployment planning
+1. pm-agent                  — Requirements analysis
+2. architect-agent           — System design
+3. implementer-tdd-agent     — TDD code generation (default — use when project has a test suite)
+   3b. implementer-coder-agent — Code-only, no TDD (use when project has NO test suite)
+4. code-reviewer             — Quality assurance
+5. test-verifier             — Test quality & coverage
+6. release-planner           — Deployment planning
 ```
 
 If the issue already contains a `## KAIROS Pipeline` checklist block (placed there by you or a team template), the orchestrator reads it automatically and just asks you to confirm.
@@ -119,11 +120,13 @@ Pre-built presets for common task types — Feature, Bug Fix, Hotfix, Refactor, 
 A typical KAIROS feature run produces:
 
 - ✅ Production-ready code following your project's patterns
-- ✅ Comprehensive test suite with coverage >80%
+- ✅ Comprehensive test suite with coverage >80% _(when using `implementer-tdd-agent`)_
 - ✅ Architecture decision record
 - ✅ Code review report (security, performance, standards)
 - ✅ Deployment plan with rollback procedure
 - ✅ Full issue tracker comment trail (Jira / GitLab / Bitbucket)
+
+> When using `implementer-coder-agent` (no-TDD path), test files and coverage reports are not produced.
 
 **Typical time savings per feature:**
 
@@ -142,7 +145,8 @@ agents/
 ├── context-extractor-agent.md ← Pre-pipeline context
 ├── pm-agent.md             ← Requirements
 ├── architect-agent.md      ← System design
-├── implementer-agent.md    ← TDD code generation
+├── implementer-tdd-agent.md    ← TDD code generation (default)
+├── implementer-coder-agent.md  ← Code-only, no TDD (projects without test suite)
 ├── code-reviewer-agent.md  ← Quality review
 ├── test-verifier-agent.md  ← Test quality
 ├── release-planner-agent.md ← Deployment planning

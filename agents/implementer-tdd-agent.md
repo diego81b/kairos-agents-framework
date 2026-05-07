@@ -1,8 +1,8 @@
 ---
-name: implementer-agent
-description: "Generates code and tests using TDD. Use after architecture design."
+name: implementer-tdd-agent
+description: "TDD implementer — generates code and tests using real TDD (RED→GREEN→REFACTOR). Use after architecture design when the project has a test suite. For projects without a test suite, use implementer-coder-agent instead."
 tools: [read, write, bash, grep]
-model: claude-opus-4-6
+model: sonnet
 ---
 
 # Implementer Agent - Code Generation
@@ -202,75 +202,6 @@ curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issu
   -d "{\"content\":{\"raw\":\"## Implementation\"}}"
 ```
 
-## Platform Configuration
-
-The implementer is the most resource-intensive agent — TDD cycle, code generation, test execution. Always use `claude-opus-4-6`.
-
-### Claude Code
-
-```yaml
----
-name: implementer-agent
-description: "Generates code and tests using TDD. Use after architecture design."
-model: claude-opus-4-6
-tools: [read, write, bash, grep]
----
-```
-
-**`bash` tool** is mandatory — without it the TDD RED/GREEN cycle cannot be verified (cannot run `npm test`, `pytest`, etc.).  
-**`grep` tool** is critical for reading existing code patterns before generating new files.  
-**MCP** (optional):
-- `context7`: fetches up-to-date library documentation — prevents hallucinating outdated API signatures
-- `sequential-thinking`: enforces step-by-step TDD reasoning (write test → RED → implement → GREEN → refactor)
-
-### Cursor
-
-```yaml
----
-name: implementer-agent
-description: "Generates code and tests using TDD. Use after architecture design."
-model: claude-opus-4-6
-tools: [read, write, bash, grep]
-readonly: false
-is_background: false
----
-```
-
-Never set `readonly: true` — the implementer must write source and test files. Never set `is_background: true` — TDD requires interactive feedback between test runs and implementation.
-
-### VS Code
-
-```yaml
----
-name: implementer-agent
-description: "Generates code and tests using TDD. Use after architecture design."
-model: claude-opus-4-6
-tools: ['read', 'edit', 'execute', 'search']
-user-invocable: false
-handoffs:
-  - label: "✅ Approve Plan → Implement"
-    agent: implementer-agent
-    prompt: "Plan approved. Proceed with full TDD implementation (PHASE 1–6): write tests first (RED), implement (GREEN), refactor, measure coverage. Architecture and plan: {output}"
-    send: true
-  - label: "✏️ Revise plan"
-    agent: implementer-agent
-    prompt: "Revise the implementation plan based on this feedback (do not write files yet): "
-    send: false
-  - label: "✅ Approve Implementation → Code Review"
-    agent: code-reviewer
-    prompt: "Review this implementation for quality, security and standards: {output}"
-    send: false
-  - label: "✏️ Request changes"
-    agent: implementer-agent
-    prompt: "Fix the implementation based on this feedback: "
-    send: false
-  - label: "⛔ Stop pipeline"
-    agent: ""
----
-```
-
-**Two-stage HITL**: the first two handoffs handle plan approval (no files written); the last three handle implementation approval after code is generated.  
-**`execute` tool** is the VS Code equivalent of `bash` — required to run the test suite and verify RED/GREEN phases.
 
 ## Important Notes
 - Follow project's conventions EXACTLY

@@ -13,7 +13,7 @@ description: Collects and structures requirements. Use at the START of a new fea
 tools:
   - read_file
   - write_file
-model: claude-sonnet-4-6
+model: sonnet
 ---
 
 # PM Agent
@@ -63,7 +63,8 @@ your-project/
 │   ├── orchestrator-agent.md
 │   ├── pm-agent.md
 │   ├── architect-agent.md
-│   ├── implementer-agent.md
+│   ├── implementer-tdd-agent.md    ← TDD implementer (default)
+│   ├── implementer-coder-agent.md  ← Code-only implementer (no test suite)
 │   ├── code-reviewer-agent.md
 │   ├── test-verifier-agent.md
 │   └── release-planner-agent.md

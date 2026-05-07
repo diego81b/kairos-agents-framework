@@ -31,7 +31,7 @@ export default withMermaid(defineConfig({
   },
 
   title: 'KAIROS Framework',
-  description: 'Intelligent multi-agent SDLC orchestration by Comm.it',
+  description: 'Intelligent multi-agent SDLC orchestration framework',
   lang: 'en-US',
 
   head: [
@@ -107,7 +107,8 @@ export default withMermaid(defineConfig({
               { text: 'Orchestrator', link: '/agent-files#orchestrator' },
               { text: 'PM Agent', link: '/agent-files#pm-agent' },
               { text: 'Architect Agent', link: '/agent-files#architect-agent' },
-              { text: 'Implementer Agent', link: '/agent-files#implementer-agent' },
+              { text: 'Implementer Agent — TDD', link: '/agent-files#implementer-tdd-agent' },
+              { text: 'Implementer Agent — Code Only', link: '/agent-files#implementer-coder-agent' },
               { text: 'Code Reviewer', link: '/agent-files#code-reviewer' },
               { text: 'Test Verifier', link: '/agent-files#test-verifier' },
               { text: 'Release Planner', link: '/agent-files#release-planner' }
@@ -117,7 +118,8 @@ export default withMermaid(defineConfig({
           { text: 'Orchestrator', link: '/agents/orchestrator-agent' },
           { text: 'PM Agent', link: '/agents/pm-agent' },
           { text: 'Architect Agent', link: '/agents/architect-agent' },
-          { text: 'Implementer Agent', link: '/agents/implementer-agent' },
+          { text: 'Implementer Agent — TDD', link: '/agents/implementer-tdd-agent' },
+          { text: 'Implementer Agent — Code Only', link: '/agents/implementer-coder-agent' },
           { text: 'Code Reviewer', link: '/agents/code-reviewer-agent' },
           { text: 'Test Verifier', link: '/agents/test-verifier-agent' },
           { text: 'Release Planner', link: '/agents/release-planner-agent' }
@@ -169,7 +171,7 @@ export default withMermaid(defineConfig({
 
     footer: {
       message: `KAIROS Framework v${version} — Released under the AGPL-3.0 License.`,
-      copyright: 'Copyright © 2026 Comm.it - Florence, Italy'
+      copyright: 'Copyright © 2026 Diego Baldeschi - Florence, Italy'
     },
 
     editLink: {

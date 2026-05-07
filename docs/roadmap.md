@@ -75,10 +75,9 @@ AGPL-3.0 — free to use, fork, and modify. If you distribute a modified version
 
 ## Contact & Support
 
-Built by **Comm.it** — Software Consulting Agency, Florence, Italy
+Built by Diego Baldeschi
 
 - GitHub: [github.com/diego81b/kairos-agents-framework](https://github.com/diego81b/kairos-agents-framework)
-- Website: [comm-it.it](https://comm-it.it)
 
 ---
 

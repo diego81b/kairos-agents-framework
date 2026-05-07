@@ -1,4 +1,4 @@
-# VS Code Setup
+﻿# VS Code Setup
 
 VS Code with GitHub Copilot supports **native custom agents** via `.github/agents/` — `.agent.md` files with YAML frontmatter, each running in its own isolated context. VS Code also reads `.claude/agents/` for Claude-format compatibility.
 
@@ -35,7 +35,9 @@ your-project/
 │       ├── orchestrator-agent.agent.md
 │       ├── pm-agent.agent.md
 │       ├── architect-agent.agent.md
-│       ├── implementer-agent.agent.md
+│       ├── context-extractor-agent.agent.md
+│       ├── implementer-tdd-agent.agent.md    <- TDD implementer (default)
+│       ├── implementer-coder-agent.agent.md  <- Code-only implementer (no test suite)
 │       ├── code-reviewer-agent.agent.md
 │       ├── test-verifier-agent.agent.md
 │       └── release-planner-agent.agent.md
@@ -50,7 +52,7 @@ VS Code native `.agent.md` format supports additional fields beyond Claude's for
 name: PM Agent
 description: Collects and structures requirements. Use at the START of a new feature.
 tools: ['read', 'edit', 'search']
-model: claude-sonnet-4-6
+model: sonnet
 handoffs:
   - label: "✅ Continue to Architecture"
     agent: architect-agent
@@ -129,3 +131,23 @@ Or save manually by copying the JSON from the chat after each approved phase.
 | Handoff buttons not appearing | Verify `handoffs:` is in agent frontmatter and `agent` tool is in `tools:` |
 | Wrong agent format | Plain `.md` files work in `.github/agents/` but `.agent.md` unlocks full features |
 | `.kairos/` not written | Add `edit` to agent `tools:` and explicit instruction to write the file |
+
+## Suggested Models
+
+VS Code uses model IDs from the Copilot model picker. The `model:` field in agent frontmatter sets the model for that specific agent regardless of what is active in the chat panel.
+
+| Agent | Recommended | Non-Claude equivalent |
+|-------|------------|----------------------|
+| `orchestrator-agent` | `opus` | o1, o3, Gemini Ultra |
+| `implementer-tdd-agent` | `opus` | o1, o3, Gemini Ultra — TDD cycle needs strongest model |
+| `implementer-coder-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro — no TDD overhead |
+| `architect-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
+| `pm-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
+| `context-extractor-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
+| `code-reviewer-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
+| `test-verifier-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
+| `release-planner-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
+
+::: warning Team Mode not supported
+VS Code does not support KAIROS Team Mode agents (`agents/team/`). Those require Claude Code with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`.
+:::

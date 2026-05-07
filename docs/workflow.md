@@ -1,4 +1,4 @@
-﻿# Development Workflow
+# Development Workflow
 
 KAIROS is a **Human-in-the-Loop (HITL)** pipeline. Every phase produces a concrete artifact that the user validates before the next phase begins. The AI does the work; the human controls the gate.
 
@@ -251,7 +251,7 @@ User confirms coverage is adequate. FAIL sends gap list back to the Implementer.
 
 ## Phase 6: Deployment Planning (Release Planner)
 
-- Define deployment steps (pre-checks â†’ staging â†’ canary 10% â†’ full rollout)
+- Define deployment steps (pre-checks → staging → canary 10% → full rollout)
 - Create rollback strategy with estimated time
 - Define monitoring metrics and alert thresholds
 

@@ -2,7 +2,7 @@
 name: context-extractor-agent
 description: "Scans a codebase and an issue draft to produce 00-context.json for downstream agents. Use before orchestrator to prepare LLM context."
 tools: [read, write, bash, grep]
-model: claude-sonnet-4-6
+model: opus
 ---
 
 # Context Extractor - Codebase Analysis & Context Preparation
@@ -54,7 +54,7 @@ ALWAYS output structured JSON:
 Field descriptions:
 - `context_file`: markdown — stack, reusable components with paths, patterns with example file paths, naming conventions, no-touch zones
 - `issue_tech_section`: markdown — draft technical context section for human review before adding to the issue; includes suggested out-of-scope items and AI validation criteria
-- `prompt_template`: markdown — ready-to-use prompt for `implementer-agent`, specific to this issue type and the patterns found in the codebase
+- `prompt_template`: markdown — ready-to-use prompt for `implementer-tdd-agent`, specific to this issue type and the patterns found in the codebase
 
 ## After Generating Output
 
@@ -102,58 +102,6 @@ curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issu
   -H "Content-Type: application/json" \
   -d "{\"content\":{\"raw\":\"## Technical Context\"}}"
 ```
-
-## Platform Configuration
-
-### Claude Code
-
-```yaml
----
-name: context-extractor-agent
-description: "Scans a codebase and an issue draft to produce 00-context.json for downstream agents. Use before orchestrator to prepare LLM context."
-model: claude-sonnet-4-6
-tools: [read, grep, write, bash]
----
-```
-
-`write` is required to save `00-context.json` after approval. The default frontmatter omits it as a reminder that this agent is read-only during analysis; add it when running on Claude Code.
-
-### Cursor
-
-```yaml
----
-name: context-extractor-agent
-description: "Scans a codebase and an issue draft to produce 00-context.json for downstream agents. Use before orchestrator to prepare LLM context."
-model: claude-sonnet-4-6
-tools: [read, grep, write]
-readonly: false
----
-```
-
-### VS Code
-
-```yaml
----
-name: context-extractor-agent
-description: "Scans a codebase and an issue draft to produce 00-context.json for downstream agents. Use before orchestrator to prepare LLM context."
-model: claude-sonnet-4-6
-tools: ['read', 'search', 'edit']
-user-invocable: true
-handoffs:
-  - label: "✅ Approve — save and launch pipeline"
-    agent: orchestrator-agent
-    prompt: "Run the KAIROS pipeline. Context file is ready at .kairos/{feature_folder}/00-context.json"
-    send: false
-  - label: "✏️ Request changes"
-    agent: context-extractor-agent
-    prompt: "Revise the context based on this feedback: "
-    send: false
-  - label: "⛔ Stop"
-    agent: ""
----
-```
-
-`user-invocable: true` — this agent is invoked directly by the user before the main pipeline, not by the orchestrator.
 
 ## Important Notes
 - Do NOT invent stack, patterns, or file paths — only report what you find in the codebase

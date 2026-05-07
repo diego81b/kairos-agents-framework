@@ -2,7 +2,7 @@
 name: release-planner-agent
 description: "Plans deployment strategy and rollback procedures."
 tools: [read, write, bash]
-model: claude-sonnet-4-6
+model: sonnet
 ---
 
 # Release Planner - Deployment
@@ -116,62 +116,6 @@ curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issu
   -H "Content-Type: application/json" \
   -d "{\"content\":{\"raw\":\"## Deployment Plan\"}}"
 ```
-
-## Platform Configuration
-
-### Claude Code
-
-```yaml
----
-name: release-planner-agent
-description: "Plans deployment strategy and rollback procedures."
-model: claude-sonnet-4-6
-tools: [read, write, bash]
----
-```
-
-**`bash` tool** enables posting the deployment plan to the issue tracker via `jira-cli`, `glab`, or curl.  
-**`write` tool** is required to save `06-deployment-plan.json` — currently missing from the default frontmatter, add it.  
-**MCP** (optional):
-- `jira`: posts the deployment plan directly to the Jira ticket timeline without requiring `jira-cli`
-- `gitlab`: posts directly to the GitLab issue without requiring `glab` CLI
-
-### Cursor
-
-```yaml
----
-name: release-planner-agent
-description: "Plans deployment strategy and rollback procedures."
-model: claude-sonnet-4-6
-tools: [read, write, bash]
-readonly: false
----
-```
-
-`bash` is needed only if you want to auto-post to the issue tracker (Jira, GitLab, or Bitbucket). If you manage issue comments manually, you can safely drop it and set `readonly: true` once the plan is written.
-
-### VS Code
-
-```yaml
----
-name: release-planner-agent
-description: "Plans deployment strategy and rollback procedures."
-model: claude-sonnet-4-6
-tools: ['read', 'edit', 'execute']
-user-invocable: false
-handoffs:
-  - label: "✅ Pipeline complete"
-    agent: ""
-    prompt: ""
-    send: false
-  - label: "✏️ Request changes"
-    agent: release-planner-agent
-    prompt: "Revise the deployment plan based on this feedback: "
-    send: false
----
-```
-
-This is the final agent in the chain. The `✅ Pipeline complete` handoff has an empty `agent` field — this closes the KAIROS run cleanly in VS Code Copilot Chat.
 
 ## Important Notes
 - Be practical and realistic

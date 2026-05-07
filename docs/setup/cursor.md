@@ -31,7 +31,8 @@ your-project/
 │       ├── orchestrator-agent.md
 │       ├── pm-agent.md
 │       ├── architect-agent.md
-│       ├── implementer-agent.md
+│       ├── implementer-tdd-agent.md   ← TDD implementer (default)
+│       ├── implementer-coder-agent.md ← Code-only implementer (no test suite)
 │       ├── code-reviewer-agent.md
 │       ├── test-verifier-agent.md
 │       └── release-planner-agent.md
@@ -48,7 +49,7 @@ description: Collects and structures requirements. Use at the START of a new fea
 tools:
   - read_file
   - write_file
-model: claude-sonnet-4-6
+model: sonnet
 ---
 ```
 
@@ -140,3 +141,23 @@ Cursor spawns both subagents simultaneously and returns both results.
 | Wrong agent invoked | Refine the `description` — be more specific about when to use the agent |
 | Agent not pausing for approval | Add "Always wait for explicit ✅ approval before proceeding" to the agent prompt |
 | `.kairos/` not written | Ensure `write_file` is in the agent's `tools:` list |
+
+## Suggested Models
+
+Cursor accepts `inherit` (workspace default), `fast` (Haiku-class), or an explicit model ID. The `model:` field in agent frontmatter overrides whatever is selected in the Cursor UI.
+
+| Agent | Recommended | Notes |
+|-------|------------|-------|
+| `orchestrator-agent` | `opus` | Never use `inherit` or `fast` — coordination requires full reasoning |
+| `implementer-tdd-agent` | `opus` | Never use `inherit` or `fast` — TDD cycle requires the strongest model |
+| `implementer-coder-agent` | `sonnet` | `fast` not recommended; no TDD overhead but still needs solid reasoning |
+| `architect-agent` | `sonnet` | `fast` acceptable only for very small, well-defined codebases |
+| `pm-agent` | `sonnet` | `fast` acceptable for quick requirement sketches |
+| `context-extractor-agent` | `sonnet` | `fast` is OK for small codebases (read-only analysis) |
+| `code-reviewer-agent` | `sonnet` | Upgrade to `opus` for deep security audits |
+| `test-verifier-agent` | `sonnet` | Sufficient for coverage analysis |
+| `release-planner-agent` | `sonnet` | Sufficient for deployment planning |
+
+::: warning Team Mode not supported
+Cursor does not support KAIROS Team Mode agents (`agents/team/`). Those require Claude Code with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`.
+:::

@@ -2,7 +2,7 @@
 
 **"The Right Moment for Development"**
 
-Intelligent multi-agent SDLC orchestration by Comm.it
+Intelligent multi-agent SDLC orchestration
 
 ## What's Included
 

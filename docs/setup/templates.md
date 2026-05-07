@@ -18,13 +18,14 @@ Copy this block into any issue description or paste it directly in the chat:
 
 - [ ] pm-agent
 - [ ] architect-agent
-- [ ] implementer-agent
+- [ ] implementer-tdd-agent
+- [ ] implementer-coder-agent
 - [ ] code-reviewer-agent
 - [ ] test-verifier-agent
 - [ ] release-planner-agent
 ```
 
-Check (`[x]`) only the agents you want to activate.
+Check (`[x]`) only the agents you want to activate. For the implementation step, pick **one** of `implementer-tdd-agent` (TDD, default) or `implementer-coder-agent` (no TDD).
 
 ---
 
@@ -37,7 +38,7 @@ Full pipeline — new functionality going to production.
 
 - [x] pm-agent
 - [x] architect-agent
-- [x] implementer-agent
+- [x] implementer-tdd-agent
 - [x] code-reviewer-agent
 - [x] test-verifier-agent
 - [x] release-planner-agent
@@ -54,7 +55,7 @@ Skip design and deployment planning; focus on fix + verification.
 
 - [x] pm-agent
 - [ ] architect-agent
-- [x] implementer-agent
+- [x] implementer-tdd-agent
 - [x] code-reviewer-agent
 - [x] test-verifier-agent
 - [ ] release-planner-agent
@@ -71,7 +72,7 @@ Minimal pipeline — urgent production fix, skip analysis and planning.
 
 - [ ] pm-agent
 - [ ] architect-agent
-- [x] implementer-agent
+- [x] implementer-tdd-agent
 - [x] code-reviewer-agent
 - [ ] test-verifier-agent
 - [ ] release-planner-agent
@@ -88,7 +89,7 @@ All phases except deployment — improving existing code without a new release.
 
 - [x] pm-agent
 - [x] architect-agent
-- [x] implementer-agent
+- [x] implementer-tdd-agent
 - [x] code-reviewer-agent
 - [x] test-verifier-agent
 - [ ] release-planner-agent
@@ -105,7 +106,7 @@ Analysis and writing only — no code, no deployment.
 
 - [x] pm-agent
 - [ ] architect-agent
-- [ ] implementer-agent
+- [ ] implementer-tdd-agent
 - [ ] code-reviewer-agent
 - [ ] test-verifier-agent
 - [ ] release-planner-agent
@@ -145,7 +146,8 @@ When the orchestrator shows the Case B selection prompt, paste the entire templa
 |---|-------|------|
 | 1 | `pm-agent` | Requirements analysis, acceptance criteria, risks |
 | 2 | `architect-agent` | System design, API contracts, DB schema |
-| 3 | `implementer-agent` | TDD code generation (plan gate + code gate) |
+| 3 | `implementer-tdd-agent` | TDD code generation (plan gate + code gate) — **default** |
+| 3b | `implementer-coder-agent` | Code generation without TDD (for projects without a test suite) |
 | 4 | `code-reviewer-agent` | Standards, security, performance review |
 | 5 | `test-verifier-agent` | Test coverage and assertion quality |
 | 6 | `release-planner-agent` | Deployment steps, rollback, monitoring |

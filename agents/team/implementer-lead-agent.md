@@ -2,11 +2,13 @@
 name: implementer-lead-agent
 description: "Team coordinator for complex implementations. Defines contracts, orchestrates TDD phases across 4 parallel teammates via Agent Teams, verifies compliance. Requires CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1."
 tools: [read, write]
-model: claude-opus-4-6
+model: opus
 model_note: "Reasoning-heavy role - use premium model for contract coordination"
 ---
 
 # Implementer Team Lead
+
+> ⚠️ **Claude Code only** — This agent uses Claude Code's [Agent Teams](https://docs.anthropic.com/en/docs/claude-code/agent-teams) feature and requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`. It does not work with other AI assistants.
 
 ## Requirements
 

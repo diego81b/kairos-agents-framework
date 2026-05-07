@@ -27,7 +27,8 @@ No exceptions. A pull request that modifies an agent without a matching changelo
 | [Orchestrator](#orchestrator) | `agents/orchestrator-agent.md` |
 | [PM Agent](#pm-agent) | `agents/pm-agent.md` |
 | [Architect Agent](#architect-agent) | `agents/architect-agent.md` |
-| [Implementer Agent](#implementer-agent) | `agents/implementer-agent.md` |
+| [Implementer Agent — TDD](#implementer-tdd-agent) | `agents/implementer-tdd-agent.md` |
+| [Implementer Agent — Code Only](#implementer-coder-agent) | `agents/implementer-coder-agent.md` |
 | [Code Reviewer](#code-reviewer) | `agents/code-reviewer-agent.md` |
 | [Test Verifier](#test-verifier) | `agents/test-verifier-agent.md` |
 | [Release Planner](#release-planner) | `agents/release-planner-agent.md` |
@@ -68,11 +69,19 @@ System design — architecture options, database schema, API contracts.
 
 ---
 
-## Implementer Agent
+## Implementer Agent — TDD
 
 Code generation with real TDD. **Default implementer — works on every platform.**
 
-<<< @/agents/implementer-agent.md{md}
+<<< @/agents/implementer-tdd-agent.md{md}
+
+---
+
+## Implementer Agent — Code Only
+
+Code generation without TDD. **Use when the project has no test suite or tests are out of scope.**
+
+<<< @/agents/implementer-coder-agent.md{md}
 
 ---
 

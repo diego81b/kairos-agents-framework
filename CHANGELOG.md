@@ -4,6 +4,29 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v3.0.0 — May 7, 2026
+
+### Added
+
+- **`agents/implementer-coder-agent.md` — new code-only implementer** — lightweight alternative to `implementer-tdd-agent` for projects without a test suite or when tests are explicitly out of scope. Follows the same two-gate HITL workflow (plan approval → implementation approval) but skips all TDD phases, test-file generation, RED/GREEN cycles, and coverage measurement. Frontmatter description: _"Code-only implementer — use ONLY when the project has no test suite or tests are explicitly out of scope. For projects with a test suite, use implementer-tdd-agent instead."_
+- **`orchestrator-agent` — `implementer-coder-agent` routing** — the orchestrator presents `implementer-coder-agent` as option 3b (code-only, no TDD) in both Case A and Case B selection menus, with `implementer-lead-agent` promoted to 3c. Implementation Phase routing block handles all three paths.
+- **`docs/agents.md`** — new Implementer Agent — Code Only section with a note directing users back to `implementer-tdd-agent` when a test suite exists.
+- **`docs/agent-files.md`** — `implementer-coder-agent` added to the quick-jump table and as a copy-block embed section.
+- **`docs/setup/templates.md`** — `implementer-coder-agent` added to blank template block and agent role reference table (row 3b).
+
+### Changed
+
+- **Agent files renamed for clarity** — `agents/implementer-agent.md` → `agents/implementer-tdd-agent.md`; `agents/coder-agent.md` → `agents/implementer-coder-agent.md`. The `implementer-` prefix is now consistent across all three single-agent implementers. All docs, orchestrator references, VitePress sidebar, and template blocks updated accordingly.
+- **Naming and purpose clarified across all docs** — every reference to `implementer-agent` was audited and the TDD nature made explicit; every reference to `coder-agent` was labelled "code-only / no TDD". Affected files:
+  - `docs/index.md` — agent count updated (8 → 9); feature tiles revised to distinguish TDD vs code-only output
+  - `docs/overview.md` — selection menu, file tree, and "What You Get" list all updated
+  - `docs/setup/index.md` — file tree updated
+  - `docs/setup/claude-code.md` — file tree, implementer-choice tip, troubleshooting, pipeline diagram, model table
+  - `docs/setup/cursor.md` — file tree, model table
+  - `docs/setup/vscode.md` — file tree, model table
+
+---
+
 ## v2.1.2 — April 11, 2026
 
 ### Changed
