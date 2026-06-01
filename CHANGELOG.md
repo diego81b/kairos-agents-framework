@@ -4,6 +4,15 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v3.1.2 — June 1, 2026
+
+### Added
+
+- **`docs/distribution/00-discovery.md`** — Phase 0 Discovery findings: verified Claude Code plugin anatomy (manifest fields, folder layout, marketplace distribution, install steps), MCP server SDK options (TypeScript/Python/C#/Go tier 1), transport choices (stdio vs Streamable HTTP), user config blocks for both local and remote servers, and a "where does it live" summary table. Five open questions for Phase 1 captured at end of document.
+- **`docs/.vitepress/config.js`** — new "Distribution" sidebar section linking to the roadmap and Phase 0 discovery page.
+
+---
+
 ## v3.1.1 — June 1, 2026
 
 ### Added
