@@ -24,14 +24,14 @@ All `/plugin` commands are **user-global** — they apply to the current machine
 /plugin marketplace add diego81b/kairos-agents-framework
 
 # 2. Install the plugin
-/plugin install kairos@kairos-marketplace
+/plugin install kairos@kairos-agents-framework
 
 # 3. Enable it (defaultEnabled: false — must be explicit)
-/plugin enable kairos@kairos-marketplace
+/plugin enable kairos@kairos-agents-framework
 
 # 4. Verify
 /plugin list
-/plugin details kairos@kairos-marketplace
+/plugin details kairos@kairos-agents-framework
 ```
 
 **Why step 3 is required:** `plugin.json` sets `defaultEnabled: false`. This prevents KAIROS agents from appearing in the typeahead for users who install without intending to use them. Explicit enable = explicit intent.
@@ -44,7 +44,7 @@ There is no built-in way to enable a plugin for one project and disable it for a
 
 ## What Gets Installed
 
-Claude Code downloads the repo to `~/.claude/plugins/cache/kairos-marketplace/kairos/<version>/`. Nothing executes at install time — it is a pure file copy.
+Claude Code downloads the repo to `~/.claude/plugins/cache/kairos/kairos/<version>/`. Nothing executes at install time — it is a pure file copy.
 
 Installed components:
 
@@ -144,8 +144,8 @@ Agent files reference the checklist by file path (via Read) and do not use the s
 ```bash
 /plugin marketplace list      # All connected marketplaces
 /plugin marketplace update    # Pull latest from all marketplaces
-/plugin disable kairos@kairos-marketplace
-/plugin uninstall kairos@kairos-marketplace
+/plugin disable kairos@kairos-agents-framework
+/plugin uninstall kairos@kairos-agents-framework
 ```
 
 ---
@@ -154,7 +154,7 @@ Agent files reference the checklist by file path (via Read) and do not use the s
 
 ```bash
 /plugin marketplace update
-/plugin install kairos@kairos-marketplace   # Installs latest version
+/plugin install kairos@kairos-agents-framework   # Installs latest version
 ```
 
 Plugin versions follow the repo's git tags. The `version` field in `plugin.json` maps to the semver tag on GitHub.

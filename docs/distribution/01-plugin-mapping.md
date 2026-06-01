@@ -89,7 +89,7 @@
 
 ```json
 {
-  "name": "kairos-marketplace",
+  "name": "kairos-agents-framework",
   "owner": { "name": "Diego Baldeschi", "email": "diego.baldeschi@comm-it.it" },
   "plugins": [
     {

@@ -4,22 +4,23 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
-## v3.2.2 — June 1, 2026
-
-### Changed
-
-- **`docs/distribution/02-plugin-install.md`** — Team Mode section expanded: all three scopes for `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` documented (project-level `.claude/settings.json`, global `~/.claude/settings.json`, shell session export). Install section clarified: all `/plugin` commands are user-global; added note on per-project isolation alternative (manual agent copy).
-- **`docs/setup/claude-code.md`** — "Enable Agent Teams" section expanded with same three-scope breakdown; project-level recommended for teams using git.
-
----
-
-## v3.2.1 — June 1, 2026
+## v3.2.3 — June 2, 2026
 
 ### Added
 
-- **`docs/distribution/02-plugin-install.md`** — Phase 1.3 install guide: prerequisites, install commands, agent namespace reference table, contract checklist skill access, and Phase 1.4 routing test requirements.
-- **`docs/.vitepress/config.js`** — Phase 1.3 install guide added to Distribution sidebar; dead sidebar link for Contract Checklist fixed (`agents/shared/contract-checklist` → `skills/contract-checklist/SKILL`).
-- **`docs/agent-files.md`** — dead link for Contract Checklist fixed (`agents/shared/contract-checklist.md` → `skills/contract-checklist/SKILL.md`).
+- **`docs/distribution/02-plugin-install.md`** — Phase 1.3 canonical install guide: prerequisites, install commands (`kairos@kairos-agents-framework`), full agent namespace reference tables (core and Team Mode), contract checklist skill access, global-scope clarification for `/plugin` commands, per-project isolation note, and Phase 1.4 routing test requirements.
+- **`docs/.vitepress/config.js`** — Phase 1.3 install guide added to Distribution sidebar.
+
+### Changed
+
+- **`.claude-plugin/marketplace.json`** — marketplace `name` set to `kairos-agents-framework`; install commands use `kairos@kairos-agents-framework`.
+- **`docs/setup/claude-code.md`** — "Enable Agent Teams" section expanded: all three scopes for `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` documented (project-level `.claude/settings.json`, global `~/.claude/settings.json`, shell session export).
+- **`docs/distribution/01-plugin-mapping.md`** — marketplace manifest example updated to match renamed `name` field.
+
+### Fixed
+
+- **`docs/.vitepress/config.js`** — dead sidebar link for Contract Checklist (`agents/shared/contract-checklist` → `skills/contract-checklist/SKILL`).
+- **`docs/agent-files.md`** — dead link for Contract Checklist (`agents/shared/contract-checklist.md` → `skills/contract-checklist/SKILL.md`).
 
 ---
 
