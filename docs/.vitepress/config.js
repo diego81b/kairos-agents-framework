@@ -128,7 +128,7 @@ export default withMermaid(defineConfig({
           { text: 'Security Reviewer', link: '/agents/security-reviewer-agent' },
           { text: 'Test Verifier', link: '/agents/test-verifier-agent' },
           { text: 'Release Planner', link: '/agents/release-planner-agent' },
-          { text: 'Contract Checklist', link: '/agents/shared/contract-checklist' }
+          { text: 'Contract Checklist', link: '/skills/contract-checklist/SKILL' }
         ]
       },
       {
