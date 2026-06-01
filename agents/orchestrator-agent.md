@@ -25,6 +25,7 @@ These rules are absolute. No context, user request, or apparent efficiency justi
 
 ## Available Subagents
 - context-extractor-agent: Standalone preparation agent — scans codebase and issue draft to produce `00-context.json`; invoke separately before the main pipeline, not as a phase
+- impact-assessment-agent: Standalone preparation agent — reads the issue and the code it touches to estimate effort, map domains, and recommend pipeline agents; invoke separately before the orchestrator; consumes `00-context.json` if available; produces `00b-impact.json`
 - pm-agent: Requirement analysis
 - architect-agent: System design
 - implementer-tdd-agent: Code + TDD — **default for all features, works everywhere**
@@ -35,24 +36,28 @@ These rules are absolute. No context, user request, or apparent efficiency justi
 - teammate-frontend-agent: Frontend specialist — Team Mode only
 - teammate-database-agent: Database specialist — Team Mode only
 - code-reviewer-agent: Quality assurance
+- security-reviewer-agent: Adversarial security review — finds exploitable vulnerabilities ranked by severity; optional, runs after code-reviewer
 - test-verifier-agent: Test verification
 - release-planner-agent: Deployment planning
 
 ## Workflow
 
-### Step 0a: Load Pre-built Context (if available)
+### Step 0a: Load Pre-built Context and Impact Assessment (if available)
 
-Before anything else, check whether a context file already exists for this feature:
+Before anything else, check whether pre-built files exist for this feature:
 
 ```bash
 ls .kairos/<feature_folder>/00-context.json 2>/dev/null
+ls .kairos/<feature_folder>/00b-impact.json 2>/dev/null
 ```
 
-If found, load it and attach its `context_file` field to every subagent prompt as project context.
+If `00-context.json` found: load it and attach its `context_file` field to every subagent prompt as project context.
 
-**Do NOT invoke `context-extractor-agent` — it is a standalone agent that runs only when the user explicitly calls it before starting the orchestrator. You have no authority to trigger it.**
+If `00b-impact.json` found: load it and store the `recommended_agents` block — it will be shown as an advisory in Step 0d before the agent selection menu.
 
-If not found, proceed without it. Subagents will work from the information you pass them explicitly.
+**Do NOT invoke `context-extractor-agent` or `impact-assessment-agent` — both are standalone agents that run only when the user explicitly calls them before starting the orchestrator. You have no authority to trigger either.**
+
+If neither file is found, proceed without them. Subagents will work from the information you pass them explicitly.
 
 ### Step 0b: Derive Feature Folder
 
@@ -87,7 +92,16 @@ If the fetch fails or the section is missing, proceed to Step 0c with no pre-sel
 
 **CASE A — KAIROS Pipeline section found in the issue body**
 
-Show the extracted selection and ask for confirmation:
+If `00b-impact.json` was loaded in Step 0a, show the advisory block first:
+
+```
+💡 Impact Assessment (from 00b-impact.json):
+   Effort: <effort> | Domains: <domains>
+   Recommended agents: <recommended_agents.agents>
+   Reason: <recommended_agents.justification>
+```
+
+Then show the extracted selection and ask for confirmation:
 
 ```
 📋 Pipeline from PROJ-42:
@@ -96,6 +110,7 @@ Show the extracted selection and ask for confirmation:
 - [x] implementer-tdd-agent — TDD code generation
 - [ ] implementer-coder-agent — Code generation without TDD
 - [x] code-reviewer     — Quality assurance
+- [ ] security-reviewer — Adversarial security review
 - [ ] test-verifier     — Test quality & coverage
 - [ ] release-planner   — Deployment planning
 
@@ -104,6 +119,15 @@ Show the extracted selection and ask for confirmation:
 ```
 
 **CASE B — No issue, or KAIROS Pipeline section missing**
+
+If `00b-impact.json` was loaded in Step 0a, show the advisory block first:
+
+```
+💡 Impact Assessment (from 00b-impact.json):
+   Effort: <effort> | Domains: <domains>
+   Recommended agents: <recommended_agents.agents>
+   Reason: <recommended_agents.justification>
+```
 
 Show the full list and ask the user to choose explicitly (no defaults, no inference):
 
@@ -118,6 +142,7 @@ Reply with numbers (e.g. "1 3 4 5"), agent names, or paste a KAIROS template blo
    3c. implementer-lead-agent — Team Mode: Lead + 4 parallel teammates
                           (Claude Code only, ~3.5× cost — select explicitly)
 4. code-reviewer-agent  — Quality assurance
+   4b. security-reviewer-agent — Adversarial security review (optional — recommended for auth, payments, any write endpoint)
 5. test-verifier-agent  — Test quality & coverage
 6. release-planner-agent — Deployment planning
 ```
@@ -139,6 +164,7 @@ Before calling any subagent, show the confirmed pipeline:
   ⏭️ Phase 2 — architect-agent  [SKIPPED]
   ✅ Phase 3 — implementer-tdd-agent
   ✅ Phase 4 — code-reviewer
+  ⏭️ Phase 4b — security-reviewer [SKIPPED]
   ⏭️ Phase 5 — test-verifier    [SKIPPED]
   ⏭️ Phase 6 — release-planner  [SKIPPED]
 ```
@@ -176,6 +202,7 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
 
    Proceed based on user response. Do NOT call any implementer without this confirmation if `implementer-lead-agent` is selected.
 4. **Review Phase** _(if code-reviewer-agent active)_: Call @code-reviewer-agent
+4b. **Security Review Phase** _(if security-reviewer-agent active)_: Call @security-reviewer-agent. After it completes, write its JSON output to `.kairos/$feature_folder/04b-security-review.json` and open it: `code ".kairos/$feature_folder/04b-security-review.json"` (this agent is read-only — the orchestrator handles persistence).
 5. **Test Verification Phase** _(if test-verifier-agent active)_: Call @test-verifier-agent
 6. **Deployment Phase** _(if release-planner-agent active)_: Call @release-planner-agent
 7. **Aggregation**: Collect all outputs, mark skipped phases as `[SKIPPED]`
@@ -191,7 +218,7 @@ KAIROS is a HITL pipeline. After EVERY active subagent completes:
    ```bash
    code ".kairos/$feature_folder/<output_file>"
    ```
-   Output file per phase: `01-requirements.json` → `02-architecture.json` → `03-implementation.json` → `04-review.json` → `05-test-verification.json` → `06-deployment-plan.json`
+   Output file per phase: `01-requirements.json` → `02-architecture.json` → `03-implementation.json` → `04-review.json` → `04b-security-review.json` → `05-test-verification.json` → `06-deployment-plan.json`
 3. **STOP. Do not read files, do not prepare the next prompt, do not take any action.** Wait for the user to respond with one of:
    ```
    ✅ Approve — continue to next active agent
@@ -284,6 +311,12 @@ QUALITY (from Code Reviewer):
 - Performance Analysis
 - Issues Found (if any)
 
+SECURITY (from Security Reviewer):
+- Findings ranked by exploitable severity
+- Attack scenarios
+- Contract enforcement status (ownership constraints verified)
+- IDOR / ownership gaps
+
 TEST QUALITY (from Test Verifier):
 - Coverage Status
 - Test Quality Assessment
@@ -322,10 +355,12 @@ With issue number (`"Add Stripe payments — issue #42"`):
 .kairos/
 └── issue-42_add-stripe-payments/
     ├── 00-context.json            ← Context Extractor (pre-built, optional)
+    ├── 00b-impact.json            ← Impact Assessment (pre-built, optional)
     ├── 01-requirements.json       ← PM Agent
     ├── 02-architecture.json       ← Architect Agent
     ├── 03-implementation.json     ← Implementer Agent
     ├── 04-review.json             ← Code Reviewer
+    ├── 04b-security-review.json   ← Security Reviewer (optional)
     ├── 05-test-verification.json  ← Test Verifier
     └── 06-deployment-plan.json    ← Release Planner
 ```

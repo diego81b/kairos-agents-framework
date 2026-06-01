@@ -59,12 +59,28 @@ For each constraint combination:
 ### 4. Recommend Best Option
 Explain why it's best given constraints.
 
-### 5. Detailed Design
+### 5. Pre-Contract Resolution
+Before defining `api_contracts`, work through [`agents/shared/contract-checklist.md`](shared/contract-checklist.md).
+
+For each section that applies to this feature, document your resolution. If a section is genuinely not applicable (e.g. a read-only feature has no ownership mutation risk), note it as "N/A — [reason]" so downstream agents can verify rather than guess.
+
+Questions to resolve for every contract that involves writes or collections:
+- Entity lifecycle: does the child exist without the parent?
+- Payload shape: nested aggregate or separate endpoints? (depends on interaction model)
+- Ownership: is it enforced server-side, and can a nested update mutate a child belonging to a different parent?
+- Idempotency: safe to retry? How enforced?
+- Delete behavior: soft or hard? What cascades?
+- Aggregate update diff: how does the payload signal existing vs new vs deleted children?
+- Error response shape: exact JSON structure for 4xx and 5xx.
+
+Do NOT proceed to step 6 until every applicable item is resolved.
+
+### 6. Detailed Design
 For selected option:
 - Technology choices (and why)
 - Integration points (how to connect)
 - Database changes (new tables/fields)
-- API contracts (request/response format)
+- API contracts (request/response format — informed by Pre-Contract Resolution above)
 - Error codes (how to fail)
 - Error handling (pattern to use)
 

@@ -90,6 +90,8 @@ Example:
 
 ### Step 2: Create Binding Contracts
 
+Before writing any contract, work through [`agents/shared/contract-checklist.md`](../shared/contract-checklist.md) for this feature. Resolve every applicable item — entity lifecycle, payload shape, ownership enforcement, idempotency, delete behavior, aggregate update diff, and error shape. Do NOT skip this step; unresolved questions become drift between teammates.
+
 Create 4 detailed contracts that ALL teammates MUST follow. Define these before spawning anyone.
 
 #### CONTRACT 1: TEST CONTRACT
@@ -216,6 +218,42 @@ Create 4 detailed contracts that ALL teammates MUST follow. Define these before 
   }
 }
 ```
+
+---
+
+### Step 2b: Contract Consistency Check
+
+Before spawning any teammate, verify that the 4 contracts you just defined are faithful to the Architect's output. Read `.kairos/<feature_folder>/02-architecture.json` and compare:
+
+| Lead contract | Architect field to check |
+|--------------|--------------------------|
+| API CONTRACT | `api_contracts` — endpoints, methods, request/response shapes, error codes |
+| DATABASE CONTRACT | `database_changes` — tables, fields, types, constraints, indexes |
+| PATTERN CONTRACT | `error_handling`, `error_codes` |
+| TEST CONTRACT | all of the above (coverage must map to the above contracts) |
+
+Flag any of these as a mismatch:
+- An endpoint in Lead's API CONTRACT not present in Architect's `api_contracts`
+- A field or type in Lead's DATABASE CONTRACT that contradicts Architect's `database_changes`
+- An error code in Lead's PATTERN CONTRACT not in Architect's `error_codes`
+- A contract that silently re-invents something the Architect already decided
+
+**If no mismatches:** proceed directly to Step 3.
+
+**If any mismatch found:** surface it as a HITL gate — do NOT proceed silently.
+
+```
+⚠️  CONTRACT DRIFT DETECTED — Review Required
+
+Lead contracts diverge from Architect spec:
+  [list each mismatch: contract name, field, Architect value, Lead value]
+
+✅ Accept divergence — proceed with Lead contracts as defined (document reason)
+✏️  Align contracts — specify which takes precedence (Architect or Lead)
+⛔ Stop — flag to Architect for redesign before implementation begins
+```
+
+Do NOT spawn `teammate-tests-agent` until this gate is resolved.
 
 ---
 
