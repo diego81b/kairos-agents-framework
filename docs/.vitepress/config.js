@@ -167,7 +167,8 @@ export default withMermaid(defineConfig({
         items: [
           { text: 'Roadmap', link: '/distribution-roadmap' },
           { text: 'Phase 0 — Discovery', link: '/distribution/00-discovery' },
-          { text: 'Phase 1.1 — Plugin Mapping', link: '/distribution/01-plugin-mapping' }
+          { text: 'Phase 1.1 — Plugin Mapping', link: '/distribution/01-plugin-mapping' },
+          { text: 'Phase 1.3 — Install Guide', link: '/distribution/02-plugin-install' }
         ]
       },
       {

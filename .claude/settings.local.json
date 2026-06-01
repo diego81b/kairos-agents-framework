@@ -10,7 +10,9 @@
       "Bash(Select-Object Name, PSIsContainer)",
       "Bash(grep -E \"\\\\.\\(md|json|txt|yaml|yml\\)$\")",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(Remove-Item -Path \"C:\\\\varie\\\\kairos\\\\agents\\\\shared\\\\contract-checklist.md\" -Force)",
+      "Bash(Remove-Item -Path \"C:\\\\varie\\\\kairos\\\\agents\\\\shared\" -Force)"
     ]
   }
 }
