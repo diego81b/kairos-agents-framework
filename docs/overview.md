@@ -44,11 +44,14 @@ Each subagent:
 
 | # | Agent | Role | Output |
 | --- | --- | --- | --- |
+| pre | **Context Extractor** | Full-repo scan → stack, patterns, conventions | `00-context.json` |
+| pre | **Impact Assessment** | Issue-scoped grounding → effort, domains, agent recommendations | `00b-impact.json` |
 | 0 | **Orchestrator** | Coordinates the pipeline, manages HITL | Routes & aggregates |
 | 1 | **PM Agent** | Requirements, constraints, acceptance criteria | `01-requirements.json` |
 | 2 | **Architect Agent** | 3 design options → recommended choice, API contracts, DB schema | `02-architecture.json` |
 | 3 | **Implementer Agent** | Implementation plan → TDD cycle (tests first, then code) — **default for all features** | Code + `03-implementation.json` |
 | 4 | **Code Reviewer** | Standards, security, performance, contract compliance | `04-review.json` |
+| 4b | **Security Reviewer** _(optional)_ | Adversarial security pass — IDOR, auth, injection, secrets, data exposure | `04b-security-review.json` |
 | 5 | **Test Verifier** | Coverage adequacy (>80%), edge cases, assertion quality | `05-test-verification.json` |
 | 6 | **Release Planner** | Deployment steps, rollback strategy, monitoring thresholds | `06-deployment-plan.json` |
 
@@ -105,6 +108,7 @@ Reply with numbers (e.g. "1 3 4") or paste a KAIROS template block:
 3. implementer-tdd-agent     — TDD code generation (default — use when project has a test suite)
    3b. implementer-coder-agent — Code-only, no TDD (use when project has NO test suite)
 4. code-reviewer             — Quality assurance
+   4b. security-reviewer-agent — Adversarial security review (optional — recommended for auth, payments, write endpoints)
 5. test-verifier             — Test quality & coverage
 6. release-planner           — Deployment planning
 ```
@@ -121,8 +125,9 @@ A typical KAIROS feature run produces:
 
 - ✅ Production-ready code following your project's patterns
 - ✅ Comprehensive test suite with coverage >80% _(when using `implementer-tdd-agent`)_
-- ✅ Architecture decision record
+- ✅ Architecture decision record with sound API contracts _(via pre-contract checklist gate)_
 - ✅ Code review report (security, performance, standards)
+- ✅ Adversarial security report with exploitable findings and attack scenarios _(when using `security-reviewer-agent`)_
 - ✅ Deployment plan with rollback procedure
 - ✅ Full issue tracker comment trail (Jira / GitLab / Bitbucket)
 
@@ -141,16 +146,20 @@ A typical KAIROS feature run produces:
 
 ```
 agents/
-├── orchestrator-agent.md   ← Coordinator
-├── context-extractor-agent.md ← Pre-pipeline context
-├── pm-agent.md             ← Requirements
-├── architect-agent.md      ← System design
-├── implementer-tdd-agent.md    ← TDD code generation (default)
-├── implementer-coder-agent.md  ← Code-only, no TDD (projects without test suite)
-├── code-reviewer-agent.md  ← Quality review
-├── test-verifier-agent.md  ← Test quality
-├── release-planner-agent.md ← Deployment planning
-└── team/                   ← Team Mode specialists
+├── orchestrator-agent.md        ← Coordinator
+├── context-extractor-agent.md   ← Pre-pipeline: full-repo context
+├── impact-assessment-agent.md   ← Pre-pipeline: issue-scoped grounding + agent recommendations
+├── pm-agent.md                  ← Requirements
+├── architect-agent.md           ← System design
+├── implementer-tdd-agent.md     ← TDD code generation (default)
+├── implementer-coder-agent.md   ← Code-only, no TDD (projects without test suite)
+├── code-reviewer-agent.md       ← Quality review
+├── security-reviewer-agent.md   ← Adversarial security review (optional, read-only)
+├── test-verifier-agent.md       ← Test quality
+├── release-planner-agent.md     ← Deployment planning
+├── shared/
+│   └── contract-checklist.md    ← Shared reference: 9 questions to resolve before any contract
+└── team/                        ← Team Mode specialists
     ├── implementer-lead-agent.md
     ├── teammate-tests-agent.md
     ├── teammate-backend-agent.md

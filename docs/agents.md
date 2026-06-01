@@ -1,6 +1,6 @@
 # The KAIROS Agents
 
-KAIROS orchestrates a core pipeline of 8 specialized AI agents, plus an optional team of 5 specialists for Team Mode. The Context Extractor runs standalone before the main pipeline; the remaining core agents run in sequence coordinated by the Orchestrator. Team Mode agents are Claude Code only and activated on explicit request.
+KAIROS orchestrates a core pipeline of 11 specialized AI agents, plus an optional team of 5 specialists for Team Mode. Two agents run standalone before the main pipeline (Context Extractor and Impact Assessment); the remaining core agents run in sequence coordinated by the Orchestrator. Team Mode agents are Claude Code only and activated on explicit request.
 
 ::: tip Copy agents directly from the documentation
 Need the raw agent definition to paste into your tool? Go to **[Agent Files](/agent-files)** — every agent is embedded as a ready-to-copy code block, auto-synced from the source files.
@@ -15,6 +15,16 @@ Every modification to an agent file must be accompanied by an entry in [`CHANGEL
 ## [Context Extractor](/agents/context-extractor-agent)
 
 Scans the codebase and an issue draft to produce a structured context file (`00-context.json`) that all downstream agents consume. Run this agent before launching the Orchestrator to give every phase accurate, verified knowledge of your stack, patterns, and conventions — without each agent re-scanning the repository independently.
+
+---
+
+## [Impact Assessment](/agents/impact-assessment-agent)
+
+Issue-scoped grounding agent. Run this before the Orchestrator (optionally, after Context Extractor) to answer three questions before you select agents: How big is this? What already exists and what is missing? Which pipeline agents does this issue actually need?
+
+Unlike the Context Extractor, which scans the full repository, this agent reads only the code the issue directly touches. It consumes `00-context.json` if already present rather than rescanning. Output is `00b-impact.json` with effort estimate (`simple_fix / medium / significant_rework`), domains touched (backend / frontend / db / auth / integrations), reusable assets with real file paths, gaps, risks, and a `recommended_agents` list with per-agent justification.
+
+The recommendation is advisory only. When the Orchestrator detects `00b-impact.json`, it displays the recommendation as a `💡 Impact Assessment` block above the agent selection menu — the human confirms or ignores it. Nothing is pre-selected.
 
 ---
 
@@ -89,6 +99,18 @@ Database specialist — creates schema migrations and rollback scripts exactly p
 ## [Code Reviewer](/agents/code-reviewer-agent)
 
 Checks code quality against standards, verifies pattern compliance, reviews architecture alignment, and suggests improvements before the code reaches test verification.
+
+---
+
+## [Security Reviewer](/agents/security-reviewer-agent)
+
+Adversarial security review — posture is "how do I break this", not "looks okay". Optional; runs after Code Reviewer when selected. Read-only agent (`tools: Read, Grep, Glob`, `model: opus`).
+
+Covers seven categories: authorization and IDOR (including writes through nested payloads where a PUT on a parent can mutate a child belonging to a different parent), authentication on sensitive endpoints, injection (SQL, command, template, NoSQL), secret handling, data over-exposure in responses, input validation at the server boundary, and dependency risks.
+
+Also includes a mandatory **contract enforcement check**: reads `02-architecture.json` and verifies that ownership constraints defined by the Architect are actually present in the implementation code. Gaps are flagged regardless of direct exploitability.
+
+Output is `04b-security-review.json` with findings ranked by exploitable severity, each with a concrete attack scenario and remediation. Because this agent is read-only, the Orchestrator writes and opens the output file on its behalf.
 
 ---
 

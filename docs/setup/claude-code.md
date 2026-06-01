@@ -26,12 +26,14 @@ your-project/
 ├── .claude/
 │   └── agents/
 │       ├── orchestrator-agent.md
-│       ├── context-extractor-agent.md
+│       ├── context-extractor-agent.md     ← Pre-pipeline: full-repo context (standalone)
+│       ├── impact-assessment-agent.md     ← Pre-pipeline: issue grounding + agent recommendations (standalone)
 │       ├── pm-agent.md
 │       ├── architect-agent.md
 │       ├── implementer-tdd-agent.md       ← TDD implementer (default — use when project has a test suite)
 │       ├── implementer-coder-agent.md     ← Code-only implementer (no TDD — use when project has NO test suite)
 │       ├── code-reviewer-agent.md
+│       ├── security-reviewer-agent.md     ← Adversarial security review (optional, read-only)
 │       ├── test-verifier-agent.md
 │       ├── release-planner-agent.md
 │       └── team/                      ← Team Mode specialists

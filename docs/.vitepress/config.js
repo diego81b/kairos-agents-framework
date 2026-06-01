@@ -105,25 +105,30 @@ export default withMermaid(defineConfig({
             collapsed: true,
             items: [
               { text: 'Context Extractor', link: '/agent-files#context-extractor' },
+              { text: 'Impact Assessment', link: '/agent-files#impact-assessment' },
               { text: 'Orchestrator', link: '/agent-files#orchestrator' },
               { text: 'PM Agent', link: '/agent-files#pm-agent' },
               { text: 'Architect Agent', link: '/agent-files#architect-agent' },
               { text: 'Implementer Agent — TDD', link: '/agent-files#implementer-tdd-agent' },
               { text: 'Implementer Agent — Code Only', link: '/agent-files#implementer-coder-agent' },
               { text: 'Code Reviewer', link: '/agent-files#code-reviewer' },
+              { text: 'Security Reviewer', link: '/agent-files#security-reviewer' },
               { text: 'Test Verifier', link: '/agent-files#test-verifier' },
               { text: 'Release Planner', link: '/agent-files#release-planner' }
             ]
           },
           { text: 'Context Extractor', link: '/agents/context-extractor-agent' },
+          { text: 'Impact Assessment', link: '/agents/impact-assessment-agent' },
           { text: 'Orchestrator', link: '/agents/orchestrator-agent' },
           { text: 'PM Agent', link: '/agents/pm-agent' },
           { text: 'Architect Agent', link: '/agents/architect-agent' },
           { text: 'Implementer Agent — TDD', link: '/agents/implementer-tdd-agent' },
           { text: 'Implementer Agent — Code Only', link: '/agents/implementer-coder-agent' },
           { text: 'Code Reviewer', link: '/agents/code-reviewer-agent' },
+          { text: 'Security Reviewer', link: '/agents/security-reviewer-agent' },
           { text: 'Test Verifier', link: '/agents/test-verifier-agent' },
-          { text: 'Release Planner', link: '/agents/release-planner-agent' }
+          { text: 'Release Planner', link: '/agents/release-planner-agent' },
+          { text: 'Contract Checklist', link: '/agents/shared/contract-checklist' }
         ]
       },
       {

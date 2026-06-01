@@ -29,11 +29,14 @@ your-project/
 ├── .cursor/
 │   └── agents/
 │       ├── orchestrator-agent.md
+│       ├── context-extractor-agent.md     ← Pre-pipeline: full-repo context (standalone)
+│       ├── impact-assessment-agent.md     ← Pre-pipeline: issue grounding + recommendations (standalone)
 │       ├── pm-agent.md
 │       ├── architect-agent.md
-│       ├── implementer-tdd-agent.md   ← TDD implementer (default)
-│       ├── implementer-coder-agent.md ← Code-only implementer (no test suite)
+│       ├── implementer-tdd-agent.md       ← TDD implementer (default)
+│       ├── implementer-coder-agent.md     ← Code-only implementer (no test suite)
 │       ├── code-reviewer-agent.md
+│       ├── security-reviewer-agent.md     ← Adversarial security review (optional, read-only)
 │       ├── test-verifier-agent.md
 │       └── release-planner-agent.md
 ```

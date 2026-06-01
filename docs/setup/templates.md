@@ -21,11 +21,12 @@ Copy this block into any issue description or paste it directly in the chat:
 - [ ] implementer-tdd-agent
 - [ ] implementer-coder-agent
 - [ ] code-reviewer-agent
+- [ ] security-reviewer-agent
 - [ ] test-verifier-agent
 - [ ] release-planner-agent
 ```
 
-Check (`[x]`) only the agents you want to activate. For the implementation step, pick **one** of `implementer-tdd-agent` (TDD, default) or `implementer-coder-agent` (no TDD).
+Check (`[x]`) only the agents you want to activate. For the implementation step, pick **one** of `implementer-tdd-agent` (TDD, default) or `implementer-coder-agent` (no TDD). Add `security-reviewer-agent` when the feature touches auth, payments, or any write endpoint.
 
 ---
 
@@ -40,6 +41,7 @@ Full pipeline — new functionality going to production.
 - [x] architect-agent
 - [x] implementer-tdd-agent
 - [x] code-reviewer-agent
+- [x] security-reviewer-agent
 - [x] test-verifier-agent
 - [x] release-planner-agent
 ```
@@ -57,6 +59,7 @@ Skip design and deployment planning; focus on fix + verification.
 - [ ] architect-agent
 - [x] implementer-tdd-agent
 - [x] code-reviewer-agent
+- [ ] security-reviewer-agent
 - [x] test-verifier-agent
 - [ ] release-planner-agent
 ```
@@ -74,6 +77,7 @@ Minimal pipeline — urgent production fix, skip analysis and planning.
 - [ ] architect-agent
 - [x] implementer-tdd-agent
 - [x] code-reviewer-agent
+- [ ] security-reviewer-agent
 - [ ] test-verifier-agent
 - [ ] release-planner-agent
 ```
@@ -91,6 +95,7 @@ All phases except deployment — improving existing code without a new release.
 - [x] architect-agent
 - [x] implementer-tdd-agent
 - [x] code-reviewer-agent
+- [ ] security-reviewer-agent
 - [x] test-verifier-agent
 - [ ] release-planner-agent
 ```
@@ -108,6 +113,7 @@ Analysis and writing only — no code, no deployment.
 - [ ] architect-agent
 - [ ] implementer-tdd-agent
 - [ ] code-reviewer-agent
+- [ ] security-reviewer-agent
 - [ ] test-verifier-agent
 - [ ] release-planner-agent
 ```
@@ -144,10 +150,13 @@ When the orchestrator shows the Case B selection prompt, paste the entire templa
 
 | # | Agent | Role |
 |---|-------|------|
+| pre | `context-extractor-agent` | Full-repo scan → stack, patterns, conventions (standalone, optional) |
+| pre | `impact-assessment-agent` | Issue-scoped grounding → effort, domains, agent recommendations (standalone, optional) |
 | 1 | `pm-agent` | Requirements analysis, acceptance criteria, risks |
 | 2 | `architect-agent` | System design, API contracts, DB schema |
 | 3 | `implementer-tdd-agent` | TDD code generation (plan gate + code gate) — **default** |
 | 3b | `implementer-coder-agent` | Code generation without TDD (for projects without a test suite) |
 | 4 | `code-reviewer-agent` | Standards, security, performance review |
+| 4b | `security-reviewer-agent` | Adversarial security review — IDOR, auth, injection, secrets, data exposure (optional) |
 | 5 | `test-verifier-agent` | Test coverage and assertion quality |
 | 6 | `release-planner-agent` | Deployment steps, rollback, monitoring |

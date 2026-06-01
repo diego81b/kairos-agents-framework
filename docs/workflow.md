@@ -6,9 +6,13 @@ KAIROS is a **Human-in-the-Loop (HITL)** pipeline. Every phase produces a concre
 flowchart TD
     A([Feature Request]) --> P0
 
-    subgraph P0["Phase 0 — Context & Agent Selection"]
+    subgraph P0["Phase 0 — Prep & Agent Selection"]
         direction TB
-        O[Orchestrator] --> SEL[User selects active agents]
+        PRE["Pre-pipeline (optional):
+context-extractor-agent
+impact-assessment-agent"] --> O
+        O[Orchestrator] --> ADV["💡 Impact advisory (if 00b-impact.json found)"]
+        ADV --> SEL[User selects active agents]
     end
 
     P0 -->|HITL: confirm pipeline| P1
@@ -60,7 +64,13 @@ creates binding contracts"]
         REV[Code Reviewer]
     end
 
-    P4 -->|"HITL ✅ / ✏️ / ⏭️ / ⛔"| P5
+    P4 -->|"HITL ✅ / ✏️ / ⏭️ / ⛔"| P4B
+
+    subgraph P4B["Phase 4b — Security Review (optional)"]
+        SR[Security Reviewer]
+    end
+
+    P4B -->|"HITL ✅ / ✏️ / ⏭️ / ⛔"| P5
 
     subgraph P5["Phase 5 — Test Verification"]
         TV[Test Verifier]
@@ -86,13 +96,20 @@ Only selected agents run. Order is never changed.
 
 ---
 
-## Phase 0: Context Extraction & Agent Selection
+## Phase 0: Prep & Agent Selection
 
+**Pre-pipeline (optional, both standalone):**
+- Run `@context-extractor-agent` first to produce `00-context.json` (full-repo scan — stack, patterns, conventions)
+- Run `@impact-assessment-agent` to produce `00b-impact.json` (issue-scoped grounding — effort, domains, recommended agents). Consumes `00-context.json` if present; does not rescan what it already covers.
+
+**Pipeline start:**
 - Developer provides a natural-language feature request (with optional issue reference)
+- Orchestrator loads `00-context.json` and `00b-impact.json` if present
+- If `00b-impact.json` found, displays a `💡 Impact Assessment` advisory block before the selection menu (effort, domains, recommended agents) — advisory only, nothing pre-selected
 - Orchestrator reads the `## KAIROS Pipeline` section from the issue body (if present), or shows an interactive numbered list — **no automatic inference**
 - User confirms or adjusts the agent selection; orchestrator announces the active pipeline before Phase 1
 
-_Input: free-text feature request + optional issue reference_
+_Input: free-text feature request + optional issue reference + optional pre-pipeline JSON files_
 _Output: confirmed `active_agents` list + `feature_folder` path_
 
 ::: tip Selective pipeline
@@ -231,6 +248,35 @@ User reviews quality report. NEEDS\_FIXES sends the issue list back to the Imple
 
 ---
 
+## Phase 4b: Security Review — optional (Security Reviewer)
+
+Adversarial pass — the agent asks "how do I break this" rather than checking compliance boxes. Only runs when explicitly selected. Read-only agent (`model: opus`).
+
+- **Authorization and IDOR** — including nested payload mutations (a PUT on parent A that can silently modify a child belonging to parent B)
+- **Authentication** on sensitive endpoints
+- **Injection** — SQL, command, template, NoSQL
+- **Secret handling** — hardcoded creds, secrets in logs or responses
+- **Data over-exposure** — full model serialization, unfiltered list endpoints
+- **Input validation** at the server boundary
+- **Dependency risks** — known CVEs, deprecated crypto
+- **Contract enforcement** — verifies that ownership constraints from `02-architecture.json` are actually present in code; gaps are flagged regardless of direct exploitability
+
+_Input: implementation code + `02-architecture.json`_
+_Output: findings ranked by exploitable severity with attack scenarios + contract enforcement status_
+_Saved to: `.kairos/<feature_folder>/04b-security-review.json`_ (written by Orchestrator — agent is read-only)
+
+::: info HITL checkpoint
+User reviews findings. "Request fixes" forwards the `findings[]` list to the Implementer.
+
+`✅ Approve` · `✏️ Request fixes` · `⏭️ Skip next` · `⛔ Stop`
+:::
+
+::: tip When to add the Security Reviewer
+Select `security-reviewer-agent` whenever the feature touches: authentication or authorization, user-owned data, payment flows, or any write endpoint. KAIROS's own flagship example (PCI-DSS Stripe payments) is a clear case.
+:::
+
+---
+
 ## Phase 5: Test Verification (Test Verifier)
 
 - Verify test comprehensiveness (edge cases, error scenarios)
@@ -324,6 +370,12 @@ IMPLEMENTATION (from Implementer Agent):
 QUALITY (from Code Reviewer):
   - Standards Compliance, Security Check
   - Performance Analysis, Issues Found (if any)
+
+SECURITY (from Security Reviewer):
+  - Findings ranked by exploitable severity
+  - Attack scenarios
+  - Contract enforcement status (ownership constraints verified)
+  - IDOR / ownership gaps
 
 TEST QUALITY (from Test Verifier):
   - Coverage Status, Test Quality Assessment
