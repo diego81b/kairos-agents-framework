@@ -95,7 +95,7 @@
     {
       "name": "kairos",
       "description": "KAIROS multi-agent SDLC pipeline",
-      "source": { "source": "github", "repo": "diego81b/kairos-agents-framework" }
+      "source": { "source": "url", "url": "https://github.com/diego81b/kairos-agents-framework.git" }
     }
   ]
 }
