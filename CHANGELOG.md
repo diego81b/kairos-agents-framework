@@ -4,6 +4,14 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v3.1.1 — June 1, 2026
+
+### Added
+
+- **`docs/distribution-roadmap.md`** — distribution roadmap (Plugin → MCP Server) published to the docs site; covers Phase 0 (discovery), Phase 1 (Claude Code plugin), and Phase 2 (MCP server re-architecture) with guiding principles and a "where things live" reference table.
+
+---
+
 ## v3.1.0 — June 1, 2026
 
 ### Added

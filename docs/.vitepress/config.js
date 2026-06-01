@@ -165,6 +165,7 @@ export default withMermaid(defineConfig({
         text: 'Project',
         items: [
           { text: 'Roadmap', link: '/roadmap' },
+          { text: 'Distribution Roadmap', link: '/distribution-roadmap' },
           { text: 'Changelog', link: '/changelog' },
           { text: 'FAQ', link: '/faq' }
         ]

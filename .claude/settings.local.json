@@ -5,7 +5,12 @@
       "Bash(python3 -c ':*)",
       "Bash(node -e ':*)",
       "Bash(node)",
-      "Bash(grep -l \"mermaid\" c:/progetti/kairos/docs/.vitepress/dist/*.js)"
+      "Bash(grep -l \"mermaid\" c:/progetti/kairos/docs/.vitepress/dist/*.js)",
+      "Bash(Get-ChildItem -Path \"C:\\\\varie\\\\kairos\" -Force)",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "Bash(grep -E \"\\\\.\\(md|json|txt|yaml|yml\\)$\")",
+      "Bash(git add *)",
+      "Bash(git commit *)"
     ]
   }
 }
