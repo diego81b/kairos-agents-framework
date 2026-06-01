@@ -22,22 +22,39 @@
 
 ---
 
-## Phase 0 — Discovery
+## Phase 0 — Discovery ✅
 
-Before touching anything, establish ground truth and report back:
+- [x] **Plugin structure:** manifest is `.claude-plugin/plugin.json` (only `name` required); agents/,
+      skills/, commands/ at plugin root; auto-discovered, no manifest required.
+- [x] **Where a plugin lives:** git repo + marketplace manifest (`.claude-plugin/marketplace.json`).
+      Install via `/plugin marketplace add owner/repo` then `/plugin install kairos@marketplace-name`.
+      No build step — purely file-based.
+- [x] **MCP setup:** Tier 1 SDKs: TypeScript, Python, C#, Go. Transports: stdio (local subprocess)
+      or Streamable HTTP (remote, replaces deprecated SSE). Local: `claude mcp add --transport stdio`.
+      Remote: `claude mcp add --transport http`.
+- [x] **Where an MCP server lives:** local = npm/pip/binary on each user's machine, no hosting.
+      Remote = always-on hosted process (Railway, Render, Cloudflare, custom VPS).
 
-- [ ] **Plugin structure:** determine the real anatomy of a Claude Code plugin — manifest file name and
-      required fields, the expected folder layout (where agents / commands / skills go inside a plugin),
-      and how a plugin is distributed and installed.
-- [ ] **Where a plugin lives:** confirm whether distribution is via a git repository / marketplace (no
-      running process) — and document the exact install steps an end user runs.
-- [ ] **MCP setup:** determine how an MCP server is built (language/SDK options), the transport choices
-      (local stdio vs remote HTTP/SSE), and how a Claude Code user connects to one.
-- [ ] **Where an MCP server lives:** confirm the two hosting models — local (runs on the user's machine,
-      no hosting) vs remote (a hosted process reachable by URL) — and what each requires.
+**Output:** [`docs/distribution/00-discovery.md`](/distribution/00-discovery) — verified structures and
+"where it lives" answers.
 
-**Output:** `docs/distribution/00-discovery.md` with the verified structures and the two "where it lives"
-answers. Stop for review before Phase 1.
+### Phase 0 Review Decisions
+
+Three decisions made during review, applied to Phase 1:
+
+**Decision 1 — `.claude/CLAUDE.md` excluded from plugin.**
+Contains contributor discipline (versioning rules, commit convention) — not relevant to plugin users.
+Plugin ships agents and the checklist skill only.
+
+**Decision 2 — `defaultEnabled: false`.**
+KAIROS ships ~12 agents. Auto-enabling all on install causes "wrong agent fires" collisions in the
+user's main context. Plugin is opt-in: install, then `/plugin enable kairos@...` when the pipeline is needed.
+
+**Decision 3 — Agent namespacing is the primary risk, not a side note.**
+Skills are namespaced (`plugin-name:skill-name`). Whether agents follow the same pattern is
+undocumented. KAIROS has 9 @-notation calls in `orchestrator-agent.md` and 4 Agent Teams spawn type
+names in `implementer-lead-agent.md` — all break under namespacing if bare names stop resolving.
+Must verify empirically before Phase 1.2.
 
 ---
 
@@ -46,25 +63,37 @@ answers. Stop for review before Phase 1.
 Faithful repackaging. KAIROS agents stay as agents; the shared `contract-checklist` becomes the
 plugin's first real skill.
 
-### 1.1 — Map KAIROS onto plugin structure
+### 1.1 — Map KAIROS onto plugin structure ✅
 
-- [ ] Inventory what KAIROS has: all `agents/` (core + `agents/team/`), the shared `contract-checklist.md`,
-      any commands, the `.claude/CLAUDE.md` rules, the `00–06` JSON convention.
-- [ ] Map each onto the plugin layout from Phase 0. Flag anything that has no clean slot and propose
-      where it goes.
-- [ ] Decide what becomes a slash-command vs an agent (e.g. is "run the pipeline" a command?).
+- [x] Inventory: 11 core agents, 5 team agents, `contract-checklist` shared reference, `.claude/CLAUDE.md`
+      (contributor-only, excluded), `00–06` JSON convention (preserved via agent instructions).
+- [x] Mapped all components to plugin slots. Two path references need updating (architect + implementer-lead
+      → checklist path changes when moved to `skills/`). No slot has no home.
+- [x] `contract-checklist` → `skills/contract-checklist/SKILL.md` (slash-command: `/kairos:contract-checklist`).
+      No other components become commands — orchestrator is the entry point, not a slash-command.
+
+**Output:** [`docs/distribution/01-plugin-mapping.md`](/distribution/01-plugin-mapping) — full component
+inventory, agent-to-agent invocation list (13 call points), namespacing blocker documented.
 
 ### 1.2 — Build the plugin
 
-- [ ] Create the manifest and folder structure per the verified format.
-- [ ] Move/reference the agents and the checklist-skill into it without editing their behavior.
-- [ ] Keep the `package.json` + `CHANGELOG.md` discipline already in the repo.
+**Hard blocker: verify agent namespacing empirically before starting.**
+Install a test plugin with two agents; confirm whether `@agent-b` or `@plugin-name:agent-b` resolves.
+Document the result. Then:
+
+- [ ] Create `.claude-plugin/plugin.json` (`name: kairos`, `defaultEnabled: false`).
+- [ ] Create `.claude-plugin/marketplace.json` (self-hosted, same repo).
+- [ ] Create `skills/contract-checklist/SKILL.md` (move content from `agents/shared/contract-checklist.md`).
+- [ ] Update `agents/architect-agent.md:63` and `agents/team/implementer-lead-agent.md:93` — checklist path.
+- [ ] If agents are namespaced: update 9 @-notation calls in `orchestrator-agent.md` and 4 spawn type names
+      in `implementer-lead-agent.md`.
+- [ ] Remove `agents/shared/contract-checklist.md` (replaced by skill).
 
 ### 1.3 — Where it lives
 
 - [ ] State exactly where the plugin is published: the git repository and the marketplace manifest
       that points to it.
-- [ ] Write `docs/distribution/01-plugin-install.md` — the literal steps the team runs to get KAIROS.
+- [ ] Write `docs/distribution/02-plugin-install.md` — the literal steps the team runs to get KAIROS.
 - [ ] Confirm: nothing needs to "run". Distribution = push to git + the install steps above.
 
 ### 1.4 — Test before declaring done
@@ -72,8 +101,12 @@ plugin's first real skill.
 - [ ] Install the plugin fresh (as a teammate would), then run KAIROS on one small real feature end-to-end.
 - [ ] Verify the HITL gates, `active_agents` selection, and the `.kairos/` audit trail still behave
       exactly as before packaging.
+- [ ] **Mandatory routing test:** full pipeline run (orchestrator → pm → architect → implementer-tdd →
+      reviewer → test-verifier) AND full Team Mode run (orchestrator → implementer-lead → 4 teammates).
+      Both must complete without agent-resolution failures. A green install that never tested
+      agent-to-agent routing proves nothing.
 
-**Phase 1 complete only when a fresh install runs a real feature correctly and `01-plugin-install.md`
+**Phase 1 complete only when a fresh install runs a real feature correctly and `02-plugin-install.md`
 documents the exact install path.**
 
 ---

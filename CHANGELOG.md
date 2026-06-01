@@ -4,6 +4,19 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v3.1.3 — June 1, 2026
+
+### Added
+
+- **`docs/distribution/01-plugin-mapping.md`** — Phase 1.1 mapping: full KAIROS component inventory mapped to plugin slots, three Phase 0 review decisions applied, complete agent-to-agent invocation list (9 @-notation calls in orchestrator, 4 Agent Teams spawn type names in implementer-lead), namespacing blocker documented with verification method and required test scope.
+- **`docs/.vitepress/config.js`** — Phase 1.1 mapping page added to Distribution sidebar.
+
+### Changed
+
+- **`docs/distribution-roadmap.md`** — Phase 0 checkboxes marked complete with verified answers; Phase 0 review decisions (CLAUDE.md exclusion, defaultEnabled: false, namespacing as primary risk) documented as a dedicated section; Phase 1.1 marked complete with output link; Phase 1.2 updated with namespacing hard blocker and mandatory routing test requirement for Phase 1.4.
+
+---
+
 ## v3.1.2 — June 1, 2026
 
 ### Added
