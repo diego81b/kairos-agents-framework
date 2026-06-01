@@ -17,6 +17,8 @@
 
 ## Install
 
+All `/plugin` commands are **user-global** — they apply to the current machine, not to a single project. Install once and KAIROS is available in all projects on that machine.
+
 ```bash
 # 1. Register the KAIROS marketplace (hosted in the same repo)
 /plugin marketplace add diego81b/kairos-agents-framework
@@ -33,6 +35,10 @@
 ```
 
 **Why step 3 is required:** `plugin.json` sets `defaultEnabled: false`. This prevents KAIROS agents from appearing in the typeahead for users who install without intending to use them. Explicit enable = explicit intent.
+
+::: info No per-project plugin scoping
+There is no built-in way to enable a plugin for one project and disable it for another via `/plugin` commands. The enable state is stored in `~/.claude/settings.json` and applies globally. If you need project isolation, the manual copy approach in the [Claude Code setup guide](/setup/claude-code) is the alternative — agents copied to `.claude/agents/` are project-scoped.
+:::
 
 ---
 
