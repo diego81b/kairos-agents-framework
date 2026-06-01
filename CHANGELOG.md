@@ -4,6 +4,15 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v3.2.2 — June 1, 2026
+
+### Changed
+
+- **`docs/distribution/02-plugin-install.md`** — Team Mode section expanded: all three scopes for `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` documented (project-level `.claude/settings.json`, global `~/.claude/settings.json`, shell session export).
+- **`docs/setup/claude-code.md`** — "Enable Agent Teams" section expanded with same three-scope breakdown; project-level recommended for teams using git.
+
+---
+
 ## v3.2.1 — June 1, 2026
 
 ### Added

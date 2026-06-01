@@ -72,7 +72,32 @@ All KAIROS agents are scoped under the `kairos:` plugin namespace. Bare names (`
 
 ### Team Mode Agents
 
-Requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` and Claude Code ≥ 2.1.32.
+Requires Claude Code ≥ 2.1.32 and the Agent Teams flag enabled. Set it at whichever scope fits:
+
+**Project-level** — committed to git, whole team gets it:
+```json
+// .claude/settings.json in your project root
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  }
+}
+```
+
+**Global** — all projects on this machine:
+```json
+// ~/.claude/settings.json
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  }
+}
+```
+
+**Shell session** — temporary, for testing:
+```bash
+export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
+```
 
 | Agent | Scoped name |
 |-------|-------------|

@@ -169,9 +169,18 @@ Team Mode activates a coordinated team of 5 specialists in place of the single i
 
 ### Enable Agent Teams
 
-Create or update `.claude/settings.json` in your project root:
+Requires Claude Code v2.1.32 or later:
+
+```bash
+claude --version
+```
+
+Set the flag at whichever scope fits your workflow:
+
+**Project-level** (recommended — commits the setting to git so the whole team gets it):
 
 ```json
+// .claude/settings.json in your project root
 {
   "env": {
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
@@ -179,10 +188,22 @@ Create or update `.claude/settings.json` in your project root:
 }
 ```
 
-Requires Claude Code v2.1.32 or later:
+**Global** (all projects on this machine — developer preference):
+
+```json
+// ~/.claude/settings.json
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  }
+}
+```
+
+**Shell session** (temporary, for testing):
 
 ```bash
-claude --version
+export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
+claude
 ```
 
 ### Why Claude Code only?
