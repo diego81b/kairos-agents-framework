@@ -175,14 +175,14 @@ Pass `feature_folder`, the original issue reference, and the `active_agents` lis
 
 Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
 
-1. **PM Phase** _(if pm-agent active)_: Call @pm-agent
-2. **Architecture Phase** _(if architect-agent active)_: Call @architect-agent
+1. **PM Phase** _(if pm-agent active)_: Call @kairos:pm-agent
+2. **Architecture Phase** _(if architect-agent active)_: Call @kairos:architect-agent
 3. **Implementation Phase** _(if implementer-tdd-agent, implementer-coder-agent, or implementer-lead active)_
 
    **Routing Decision (before calling any implementer):**
 
-   - `implementer-tdd-agent` in `active_agents` → call @implementer-tdd-agent directly (default path, TDD)
-   - `implementer-coder-agent` in `active_agents` → call @implementer-coder-agent directly (no TDD path)
+   - `implementer-tdd-agent` in `active_agents` → call @kairos:implementer-tdd-agent directly (default path, TDD)
+   - `implementer-coder-agent` in `active_agents` → call @kairos:implementer-coder-agent directly (no TDD path)
    - `implementer-lead-agent` in `active_agents` → show cost warning and wait for user confirmation:
 
    ```
@@ -200,11 +200,11 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
    ⛔ Cancel pipeline
    ```
 
-   Proceed based on user response. Do NOT call any implementer without this confirmation if `implementer-lead-agent` is selected.
-4. **Review Phase** _(if code-reviewer-agent active)_: Call @code-reviewer-agent
-4b. **Security Review Phase** _(if security-reviewer-agent active)_: Call @security-reviewer-agent. After it completes, write its JSON output to `.kairos/$feature_folder/04b-security-review.json` and open it: `code ".kairos/$feature_folder/04b-security-review.json"` (this agent is read-only — the orchestrator handles persistence).
-5. **Test Verification Phase** _(if test-verifier-agent active)_: Call @test-verifier-agent
-6. **Deployment Phase** _(if release-planner-agent active)_: Call @release-planner-agent
+   If confirmed → call @kairos:team:implementer-lead-agent. If switched → call @kairos:implementer-tdd-agent instead. If cancelled → stop. Do NOT call any implementer without this confirmation.
+4. **Review Phase** _(if code-reviewer-agent active)_: Call @kairos:code-reviewer-agent
+4b. **Security Review Phase** _(if security-reviewer-agent active)_: Call @kairos:security-reviewer-agent. After it completes, write its JSON output to `.kairos/$feature_folder/04b-security-review.json` and open it: `code ".kairos/$feature_folder/04b-security-review.json"` (this agent is read-only — the orchestrator handles persistence).
+5. **Test Verification Phase** _(if test-verifier-agent active)_: Call @kairos:test-verifier-agent
+6. **Deployment Phase** _(if release-planner-agent active)_: Call @kairos:release-planner-agent
 7. **Aggregation**: Collect all outputs, mark skipped phases as `[SKIPPED]`
 8. **Present**: Show user everything
 

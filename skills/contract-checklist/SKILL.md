@@ -1,3 +1,7 @@
+---
+description: Pre-implementation checklist for API and database contracts. Resolves entity lifecycle, payload shape, ownership/IDOR risk, idempotency, delete behavior, aggregate update semantics, pagination, versioning, and error shape before any contract is finalized.
+---
+
 # Contract Checklist
 
 Shared reference for `architect-agent` and `implementer-lead-agent`.

@@ -1,7 +1,7 @@
 # Phase 1.1 — KAIROS → Plugin Mapping
 
-> **Status:** Complete. Awaiting review before Phase 1.2 (build).
-> One hard blocker (agent namespacing) must be verified empirically before build starts.
+> **Status:** Complete. Phase 1.2 build complete as of v3.2.0.
+> Namespacing blocker resolved: Case B confirmed (plugin agents ARE namespaced). All @-calls and spawn type names updated.
 
 ---
 
@@ -176,23 +176,19 @@ If namespacing changes, these need updating for correctness but cannot cause rou
 
 ## Namespacing Blocker
 
-**Status: Undocumented. Must verify empirically before Phase 1.2.**
+**Status: RESOLVED — Case B confirmed (v3.2.0).**
 
-The official Claude Code docs do not state whether agents in a plugin are namespaced the same way
-skills are (`plugin-name:skill-name`). There are two possible realities:
+Verified empirically: the Claude Code Agent tool rejects bare agent names for plugin agents.
+`cavecrew-investigator` (bare) → "Agent type not found"; `caveman:cavecrew-investigator` (scoped) → resolves.
+Official docs confirm: plugin agents appear under scoped names in the typeahead (`plugin-name:agent-name`),
+and agents in a plugin subfolder include the subfolder path: `plugin:folder:agent-name`.
 
-**Case A — Agents are NOT namespaced** (bare names preserved):
-- All 9 @-notation calls and 4 spawn type names work as-is.
-- No changes to orchestrator-agent.md or implementer-lead-agent.md beyond the checklist path fix.
+**Applied in v3.2.0:**
+- 9 @-notation calls in `orchestrator-agent.md` updated to `kairos:` prefix.
+- `implementer-lead-agent.md` in `agents/team/` → team agents use `kairos:team:` prefix.
+- 4 spawn type names updated: `kairos:team:teammate-tests-agent`, etc.
 
-**Case B — Agents ARE namespaced** (`kairos:agent-name`):
-- All 9 @-notation calls must become `@kairos:pm-agent`, `@kairos:architect-agent`, etc.
-- All 4 spawn type names must become `kairos:teammate-tests-agent`, etc.
-- This is a real edit to `orchestrator-agent.md` (9 lines) and `implementer-lead-agent.md` (4 lines).
-
-**Verification method:** install a test plugin with two agents where agent A calls `@agent-b` and
-`@plugin-name:agent-b`, and observe which form resolves. This must be done before writing any plugin
-file in Phase 1.2.
+**Phase 1.4 still mandatory:** verify routing works in a live plugin install.
 
 **Phase 1.4 must test** (regardless of which case applies):
 - Full single-agent pipeline: orchestrator → pm → architect → implementer-tdd → reviewer → test-verifier
@@ -210,20 +206,16 @@ Agent files reference the checklist by file path (via Read) — they do not use 
 
 ---
 
-## Phase 1.2 Prerequisites (must be resolved before building)
+## Phase 1.2 Build — Complete (v3.2.0)
 
-**Hard blocker:**
-1. Verify agent namespacing empirically. Determine whether @-notation and spawn type names need
-   the `kairos:` prefix. Document the verified answer.
+All items resolved and shipped:
 
-**Then proceed with:**
-2. Create `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`
-3. Create `skills/contract-checklist/SKILL.md` (move content from `agents/shared/contract-checklist.md`)
-4. Update two path references (`architect-agent.md:63`, `implementer-lead-agent.md:93`)
-5. If Case B: update 9 @-notation calls in `orchestrator-agent.md` and 4 spawn type names in `implementer-lead-agent.md`
-6. Remove `agents/shared/contract-checklist.md` (replaced by skill)
+1. ✅ Agent namespacing verified: Case B — `kairos:` prefix required.
+2. ✅ `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` created.
+3. ✅ `skills/contract-checklist/SKILL.md` created; `agents/shared/contract-checklist.md` removed.
+4. ✅ Path refs updated: `architect-agent.md:63`, `implementer-lead-agent.md:93`.
+5. ✅ 9 @-notation calls in `orchestrator-agent.md` updated; 4 spawn type names in `implementer-lead-agent.md` updated.
 
 ---
 
-> **Next step:** Verify agent namespacing (empirical test), then proceed to Phase 1.2.
-> Stop for review after Phase 1.2 build before installing.
+> **Next step:** Phase 1.3 — document where the plugin lives and write the install guide.

@@ -1,0 +1,11 @@
+{
+  "name": "kairos-marketplace",
+  "owner": { "name": "Diego Baldeschi", "email": "diego.baldeschi@comm-it.it" },
+  "plugins": [
+    {
+      "name": "kairos",
+      "description": "KAIROS multi-agent SDLC pipeline",
+      "source": { "source": "github", "repo": "diego81b/kairos-agents-framework" }
+    }
+  ]
+}

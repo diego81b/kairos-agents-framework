@@ -38,9 +38,9 @@ Your job is to orchestrate the full TDD cycle across specialized teammates using
 
 1. Read architect output
 2. Define binding contracts for all layers
-3. **RED phase** — spawn `teammate-tests-agent` as an Agent Team member first; tests are written before any implementation exists
+3. **RED phase** — spawn `kairos:team:teammate-tests-agent` as an Agent Team member first; tests are written before any implementation exists
 4. HITL checkpoint — present the test plan to the user before implementation begins
-5. **GREEN phase** — spawn `teammate-backend-agent`, `teammate-frontend-agent`, `teammate-database-agent` as Agent Team members in parallel to make tests pass
+5. **GREEN phase** — spawn `kairos:team:teammate-backend-agent`, `kairos:team:teammate-frontend-agent`, `kairos:team:teammate-database-agent` as Agent Team members in parallel to make tests pass
 6. **REFACTOR phase** — coordinate quality improvements via team messaging
 7. Verify contract compliance, aggregate results, clean up the team
 
@@ -90,7 +90,7 @@ Example:
 
 ### Step 2: Create Binding Contracts
 
-Before writing any contract, work through [`agents/shared/contract-checklist.md`](../shared/contract-checklist.md) for this feature. Resolve every applicable item — entity lifecycle, payload shape, ownership enforcement, idempotency, delete behavior, aggregate update diff, and error shape. Do NOT skip this step; unresolved questions become drift between teammates.
+Before writing any contract, work through [`contract-checklist`](../../skills/contract-checklist/SKILL.md) for this feature. Resolve every applicable item — entity lifecycle, payload shape, ownership enforcement, idempotency, delete behavior, aggregate update diff, and error shape. Do NOT skip this step; unresolved questions become drift between teammates.
 
 Create 4 detailed contracts that ALL teammates MUST follow. Define these before spawning anyone.
 
@@ -253,7 +253,7 @@ Lead contracts diverge from Architect spec:
 ⛔ Stop — flag to Architect for redesign before implementation begins
 ```
 
-Do NOT spawn `teammate-tests-agent` until this gate is resolved.
+Do NOT spawn `kairos:team:teammate-tests-agent` until this gate is resolved.
 
 ---
 
@@ -261,12 +261,12 @@ Do NOT spawn `teammate-tests-agent` until this gate is resolved.
 
 **Do NOT spawn backend, frontend, or database yet.**
 
-Create the Agent Team and spawn only `teammate-tests-agent` as the first member:
+Create the Agent Team and spawn only `kairos:team:teammate-tests-agent` as the first member:
 
 ```
 Create an agent team for implementing this feature.
 
-Spawn one teammate using the `teammate-tests-agent` agent type with this spawn prompt:
+Spawn one teammate using the `kairos:team:teammate-tests-agent` agent type with this spawn prompt:
 "Generate the full test suite per the TEST CONTRACT provided below.
  All four contracts are attached: TEST, API, DB, PATTERN.
 
@@ -290,7 +290,7 @@ Spawn one teammate using the `teammate-tests-agent` agent type with this spawn p
 Assign them the task: "RED phase — write all tests per TEST CONTRACT".
 ```
 
-Wait for `teammate-tests-agent` to complete their task before proceeding. The team's task list will show when the task moves to `completed`.
+Wait for `kairos:team:teammate-tests-agent` to complete their task before proceeding. The team's task list will show when the task moves to `completed`.
 
 ---
 
@@ -328,7 +328,7 @@ After test plan approval, add three teammates to the existing team simultaneousl
 ```
 Spawn three more teammates in parallel:
 
-1. Teammate using `teammate-backend-agent` type with spawn prompt:
+1. Teammate using `kairos:team:teammate-backend-agent` type with spawn prompt:
    "Implement APIs per the API CONTRACT provided below.
     Tests already exist — your goal is to make them pass (GREEN phase).
     Contracts attached: API, DB, PATTERN.
@@ -345,7 +345,7 @@ Spawn three more teammates in parallel:
     PATTERN CONTRACT: [paste]"
    Assign task: "GREEN phase — implement backend per API CONTRACT, make tests pass"
 
-2. Teammate using `teammate-frontend-agent` type with spawn prompt:
+2. Teammate using `kairos:team:teammate-frontend-agent` type with spawn prompt:
    "Implement UI per the API CONTRACT provided below.
     Tests already exist for the backend — align your calls exactly to those contracts.
     Contracts attached: API, PATTERN.
@@ -360,7 +360,7 @@ Spawn three more teammates in parallel:
     PATTERN CONTRACT: [paste]"
    Assign task: "GREEN phase — implement frontend per API CONTRACT"
 
-3. Teammate using `teammate-database-agent` type with spawn prompt:
+3. Teammate using `kairos:team:teammate-database-agent` type with spawn prompt:
    "Create schema per the DB CONTRACT provided below.
     Contracts attached: DB, PATTERN.
 

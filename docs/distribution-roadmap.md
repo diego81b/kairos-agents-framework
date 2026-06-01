@@ -81,13 +81,12 @@ inventory, agent-to-agent invocation list (13 call points), namespacing blocker 
 Install a test plugin with two agents; confirm whether `@agent-b` or `@plugin-name:agent-b` resolves.
 Document the result. Then:
 
-- [ ] Create `.claude-plugin/plugin.json` (`name: kairos`, `defaultEnabled: false`).
-- [ ] Create `.claude-plugin/marketplace.json` (self-hosted, same repo).
-- [ ] Create `skills/contract-checklist/SKILL.md` (move content from `agents/shared/contract-checklist.md`).
-- [ ] Update `agents/architect-agent.md:63` and `agents/team/implementer-lead-agent.md:93` — checklist path.
-- [ ] If agents are namespaced: update 9 @-notation calls in `orchestrator-agent.md` and 4 spawn type names
-      in `implementer-lead-agent.md`.
-- [ ] Remove `agents/shared/contract-checklist.md` (replaced by skill).
+- [x] Create `.claude-plugin/plugin.json` (`name: kairos`, `defaultEnabled: false`).
+- [x] Create `.claude-plugin/marketplace.json` (self-hosted, same repo).
+- [x] Create `skills/contract-checklist/SKILL.md` (move content from `agents/shared/contract-checklist.md`).
+- [x] Update `agents/architect-agent.md:63` and `agents/team/implementer-lead-agent.md:93` — checklist path.
+- [x] Agents ARE namespaced (Case B confirmed empirically): updated 9 @-notation calls in `orchestrator-agent.md` and 4 spawn type names in `implementer-lead-agent.md` (`kairos:` prefix for core agents, `kairos:team:` for team subfolder agents).
+- [x] Remove `agents/shared/contract-checklist.md` (replaced by skill).
 
 ### 1.3 — Where it lives
 

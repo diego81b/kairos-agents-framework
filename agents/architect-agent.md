@@ -60,7 +60,7 @@ For each constraint combination:
 Explain why it's best given constraints.
 
 ### 5. Pre-Contract Resolution
-Before defining `api_contracts`, work through [`agents/shared/contract-checklist.md`](shared/contract-checklist.md).
+Before defining `api_contracts`, work through [`contract-checklist`](../skills/contract-checklist/SKILL.md).
 
 For each section that applies to this feature, document your resolution. If a section is genuinely not applicable (e.g. a read-only feature has no ownership mutation risk), note it as "N/A — [reason]" so downstream agents can verify rather than guess.
 

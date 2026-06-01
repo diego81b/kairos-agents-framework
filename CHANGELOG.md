@@ -4,6 +4,26 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v3.2.0 — June 1, 2026
+
+### Added
+
+- **`.claude-plugin/plugin.json`** — plugin manifest enabling KAIROS as an installable Claude Code plugin (`name: kairos`, `defaultEnabled: false`, `version: 3.2.0`).
+- **`.claude-plugin/marketplace.json`** — self-hosted marketplace manifest pointing to the GitHub repo for distribution.
+- **`skills/contract-checklist/SKILL.md`** — contract checklist migrated from `agents/shared/` into a Claude Code skill; accessible as `/kairos:contract-checklist`.
+
+### Changed
+
+- **`agents/orchestrator-agent.md`** — all 9 agent invocation calls updated to use `kairos:` namespace prefix (e.g. `@pm-agent` → `@kairos:pm-agent`, implementer-lead → `@kairos:team:implementer-lead-agent`); required for plugin-installed agent routing.
+- **`agents/team/implementer-lead-agent.md`** — all 4 teammate spawn type names updated to `kairos:team:` prefix (e.g. `teammate-tests-agent` → `kairos:team:teammate-tests-agent`); checklist path updated to new `skills/` location.
+- **`agents/architect-agent.md`** — checklist path updated from `agents/shared/contract-checklist.md` to `skills/contract-checklist/SKILL.md`.
+
+### Removed
+
+- **`agents/shared/contract-checklist.md`** — replaced by `skills/contract-checklist/SKILL.md`.
+
+---
+
 ## v3.1.3 — June 1, 2026
 
 ### Added
