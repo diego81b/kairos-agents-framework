@@ -9,7 +9,8 @@ All notable changes to KAIROS Framework are documented in this file.
 ### Added
 
 - **`docs/distribution/02-plugin-install.md`** — Phase 1.3 install guide: prerequisites, install commands, agent namespace reference table, contract checklist skill access, and Phase 1.4 routing test requirements.
-- **`docs/.vitepress/config.js`** — Phase 1.3 install guide added to Distribution sidebar; dead link for Contract Checklist fixed (`agents/shared/contract-checklist` → `skills/contract-checklist/SKILL`).
+- **`docs/.vitepress/config.js`** — Phase 1.3 install guide added to Distribution sidebar; dead sidebar link for Contract Checklist fixed (`agents/shared/contract-checklist` → `skills/contract-checklist/SKILL`).
+- **`docs/agent-files.md`** — dead link for Contract Checklist fixed (`agents/shared/contract-checklist.md` → `skills/contract-checklist/SKILL.md`).
 
 ---
 

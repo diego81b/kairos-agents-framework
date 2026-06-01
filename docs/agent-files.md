@@ -37,7 +37,7 @@ No exceptions. A pull request that modifies an agent without a matching changelo
 
 > Team Mode agent files are on a [separate page](/agent-files-team).
 >
-> The shared [Contract Checklist](agents/shared/contract-checklist.md) used by Architect Agent and Implementer Lead is in `agents/shared/contract-checklist.md`.
+> The shared [Contract Checklist](skills/contract-checklist/SKILL.md) used by Architect Agent and Implementer Lead is in `skills/contract-checklist/SKILL.md`.
 
 ---
 
