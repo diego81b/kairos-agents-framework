@@ -4,38 +4,17 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
-## v3.3.0 — June 1, 2026
-
-### Added
-
-- **`agents/impact-assessment-agent.md`** — new standalone grounding agent (read-only: `tools: Read, Grep, Glob`, `model: opus`). User-triggered before the orchestrator, same pattern as `context-extractor-agent` (Hard Constraint #4 preserved — the orchestrator never invokes it). Reads the issue and only the code it directly touches — not a full-repo rescan. Consumes `00-context.json` if already present. Outputs `00b-impact.json` with: effort estimate (`simple_fix / medium / significant_rework`) with file-level reasoning, domains touched (`backend / frontend / db / auth / integrations`), existing reusable assets with real file paths, gaps, risks visible from current code, open questions, and a `recommended_agents` block with per-agent justification. The recommendation is advisory only — it is displayed to the user as a `💡 Impact Assessment` block above the Step 0d selection menu; nothing is pre-selected. Because this agent is read-only, the orchestrator (or user) handles writing and opening the file.
-
-### Changed
-
-- **`agents/orchestrator-agent.md`** — `impact-assessment-agent` added to Available Subagents as a standalone pre-pipeline agent; Step 0a now checks for both `00-context.json` and `00b-impact.json` and stores the impact `recommended_agents` block if found; the Hard Constraint #4 prohibition extended to cover `impact-assessment-agent` alongside `context-extractor-agent`; Step 0d (both Case A and Case B) now displays a `💡 Impact Assessment` advisory block above the selection menu when `00b-impact.json` was loaded — the human confirms or ignores it, no auto-selection; Pipeline Outputs tree updated with `00b-impact.json`.
-
----
-
-## v3.2.0 — June 1, 2026
-
-### Added
-
-- **`agents/security-reviewer-agent.md`** — new adversarial security reviewer (read-only: `tools: Read, Grep, Glob`, `model: opus`). Posture is "how do I break this" rather than checklist compliance. Covers 7 categories: authorization/IDOR (including writes through nested payloads where a PUT on a parent can mutate a child belonging to a different parent), authentication on sensitive endpoints, injection (SQL/command/template/NoSQL), secret handling, data over-exposure in responses, input validation at server boundary, and dependency risks. Output is `04b-security-review.json` ranked by exploitable severity, each finding with a concrete attack scenario. Includes a mandatory `contract_enforcement` block that verifies ownership constraints defined in `02-architecture.json` are actually present in the implementation code. Because this agent is read-only, the orchestrator handles writing the output file and opening it in the editor.
-
-### Changed
-
-- **`agents/orchestrator-agent.md`** — `security-reviewer-agent` added to Available Subagents list; Case A pipeline display and Case B selection menu both include `security-reviewer` as option `4b` (optional, recommended for auth/payments/write endpoints); Phase Execution block adds Phase `4b` (Security Review) between Review and Test Verification, with the orchestrator explicitly responsible for persisting `04b-security-review.json` and opening it; HITL phase-to-filename map updated to include `04b-security-review.json`; Pipeline Outputs tree updated; Output To User block adds `SECURITY` section.
-
----
-
 ## v3.1.0 — June 1, 2026
 
 ### Added
 
+- **`agents/security-reviewer-agent.md`** — new adversarial security reviewer (read-only: `tools: Read, Grep, Glob`, `model: opus`). Posture is "how do I break this" rather than checklist compliance. Covers 7 categories: authorization/IDOR (including writes through nested payloads where a PUT on a parent can mutate a child belonging to a different parent), authentication on sensitive endpoints, injection (SQL/command/template/NoSQL), secret handling, data over-exposure in responses, input validation at server boundary, and dependency risks. Output is `04b-security-review.json` ranked by exploitable severity, each finding with a concrete attack scenario. Includes a mandatory `contract_enforcement` block that verifies ownership constraints defined in `02-architecture.json` are actually present in the implementation code. Because this agent is read-only, the orchestrator handles writing the output file and opening it in the editor.
+- **`agents/impact-assessment-agent.md`** — new standalone grounding agent (read-only: `tools: Read, Grep, Glob`, `model: opus`). User-triggered before the orchestrator, same pattern as `context-extractor-agent` (Hard Constraint #4 preserved — the orchestrator never invokes it). Reads the issue and only the code it directly touches — not a full-repo rescan. Consumes `00-context.json` if already present. Outputs `00b-impact.json` with: effort estimate (`simple_fix / medium / significant_rework`) with file-level reasoning, domains touched (`backend / frontend / db / auth / integrations`), existing reusable assets with real file paths, gaps, risks visible from current code, open questions, and a `recommended_agents` block with per-agent justification. The recommendation is advisory only — it is displayed to the user as a `💡 Impact Assessment` block above the Step 0d selection menu; nothing is pre-selected. Because this agent is read-only, the orchestrator (or user) handles writing and opening the file.
 - **`agents/shared/contract-checklist.md`** — new shared reference encoding the critical questions every API or database contract must resolve before finalization: entity lifecycle, payload shape for master-detail (nested aggregate vs separate endpoints), ownership and IDOR risk (including nested updates that mutate a child belonging to a different parent), idempotency and retry behavior, delete behavior (soft/hard, cascade), aggregate update diff (how the payload signals existing vs new vs deleted children), pagination/filter/sort, versioning, and error response shape. Referenced by both `architect-agent` and `implementer-lead-agent`.
 
 ### Changed
 
+- **`agents/orchestrator-agent.md`** — `security-reviewer-agent` and `impact-assessment-agent` added to Available Subagents; Case A and Case B selection menus include `security-reviewer` as option `4b`; Phase Execution adds Phase `4b` (Security Review) between Review and Test Verification, with the orchestrator persisting `04b-security-review.json`; Step 0a now checks for `00b-impact.json` alongside `00-context.json`; Hard Constraint #4 extended to cover `impact-assessment-agent`; Step 0d displays a `💡 Impact Assessment` advisory block when `00b-impact.json` is present — advisory only, no auto-selection; HITL file map, Pipeline Outputs tree, and Output To User block updated.
 - **`agents/architect-agent.md`** — new Step 5 "Pre-Contract Resolution" inserted before Detailed Design: before emitting `api_contracts`, the Architect must work through `agents/shared/contract-checklist.md` and resolve every applicable item, preventing silent drift from reaching the Implementer.
 - **`agents/team/implementer-lead-agent.md`** — Step 2 (Create Binding Contracts) now opens with a mandatory checklist gate referencing `agents/shared/contract-checklist.md`; new Step 2b "Contract Consistency Check" verifies the 4 Lead contracts are faithful to the Architect's `api_contracts` and `database_changes` before any teammate is spawned — mismatches surface as a HITL gate rather than silently diverging.
 
