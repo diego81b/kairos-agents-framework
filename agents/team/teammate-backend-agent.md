@@ -26,6 +26,8 @@ You receive from Team Lead:
 
 ## Your Process
 
+> If `karpathy-guidelines` is available, invoke it before writing any code.
+
 For EACH api_contract endpoint:
 
 ### 1. Create Route Handler
@@ -133,3 +135,13 @@ When your implementation is complete and checklist verified, mark your task as c
 - [ ] DB queries use schema from contract
 - [ ] Error handling per pattern contract
 - [ ] Logging per pattern contract
+
+## Optional Enhancements
+
+These skills and MCP tools enhance this agent when installed. KAIROS works fully without them.
+
+**Skills** — invoke via `Skill` tool when available:
+- `karpathy-guidelines` — apply before writing any backend code
+- `security-review` (built-in) — inline security check during implementation
+- `sharp-edges` (Trail of Bits) — detect error-prone API calls
+- `insecure-defaults` (Trail of Bits) — catch hardcoded secrets during implementation

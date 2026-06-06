@@ -10,6 +10,18 @@ Intelligent multi-agent SDLC orchestration
 - **docs/** - Complete documentation site (VitePress)
 - **CHANGELOG.md** - Version history
 
+## Optional Enhancements
+
+KAIROS agents declare optional enhancements via skills and MCP tools. The framework works fully without them — enhancements are additive only.
+
+**Recommended installs:**
+- [karpathy-guidelines](https://github.com/multica-ai/andrej-karpathy-skills) — coding best practices for all implementer agents (167k+ stars)
+- [Trail of Bits security plugins](https://github.com/trailofbits/skills) — security audit suite for reviewer agents (5.5k stars)
+- [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp) — behavioral verification for test agents (42.8k stars)
+- [Playwright MCP](https://github.com/microsoft/playwright-mcp) — E2E automation for test agents (33.3k stars)
+
+See [Skills & MCP Enhancements](docs/skills-mcp.md) for the full map and install commands.
+
 ## Quick Start
 
 1. Copy `agents/` to your project

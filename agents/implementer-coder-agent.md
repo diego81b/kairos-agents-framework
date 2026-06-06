@@ -32,6 +32,8 @@ If standalone, derive `feature_folder` yourself using the same rules as the orch
 
 ### PHASE 0: Implementation Plan
 
+> If `karpathy-guidelines` is available, invoke it before starting implementation.
+
 Before writing any file, output a structured plan and wait for user approval.
 
 Analyze:
@@ -183,6 +185,14 @@ curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issu
   -H "Content-Type: application/json" \
   -d "{\"content\":{\"raw\":\"## Implementation\"}}"
 ```
+
+## Optional Enhancements
+
+These skills and MCP tools enhance this agent when installed. KAIROS works fully without them.
+
+**Skills** — invoke via `Skill` tool when available:
+- `karpathy-guidelines` — apply before writing any code
+- `verify` / `run` — verify implementation in the running app after coding
 
 ## Important Notes
 - You have FRESH context

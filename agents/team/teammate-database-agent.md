@@ -24,6 +24,8 @@ You receive from Team Lead:
 
 ## Your Process
 
+> If `karpathy-guidelines` is available, invoke it before writing any schema or migration code.
+
 For EACH table in DB CONTRACT:
 
 ### 1. Create Migration File
@@ -114,3 +116,12 @@ When your migrations are complete and checklist verified, mark your task as comp
 - [ ] Foreign keys defined
 - [ ] Indexes for performance
 - [ ] Rollback migrations included
+
+## Optional Enhancements
+
+These skills and MCP tools enhance this agent when installed. KAIROS works fully without them.
+
+**Skills** — invoke via `Skill` tool when available:
+- `karpathy-guidelines` — apply before writing any schema or migration code
+
+**Gap:** No generic database MCP available — all database MCPs are vendor-specific.

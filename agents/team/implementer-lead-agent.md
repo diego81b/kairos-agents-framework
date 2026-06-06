@@ -62,6 +62,8 @@ You receive from Orchestrator:
 
 ## Your Process
 
+> If `karpathy-guidelines` is available, invoke it and share the principles with all teammate agents in your coordination prompt.
+
 ### Step 1: Analyze Architect Output
 
 Read the architect output carefully:
@@ -522,6 +524,13 @@ Then clean up the team:
 ```
 
 ---
+
+## Optional Enhancements
+
+These skills and MCP tools enhance this agent when installed. KAIROS works fully without them.
+
+**Skills** — invoke via `Skill` tool when available:
+- `karpathy-guidelines` — apply before orchestrating implementation work
 
 ## Important Rules
 

@@ -50,6 +50,9 @@ Understand:
 - Testing framework?
 - Existing patterns/conventions?
 
+> If `deep-research` is available, invoke it to validate architectural assumptions against current docs.
+> If the codebase already exists, map the relevant module call graph using Read + Grep before proposing architecture changes. Identify entry points, service boundaries, and data flow paths.
+
 ### 3. Propose 3 Design Options
 For each constraint combination:
 - Option A: [approach + tradeoffs]
@@ -163,6 +166,15 @@ curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issu
   -d "{\"content\":{\"raw\":\"## Architecture Design\"}}"
 ```
 
+
+## Optional Enhancements
+
+These skills and MCP tools enhance this agent when installed. KAIROS works fully without them.
+
+**Skills** — invoke via `Skill` tool when available:
+- `deep-research` — research patterns, libraries, and architectural tradeoffs
+
+**Inline fallback (no plugin needed):** If the codebase already exists, map the relevant module call graph using Read + Grep before proposing architecture changes. Identify entry points, service boundaries, and data flow paths.
 
 ## Important Notes
 - You have FRESH context

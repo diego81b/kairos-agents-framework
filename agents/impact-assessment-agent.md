@@ -190,6 +190,13 @@ curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issu
   -d "{\"content\":{\"raw\":\"## Impact Assessment\"}}"
 ```
 
+## Optional Enhancements
+
+These skills and MCP tools enhance this agent when installed. KAIROS works fully without them.
+
+**Skills** — invoke via `Skill` tool when available:
+- `deep-research` — research domain impact and dependency implications
+
 ## Important Notes
 - Issue-scoped only — do NOT scan the full repository. Read the code the issue directly touches.
 - If `00-context.json` exists, consume it — do not re-read files it already covers.

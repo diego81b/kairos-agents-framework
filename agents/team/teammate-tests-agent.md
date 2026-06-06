@@ -26,6 +26,9 @@ You receive from Team Lead:
 
 ## Your Process
 
+> If `karpathy-guidelines` is available, invoke it before writing tests.
+> If `property-based-testing` is available, invoke it to augment unit tests with property-based cases.
+
 ### RED Phase (Write Failing Tests First)
 
 For EACH api_contract endpoint:
@@ -130,3 +133,19 @@ message [lead]: "Contract mismatch in [endpoint]: [expected] vs [found]. Correct
 ```
 
 When your task is complete, mark it as completed on the shared task list.
+
+## Optional Enhancements
+
+These skills and MCP tools enhance this agent when installed. KAIROS works fully without them.
+
+**Skills** — invoke via `Skill` tool when available:
+- `karpathy-guidelines` — apply before writing any test code
+- `property-based-testing` (Trail of Bits) — generate property-based test cases
+- `verify` / `run` — execute tests against the running app
+
+**MCP Tools** — use these tools directly when the MCP is connected:
+- `take_screenshot` (via Chrome DevTools MCP) — visual verification of UI under test
+- `get_console_message` / `list_console_messages` (via Chrome DevTools MCP) — catch JS runtime errors during testing
+- `list_network_requests` (via Chrome DevTools MCP) — verify API integration
+- `lighthouse_audit` (via Chrome DevTools MCP) — automated performance and a11y audit
+- Full E2E test execution (via Playwright MCP) — run tests against the running app

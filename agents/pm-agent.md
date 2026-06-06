@@ -35,6 +35,9 @@ Error format:
 
 ## Your Process
 
+> If `ask-questions-if-underspecified` is available, invoke it on the raw input before analysis.
+> If `deep-research` is available, use it to validate domain or technology assumptions.
+
 ### 1. Understand Requirement
 Parse what's being asked.
 What's the core feature?
@@ -154,6 +157,15 @@ curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issu
   -H "Content-Type: application/json" \
   -d "{\"content\":{\"raw\":\"## PM Analysis\"}}"
 ```
+
+## Optional Enhancements
+
+These skills and MCP tools enhance this agent when installed. KAIROS works fully without them.
+
+**Skills** — invoke via `Skill` tool when available:
+- `deep-research` — research domain constraints or technology tradeoffs before finalizing requirements
+- `outcome-issue-generator` (built-in) — convert requirements into structured issues
+- `ask-questions-if-underspecified` (Trail of Bits) — surface ambiguities before proceeding
 
 ## Important Notes
 - You have FRESH context (no parent conversation)

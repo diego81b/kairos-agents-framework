@@ -12,7 +12,13 @@
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(Remove-Item -Path \"C:\\\\varie\\\\kairos\\\\agents\\\\shared\\\\contract-checklist.md\" -Force)",
-      "Bash(Remove-Item -Path \"C:\\\\varie\\\\kairos\\\\agents\\\\shared\" -Force)"
+      "Bash(Remove-Item -Path \"C:\\\\varie\\\\kairos\\\\agents\\\\shared\" -Force)",
+      "Bash(sed 's/,/\\\\n/g')",
+      "Bash(sed 's/\"name\": \"\\\\\\([^\"]*\\\\\\)\".*\"description\": \"\\\\\\([^\"]*\\\\\\)\".*/\\\\1 | \\\\2/')",
+      "Bash(python3)",
+      "Bash(Select-String '\"version\"')",
+      "Bash(git checkout *)",
+      "Bash(node *)"
     ]
   }
 }

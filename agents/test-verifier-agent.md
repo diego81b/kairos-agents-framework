@@ -61,6 +61,8 @@ Record:
 
 If execution fails (missing deps, config error), do NOT fabricate results. Set `coverage_status: UNKNOWN` and add a `critical` issue with the failure reason.
 
+> **Optional MCP enhancement:** If Chrome DevTools MCP is connected, open the app in the browser, take a screenshot, check the console for errors, and run `lighthouse_audit`. Report findings alongside the test execution results before signing off.
+
 ### PHASE 1: Static Audit
 
 Run the checks below. Each check produces zero or more issues.
@@ -228,6 +230,25 @@ curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issu
   -H "Content-Type: application/json" \
   -d "{\"content\":{\"raw\":\"## Test Verification\"}}"
 ```
+
+## Optional Enhancements
+
+These skills and MCP tools enhance this agent when installed. KAIROS works fully without them.
+
+**Skills** — invoke via `Skill` tool when available:
+- `verify` — run the app and observe real behavior before signing off
+- `property-based-testing` (Trail of Bits) — validate test suite covers property-based cases
+- `mutation-testing` (Trail of Bits) — check test suite catches mutations
+- `sarif-parsing` (Trail of Bits `static-analysis`) — parse static analysis output included in test artifacts
+- `fp-check` (Trail of Bits) — verify static analysis findings are not false positives
+
+**MCP Tools** — use these tools directly when the MCP is connected:
+- `take_screenshot` (via Chrome DevTools MCP) — visual verification post-implementation
+- `get_console_message` / `list_console_messages` (via Chrome DevTools MCP) — catch JS runtime errors
+- `list_network_requests` (via Chrome DevTools MCP) — verify API calls match expectations
+- `lighthouse_audit` (via Chrome DevTools MCP) — automated performance and a11y audit
+- `evaluate_script` (via Chrome DevTools MCP) — custom in-browser assertions
+- Full E2E test execution (via Playwright MCP) — run tests against the running app
 
 ## Important Notes
 - Execute tests; do not infer pass/fail from reading code.

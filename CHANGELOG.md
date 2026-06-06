@@ -4,6 +4,24 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v3.3.0 — June 6, 2026
+
+### Added
+
+- **`agents/*.md`, `agents/team/*.md`** — optional-enhancement sections across all 15 agents; each agent declares which skills and MCP tools enhance it, with inline conditional instructions (`> If skill X is available, invoke it; else apply inline checklist`). KAIROS remains fully functional without any external install — all enhancements are additive only.
+- **`docs/skills-mcp.md`** — new VitePress page documenting the full skills/MCP ecosystem: MCP table, skills table, Trail of Bits plugin breakdown, copy-paste install commands, full agent × enhancement map, and gap section (database MCP, deploy MCP, LSP).
+- **`docs/.vitepress/config.js`** — Skills & MCP Enhancements page added to sidebar under Core Agents.
+- **`docs/agents.md`** — per-agent VitePress tip callouts listing declared skills and MCP tools with install commands.
+- **`README.md`** — Optional Enhancements section with recommended installs and link to the new docs page.
+
+### Changed
+
+- **Trail of Bits plugin scope** — 11 plugins declared as optional enhancements in agent files (`differential-review`, `insecure-defaults`, `supply-chain-risk-auditor`, `static-analysis`, `variant-analysis`, `sharp-edges`, `property-based-testing`, `mutation-testing`, `fp-check`, `ask-questions-if-underspecified`, `audit-context-building`). `testing-handbook-skills` and `trailmark` excluded: those plugins bundle 15 and 10 skills respectively; only 1 skill from each was needed, so inline fallback instructions are used instead.
+- **MCP wiring** — Chrome DevTools MCP and Playwright MCP declared in `test-verifier-agent`, `teammate-tests-agent`, `teammate-frontend-agent`.
+- **karpathy-guidelines** — declared in all implementer and teammate agents.
+
+---
+
 ## v3.2.3 — June 2, 2026
 
 ### Added

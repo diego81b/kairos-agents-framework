@@ -135,5 +135,14 @@ curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issu
   -d "{\"content\":{\"raw\":\"## Deployment Plan\"}}"
 ```
 
+## Optional Enhancements
+
+These skills and MCP tools enhance this agent when installed. KAIROS works fully without them.
+
+**Skills** — invoke via `Skill` tool when available:
+- `verify` / `run` — verify build and smoke test before finalizing deployment plan
+
+**Gap:** No generic deploy MCP available — all deploy MCPs (Vercel, Buildkite, etc.) are vendor-specific.
+
 ## Important Notes
 - Be practical and realistic

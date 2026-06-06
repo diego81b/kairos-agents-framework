@@ -36,6 +36,10 @@ Error format:
 
 ## Your Checks
 
+> If `differential-review` is available, invoke it on the diff first.
+> If `static-analysis/semgrep` is available, run Semgrep scan.
+> If `fp-check` is available, verify any static analysis findings before reporting.
+
 ### 1. Standards Compliance
 - Naming conventions match?
 - File structure correct?
@@ -139,6 +143,19 @@ curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issu
   -d "{\"content\":{\"raw\":\"## Code Review\"}}"
 ```
 
+
+## Optional Enhancements
+
+These skills and MCP tools enhance this agent when installed. KAIROS works fully without them.
+
+**Skills** — invoke via `Skill` tool when available:
+- `code-review` (built-in) — baseline code review
+- `differential-review` (Trail of Bits) — security-focused diff review
+- `static-analysis/semgrep` (Trail of Bits) — Semgrep static analysis
+- `static-analysis/codeql` (Trail of Bits) — CodeQL queries (requires CodeQL CLI installed)
+- `static-analysis/sarif-parsing` (Trail of Bits) — parse static analyzer output
+- `sharp-edges` (Trail of Bits) — detect error-prone API usage
+- `fp-check` (Trail of Bits) — verify findings are not false positives
 
 ## Important Notes
 - Be thorough but concise

@@ -20,6 +20,8 @@ You receive:
 
 ## Your Process
 
+> If `audit-context-building` is available, invoke it to produce granular code analysis before building context JSON.
+
 ### 1. Codebase Scan
 Read the repository to extract:
 - **Stack and versions**: `package.json`, `pyproject.toml`, `go.mod`, `pom.xml`, `Cargo.toml` — exact names and versions only
@@ -102,6 +104,14 @@ curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issu
   -H "Content-Type: application/json" \
   -d "{\"content\":{\"raw\":\"## Technical Context\"}}"
 ```
+
+## Optional Enhancements
+
+These skills and MCP tools enhance this agent when installed. KAIROS works fully without them.
+
+**Skills** — invoke via `Skill` tool when available:
+- `deep-research` — enrich context with external domain knowledge
+- `audit-context-building` (Trail of Bits) — ultra-granular code analysis for audit-quality context
 
 ## Important Notes
 - Do NOT invent stack, patterns, or file paths — only report what you find in the codebase
