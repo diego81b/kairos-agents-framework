@@ -39,6 +39,16 @@ Error format:
 > **Action required:** [what must be provided]
 > ⛔ This agent cannot continue until the missing input is supplied.
 
+## Ledger Check (required)
+
+Before proceeding, read all three ledger files:
+
+- `.kairos/<feature_folder>/ledger/constraints.md` — focus on security-related constraints; verify they are enforced in code
+- `.kairos/<feature_folder>/ledger/decisions.md` — note architectural decisions that have security implications
+- `.kairos/<feature_folder>/ledger/open-questions.md` — answer any security questions from prior phases
+
+If the ledger does not exist, proceed without it.
+
 ## Your Checks
 
 > If `insecure-defaults` is available, invoke it first.
@@ -144,6 +154,13 @@ If user picks "Request fixes", forward the `findings[]` array and `contract_enfo
 
 ### 2. Write to Project
 This agent is read-only (`tools: Read, Grep, Glob`). Present the complete JSON to the orchestrator and instruct it to write the output to `.kairos/<feature_folder>/04b-security-review.json`.
+
+### Ledger Update
+Produce a ledger update block as part of your output. Instruct the orchestrator to apply it:
+
+- **`constraints.md`**: Update Status for every existing row. For each security finding that violates a constraint, re-open that row to `🔴 open` with the finding ID as evidence. Add new security constraints identified (e.g. "All tokens must be rotated after use").
+- **`decisions.md`**: Add any security decisions (e.g. "Adopted PKCE for OAuth flow").
+- **`open-questions.md`**: Answer security questions from prior phases. Add new open security questions.
 
 > `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
 

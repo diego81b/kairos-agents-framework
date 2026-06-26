@@ -34,6 +34,16 @@ Error format:
 > **Action required:** [what must be provided]  
 > ⛔ This agent cannot continue until the missing input is supplied.
 
+## Ledger Check (required)
+
+Before proceeding, read all three ledger files:
+
+- `.kairos/<feature_folder>/ledger/constraints.md` — verify that each constraint is satisfied by the implementation; you may re-open constraints the implementer marked resolved if code does not comply
+- `.kairos/<feature_folder>/ledger/decisions.md` — understand architectural decisions you must verify compliance with
+- `.kairos/<feature_folder>/ledger/open-questions.md` — answer any questions you can from code inspection
+
+If the ledger does not exist, proceed without it.
+
 ## Your Checks
 
 > If `differential-review` is available, invoke it on the diff first.
@@ -113,6 +123,20 @@ Do NOT pass output to the next phase until the user explicitly approves.
 Save output to `.kairos/<feature_folder>/04-review.json`.
 
 > `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
+
+### 2b. Ledger Update (mandatory)
+
+Update all three ledger files under `.kairos/<feature_folder>/ledger/`:
+
+**`constraints.md`** — Update the Status of EVERY existing row:
+- Constraint verified as met by code → keep `✓ resolved` or mark it if the implementer left it `🔴 open` but code actually satisfies it
+- Constraint the implementer marked resolved but code does NOT satisfy → re-open to `🔴 open` with the file/line evidence
+- Constraint not applicable to review → leave as-is
+- Add any new quality constraints found (e.g. "error responses must always include a `request_id` field")
+
+**`decisions.md`** — Add any review-phase decisions (patterns enforced, deviations rejected and why).
+
+**`open-questions.md`** — Answer questions visible from code. Add questions raised during review.
 
 ### 3. Open in Editor
 After writing, open the output file in the editor so the user can inspect it directly.

@@ -39,6 +39,16 @@ Error format:
 > **Action required:** [what must be provided]
 > ⛔ This agent cannot continue until the missing input is supplied.
 
+## Ledger Check (required)
+
+Before proceeding, read all three ledger files:
+
+- `.kairos/<feature_folder>/ledger/constraints.md` — check for testing/coverage constraints (e.g. "> 80% line coverage required"); verify they are met
+- `.kairos/<feature_folder>/ledger/decisions.md` — note any decisions that affect test strategy
+- `.kairos/<feature_folder>/ledger/open-questions.md` — answer any test-related questions from prior phases
+
+If the ledger does not exist, proceed without it.
+
 ## Your Process
 
 ### PHASE 0: Execute Test Suite
@@ -201,6 +211,20 @@ If user picks "Request fixes", forward the `issues[]` array verbatim to `impleme
 Save output to `.kairos/<feature_folder>/05-test-verification.json`.
 
 > `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
+
+### 2b. Ledger Update (mandatory)
+
+Update all three ledger files under `.kairos/<feature_folder>/ledger/`:
+
+**`constraints.md`** — Update the Status of EVERY existing row:
+- Coverage constraints met → mark `✓ resolved` with actual percentages
+- Coverage constraints not met → mark `🔴 open` with actual vs required
+- TDD compliance constraints → update based on `tdd_reality` check result
+- Add any new testing constraints surfaced (e.g. "Integration tests required for payment webhook path")
+
+**`decisions.md`** — Add test verification decisions (e.g. "Mutation testing added for payment core logic").
+
+**`open-questions.md`** — Answer test-related questions. Add questions raised by coverage gaps.
 
 ### 3. Open in Editor
 After writing, open the output file in the editor so the user can inspect it directly.

@@ -144,6 +144,17 @@ State the justification for each recommended agent. Also state which agents you 
 }
 ```
 
+## Ledger Check
+
+Before proceeding, check if `.kairos/<feature_folder>/ledger/` exists:
+
+1. If it exists, read all three files:
+   - `ledger/constraints.md` — note any existing constraints that the issue may affect
+   - `ledger/decisions.md` — note any early architectural decisions already recorded
+   - `ledger/open-questions.md` — see if any questions overlap with what you surface
+
+2. If the ledger does not exist yet, skip this check.
+
 ## After Generating Output
 
 ### 1. Present for Validation
@@ -159,6 +170,14 @@ Do NOT save output until the user explicitly approves.
 
 ### 2. Write to Project
 This agent is read-only (`tools: Read, Grep, Glob`). Present the complete JSON to the orchestrator (or directly to the user if running standalone) and instruct it to write the output to `.kairos/<feature_folder>/00b-impact.json`.
+
+### Ledger Update
+Produce a ledger update block as part of your output. Instruct the orchestrator (or user) to apply it:
+
+- **`ledger/constraints.md`**: Update Status for every existing row. Add new risk-derived constraints identified in this phase (e.g. "PaymentService has no retry logic — constraint: must add retry before integration").
+- **`ledger/open-questions.md`**: Add any open questions from your `open_questions[]` array that are not yet answered.
+
+If the ledger does not exist yet, skip this step.
 
 > `feature_folder` is provided by the user or derived from the issue reference (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
 

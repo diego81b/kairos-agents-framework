@@ -4,6 +4,24 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v3.4.0 — June 26, 2026
+
+### Added
+
+- **`agents/*.md`, `agents/team/implementer-lead-agent.md`** — shared ledger system across all 12 pipeline agents. Each agent now reads `.kairos/<feature_folder>/ledger/` at phase start and updates it at phase end with mandatory accounting: every existing constraint row must be marked resolved / deferred / open / modified / dropped before adding new ones.
+- **`agents/orchestrator-agent.md`** — ledger lifecycle management: creates `ledger/` directory on pipeline init, offers optional human annotation at each HITL gate, and warns about unresolved open-questions at pipeline end.
+- **`agents/pm-agent.md`** — primary ledger seeder: populates `ledger/constraints.md` and `ledger/open-questions.md` from requirement analysis.
+- **`agents/architect-agent.md`** — seeds `ledger/decisions.md`, performs the first full accounting pass over all PM constraints.
+- **`agents/context-extractor-agent.md`** — optional early ledger seeder: creates `ledger/constraints.md` with codebase-derived constraints (naming rules, no-touch zones, compatibility requirements) before the main pipeline starts.
+
+### Changed
+
+- **Pipeline structure** — `.kairos/<feature_folder>/` now includes a `ledger/` subdirectory containing three living files: `constraints.md` (table of constraints with per-phase status), `decisions.md` (table of architectural and implementation decisions), `open-questions.md` (table of cross-phase questions with answers). Phase JSON files (01–06) are unchanged.
+- **Forced accounting model** — each agent must update the Status column of every existing constraint row before adding new ones. Unaddressed constraints remain `🔴 open` and are visible to all downstream agents. This eliminates silent information loss between phases (the "telephone game" problem).
+- **Team Mode** — only `implementer-lead-agent` reads and writes the ledger; teammates work via binding contracts and never touch `ledger/` directly.
+
+---
+
 ## v3.3.0 — June 6, 2026
 
 ### Added

@@ -59,6 +59,19 @@ If `00b-impact.json` found: load it and store the `recommended_agents` block —
 
 If neither file is found, proceed without them. Subagents will work from the information you pass them explicitly.
 
+### Step 0b: Initialize Ledger Directory
+
+After deriving `feature_folder`, create the shared ledger directory:
+
+```bash
+mkdir -p ".kairos/$feature_folder/ledger"
+```
+
+The ledger contains three living files — `constraints.md`, `decisions.md`, `open-questions.md` — that agents populate and update across phases. You do not write to these files directly. Subagents are responsible for their own ledger updates. Your job is to:
+1. Ensure the directory exists before any subagent runs
+2. Offer optional human annotation at each HITL gate (see HITL section)
+3. Warn about unresolved open-questions at pipeline end
+
 ### Step 0b: Derive Feature Folder
 
 Compute `feature_folder` from the user prompt:
@@ -206,7 +219,12 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
 5. **Test Verification Phase** _(if test-verifier-agent active)_: Call @kairos:test-verifier-agent
 6. **Deployment Phase** _(if release-planner-agent active)_: Call @kairos:release-planner-agent
 7. **Aggregation**: Collect all outputs, mark skipped phases as `[SKIPPED]`
-8. **Present**: Show user everything
+8. **Ledger audit**: Read `.kairos/$feature_folder/ledger/open-questions.md`. Count rows with `🔴 open` status. If any exist, warn:
+   ```
+   ⚠️  LEDGER — X unresolved open question(s) remain. Review before shipping:
+   [list each open Q with its ID and text]
+   ```
+9. **Present**: Show user everything
 
 ## Key Rules
 
@@ -225,8 +243,10 @@ KAIROS is a HITL pipeline. After EVERY active subagent completes:
    ✏️  Request changes — re-run this agent with feedback
    ⏭️  Skip next — approve this output, skip the next agent in the pipeline
    ⛔ Stop pipeline
+   📝 Add ledger note — type a note to append to open-questions.md or constraints.md before continuing
    ```
 4. Do NOT call the next subagent until the user explicitly responds with one of the options above. Silence = wait.
+   If user selects "📝 Add ledger note": append their note to `.kairos/$feature_folder/ledger/open-questions.md` as a new row with source `human` and status `🔴 open`, then re-show the HITL gate options.
 5. If changes requested, re-invoke the same subagent with feedback
 6. If **Skip next**: mark the next active agent as `[SKIPPED]` and proceed to the one after it
 
@@ -362,7 +382,11 @@ With issue number (`"Add Stripe payments — issue #42"`):
     ├── 04-review.json             ← Code Reviewer
     ├── 04b-security-review.json   ← Security Reviewer (optional)
     ├── 05-test-verification.json  ← Test Verifier
-    └── 06-deployment-plan.json    ← Release Planner
+    ├── 06-deployment-plan.json    ← Release Planner
+    └── ledger/
+        ├── constraints.md         ← Accumulated constraints with per-phase status (seeded by PM, updated by all agents)
+        ├── decisions.md           ← Architectural and implementation decisions log (seeded by Architect)
+        └── open-questions.md      ← Cross-phase questions with answers (any agent raises, any agent answers)
 ```
 
 Without issue number (`"Add Stripe payments"`):

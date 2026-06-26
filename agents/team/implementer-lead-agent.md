@@ -60,6 +60,16 @@ You receive from Orchestrator:
 
 ---
 
+## Ledger Check (required — lead only)
+
+Before proceeding, read all three ledger files. **You are the only agent in Team Mode that reads or writes the ledger — teammates never touch it.**
+
+- `.kairos/<feature_folder>/ledger/constraints.md` — understand every open/deferred constraint your team's implementation must satisfy
+- `.kairos/<feature_folder>/ledger/decisions.md` — understand architectural choices that bind your contracts and team's work
+- `.kairos/<feature_folder>/ledger/open-questions.md` — note unresolved questions you can answer from implementation
+
+Include relevant constraints in the contracts you define for teammates (TEST, API, DB, PATTERN). This is how constraints flow to teammates — through the contracts, not through direct ledger access.
+
 ## Your Process
 
 > If `karpathy-guidelines` is available, invoke it and share the principles with all teammate agents in your coordination prompt.
@@ -525,6 +535,23 @@ Then clean up the team:
 
 ---
 
+## Ledger Update (mandatory — after REFACTOR phase)
+
+After Step 6 (REFACTOR complete, contracts verified), update the ledger. **Only you write the ledger — do not ask or instruct teammates to write it.**
+
+**`constraints.md`** — Update the Status of EVERY existing row:
+- Constraint satisfied by team implementation → mark `✓ resolved` with which teammate/file resolved it
+- Constraint deferred (e.g. monitoring, future sprint) → mark `⚠ deferred`
+- Constraint violated or not addressed → mark `🔴 open` with explanation
+- Add any new constraints surfaced during Team Mode coordination
+
+**`decisions.md`** — Add lead-phase decisions:
+- Contract choices made during Step 2 (why you chose specific API shapes, error codes)
+- Any contract drift resolutions from Step 2b
+- Coverage targets agreed with teammate-tests
+
+**`open-questions.md`** — Answer questions visible from implementation findings. Add new questions raised during coordination.
+
 ## Optional Enhancements
 
 These skills and MCP tools enhance this agent when installed. KAIROS works fully without them.
@@ -544,3 +571,4 @@ These skills and MCP tools enhance this agent when installed. KAIROS works fully
 8. **Verify contract compliance at every phase** — message the specific teammate directly if a mismatch is found
 9. **Clean up the team when done** — use `"Clean up the team"` only from the Lead after all teammates have shut down
 10. **One team at a time** — clean up the current team before starting a new one
+11. **Only Lead touches the ledger** — teammates never read or write `ledger/` files; constraints flow through contracts only

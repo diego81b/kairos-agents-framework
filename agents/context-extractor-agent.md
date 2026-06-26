@@ -58,6 +58,30 @@ Field descriptions:
 - `issue_tech_section`: markdown — draft technical context section for human review before adding to the issue; includes suggested out-of-scope items and AI validation criteria
 - `prompt_template`: markdown — ready-to-use prompt for `implementer-tdd-agent`, specific to this issue type and the patterns found in the codebase
 
+## Ledger Seeding (optional)
+
+This agent runs before the main pipeline, so no ledger exists yet. After approval, optionally seed the ledger with codebase-derived constraints:
+
+Create `.kairos/<feature_folder>/ledger/constraints.md` with constraints extracted from the codebase scan — things like:
+- Backward-compatibility requirements (existing API contracts that must not break)
+- Naming and folder conventions enforced by project tooling
+- No-touch zones (files or modules the issue must not modify)
+- Test framework requirements (must use existing test setup)
+
+Use the format:
+```markdown
+# Constraints
+
+| ID | Constraint | Source | Status | Updated by | Note |
+|----|-----------|--------|--------|------------|------|
+| C1 | No breaking changes to existing REST API | context-extractor | 🔴 open | — | — |
+| C2 | Files under src/legacy/ must not be modified | context-extractor | 🔴 open | — | — |
+```
+
+Status values: `🔴 open` · `✓ resolved` · `⚠ deferred` · `♻ modified` · `❌ dropped`
+
+If no codebase-derived constraints are found, skip ledger seeding entirely — the PM agent will create the ledger when it runs.
+
 ## After Generating Output
 
 ### 1. Present for Validation

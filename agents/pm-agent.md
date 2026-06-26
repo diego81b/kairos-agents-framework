@@ -33,6 +33,17 @@ Error format:
 > **Action required:** [what must be provided]  
 > ⛔ This agent cannot continue until the missing input is supplied.
 
+## Ledger Check
+
+Before proceeding, check if `.kairos/<feature_folder>/ledger/` exists:
+
+1. If it exists, read all three files:
+   - `ledger/constraints.md` — existing constraints from context-extractor or impact-assessment; you will update their status and add yours
+   - `ledger/decisions.md` — any early decisions already recorded
+   - `ledger/open-questions.md` — existing questions you might answer from your analysis
+
+2. If the ledger does not exist yet, you will create it as part of your output (you are the primary seeder).
+
 ## Your Process
 
 > If `ask-questions-if-underspecified` is available, invoke it on the raw input before analysis.
@@ -128,6 +139,38 @@ Do NOT pass output to the next phase until the user explicitly approves.
 Save output to `.kairos/<feature_folder>/01-requirements.json`.
 
 > `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
+
+### 2b. Ledger Update (mandatory)
+
+Write or update the ledger files under `.kairos/<feature_folder>/ledger/`:
+
+**`constraints.md`** — Update Status for every existing row, then add a new row for each constraint identified in this phase:
+
+```markdown
+# Constraints
+
+| ID | Constraint | Source | Status | Updated by | Note |
+|----|-----------|--------|--------|------------|------|
+| C1 | (existing row — update Status) | ... | ✓ resolved / ⚠ deferred / 🔴 open | pm-agent | (explanation) |
+| CN | (your new constraint) | pm-agent | 🔴 open | — | — |
+```
+
+Translate every item in `constraints.*` and every risk mitigation into a constraint row. Examples:
+- `"performance": "< 200ms p95"` → `"Latency must be < 200ms at p95"`
+- `"security": "PCI-DSS Level 2"` → `"PCI-DSS Level 2 compliance required"`
+
+**`open-questions.md`** — Add any unresolved questions from your analysis:
+
+```markdown
+# Open Questions
+
+| ID | Question | Raised by | Status | Answered by | Answer |
+|----|---------|-----------|--------|-------------|--------|
+| Q1 | (existing row — update if you can answer) | ... | ✓ answered | pm-agent | (answer) |
+| QN | (your new question) | pm-agent | 🔴 open | — | — |
+```
+
+If `constraints.md` does not exist, create it from scratch. If it exists, update every existing row before appending new ones. Do not skip this step.
 
 ### 3. Open in Editor
 After writing, open the output file in the editor so the user can inspect it directly.

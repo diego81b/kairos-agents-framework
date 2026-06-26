@@ -33,6 +33,16 @@ Error format:
 > **Action required:** [what must be provided]  
 > ⛔ This agent cannot continue until the missing input is supplied.
 
+## Ledger Check (required — final accounting pass)
+
+Before proceeding, read all three ledger files:
+
+- `.kairos/<feature_folder>/ledger/constraints.md` — this is your final accounting pass; every constraint must be in a terminal state before release
+- `.kairos/<feature_folder>/ledger/decisions.md` — understand all decisions made across phases; reference them in rollback procedures where relevant
+- `.kairos/<feature_folder>/ledger/open-questions.md` — any `🔴 open` question at this stage is a release risk; flag each one explicitly
+
+If the ledger does not exist, proceed without it.
+
 ## Your Planning
 
 ### 1. Deployment Steps
@@ -105,6 +115,27 @@ This is the final phase. User approval closes the KAIROS run.
 Save output to `.kairos/<feature_folder>/06-deployment-plan.json`.
 
 > `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
+
+### 2b. Ledger Update (mandatory — final pass)
+
+Update all three ledger files under `.kairos/<feature_folder>/ledger/`:
+
+**`constraints.md`** — Final accounting. Update the Status of EVERY remaining row:
+- Deployment constraints met → mark `✓ resolved`
+- Constraints deferred to post-release monitoring → mark `⚠ deferred` with monitoring plan reference
+- Any constraint still `🔴 open` → this is a release blocker; list it in your deployment plan risks section
+
+**`decisions.md`** — Add deployment decisions (rollback strategy, canary percentage, feature flag choices).
+
+**`open-questions.md`** — Final answer pass. Any question still `🔴 open` after this phase must appear in the deployment plan as a known risk.
+
+After writing, report the ledger summary in your output:
+```
+📊 Ledger Summary:
+  Constraints: N total — X resolved, Y deferred, Z open (release blockers if Z > 0)
+  Decisions: N recorded across all phases
+  Questions: N total — X answered, Y open
+```
 
 ### 3. Open in Editor
 After writing, open the output file in the editor so the user can inspect it directly.

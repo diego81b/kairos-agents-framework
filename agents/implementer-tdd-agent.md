@@ -28,6 +28,16 @@ If standalone, derive `feature_folder` yourself using the same rules as the orch
 
 **If both are missing** (no architecture spec AND no prompt description): stop, ask the user for either an architecture file path or a feature description. Never guess.
 
+## Ledger Check (required)
+
+Before proceeding, read all three ledger files:
+
+- `.kairos/<feature_folder>/ledger/constraints.md` — understand every open/deferred constraint your implementation must satisfy
+- `.kairos/<feature_folder>/ledger/decisions.md` — understand architectural choices that bind your code
+- `.kairos/<feature_folder>/ledger/open-questions.md` — note unresolved questions you can answer from implementation
+
+If the ledger does not exist (standalone invocation), skip this check.
+
 ## Your Process
 
 ### PHASE 0: Implementation Plan
@@ -210,6 +220,28 @@ Do NOT pass output to the next phase until the user explicitly approves.
 - Save the coverage + TDD summary to `.kairos/<feature_folder>/03-implementation.json`
 
 > `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
+
+### 2b. Ledger Update (mandatory)
+
+Update all three ledger files under `.kairos/<feature_folder>/ledger/`:
+
+**`constraints.md`** — Update the Status of EVERY existing row:
+- Constraint your implementation satisfies → mark `✓ resolved` with the file/pattern that satisfies it
+- Technical constraint deferred to later (e.g. monitoring) → mark `⚠ deferred`
+- Constraint re-opened by implementation difficulty → mark `🔴 open` with explanation
+- Add any new technical constraints surfaced during coding (e.g. "async queue required for retry logic")
+
+**`decisions.md`** — Add implementation decisions:
+- Pattern chosen (e.g. "Repository pattern for data access")
+- Dependency added (e.g. "ioredis@5 for Redis client")
+- Any deviation from architecture spec with justification
+
+**`open-questions.md`** — Answer any questions you can from implementation findings. Add new questions raised during coding:
+```
+| QN | (question you couldn't resolve) | implementer-tdd | 🔴 open | — | — |
+```
+
+If this is a multi-wave run (`status: partial`), update the ledger at the end of each wave, not just the final wave.
 
 ### 3. Open in Editor
 After writing, open the summary file in the editor so the user can inspect it directly.

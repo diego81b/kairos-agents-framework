@@ -313,6 +313,38 @@ User approves the deployment plan. This is the final checkpoint — approval clo
 
 ---
 
+## Shared Ledger — Cross-Phase Project Memory
+
+Each KAIROS run maintains three living files under `.kairos/<feature_folder>/ledger/` that accumulate shared state across all phases:
+
+| File | Purpose | Seeded by | Updated by |
+|------|---------|-----------|-----------|
+| `constraints.md` | All constraints with per-phase accounting | PM Agent (or Context Extractor if run first) | Every agent |
+| `decisions.md` | Architectural and implementation decisions log | Architect Agent | Any agent |
+| `open-questions.md` | Cross-phase questions with answers | Any agent or human (via HITL gate) | Any agent |
+
+### How the ledger works
+
+**Forced accounting model** — at the end of every phase, each agent must update the Status column of every existing constraint row before adding new ones. An unaddressed constraint stays `🔴 open` and is visible to every downstream agent.
+
+| Status | Meaning |
+|--------|---------|
+| `🔴 open` | Not yet addressed by any agent |
+| `✓ resolved` | Constraint is satisfied — note how |
+| `⚠ deferred` | Acknowledged but deferred (tracked in risk) |
+| `♻ modified` | Constraint was changed — note new version |
+| `❌ dropped` | Explicitly removed — note justification |
+
+### Why this matters
+
+Without the ledger, information can be silently dropped between phases: a SOC2 compliance constraint captured by the PM but not echoed into `02-architecture.json` is invisible to the Implementer and Reviewer. The ledger eliminates this by making all cross-phase constraints and decisions explicit and persistent.
+
+At pipeline end, the Orchestrator counts `🔴 open` items in `open-questions.md` and warns if any remain unresolved before shipping.
+
+> **Team Mode**: only `implementer-lead-agent` reads and writes the ledger. Teammates receive constraints through their binding contracts, not by direct ledger access.
+
+---
+
 ## Issue Tracker Integration
 
 KAIROS supports **Jira**, **GitLab Issues**, and **Bitbucket Issues**. Provide an issue reference at the start of your request — each agent will post its validated output as a comment, building the full pipeline trace in the ticket history.

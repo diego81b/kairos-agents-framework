@@ -34,6 +34,16 @@ Error format:
 > **Action required:** [what must be provided]  
 > ⛔ This agent cannot continue until the missing input is supplied.
 
+## Ledger Check (required)
+
+Before proceeding, read all three ledger files:
+
+- `.kairos/<feature_folder>/ledger/constraints.md` — **every constraint must be addressed**; you will update the Status of each row
+- `.kairos/<feature_folder>/ledger/decisions.md` — note any early decisions already recorded
+- `.kairos/<feature_folder>/ledger/open-questions.md` — answer any questions you can from the requirements and your design
+
+If the ledger does not exist, proceed; the PM agent may not have run yet (standalone invocation).
+
 ## Your Process
 
 ### 1. Review Constraints
@@ -136,6 +146,38 @@ Do NOT pass output to the next phase until the user explicitly approves.
 Save output to `.kairos/<feature_folder>/02-architecture.json`.
 
 > `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
+
+### 2b. Ledger Update (mandatory)
+
+Update all three ledger files under `.kairos/<feature_folder>/ledger/`:
+
+**`constraints.md`** — Update the Status of EVERY existing row. This is the first major accounting pass:
+- Constraint your design resolves → mark `✓ resolved` with how
+- Constraint addressed but tracked in risk → mark `⚠ deferred` with explanation
+- Constraint your design changes → mark `♻ modified` with new version
+- Constraint irrelevant to this feature → mark `❌ dropped` with justification
+- Constraint not yet addressed → leave `🔴 open`
+
+Then add any new architectural constraints (e.g. "Redis required in infrastructure", "JWT must use RS256").
+
+**`decisions.md`** — Seed this file with your phase's decisions. Add a row for each significant choice:
+
+```markdown
+# Decisions
+
+| ID | Decision | Phase | Rationale | Constraint impact |
+|----|---------|-------|-----------|-------------------|
+| D1 | Use Redis for caching | architect | meets C1 latency < 200ms | resolves C1 |
+| D2 | Soft-delete pattern for all entities | architect | prevents data loss risk | — |
+```
+
+**`open-questions.md`** — Answer any existing questions you can now answer from your design. Add new unresolved questions:
+
+```markdown
+| QN | (new question) | architect | 🔴 open | — | — |
+```
+
+Do not skip this step. An unanswered constraint left `🔴 open` without acknowledgement will be visible to every downstream agent.
 
 ### 3. Open in Editor
 After writing, open the output file in the editor so the user can inspect it directly.
