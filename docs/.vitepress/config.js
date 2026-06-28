@@ -159,6 +159,7 @@ export default withMermaid(defineConfig({
         text: 'Development',
         items: [
           { text: 'Workflow', link: '/workflow' },
+          { text: 'Agentic Loop', link: '/agentic-loop' },
           { text: 'Metrics', link: '/metrics' }
         ]
       },
