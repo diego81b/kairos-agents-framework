@@ -102,7 +102,12 @@ If the ledger does not exist, proceed without it.
       "file": "path/to/file",
       "line": 42
     }
-  ]
+  ],
+  "convergence_signal": {
+    "issues_critical_high": 2,
+    "issues_total": 5,
+    "iteration": 1
+  }
 }
 ```
 
@@ -137,6 +142,17 @@ Update all three ledger files under `.kairos/<feature_folder>/ledger/`:
 **`decisions.md`** — Add any review-phase decisions (patterns enforced, deviations rejected and why).
 
 **`open-questions.md`** — Answer questions visible from code. Add questions raised during review.
+
+**Loop State (conditional)** — If `## Loop State` already exists in `open-questions.md` (created by the orchestrator before this invocation), update it with the `convergence_signal` before returning:
+
+```markdown
+convergence_signal:
+  issues_critical_high: <count of critical + high from issues[]>
+  issues_total: <total issues count>
+  iteration: <iteration number from Loop State>
+```
+
+Do NOT create `## Loop State` yourself — only update it if the orchestrator already placed it there.
 
 ### 3. Open in Editor
 After writing, open the output file in the editor so the user can inspect it directly.

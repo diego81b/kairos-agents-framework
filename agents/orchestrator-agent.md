@@ -167,6 +167,36 @@ Accepted input formats:
 
 Do NOT proceed until the user explicitly confirms `active_agents`.
 
+Once `active_agents` is confirmed, if at least one implementer agent is selected, show the loop policy prompt:
+
+```
+🔁 Loop Policy — optional, default: manual
+
+   Phase 3: Implementer ↔ Test Verifier loop
+     auto <N>   — auto-retry up to N times on NEEDS_FIXES (recommended max: 3)
+     manual     — HITL gate on every NEEDS_FIXES (current default)
+
+   Phase 4: Code Reviewer ↔ Implementer loop
+     auto <N>   — auto-retry up to N times on critical/high issues only
+     manual     — HITL gate on every NEEDS_FIXES (current default)
+
+   ⚠️  Cost estimate (worst case, both set to auto 3):
+       Up to 6 extra implementer + 3 test-verifier + 3 code-reviewer calls (all sonnet).
+       Orchestrator stays active (opus) for the full loop duration.
+       Total worst-case: up to 12 additional subagent invocations.
+
+   Reply with values per phase, or press Enter to keep both as manual.
+   Example: "phase3: auto 3 / phase4: manual"
+```
+
+Save the response as `loop_policy`:
+```
+loop_policy.phase3 = { mode: "manual"|"auto", max_retries: N }
+loop_policy.phase4 = { mode: "manual"|"auto", max_retries: N }
+```
+
+If no implementer agent is active, skip this prompt entirely and set both to `manual`.
+
 ### Step 0e: Announce Active Pipeline
 
 Before calling any subagent, show the confirmed pipeline:
@@ -215,8 +245,53 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
 
    If confirmed → call @kairos:team:implementer-lead-agent. If switched → call @kairos:implementer-tdd-agent instead. If cancelled → stop. Do NOT call any implementer without this confirmation.
 4. **Review Phase** _(if code-reviewer-agent active)_: Call @kairos:code-reviewer-agent
+
+   **Phase 4 Loop Actuator** _(runs after code-reviewer returns, before Phase 4 HITL gate — only if `loop_policy.phase4.mode == "auto"`, `status: NEEDS_FIXES`, AND at least one `critical` or `high` issue in `issues[]`)_:
+
+   1. Create `## Loop State — Code Reviewer ↔ Implementer` in `ledger/open-questions.md`:
+      ```
+      status: in_progress
+      iteration: 1 of <max_retries>
+      issues_critical_high_prev: null
+      issues_critical_high_curr: <count of critical/high from issues[]>
+      cumulative_issues: <all critical/high issues[] from code-reviewer output>
+      ```
+   2. **Loop** — repeat until exit condition:
+      a. Re-invoke @kairos:implementer-tdd-agent (detects Iteration Mode from ledger automatically)
+      b. Re-invoke @kairos:code-reviewer-agent (writes `convergence_signal` to `## Loop State`)
+      c. Read `convergence_signal.issues_critical_high` from `## Loop State` as `new_count`
+      d. **Monotonic-progress check**: if `new_count >= issues_critical_high_curr` → exit with: `⚠️ Loop thrash after N iterations — critical/high count not decreasing. Human review required.`
+      e. If `status == READY` → exit loop (success)
+      f. If `iteration >= max_retries` → exit with: `⚠️ Loop exhausted after <N> iterations. <X> critical/high issues remain.`
+      g. Otherwise: increment `iteration`, set `issues_critical_high_prev = issues_critical_high_curr`, `issues_critical_high_curr = new_count`, append issues to `cumulative_issues`, save versioned artifacts (`04-review-iter{N}.json`, `03-implementation-iter{N}.json`), continue
+   3. **Cleanup**: remove `## Loop State — Code Reviewer ↔ Implementer` from `open-questions.md`
+   4. **Guard 3 — Regression check** _(only if ≥1 loop iteration actually ran)_: invoke @kairos:test-verifier-agent as a single-pass (loop policy NOT applied). Save output as `05-test-verification.json`. If `NEEDS_FIXES` → present HITL gate immediately with warning: `⚠️ Phase 4 loop introduced test regression. Human review required before advancing.` Skip Phase 5 invocation.
+   5. Proceed to Phase 4 HITL gate (unchanged)
+
 4b. **Security Review Phase** _(if security-reviewer-agent active)_: Call @kairos:security-reviewer-agent. After it completes, write its JSON output to `.kairos/$feature_folder/04b-security-review.json` and open it: `code ".kairos/$feature_folder/04b-security-review.json"` (this agent is read-only — the orchestrator handles persistence).
 5. **Test Verification Phase** _(if test-verifier-agent active)_: Call @kairos:test-verifier-agent
+
+   **Phase 3 Loop Actuator** _(runs after test-verifier returns, before Phase 5 HITL gate — only if `loop_policy.phase3.mode == "auto"` AND `status: NEEDS_FIXES`)_:
+
+   1. Create `## Loop State — Implementer ↔ Test Verifier` in `ledger/open-questions.md`:
+      ```
+      status: in_progress
+      iteration: 1 of <max_retries>
+      issues_critical_high_prev: null
+      issues_critical_high_curr: <convergence_signal.issues_critical_high from test-verifier output>
+      cumulative_issues: <all issues[] from test-verifier output>
+      ```
+   2. **Loop** — repeat until exit condition:
+      a. Re-invoke @kairos:implementer-tdd-agent (detects Iteration Mode from ledger automatically)
+      b. Re-invoke @kairos:test-verifier-agent (writes `convergence_signal` to `## Loop State`)
+      c. Read `convergence_signal.issues_critical_high` from `## Loop State` as `new_count`
+      d. **Monotonic-progress check**: if `new_count >= issues_critical_high_curr` → exit with: `⚠️ Loop thrash after N iterations — critical/high count not decreasing. Human review required.`
+      e. If `status == READY` → exit loop (success)
+      f. If `iteration >= max_retries` → exit with: `⚠️ Loop exhausted after <N> iterations. <X> issues remain.`
+      g. Otherwise: increment `iteration`, set `issues_critical_high_prev = issues_critical_high_curr`, `issues_critical_high_curr = new_count`, append issues to `cumulative_issues`, save versioned artifacts (`05-test-verification-iter{N}.json`, `03-implementation-iter{N}.json`), continue
+   3. **Cleanup**: remove `## Loop State — Implementer ↔ Test Verifier` from `open-questions.md`
+   4. Proceed to Phase 5 HITL gate (unchanged)
+
 6. **Deployment Phase** _(if release-planner-agent active)_: Call @kairos:release-planner-agent
 7. **Aggregation**: Collect all outputs, mark skipped phases as `[SKIPPED]`
 8. **Ledger audit**: Read `.kairos/$feature_folder/ledger/open-questions.md`. Count rows with `🔴 open` status. If any exist, warn:
