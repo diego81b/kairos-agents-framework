@@ -4,6 +4,24 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v4.0.0 — June 28, 2026
+
+### Added
+
+- **`agents/orchestrator-agent.md`** — agentic loop actuator: optional auto-retry loops for Phase 3 (Implementer ↔ Test Verifier) and Phase 4 (Code Reviewer ↔ Implementer). Consent gate with cost estimate shown at agent selection. Loop state stored in the ledger (`## Loop State` section of `open-questions.md`), not in agent prompts.
+- **`agents/orchestrator-agent.md`** — Guard 3: mandatory single-pass test-verifier invocation after any Phase 4 loop run, to detect regressions introduced by code-review-driven fixes before the Phase 4 HITL gate.
+- **`agents/implementer-tdd-agent.md`** — Iteration Mode: detected automatically from ledger when `## Loop State` with `status: in_progress` exists. In this mode the Phase 0 plan gate is skipped and focus is scoped to `cumulative_issues` only.
+- **`agents/test-verifier-agent.md`** — `convergence_signal` field added to JSON output and written to `## Loop State` in ledger (when present). Provides `issues_critical_high`, `issues_total`, `coverage_delta`, and `iteration` for orchestrator loop decisions.
+- **`agents/code-reviewer-agent.md`** — same `convergence_signal` output field and ledger write for Phase 4 loop convergence tracking.
+- **`docs/agentic-loop.md`** — new documentation page covering loop mechanics, termination guarantees, HITL preservation, ledger state store, Guard 3, cost estimates, and backward compatibility.
+
+### Changed
+
+- **Pipeline paradigm** — KAIROS shifts from purely linear HITL to optional intra-phase agentic loops. Default remains `manual` (backward compatible with v3.x). Loops are opt-in per pipeline run.
+- **`docs/.vitepress/config.js`** — added "Agentic Loop" entry to sidebar under Development.
+
+---
+
 ## v3.4.0 — June 26, 2026
 
 ### Added

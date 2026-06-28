@@ -184,7 +184,13 @@ Severity rubric:
       "description": "Test 'createCharge handles expired card' has no assertion — only awaits the call.",
       "fix": "Add `expect(result).toEqual({ status: 'declined', code: 'card_expired' })` after the await."
     }
-  ]
+  ],
+  "convergence_signal": {
+    "issues_critical_high": 1,
+    "issues_total": 3,
+    "coverage_delta": "+4%",
+    "iteration": 1
+  }
 }
 ```
 
@@ -225,6 +231,18 @@ Update all three ledger files under `.kairos/<feature_folder>/ledger/`:
 **`decisions.md`** — Add test verification decisions (e.g. "Mutation testing added for payment core logic").
 
 **`open-questions.md`** — Answer test-related questions. Add questions raised by coverage gaps.
+
+**Loop State (conditional)** — If `## Loop State` already exists in `open-questions.md` (created by the orchestrator before this invocation), update it with the `convergence_signal` before returning:
+
+```markdown
+convergence_signal:
+  issues_critical_high: <count of critical + high from issues[]>
+  issues_total: <total issues count>
+  coverage_delta: "<line coverage delta vs previous iteration, e.g. '+4%', or 'N/A' on first loop iteration>"
+  iteration: <iteration number from Loop State>
+```
+
+Do NOT create `## Loop State` yourself — only update it if the orchestrator already placed it there.
 
 ### 3. Open in Editor
 After writing, open the output file in the editor so the user can inspect it directly.
