@@ -86,13 +86,17 @@ creates binding contracts"]
 Tests · Review · Deploy plan"])
 ```
 
-At each HITL checkpoint the user can:
+Each HITL checkpoint is an interactive prompt (Claude Code's `AskUserQuestion` tool), not a text menu to reply to. It marks one option as recommended based on the phase's own status, and always leaves a free-text option for detailed feedback:
 - ✅ **Approve** — continue to the next active agent
 - ✏️ **Request changes** — agent revises and re-presents
 - ⏭️ **Skip next** — approve this output, jump past the next active agent
 - ⛔ **Stop** — abort the pipeline
 
 Only selected agents run. Order is never changed.
+
+### Split Artifacts — JSON vs Markdown
+
+Phases 2 and 4–6 (and the optional 4.5) write two files instead of one: a lean `.json` machine contract (status, counts, short refs — what the next agent or the orchestrator parses) and a `.md` report (data model tables, issues lists, findings, runbooks — what the human actually reads at the gate). A full schema or a long issues list renders as unreadable nested JSON but scans in seconds as a Markdown table, so anything tabular or long-form lives in the `.md`; the `.json` never repeats it. Phases 1 and 3 stay JSON-only since their output doesn't grow large enough to need the split.
 
 ---
 
@@ -129,7 +133,7 @@ _Output: structured JSON — scope, constraints, risks, success criteria_
 _Saved to: `.kairos/<feature_folder>/01-requirements.json`_
 
 ::: info HITL checkpoint
-User reviews requirements, constraints and risks before any design work begins.
+User reviews requirements, constraints and risks before any design work begins. Presented via `AskUserQuestion`, not a printed menu.
 
 `✅ Approve` · `✏️ Request changes` · `⏭️ Skip next` · `⛔ Stop`
 :::
@@ -143,11 +147,11 @@ User reviews requirements, constraints and risks before any design work begins.
 - Define error handling and integration patterns
 
 _Input: PM analysis JSON_
-_Output: architecture JSON — selected option, tech choices, DB changes, API contracts_
-_Saved to: `.kairos/<feature_folder>/02-architecture.json`_
+_Output: a lean JSON contract (selected option, table/error-code names only) + a Markdown design doc (full data model, API contracts, tech choices) — see "Split Artifacts" above_
+_Saved to: `.kairos/<feature_folder>/02-architecture.json` + `.kairos/<feature_folder>/02-architecture.md`_
 
 ::: info HITL checkpoint
-User reviews the selected design option and API contracts before any code is written.
+User reviews the selected design option and API contracts (in `02-architecture.md`) before any code is written. Presented via `AskUserQuestion`, not a printed menu.
 
 `✅ Approve` · `✏️ Request changes` · `⏭️ Skip next` · `⛔ Stop`
 :::
@@ -178,13 +182,13 @@ _Output: implementation plan → (approval) → code files + test files + covera
 _Saved to: project paths + `.kairos/<feature_folder>/03-implementation.json`_
 
 ::: info HITL checkpoint — Plan gate
-User reviews the implementation plan (files, test cases, approach) **before any code is written**. Reject at zero cost.
+User reviews the implementation plan (files, test cases, approach) **before any code is written**. Reject at zero cost. Presented via `AskUserQuestion`, not a printed menu.
 
 `✅ Approve plan` · `✏️ Revise plan` · `⛔ Stop`
 :::
 
 ::: info HITL checkpoint — Code gate
-User reviews generated code and test coverage before the review phase.
+User reviews generated code and test coverage before the review phase. Presented via `AskUserQuestion`, not a printed menu.
 
 `✅ Approve` · `✏️ Request changes` · `⏭️ Skip next` · `⛔ Stop`
 :::
@@ -237,11 +241,11 @@ Team Mode eliminates frontend/backend contract mismatches through binding contra
 - Check performance (N+1 queries, memory leaks)
 
 _Input: generated code + test files_
-_Output: status READY or NEEDS\_FIXES + issues list with severity_
-_Saved to: `.kairos/<feature_folder>/04-review.json`_
+_Output: a lean JSON contract (status, pass/fail checks, issue counts) + a Markdown report (full issues table with severity, file:line, description)_
+_Saved to: `.kairos/<feature_folder>/04-review.json` + `.kairos/<feature_folder>/04-review.md`_
 
 ::: info HITL checkpoint
-User reviews quality report. NEEDS\_FIXES sends the issue list back to the Implementer.
+User reviews the quality report (`04-review.md`). NEEDS\_FIXES sends the issues table back to the Implementer. Presented via `AskUserQuestion`, not a printed menu.
 
 `✅ Approve` · `✏️ Request changes` · `⏭️ Skip next` · `⛔ Stop`
 :::
@@ -259,14 +263,14 @@ Adversarial pass — the agent asks "how do I break this" rather than checking c
 - **Data over-exposure** — full model serialization, unfiltered list endpoints
 - **Input validation** at the server boundary
 - **Dependency risks** — known CVEs, deprecated crypto
-- **Contract enforcement** — verifies that ownership constraints from `02-architecture.json` are actually present in code; gaps are flagged regardless of direct exploitability
+- **Contract enforcement** — verifies that ownership constraints from `02-architecture.md` are actually present in code; gaps are flagged regardless of direct exploitability
 
-_Input: implementation code + `02-architecture.json`_
-_Output: findings ranked by exploitable severity with attack scenarios + contract enforcement status_
-_Saved to: `.kairos/<feature_folder>/04b-security-review.json`_ (written by Orchestrator — agent is read-only)
+_Input: implementation code + `02-architecture.json` / `02-architecture.md`_
+_Output: a lean JSON contract (status, finding counts) + a Markdown report (each finding's attack scenario, evidence, and fix; contract enforcement table)_
+_Saved to: `.kairos/<feature_folder>/04b-security-review.json` + `.kairos/<feature_folder>/04b-security-review.md`_ (both written by Orchestrator — agent is read-only)
 
 ::: info HITL checkpoint
-User reviews findings. "Request fixes" forwards the `findings[]` list to the Implementer.
+User reviews findings in `04b-security-review.md`. "Request fixes" forwards the Findings section to the Implementer. Presented via `AskUserQuestion`, not a printed menu.
 
 `✅ Approve` · `✏️ Request fixes` · `⏭️ Skip next` · `⛔ Stop`
 :::
@@ -284,11 +288,11 @@ Select `security-reviewer-agent` whenever the feature touches: authentication or
 - Assess assertion quality
 
 _Input: test code + coverage report_
-_Output: coverage status PASS/FAIL + quality assessment + gaps_
-_Saved to: `.kairos/<feature_folder>/05-test-verification.json`_
+_Output: a lean JSON contract (status, execution/coverage summary) + a Markdown report (uncovered lines, AC mapping, issues table)_
+_Saved to: `.kairos/<feature_folder>/05-test-verification.json` + `.kairos/<feature_folder>/05-test-verification.md`_
 
 ::: info HITL checkpoint
-User confirms coverage is adequate. FAIL sends gap list back to the Implementer.
+User confirms coverage is adequate from `05-test-verification.md`. FAIL sends the gap/issues table back to the Implementer. Presented via `AskUserQuestion`, not a printed menu.
 
 `✅ Approve` · `✏️ Request changes` · `⏭️ Skip next` · `⛔ Stop`
 :::
@@ -302,11 +306,11 @@ User confirms coverage is adequate. FAIL sends gap list back to the Implementer.
 - Define monitoring metrics and alert thresholds
 
 _Input: verified code + architecture + identified risks_
-_Output: deployment plan JSON — steps, risk mitigation, rollback, monitoring_
-_Saved to: `.kairos/<feature_folder>/06-deployment-plan.json`_
+_Output: a lean JSON contract (rollback/monitoring summary) + a Markdown runbook (deployment steps, risk mitigation table, rollback checklist, monitoring)_
+_Saved to: `.kairos/<feature_folder>/06-deployment-plan.json` + `.kairos/<feature_folder>/06-deployment-plan.md`_
 
 ::: info HITL checkpoint
-User approves the deployment plan. This is the final checkpoint — approval closes the KAIROS run.
+User approves the deployment runbook (`06-deployment-plan.md`). This is the final checkpoint — approval closes the KAIROS run. Presented via `AskUserQuestion`, not a printed menu.
 
 `✅ Approve` · `✏️ Request changes` · `⛔ Stop`
 :::

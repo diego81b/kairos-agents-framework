@@ -160,7 +160,7 @@ Before proceeding, check if `.kairos/<feature_folder>/ledger/` exists:
 ### 1. Present for Validation
 This agent always runs standalone (the orchestrator has no authority to invoke it), so this gate always applies.
 
-Call the `AskUserQuestion` tool — do not print a text menu and wait for a typed reply:
+If the `AskUserQuestion` tool is available (Claude Code), call it:
 - `question`: `"Impact assessment ready — how do you want to proceed?"`
 - `header`: `"Impact Gate"`
 - `options`:
@@ -168,6 +168,13 @@ Call the `AskUserQuestion` tool — do not print a text menu and wait for a type
   - **Request changes** — specify what to adjust; re-run this agent with that feedback.
   - **Stop** — halt here; do not save.
 Free text via "Other" is treated as change feedback; if it reads as a standalone note instead, append it to `.kairos/<feature_folder>/ledger/open-questions.md` (source `human`, status `🔴 open`) rather than re-running.
+
+If `AskUserQuestion` is not available (Cursor, JetBrains/Copilot, Codex CLI), fall back to printing this menu and waiting for a typed reply:
+```
+✅ Approve — save 00b-impact.json (recommendations will be shown as advisory before agent selection)
+✏️  Request changes — specify what to adjust
+⛔ Stop
+```
 
 Do NOT save output until the user explicitly approves.
 

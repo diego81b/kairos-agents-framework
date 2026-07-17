@@ -142,6 +142,10 @@ Severity rubric:
 
 ## Output Format
 
+Two files: `05-test-verification.json` is the machine contract (status, pass/fail checks, execution summary, counts only). `05-test-verification.md` is the full report — uncovered lines, AC mapping, and issues are all naturally tabular and belong there, not as nested JSON arrays.
+
+### `05-test-verification.json` — machine contract
+
 ```json
 {
   "status": "READY or NEEDS_FIXES",
@@ -153,14 +157,12 @@ Severity rubric:
     "tests_failed": 0,
     "tests_skipped": 1
   },
-  "coverage": {
+  "coverage_summary": {
     "status": "PASS|FAIL|UNKNOWN",
     "line": 85,
     "branch": 78,
     "function": 92,
-    "uncovered": [
-      { "file": "src/payments/stripe.service.js", "lines": "47-52", "reason": "missing test for refund-failure branch" }
-    ]
+    "uncovered_count": 1
   },
   "checks": {
     "comprehensiveness": "✓ PASS or ✗ FAIL",
@@ -171,20 +173,8 @@ Severity rubric:
     "mocking": "✓ PASS or ✗ FAIL",
     "tdd_reality": "✓ PASS or ✗ FAIL or UNKNOWN"
   },
-  "ac_mapping": [
-    { "ac_id": "AC-1", "tests": ["createCharge succeeds with valid card"] },
-    { "ac_id": "AC-3", "tests": [], "gap": "no test covers expired-card path" }
-  ],
-  "issues": [
-    {
-      "severity": "critical|high|medium|low",
-      "category": "comprehensiveness|coverage|assertion_strength|determinism|hygiene|mocking|tdd_reality",
-      "file": "__tests__/stripe.service.test.js",
-      "line": 88,
-      "description": "Test 'createCharge handles expired card' has no assertion — only awaits the call.",
-      "fix": "Add `expect(result).toEqual({ status: 'declined', code: 'card_expired' })` after the await."
-    }
-  ],
+  "issues_summary": { "critical": 0, "high": 1, "medium": 1, "low": 1, "total": 3 },
+  "report_doc": "05-test-verification.md",
   "convergence_signal": {
     "issues_critical_high": 1,
     "issues_total": 3,
@@ -192,6 +182,28 @@ Severity rubric:
     "iteration": 1
   }
 }
+```
+
+### `05-test-verification.md` — full report
+
+```markdown
+# Test Verification — <feature title>
+
+## Uncovered
+| File | Lines | Reason |
+|------|-------|--------|
+| `src/payments/stripe.service.js` | 47-52 | missing test for refund-failure branch |
+
+## Acceptance Criteria Mapping
+| AC | Tests | Gap |
+|----|-------|-----|
+| AC-1 | createCharge succeeds with valid card | — |
+| AC-3 | — | no test covers expired-card path |
+
+## Issues
+| Severity | Category | File:Line | Description | Fix |
+|----------|----------|-----------|--------------|-----|
+| critical | assertion_strength | `__tests__/stripe.service.test.js:88` | Test 'createCharge handles expired card' has no assertion — only awaits the call. | Add `expect(result).toEqual({ status: 'declined', code: 'card_expired' })` after the await. |
 ```
 
 `status` rules:
@@ -203,21 +215,28 @@ Severity rubric:
 ### 1. Present for Validation
 If invoked by the orchestrator, skip this step — the orchestrator owns gate presentation (see its HITL section). Use this only when running standalone.
 
-Call the `AskUserQuestion` tool — do not print a text menu and wait for a typed reply:
+If the `AskUserQuestion` tool is available (Claude Code), call it:
 - `question`: `"Test verification ready — how do you want to proceed?"`
 - `header`: `"Test Gate"`
 - `options`:
   - **Approve** (Recommended when `status: READY`) — continue to Release Planner.
-  - **Request fixes** (Recommended when `status: NEEDS_FIXES`) — send the `issues[]` list back to `implementer-tdd-agent`.
+  - **Request fixes** (Recommended when `status: NEEDS_FIXES`) — send the Issues table from `05-test-verification.md` back to `implementer-tdd-agent`.
   - **Stop** — halt here.
 Free text via "Other" is treated as additional fix feedback; if it reads as a standalone note instead, append it to `.kairos/<feature_folder>/ledger/open-questions.md` (source `human`, status `🔴 open`) rather than re-running.
 
+If `AskUserQuestion` is not available (Cursor, JetBrains/Copilot, Codex CLI), fall back to printing this menu and waiting for a typed reply:
+```
+✅ Approve — continue to Release Planner
+✏️  Request fixes — send issues list back to implementer-tdd-agent
+⛔ Stop pipeline
+```
+
 Do NOT pass output to the next phase until the user explicitly approves.
 
-If user picks "Request fixes", forward the `issues[]` array verbatim to `implementer-tdd-agent` as the next prompt.
+If user picks "Request fixes", forward the Issues table from `05-test-verification.md` verbatim to `implementer-tdd-agent` as the next prompt.
 
 ### 2. Write to Project
-Save output to `.kairos/<feature_folder>/05-test-verification.json`.
+Save the machine contract to `.kairos/<feature_folder>/05-test-verification.json` and the full report to `.kairos/<feature_folder>/05-test-verification.md`.
 
 > `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
 
@@ -239,7 +258,7 @@ Update all three ledger files under `.kairos/<feature_folder>/ledger/`:
 
 ```markdown
 convergence_signal:
-  issues_critical_high: <count of critical + high from issues[]>
+  issues_critical_high: <count of critical + high rows in the 05-test-verification.md Issues table>
   issues_total: <total issues count>
   coverage_delta: "<line coverage delta vs previous iteration, e.g. '+4%', or 'N/A' on first loop iteration>"
   iteration: <iteration number from Loop State>
@@ -248,24 +267,24 @@ convergence_signal:
 Do NOT create `## Loop State` yourself — only update it if the orchestrator already placed it there.
 
 ### 3. Open in Editor
-After writing, open the output file in the editor so the user can inspect it directly.
+After writing, open both output files in the editor — the report first, since that's what the user actually reviews.
 Run from the project root, substituting the actual `feature_folder` value received from the orchestrator:
 
 ```bash
-code ".kairos/$feature_folder/05-test-verification.json"
+code ".kairos/$feature_folder/05-test-verification.md" ".kairos/$feature_folder/05-test-verification.json"
 ```
 
 ### 4. Issue Tracker Comment (optional)
-If the user provides an issue reference, post the output after approval.
+If the user provides an issue reference, post the report doc (not the raw JSON) after approval.
 
 **Jira** (`jira-cli`):
 ```bash
-jira issue comment add PROJ-42 "## Test Verification\n\n$(cat .kairos/<feature_folder>/05-test-verification.json)"
+jira issue comment add PROJ-42 "$(cat .kairos/<feature_folder>/05-test-verification.md)"
 ```
 
 **GitLab** (`glab`):
 ```bash
-glab issue note <issue-id> --body "## Test Verification\n\n$(cat .kairos/<feature_folder>/05-test-verification.json)"
+glab issue note <issue-id> --body "$(cat .kairos/<feature_folder>/05-test-verification.md)"
 ```
 
 **Bitbucket** (REST API):

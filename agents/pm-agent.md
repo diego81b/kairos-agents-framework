@@ -127,7 +127,7 @@ ALWAYS output structured JSON:
 ### 1. Present for Validation
 If invoked by the orchestrator, skip this step — the orchestrator owns gate presentation (see its HITL section). Use this only when running standalone.
 
-Call the `AskUserQuestion` tool — do not print a text menu and wait for a typed reply:
+If the `AskUserQuestion` tool is available (Claude Code), call it:
 - `question`: `"PM analysis ready — how do you want to proceed?"`
 - `header`: `"PM Gate"`
 - `options`:
@@ -135,6 +135,13 @@ Call the `AskUserQuestion` tool — do not print a text menu and wait for a type
   - **Request changes** — specify what to adjust; re-run this agent with that feedback.
   - **Stop** — halt here.
 Free text via "Other" is treated as change feedback; if it reads as a standalone note instead, append it to `.kairos/<feature_folder>/ledger/open-questions.md` (source `human`, status `🔴 open`) rather than re-running.
+
+If `AskUserQuestion` is not available (Cursor, JetBrains/Copilot, Codex CLI), fall back to printing this menu and waiting for a typed reply:
+```
+✅ Approve — continue to Architect Agent
+✏️  Request changes — specify what to adjust
+⛔ Stop
+```
 
 Do NOT pass output to the next phase until the user explicitly approves.
 

@@ -99,26 +99,18 @@ For selected option:
 
 ## Output Format
 
+Two files, two audiences. `02-architecture.json` is the machine contract — small, stable-shaped, consumed by the implementer and the orchestrator. `02-architecture.md` is the actual design doc — everything tabular or narrative (the full data model, every API contract, the option comparison) belongs there, as Markdown tables and prose, not as nested JSON. A schema with 40 columns across 12 tables renders as a readable set of Markdown tables in seconds; the same data as nested JSON is what makes review unreadable — that's the whole reason for this split.
+
+### `02-architecture.json` — machine contract
+
 ```json
 {
   "selected_option": "Option A: description",
-  "rationale": "why this option",
-  "technology_choices": [
-    { "component": "...", "choice": "...", "why": "..." }
-  ],
-  "integration_points": {
-    "with_system_1": "how to integrate",
-    "with_system_2": "how to integrate"
-  },
+  "rationale": "why this option, 1-3 sentences",
+  "report_doc": "02-architecture.md",
   "database_changes": {
     "new_tables": ["table1", "table2"],
     "modified_tables": ["existing_table_with_changes"]
-  },
-  "api_contracts": {
-    "POST /api/feature": {
-      "request": { "field": "type" },
-      "response": { "field": "type" }
-    }
   },
   "error_codes": ["ERROR_CODE_1", "ERROR_CODE_2"],
   "error_handling": "pattern to use (e.g., AppError class)",
@@ -129,12 +121,59 @@ For selected option:
 }
 ```
 
+Keep every field here short: table *names* only (no columns), error *codes* only (no handling detail beyond the one-line pattern). Anything that would require a nested object-of-objects or an array with more than a handful of entries belongs in the `.md` instead.
+
+### `02-architecture.md` — design doc
+
+````markdown
+# Architecture — <feature title>
+
+## Selected Option
+<Option A/B/C comparison — approach + tradeoffs for each, then which was picked and why>
+
+## Technology Choices
+| Component | Choice | Why |
+|-----------|--------|-----|
+| ... | ... | ... |
+
+## Integration Points
+| System | How to integrate |
+|--------|-------------------|
+| ... | ... |
+
+## Data Model
+One table per entity — every column, type, constraint, and FK goes here, not in the JSON:
+
+### `table_name`
+| Column | Type | Constraints | FK |
+|--------|------|-------------|-----|
+| id | uuid | PK | — |
+| ... | ... | ... | ... |
+
+## API Contracts
+### `POST /api/feature`
+**Request**
+```json
+{ "field": "type" }
+```
+**Response**
+```json
+{ "field": "type" }
+```
+
+## Error Codes & Handling
+<table or list — code, meaning, handling pattern>
+
+## Performance Targets
+<latency/throughput targets and how they were derived>
+````
+
 ## After Generating Output
 
 ### 1. Present for Validation
 If invoked by the orchestrator, skip this step — the orchestrator owns gate presentation (see its HITL section). Use this only when running standalone.
 
-Call the `AskUserQuestion` tool — do not print a text menu and wait for a typed reply:
+If the `AskUserQuestion` tool is available (Claude Code), call it:
 - `question`: `"Architecture ready — how do you want to proceed?"`
 - `header`: `"Architect Gate"`
 - `options`:
@@ -143,10 +182,19 @@ Call the `AskUserQuestion` tool — do not print a text menu and wait for a type
   - **Stop** — halt here.
 Free text via "Other" is treated as change feedback; if it reads as a standalone note instead, append it to `.kairos/<feature_folder>/ledger/open-questions.md` (source `human`, status `🔴 open`) rather than re-running.
 
+If `AskUserQuestion` is not available (Cursor, JetBrains/Copilot, Codex CLI), fall back to printing this menu and waiting for a typed reply:
+```
+✅ Approve — continue to Implementer Agent
+✏️  Request changes — specify what to adjust
+⛔ Stop
+```
+
+Point the user at `02-architecture.md` for the full design review — the `.json` alone does not contain the data model or API contracts.
+
 Do NOT pass output to the next phase until the user explicitly approves.
 
 ### 2. Write to Project
-Save output to `.kairos/<feature_folder>/02-architecture.json`.
+Save the machine contract to `.kairos/<feature_folder>/02-architecture.json` and the design doc to `.kairos/<feature_folder>/02-architecture.md`.
 
 > `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
 
@@ -183,24 +231,24 @@ Then add any new architectural constraints (e.g. "Redis required in infrastructu
 Do not skip this step. An unanswered constraint left `🔴 open` without acknowledgement will be visible to every downstream agent.
 
 ### 3. Open in Editor
-After writing, open the output file in the editor so the user can inspect it directly.
+After writing, open both output files in the editor — the design doc first, since that's what the user actually reviews.
 Run from the project root, substituting the actual `feature_folder` value received from the orchestrator:
 
 ```bash
-code ".kairos/$feature_folder/02-architecture.json"
+code ".kairos/$feature_folder/02-architecture.md" ".kairos/$feature_folder/02-architecture.json"
 ```
 
 ### 4. Issue Tracker Comment (optional)
-If the user provides an issue reference, post the output after approval.
+If the user provides an issue reference, post the design doc (not the raw JSON — reviewers on the tracker need the same readable tables the human gate sees) after approval.
 
 **Jira** (`jira-cli`):
 ```bash
-jira issue comment add PROJ-42 "## Architecture Design\n\n$(cat .kairos/<feature_folder>/02-architecture.json)"
+jira issue comment add PROJ-42 "$(cat .kairos/<feature_folder>/02-architecture.md)"
 ```
 
 **GitLab** (`glab`):
 ```bash
-glab issue note <issue-id> --body "## Architecture Design\n\n$(cat .kairos/<feature_folder>/02-architecture.json)"
+glab issue note <issue-id> --body "$(cat .kairos/<feature_folder>/02-architecture.md)"
 ```
 
 **Bitbucket** (REST API):
@@ -224,5 +272,5 @@ These skills and MCP tools enhance this agent when installed. KAIROS works fully
 ## Important Notes
 - You have FRESH context
 - Receive only PM analysis
-- Return JSON specification
-- Implementer will code based on this
+- Return both the JSON contract and the Markdown design doc
+- Implementer will code based on the design doc's data model and API contracts, and the JSON's short fields

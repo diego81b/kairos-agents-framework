@@ -58,6 +58,8 @@ Install: `claude plugin install trailofbits/skills/ask-questions-if-underspecifi
 
 Designs system architecture, plans database schema, designs API contracts, considers performance implications, and defines error handling patterns.
 
+Writes two files: a lean `02-architecture.json` contract (selected option, table/error-code names) and `02-architecture.md` — the actual design doc, with the full data model and API contracts as Markdown tables rather than nested JSON.
+
 ::: tip Optional enhancements
 **Skills:** `deep-research` (built-in)  
 Note: `trailmark/diagramming-code` skipped — plugin installs 10 skills, only 1 needed. Inline call graph analysis via Read + Grep is used instead.
@@ -161,13 +163,13 @@ Install: `claude plugin install trailofbits/skills/differential-review trailofbi
 
 ## [Security Reviewer](/agents/security-reviewer-agent)
 
-Adversarial security review — posture is "how do I break this", not "looks okay". Optional; runs after Code Reviewer when selected. Read-only agent (`tools: Read, Grep, Glob`, `model: opus`).
+Adversarial security review — posture is "how do I break this", not "looks okay". Optional; runs after Code Reviewer when selected. Read-only agent (`tools: Read, Grep, Glob, AskUserQuestion`, `model: opus`).
 
 Covers seven categories: authorization and IDOR (including writes through nested payloads where a PUT on a parent can mutate a child belonging to a different parent), authentication on sensitive endpoints, injection (SQL, command, template, NoSQL), secret handling, data over-exposure in responses, input validation at the server boundary, and dependency risks.
 
-Also includes a mandatory **contract enforcement check**: reads `02-architecture.json` and verifies that ownership constraints defined by the Architect are actually present in the implementation code. Gaps are flagged regardless of direct exploitability.
+Also includes a mandatory **contract enforcement check**: reads `02-architecture.md` and verifies that ownership constraints defined by the Architect are actually present in the implementation code. Gaps are flagged regardless of direct exploitability.
 
-Output is `04b-security-review.json` with findings ranked by exploitable severity, each with a concrete attack scenario and remediation. Because this agent is read-only, the Orchestrator writes and opens the output file on its behalf.
+Output is a lean `04b-security-review.json` contract (status, finding counts) plus `04b-security-review.md` with the full findings — each ranked by exploitable severity, with a concrete attack scenario and remediation. Because this agent is read-only, the Orchestrator writes and opens both output files on its behalf.
 
 ::: tip Optional enhancements
 **Skills:** `security-review` (built-in), `insecure-defaults` (Trail of Bits), `supply-chain-risk-auditor` (Trail of Bits), `variant-analysis` (Trail of Bits)  

@@ -87,7 +87,7 @@ If no codebase-derived constraints are found, skip ledger seeding entirely — t
 ### 1. Present for Validation
 This agent always runs standalone (the orchestrator has no authority to invoke it), so this gate always applies.
 
-Call the `AskUserQuestion` tool — do not print a text menu and wait for a typed reply:
+If the `AskUserQuestion` tool is available (Claude Code), call it:
 - `question`: `"Context scan ready — how do you want to proceed?"`
 - `header`: `"Context Gate"`
 - `options`:
@@ -95,6 +95,13 @@ Call the `AskUserQuestion` tool — do not print a text menu and wait for a type
   - **Request changes** — specify what to adjust; re-run this agent with that feedback.
   - **Stop** — halt here; do not save.
 Free text via "Other" is treated as change feedback.
+
+If `AskUserQuestion` is not available (Cursor, JetBrains/Copilot, Codex CLI), fall back to printing this menu and waiting for a typed reply:
+```
+✅ Approve — save 00-context.json and mark issue as ready
+✏️  Request changes — specify what to adjust
+⛔ Stop
+```
 
 Do NOT save output until the user explicitly approves.
 

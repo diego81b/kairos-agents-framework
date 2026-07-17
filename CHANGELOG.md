@@ -4,6 +4,20 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v4.2.0 — July 17, 2026
+
+### Added
+
+- **`agents/architect-agent.md`, `agents/code-reviewer-agent.md`, `agents/security-reviewer-agent.md`, `agents/test-verifier-agent.md`, `agents/release-planner-agent.md`** — each now writes two files instead of one: a lean JSON contract (status, counts, short refs) and a Markdown report (full data model, issues table, security findings, or deployment runbook). Fixes reports like a full data-model dump landing as one giant, unreadable nested-JSON file at the architecture gate — the same content renders as scannable Markdown tables in the new companion `.md` file. Downstream consumers (`implementer-tdd-agent.md`, `implementer-coder-agent.md`, `security-reviewer-agent.md`, `code-reviewer-agent.md`, `team/implementer-lead-agent.md`) and the orchestrator's file-open/issue-tracker-comment steps were updated to read/post the `.md` instead of the raw JSON.
+- **`agents/orchestrator-agent.md`** — HITL gates and the Step 0b feature-folder collision check now use `AskUserQuestion` only where it's actually available (Claude Code), and fall back to the pre-4.1.0 printed text-menu everywhere else. All 10 phase-agent gates and the orchestrator's canonical HITL section gained the same fallback.
+
+### Fixed
+
+- **All 12 gated agent files** — the v4.1.0 gate rewrite made `AskUserQuestion` mandatory unconditionally, which silently broke HITL enforcement on Cursor, JetBrains/Copilot, and Codex CLI (none of which have that tool — see `docs/setup/cursor.md` and `docs/setup/jetbrains.md`, which document HITL there as printed-menu-only). Restored the text-menu fallback for every gate.
+- **`CLAUDE.md`, `docs/workflow.md`, `docs/overview.md`, `docs/agents.md`, `docs/setup/*.md`** — pipeline tables, file-tree examples, and HITL checkpoint descriptions updated to reflect the new `.json` + `.md` output pairs and the `AskUserQuestion`-or-fallback gate mechanism; `docs/setup/*.md`'s security-reviewer output filename typo (`04b-security.json` → `04b-security-review.json`) corrected in `CLAUDE.md`.
+
+---
+
 ## v4.1.0 — July 17, 2026
 
 ### Added
