@@ -4,6 +4,22 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v4.2.0 — July 17, 2026
+
+### Added
+
+- **`agents/architect-agent.md`, `agents/code-reviewer-agent.md`, `agents/security-reviewer-agent.md`, `agents/test-verifier-agent.md`, `agents/release-planner-agent.md`** — each now writes two files instead of one: a lean JSON contract (status, counts, short refs) and a Markdown report (full data model, issues table, security findings, or deployment runbook). Fixes reports like a full data-model dump landing as one giant, unreadable nested-JSON file at the architecture gate — the same content renders as scannable Markdown tables in the new companion `.md` file. Downstream consumers (`implementer-tdd-agent.md`, `implementer-coder-agent.md`, `security-reviewer-agent.md`, `code-reviewer-agent.md`, `team/implementer-lead-agent.md`) and the orchestrator's file-open/issue-tracker-comment steps were updated to read/post the `.md` instead of the raw JSON.
+- **`agents/orchestrator-agent.md`** — HITL gates and the Step 0b feature-folder collision check now use `AskUserQuestion` only where it's actually available (Claude Code), and fall back to the pre-4.1.0 printed text-menu everywhere else. All 10 phase-agent gates and the orchestrator's canonical HITL section gained the same fallback.
+
+### Fixed
+
+- **All 12 gated agent files** — the v4.1.0 gate rewrite made `AskUserQuestion` mandatory unconditionally, which silently broke HITL enforcement on Cursor, JetBrains/Copilot, and Codex CLI (none of which have that tool — see `docs/setup/cursor.md` and `docs/setup/jetbrains.md`, which document HITL there as printed-menu-only). Restored the text-menu fallback for every gate.
+- **`CLAUDE.md`, `docs/workflow.md`, `docs/overview.md`, `docs/agents.md`, `docs/setup/*.md`** — pipeline tables, file-tree examples, and HITL checkpoint descriptions updated to reflect the new `.json` + `.md` output pairs and the `AskUserQuestion`-or-fallback gate mechanism; a stale security-reviewer output filename in `CLAUDE.md`'s pipeline table (`04b-security.json` → `04b-security-review.json`) corrected to match what every agent file actually uses.
+- **`agents/team/implementer-lead-agent.md`** — Step 2b's Contract Consistency Check still pointed the API/database contract verification at `02-architecture.json` alone; the data it compares against (API contracts, full schema) moved to `02-architecture.md`.
+- **`agents/test-verifier-agent.md`** — acceptance-criteria mapping pointed at `02-architecture.json`, a field architect-agent never produces (in either the `.json` or the new `.md`). Repointed to `success_criteria[]` in `01-requirements.json` (pm-agent), the field that actually holds them; since that list has no IDs, test-verifier now numbers them `AC-1`, `AC-2`, ... in list order.
+
+---
+
 ## v4.1.0 — July 17, 2026
 
 ### Added

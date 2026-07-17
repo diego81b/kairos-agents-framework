@@ -235,13 +235,13 @@ Create 4 detailed contracts that ALL teammates MUST follow. Define these before 
 
 ### Step 2b: Contract Consistency Check
 
-Before spawning any teammate, verify that the 4 contracts you just defined are faithful to the Architect's output. Read `.kairos/<feature_folder>/02-architecture.json` and compare:
+Before spawning any teammate, verify that the 4 contracts you just defined are faithful to the Architect's output. Read `.kairos/<feature_folder>/02-architecture.json` **and** `.kairos/<feature_folder>/02-architecture.md` — the API and data-model detail live in the `.md`, not the `.json` — and compare:
 
-| Lead contract | Architect field to check |
+| Lead contract | Architect source to check |
 |--------------|--------------------------|
-| API CONTRACT | `api_contracts` — endpoints, methods, request/response shapes, error codes |
-| DATABASE CONTRACT | `database_changes` — tables, fields, types, constraints, indexes |
-| PATTERN CONTRACT | `error_handling`, `error_codes` |
+| API CONTRACT | `02-architecture.md` § API Contracts — endpoints, methods, request/response shapes, error codes |
+| DATABASE CONTRACT | `02-architecture.md` § Data Model — tables, columns, types, constraints, FKs |
+| PATTERN CONTRACT | `02-architecture.json` `error_handling`, `error_codes` |
 | TEST CONTRACT | all of the above (coverage must map to the above contracts) |
 
 Flag any of these as a mismatch:

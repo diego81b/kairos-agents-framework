@@ -48,14 +48,14 @@ Each subagent:
 | pre | **Impact Assessment** | Issue-scoped grounding → effort, domains, agent recommendations | `00b-impact.json` |
 | 0 | **Orchestrator** | Coordinates the pipeline, manages HITL | Routes & aggregates |
 | 1 | **PM Agent** | Requirements, constraints, acceptance criteria | `01-requirements.json` |
-| 2 | **Architect Agent** | 3 design options → recommended choice, API contracts, DB schema | `02-architecture.json` |
+| 2 | **Architect Agent** | 3 design options → recommended choice, API contracts, DB schema | `02-architecture.json` + `.md` |
 | 3 | **Implementer Agent** | Implementation plan → TDD cycle (tests first, then code) — **default for all features** | Code + `03-implementation.json` |
-| 4 | **Code Reviewer** | Standards, security, performance, contract compliance | `04-review.json` |
-| 4b | **Security Reviewer** _(optional)_ | Adversarial security pass — IDOR, auth, injection, secrets, data exposure | `04b-security-review.json` |
-| 5 | **Test Verifier** | Coverage adequacy (>80%), edge cases, assertion quality | `05-test-verification.json` |
-| 6 | **Release Planner** | Deployment steps, rollback strategy, monitoring thresholds | `06-deployment-plan.json` |
+| 4 | **Code Reviewer** | Standards, security, performance, contract compliance | `04-review.json` + `.md` |
+| 4b | **Security Reviewer** _(optional)_ | Adversarial security pass — IDOR, auth, injection, secrets, data exposure | `04b-security-review.json` + `.md` |
+| 5 | **Test Verifier** | Coverage adequacy (>80%), edge cases, assertion quality | `05-test-verification.json` + `.md` |
+| 6 | **Release Planner** | Deployment steps, rollback strategy, monitoring thresholds | `06-deployment-plan.json` + `.md` |
 
-All output files are saved to `.kairos/<feature-folder>/` — one subfolder per feature, named from the issue reference (e.g. `PROJ-42_add-stripe-payments`).
+All output files are saved to `.kairos/<feature-folder>/` — one subfolder per feature, named from the issue reference (e.g. `PROJ-42_add-stripe-payments`). Phases 2 and 4–6 split into a lean `.json` contract and a `.md` human-readable report (data model, issues, findings, runbook) — see the [Workflow](/workflow) page for why.
 
 ### Team Mode — optional extension (Claude Code only)
 

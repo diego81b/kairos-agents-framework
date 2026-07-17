@@ -70,32 +70,44 @@ What to monitor:
 
 ## Output Format
 
+Two files: `06-deployment-plan.json` is the machine contract (lean summary only). `06-deployment-plan.md` is the actual runbook — deployment steps, rollback procedure, and monitoring plan are inherently procedural documents; someone executing a rollback during an incident needs a readable runbook, not a nested JSON array.
+
+### `06-deployment-plan.json` — machine contract
+
 ```json
 {
-  "deployment_plan": [
-    {
-      "step": 1,
-      "name": "Pre-deployment",
-      "tasks": ["task1", "task2"]
-    }
-  ],
-  "risks": [
-    {
-      "risk": "description",
-      "detection": "how to detect",
-      "response": "what to do"
-    }
-  ],
-  "rollback": {
-    "trigger": "when to rollback",
-    "steps": ["step1", "step2"],
-    "estimated_time_minutes": 15
-  },
-  "monitoring": {
-    "metrics": ["metric1", "metric2"],
-    "alert_thresholds": {}
-  }
+  "report_doc": "06-deployment-plan.md",
+  "rollback_summary": { "trigger": "when to rollback", "estimated_time_minutes": 15 },
+  "monitoring_summary": { "metrics_count": 2 }
 }
+```
+
+### `06-deployment-plan.md` — full runbook
+
+```markdown
+# Deployment Plan — <feature title>
+
+## Deployment Steps
+1. **Pre-deployment** — task1, task2
+2. **Staging deployment** — ...
+3. **Production canary (10%)** — ...
+4. **Full rollout** — ...
+
+## Risk Mitigation
+| Risk | Detection | Response |
+|------|-----------|----------|
+| ... | ... | ... |
+
+## Rollback Strategy
+- **Trigger**: when to rollback
+- **Steps**: step1, step2, ...
+- **Estimated time**: 15 minutes
+- **Data implications**: ...
+
+## Monitoring
+| Metric | Alert threshold |
+|--------|------------------|
+| ... | ... |
 ```
 
 ## After Generating Output
@@ -103,7 +115,7 @@ What to monitor:
 ### 1. Present for Validation
 If invoked by the orchestrator, skip this step — the orchestrator owns gate presentation (see its HITL section). Use this only when running standalone.
 
-Call the `AskUserQuestion` tool — do not print a text menu and wait for a typed reply:
+If the `AskUserQuestion` tool is available (Claude Code), call it:
 - `question`: `"Deployment plan ready — how do you want to proceed?"`
 - `header`: `"Release Gate"`
 - `options`:
@@ -112,10 +124,19 @@ Call the `AskUserQuestion` tool — do not print a text menu and wait for a type
   - **Stop** — halt here.
 Free text via "Other" is treated as change feedback; if it reads as a standalone note instead, append it to `.kairos/<feature_folder>/ledger/open-questions.md` (source `human`, status `🔴 open`) rather than re-running.
 
+If `AskUserQuestion` is not available (Cursor, JetBrains/Copilot, Codex CLI), fall back to printing this menu and waiting for a typed reply:
+```
+✅ Approve — pipeline complete
+✏️  Request changes — specify what to adjust
+⛔ Stop pipeline
+```
+
+Point the user at `06-deployment-plan.md` for the actual runbook — the `.json` alone has no deployment steps or rollback procedure.
+
 This is the final phase. User approval closes the KAIROS run.
 
 ### 2. Write to Project
-Save output to `.kairos/<feature_folder>/06-deployment-plan.json`.
+Save the machine contract to `.kairos/<feature_folder>/06-deployment-plan.json` and the runbook to `.kairos/<feature_folder>/06-deployment-plan.md`.
 
 > `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
 
@@ -141,24 +162,24 @@ After writing, report the ledger summary in your output:
 ```
 
 ### 3. Open in Editor
-After writing, open the output file in the editor so the user can inspect it directly.
+After writing, open both output files in the editor — the runbook first, since that's what the user actually reviews.
 Run from the project root, substituting the actual `feature_folder` value received from the orchestrator:
 
 ```bash
-code ".kairos/$feature_folder/06-deployment-plan.json"
+code ".kairos/$feature_folder/06-deployment-plan.md" ".kairos/$feature_folder/06-deployment-plan.json"
 ```
 
 ### 4. Issue Tracker Comment (optional)
-If the user provides an issue reference, post the output after approval.
+If the user provides an issue reference, post the runbook (not the raw JSON) after approval.
 
 **Jira** (`jira-cli`):
 ```bash
-jira issue comment add PROJ-42 "## Deployment Plan\n\n$(cat .kairos/<feature_folder>/06-deployment-plan.json)"
+jira issue comment add PROJ-42 "$(cat .kairos/<feature_folder>/06-deployment-plan.md)"
 ```
 
 **GitLab** (`glab`):
 ```bash
-glab issue note <issue-id> --body "## Deployment Plan\n\n$(cat .kairos/<feature_folder>/06-deployment-plan.json)"
+glab issue note <issue-id> --body "$(cat .kairos/<feature_folder>/06-deployment-plan.md)"
 ```
 
 **Bitbucket** (REST API):
