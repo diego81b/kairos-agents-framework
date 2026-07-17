@@ -1,7 +1,7 @@
 ---
 name: implementer-tdd-agent
 description: "TDD implementer — generates code and tests using real TDD (RED→GREEN→REFACTOR). Use after architecture design when the project has a test suite. For projects without a test suite, use implementer-coder-agent instead."
-tools: Read, Write, Edit, Bash, Grep, Glob
+tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion
 model: sonnet
 ---
 
@@ -218,13 +218,16 @@ Never return `complete` if files were not actually written. Run `git status --sh
 ## After Generating Output
 
 ### 1. Present for Validation
-Show the coverage report and file list to the user and ask:
+If invoked by the orchestrator, skip this step — the orchestrator owns gate presentation (see its HITL section). Use this only when running standalone.
 
-```
-✅ Approve implementation — continue to Code Reviewer
-✏️  Request changes — specify what to adjust
-⛔ Stop pipeline
-```
+Call the `AskUserQuestion` tool — do not print a text menu and wait for a typed reply:
+- `question`: `"Implementation ready — how do you want to proceed?"`
+- `header`: `"Implementer Gate"`
+- `options`:
+  - **Approve implementation** (Recommended when `status: complete`) — continue to Code Reviewer.
+  - **Request changes** (Recommended when `status: blocked`) — specify what to adjust; re-run this agent with that feedback.
+  - **Stop** — halt here.
+Free text via "Other" is treated as change feedback; if it reads as a standalone note instead, append it to `.kairos/<feature_folder>/ledger/open-questions.md` (source `human`, status `🔴 open`) rather than re-running.
 
 Do NOT pass output to the next phase until the user explicitly approves.
 

@@ -1,7 +1,7 @@
 ---
 name: impact-assessment-agent
 description: "Issue-scoped grounding agent. Reads the issue and the code it touches to estimate effort, map domains, surface reusable assets and gaps, and recommend which pipeline agents to run. Use before the orchestrator. Produces 00b-impact.json."
-tools: Read, Grep, Glob
+tools: Read, Grep, Glob, AskUserQuestion
 model: opus
 ---
 
@@ -158,18 +158,21 @@ Before proceeding, check if `.kairos/<feature_folder>/ledger/` exists:
 ## After Generating Output
 
 ### 1. Present for Validation
-Show the assessment to the user and ask:
+This agent always runs standalone (the orchestrator has no authority to invoke it), so this gate always applies.
 
-```
-✅ Approve — save 00b-impact.json (recommendations will be shown as advisory before agent selection)
-✏️  Request changes — specify what to adjust
-⛔ Stop
-```
+Call the `AskUserQuestion` tool — do not print a text menu and wait for a typed reply:
+- `question`: `"Impact assessment ready — how do you want to proceed?"`
+- `header`: `"Impact Gate"`
+- `options`:
+  - **Approve** (Recommended by default — this agent has no pass/fail status) — save `00b-impact.json` (recommendations will be shown as advisory before agent selection).
+  - **Request changes** — specify what to adjust; re-run this agent with that feedback.
+  - **Stop** — halt here; do not save.
+Free text via "Other" is treated as change feedback; if it reads as a standalone note instead, append it to `.kairos/<feature_folder>/ledger/open-questions.md` (source `human`, status `🔴 open`) rather than re-running.
 
 Do NOT save output until the user explicitly approves.
 
 ### 2. Write to Project
-This agent is read-only (`tools: Read, Grep, Glob`). Present the complete JSON to the orchestrator (or directly to the user if running standalone) and instruct it to write the output to `.kairos/<feature_folder>/00b-impact.json`.
+This agent cannot write project files (`tools: Read, Grep, Glob, AskUserQuestion`). Present the complete JSON to the orchestrator (or directly to the user if running standalone) and instruct it to write the output to `.kairos/<feature_folder>/00b-impact.json`.
 
 ### Ledger Update
 Produce a ledger update block as part of your output. Instruct the orchestrator (or user) to apply it:

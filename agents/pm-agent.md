@@ -1,7 +1,7 @@
 ---
 name: pm-agent
 description: "Analyzes feature requirements and elicits constraints. Use when you have a vague feature request that needs structured analysis."
-tools: Read, Write, Edit, Bash, Grep, Glob
+tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion
 model: sonnet
 ---
 
@@ -125,13 +125,16 @@ ALWAYS output structured JSON:
 ## After Generating Output
 
 ### 1. Present for Validation
-Show the JSON to the user and ask:
+If invoked by the orchestrator, skip this step — the orchestrator owns gate presentation (see its HITL section). Use this only when running standalone.
 
-```
-✅ Approve — continue to Architect Agent
-✏️  Request changes — specify what to adjust
-⛔ Stop pipeline
-```
+Call the `AskUserQuestion` tool — do not print a text menu and wait for a typed reply:
+- `question`: `"PM analysis ready — how do you want to proceed?"`
+- `header`: `"PM Gate"`
+- `options`:
+  - **Approve** (Recommended by default — this agent has no pass/fail status) — continue to Architect Agent.
+  - **Request changes** — specify what to adjust; re-run this agent with that feedback.
+  - **Stop** — halt here.
+Free text via "Other" is treated as change feedback; if it reads as a standalone note instead, append it to `.kairos/<feature_folder>/ledger/open-questions.md` (source `human`, status `🔴 open`) rather than re-running.
 
 Do NOT pass output to the next phase until the user explicitly approves.
 

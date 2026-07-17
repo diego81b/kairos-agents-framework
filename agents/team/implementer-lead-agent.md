@@ -1,7 +1,7 @@
 ---
 name: implementer-lead-agent
 description: "Team coordinator for complex implementations. Defines contracts, orchestrates TDD phases across 4 parallel teammates via Agent Teams, verifies compliance. Requires CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1."
-tools: Read, Write, Edit, Bash, Grep, Glob
+tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion
 model: opus
 model_note: "Reasoning-heavy role - use premium model for contract coordination"
 ---
@@ -308,7 +308,9 @@ Wait for `kairos:team:teammate-tests-agent` to complete their task before procee
 
 ### HITL Checkpoint — Test Plan Gate
 
-Present the test suite to the user and ask:
+If invoked by the orchestrator, skip this step — the orchestrator owns gate presentation (see its HITL section). Use this only when running standalone.
+
+Present a short summary first (not a text menu to reply to):
 
 ```
 📋 RED PHASE COMPLETE — Test Plan Review
@@ -323,11 +325,16 @@ Files generated:
   - [list of test files]
 
 All tests are currently FAILING (no implementation yet). This is correct.
-
-✅ Approve test plan — proceed to GREEN phase (spawn backend, frontend, database)
-✏️  Revise tests — specify what to add or change (no implementation written yet)
-⛔ Stop pipeline
 ```
+
+Then call the `AskUserQuestion` tool — do not print a text menu and wait for a typed reply:
+- `question`: `"RED phase complete — how do you want to proceed?"`
+- `header`: `"Test Plan Gate"`
+- `options`:
+  - **Approve test plan** (Recommended by default — all tests failing with no implementation is the expected state) — proceed to GREEN phase (spawn backend, frontend, database).
+  - **Revise tests** — specify what to add or change; no implementation has been written yet.
+  - **Stop pipeline** — halt here.
+Free text via "Other" is treated as revision feedback.
 
 **Do NOT spawn backend, frontend, or database until the user approves the test plan.**
 

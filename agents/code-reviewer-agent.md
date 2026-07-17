@@ -1,7 +1,7 @@
 ---
 name: code-reviewer-agent
 description: "Reviews code for quality, standards, security, and performance."
-tools: Read, Write, Edit, Bash, Grep, Glob
+tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion
 model: sonnet
 ---
 
@@ -114,13 +114,16 @@ If the ledger does not exist, proceed without it.
 ## After Generating Output
 
 ### 1. Present for Validation
-Show the review report to the user and ask:
+If invoked by the orchestrator, skip this step — the orchestrator owns gate presentation (see its HITL section). Use this only when running standalone.
 
-```
-✅ Approve — continue to Test Verifier
-✏️  Request fixes — send back to Implementer with issues list
-⛔ Stop pipeline
-```
+Call the `AskUserQuestion` tool — do not print a text menu and wait for a typed reply:
+- `question`: `"Code review ready — how do you want to proceed?"`
+- `header`: `"Review Gate"`
+- `options`:
+  - **Approve** (Recommended when `status: READY`) — continue to Test Verifier.
+  - **Request fixes** (Recommended when `status: NEEDS_FIXES`) — send the `issues[]` list back to the implementer agent used in this run.
+  - **Stop** — halt here.
+Free text via "Other" is treated as additional fix feedback; if it reads as a standalone note instead, append it to `.kairos/<feature_folder>/ledger/open-questions.md` (source `human`, status `🔴 open`) rather than re-running.
 
 Do NOT pass output to the next phase until the user explicitly approves.
 

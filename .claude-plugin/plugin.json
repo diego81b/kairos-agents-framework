@@ -1,7 +1,7 @@
 {
   "name": "kairos",
   "displayName": "KAIROS Framework",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "description": "Intelligent multi-agent SDLC pipeline with human-gated phases",
   "author": { "name": "Diego Baldeschi", "email": "diego.baldeschi@comm-it.it" },
   "homepage": "https://kairos-docs.vercel.app",

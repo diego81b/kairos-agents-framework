@@ -1,7 +1,7 @@
 ---
 name: test-verifier-agent
 description: "Verifies test quality, coverage adequacy, assertion strength, determinism, and TDD compliance. Loops back to implementer with actionable findings."
-tools: Read, Write, Edit, Bash, Grep, Glob
+tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion
 model: sonnet
 ---
 
@@ -201,13 +201,16 @@ Severity rubric:
 ## After Generating Output
 
 ### 1. Present for Validation
-Show the verification report to the user and ask:
+If invoked by the orchestrator, skip this step — the orchestrator owns gate presentation (see its HITL section). Use this only when running standalone.
 
-```
-✅ Approve — continue to Release Planner
-✏️  Request fixes — send issues list back to implementer-tdd-agent
-⛔ Stop pipeline
-```
+Call the `AskUserQuestion` tool — do not print a text menu and wait for a typed reply:
+- `question`: `"Test verification ready — how do you want to proceed?"`
+- `header`: `"Test Gate"`
+- `options`:
+  - **Approve** (Recommended when `status: READY`) — continue to Release Planner.
+  - **Request fixes** (Recommended when `status: NEEDS_FIXES`) — send the `issues[]` list back to `implementer-tdd-agent`.
+  - **Stop** — halt here.
+Free text via "Other" is treated as additional fix feedback; if it reads as a standalone note instead, append it to `.kairos/<feature_folder>/ledger/open-questions.md` (source `human`, status `🔴 open`) rather than re-running.
 
 Do NOT pass output to the next phase until the user explicitly approves.
 

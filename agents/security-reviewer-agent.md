@@ -1,7 +1,7 @@
 ---
 name: security-reviewer-agent
 description: "Adversarial security review of implementation code. Finds exploitable vulnerabilities ranked by real severity with attack scenarios. Use after code-reviewer-agent."
-tools: Read, Grep, Glob
+tools: Read, Grep, Glob, AskUserQuestion
 model: opus
 ---
 
@@ -140,20 +140,23 @@ Findings must be ordered by severity: `critical` first, then `high`, then `mediu
 ## After Generating Output
 
 ### 1. Present for Validation
-Show the security report to the user and ask:
+If invoked by the orchestrator, skip this step — the orchestrator owns gate presentation (see its HITL section). Use this only when running standalone.
 
-```
-✅ Approve — continue to Test Verifier
-✏️  Request fixes — send findings back to Implementer with the findings list
-⛔ Stop pipeline
-```
+Call the `AskUserQuestion` tool — do not print a text menu and wait for a typed reply:
+- `question`: `"Security review ready — how do you want to proceed?"`
+- `header`: `"Security Gate"`
+- `options`:
+  - **Approve** (Recommended when `status: SECURE`) — continue to Test Verifier.
+  - **Request fixes** (Recommended when `status: VULNERABILITIES_FOUND`) — send the `findings[]` list back to the implementer.
+  - **Stop** — halt here.
+Free text via "Other" is treated as additional fix feedback; if it reads as a standalone note instead, append it to `.kairos/<feature_folder>/ledger/open-questions.md` (source `human`, status `🔴 open`) rather than re-running.
 
 Do NOT pass output to the next phase until the user explicitly approves.
 
 If user picks "Request fixes", forward the `findings[]` array and `contract_enforcement.gaps` verbatim to the implementer as the fix list.
 
 ### 2. Write to Project
-This agent is read-only (`tools: Read, Grep, Glob`). Present the complete JSON to the orchestrator and instruct it to write the output to `.kairos/<feature_folder>/04b-security-review.json`.
+This agent cannot write project files (`tools: Read, Grep, Glob, AskUserQuestion`). Present the complete JSON to the orchestrator and instruct it to write the output to `.kairos/<feature_folder>/04b-security-review.json`.
 
 ### Ledger Update
 Produce a ledger update block as part of your output. Instruct the orchestrator to apply it:

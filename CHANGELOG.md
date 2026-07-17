@@ -4,6 +4,21 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v4.1.0 — July 17, 2026
+
+### Added
+
+- **`agents/*.md`, `agents/team/implementer-lead-agent.md`** — all 12 pipeline agents (plus the orchestrator) now gate on the `AskUserQuestion` tool instead of printing a text menu and waiting for a typed reply. Each gate marks a `(Recommended)` option derived from the agent's own status field (`NEEDS_FIXES`, `VULNERABILITIES_FOUND`, `blocked`, critical/high issues), and free-text answers are folded into change-request feedback or a ledger note. Fixes the inconsistent, improvised gate presentation reported across agents.
+- **`agents/orchestrator-agent.md`** — feature-folder collision check in Step 0b: if `.kairos/<feature_folder>/` already exists, asks the user (Resume existing / Create new folder / Stop) instead of silently overwriting prior phase outputs on repeat runs.
+
+### Fixed
+
+- **`agents/orchestrator-agent.md`** — two `Step 0b` sections existed with duplicate numbering; the ledger-init step referenced `feature_folder` before the derive-folder step that defines it. Merged and reordered into a single `0a`–`0f` sequence (derive folder → init ledger → read issue → select agents → announce pipeline).
+- **`agents/orchestrator-agent.md`** — Step 0c ("Read Issue Body") referred to itself ("go to Step 0c") instead of the next step; corrected to point at Step 0e.
+- **`agents/pm-agent.md`, `agents/architect-agent.md`, `agents/implementer-tdd-agent.md`, `agents/implementer-coder-agent.md`, `agents/code-reviewer-agent.md`, `agents/security-reviewer-agent.md`, `agents/test-verifier-agent.md`, `agents/release-planner-agent.md`, `agents/context-extractor-agent.md`, `agents/impact-assessment-agent.md`** — each agent's own standalone gate ("Present for Validation") had drifted from the orchestrator's canonical HITL option set (3 options and a literal "show the JSON" instruction vs. the orchestrator's 5). Standardized and marked as standalone-only — the orchestrator owns gate presentation whenever it's driving the pipeline.
+
+---
+
 ## v4.0.0 — June 28, 2026
 
 ### Added
