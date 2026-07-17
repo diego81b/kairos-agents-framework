@@ -1,7 +1,7 @@
 ---
 name: release-planner-agent
 description: "Plans deployment strategy and rollback procedures."
-tools: Read, Write, Edit, Bash, Grep, Glob
+tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion
 model: sonnet
 ---
 
@@ -101,13 +101,16 @@ What to monitor:
 ## After Generating Output
 
 ### 1. Present for Validation
-Show the deployment plan to the user and ask:
+If invoked by the orchestrator, skip this step — the orchestrator owns gate presentation (see its HITL section). Use this only when running standalone.
 
-```
-✅ Approve — pipeline complete
-✏️  Request changes — specify what to adjust
-⛔ Stop pipeline
-```
+Call the `AskUserQuestion` tool — do not print a text menu and wait for a typed reply:
+- `question`: `"Deployment plan ready — how do you want to proceed?"`
+- `header`: `"Release Gate"`
+- `options`:
+  - **Approve** (Recommended by default — this agent has no pass/fail status) — pipeline complete.
+  - **Request changes** — specify what to adjust; re-run this agent with that feedback.
+  - **Stop** — halt here.
+Free text via "Other" is treated as change feedback; if it reads as a standalone note instead, append it to `.kairos/<feature_folder>/ledger/open-questions.md` (source `human`, status `🔴 open`) rather than re-running.
 
 This is the final phase. User approval closes the KAIROS run.
 

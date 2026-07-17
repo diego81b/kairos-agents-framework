@@ -1,7 +1,7 @@
 ---
 name: context-extractor-agent
 description: "Scans a codebase and an issue draft to produce 00-context.json for downstream agents. Use before orchestrator to prepare LLM context."
-tools: Read, Write, Edit, Bash, Grep, Glob
+tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion
 model: opus
 ---
 
@@ -85,13 +85,16 @@ If no codebase-derived constraints are found, skip ledger seeding entirely — t
 ## After Generating Output
 
 ### 1. Present for Validation
-Show the JSON to the user and ask:
+This agent always runs standalone (the orchestrator has no authority to invoke it), so this gate always applies.
 
-```
-✅ Approve — save 00-context.json and mark issue as ready
-✏️  Request changes — specify what to adjust
-⛔ Stop
-```
+Call the `AskUserQuestion` tool — do not print a text menu and wait for a typed reply:
+- `question`: `"Context scan ready — how do you want to proceed?"`
+- `header`: `"Context Gate"`
+- `options`:
+  - **Approve** (Recommended by default — this agent has no pass/fail status) — save `00-context.json` and mark the issue as ready.
+  - **Request changes** — specify what to adjust; re-run this agent with that feedback.
+  - **Stop** — halt here; do not save.
+Free text via "Other" is treated as change feedback.
 
 Do NOT save output until the user explicitly approves.
 
