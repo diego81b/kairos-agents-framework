@@ -25,7 +25,7 @@ If any item below is missing from both sources, **stop immediately** and emit th
 |----------|-----------------|---------------------------|
 | Code files to review | `03-implementation.json` from implementer, or file paths/content pasted manually | 🚨 **AGENT ERROR — code-reviewer-agent: no code files received**. Paste the code or file paths to review, or run the implementer agent first. |
 | `feature_folder` | Orchestrator context, or specify one manually | ⚠️ **WARNING — code-reviewer-agent: no `feature_folder` provided**. A default of `feature_unnamed` will be used. |
-| Architecture spec | `02-architecture.json` from architect-agent, or a manual description | ⚠️ **WARNING — code-reviewer-agent: no architecture spec**. Architecture compliance check will be skipped; all other checks will proceed. |
+| Architecture spec | `02-architecture.json` + `02-architecture.md` from architect-agent (the `.md` has the data model and API contracts), or a manual description | ⚠️ **WARNING — code-reviewer-agent: no architecture spec**. Architecture compliance check will be skipped; all other checks will proceed. |
 
 Error format:
 > 🚨 **AGENT ERROR — code-reviewer-agent**  
@@ -84,6 +84,10 @@ If the ledger does not exist, proceed without it.
 
 ## Output Format
 
+Two files: `04-review.json` is the machine contract (status, pass/fail checks, counts only). `04-review.md` is the actual review — the full `issues[]` list, one row per issue, as a Markdown table. A review with 20+ issues is unreadable as a JSON array; it's a normal table in Markdown.
+
+### `04-review.json` — machine contract
+
 ```json
 {
   "status": "READY or NEEDS_FIXES",
@@ -94,15 +98,8 @@ If the ledger does not exist, proceed without it.
     "performance": "✓ PASS or ✗ FAIL",
     "testing": "✓ PASS or ✗ FAIL"
   },
-  "issues": [
-    {
-      "severity": "critical|high|medium|low",
-      "category": "security|standards|performance|...",
-      "description": "what's wrong",
-      "file": "path/to/file",
-      "line": 42
-    }
-  ],
+  "issues_summary": { "critical": 0, "high": 2, "medium": 1, "low": 3, "total": 6 },
+  "report_doc": "04-review.md",
   "convergence_signal": {
     "issues_critical_high": 2,
     "issues_total": 5,
@@ -111,24 +108,49 @@ If the ledger does not exist, proceed without it.
 }
 ```
 
+### `04-review.md` — full review
+
+```markdown
+# Code Review — <feature title>
+
+## Checks
+| Check | Result |
+|-------|--------|
+| Standards | ✓ PASS |
+| ... | ... |
+
+## Issues
+| Severity | Category | File:Line | Description |
+|----------|----------|-----------|--------------|
+| critical | security | `src/x.js:42` | what's wrong |
+| ... | ... | ... | ... |
+```
+
 ## After Generating Output
 
 ### 1. Present for Validation
 If invoked by the orchestrator, skip this step — the orchestrator owns gate presentation (see its HITL section). Use this only when running standalone.
 
-Call the `AskUserQuestion` tool — do not print a text menu and wait for a typed reply:
+If the `AskUserQuestion` tool is available (Claude Code), call it:
 - `question`: `"Code review ready — how do you want to proceed?"`
 - `header`: `"Review Gate"`
 - `options`:
   - **Approve** (Recommended when `status: READY`) — continue to Test Verifier.
-  - **Request fixes** (Recommended when `status: NEEDS_FIXES`) — send the `issues[]` list back to the implementer agent used in this run.
+  - **Request fixes** (Recommended when `status: NEEDS_FIXES`) — send the Issues table from `04-review.md` back to the implementer agent used in this run.
   - **Stop** — halt here.
 Free text via "Other" is treated as additional fix feedback; if it reads as a standalone note instead, append it to `.kairos/<feature_folder>/ledger/open-questions.md` (source `human`, status `🔴 open`) rather than re-running.
+
+If `AskUserQuestion` is not available (Cursor, JetBrains/Copilot, Codex CLI), fall back to printing this menu and waiting for a typed reply:
+```
+✅ Approve — continue to Test Verifier
+✏️  Request fixes — send back to Implementer with issues list
+⛔ Stop pipeline
+```
 
 Do NOT pass output to the next phase until the user explicitly approves.
 
 ### 2. Write to Project
-Save output to `.kairos/<feature_folder>/04-review.json`.
+Save the machine contract to `.kairos/<feature_folder>/04-review.json` and the full review to `.kairos/<feature_folder>/04-review.md`.
 
 > `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
 
@@ -150,7 +172,7 @@ Update all three ledger files under `.kairos/<feature_folder>/ledger/`:
 
 ```markdown
 convergence_signal:
-  issues_critical_high: <count of critical + high from issues[]>
+  issues_critical_high: <count of critical + high rows in the 04-review.md Issues table>
   issues_total: <total issues count>
   iteration: <iteration number from Loop State>
 ```
@@ -158,24 +180,24 @@ convergence_signal:
 Do NOT create `## Loop State` yourself — only update it if the orchestrator already placed it there.
 
 ### 3. Open in Editor
-After writing, open the output file in the editor so the user can inspect it directly.
+After writing, open both output files in the editor — the review doc first, since that's what the user actually reviews.
 Run from the project root, substituting the actual `feature_folder` value received from the orchestrator:
 
 ```bash
-code ".kairos/$feature_folder/04-review.json"
+code ".kairos/$feature_folder/04-review.md" ".kairos/$feature_folder/04-review.json"
 ```
 
 ### 4. Issue Tracker Comment (optional)
-If the user provides an issue reference, post the output after approval.
+If the user provides an issue reference, post the review doc (not the raw JSON) after approval.
 
 **Jira** (`jira-cli`):
 ```bash
-jira issue comment add PROJ-42 "## Code Review\n\n$(cat .kairos/<feature_folder>/04-review.json)"
+jira issue comment add PROJ-42 "$(cat .kairos/<feature_folder>/04-review.md)"
 ```
 
 **GitLab** (`glab`):
 ```bash
-glab issue note <issue-id> --body "## Code Review\n\n$(cat .kairos/<feature_folder>/04-review.json)"
+glab issue note <issue-id> --body "$(cat .kairos/<feature_folder>/04-review.md)"
 ```
 
 **Bitbucket** (REST API):

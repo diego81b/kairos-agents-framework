@@ -16,7 +16,7 @@ You can be invoked in either of two ways. Detect mode from the inputs available:
 
 **Pipeline mode** — invoked by the orchestrator. Inputs:
 - `feature_folder` provided in the prompt
-- Architecture spec at `.kairos/<feature_folder>/02-architecture.json`
+- Architecture contract at `.kairos/<feature_folder>/02-architecture.json`, and the design doc at `.kairos/<feature_folder>/02-architecture.md` — the data model and API contracts you implement against live in the `.md`, not the `.json`
 - Optional `00-context.json` with project profile
 - Optional `03-implementation-plan.json` if resuming a multi-wave run
 
@@ -220,7 +220,7 @@ Never return `complete` if files were not actually written. Run `git status --sh
 ### 1. Present for Validation
 If invoked by the orchestrator, skip this step — the orchestrator owns gate presentation (see its HITL section). Use this only when running standalone.
 
-Call the `AskUserQuestion` tool — do not print a text menu and wait for a typed reply:
+If the `AskUserQuestion` tool is available (Claude Code), call it:
 - `question`: `"Implementation ready — how do you want to proceed?"`
 - `header`: `"Implementer Gate"`
 - `options`:
@@ -228,6 +228,13 @@ Call the `AskUserQuestion` tool — do not print a text menu and wait for a type
   - **Request changes** (Recommended when `status: blocked`) — specify what to adjust; re-run this agent with that feedback.
   - **Stop** — halt here.
 Free text via "Other" is treated as change feedback; if it reads as a standalone note instead, append it to `.kairos/<feature_folder>/ledger/open-questions.md` (source `human`, status `🔴 open`) rather than re-running.
+
+If `AskUserQuestion` is not available (Cursor, JetBrains/Copilot, Codex CLI), fall back to printing this menu and waiting for a typed reply:
+```
+✅ Approve implementation — continue to Code Reviewer
+✏️  Request changes — specify what to adjust
+⛔ Stop pipeline
+```
 
 Do NOT pass output to the next phase until the user explicitly approves.
 

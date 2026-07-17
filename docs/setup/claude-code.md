@@ -110,16 +110,20 @@ Validated output is saved automatically to `.kairos/01-requirements.json`.
 
 ## Step 5 — Check `.kairos/` outputs
 
-After each approved phase, a JSON file is written:
+After each approved phase, one or two files are written — a JSON contract, plus a Markdown report for phases whose output is large or tabular (data model, issues, findings, runbook):
 
 ```
 .kairos/
-├── 01-requirements.json     ← after PM Agent approval
-├── 02-architecture.json     ← after Architect approval
-├── 03-implementation.json   ← after Implementer approval
-├── 04-review.json           ← after Code Reviewer approval
-├── 05-test-verification.json ← after Test Verifier approval
-└── 06-deployment-plan.json  ← after Release Planner approval
+├── 01-requirements.json         ← after PM Agent approval
+├── 02-architecture.json         ← after Architect approval (contract)
+├── 02-architecture.md           ← after Architect approval (design doc)
+├── 03-implementation.json       ← after Implementer approval
+├── 04-review.json               ← after Code Reviewer approval (contract)
+├── 04-review.md                 ← after Code Reviewer approval (issues report)
+├── 05-test-verification.json    ← after Test Verifier approval (contract)
+├── 05-test-verification.md      ← after Test Verifier approval (full report)
+├── 06-deployment-plan.json      ← after Release Planner approval (contract)
+└── 06-deployment-plan.md        ← after Release Planner approval (runbook)
 ```
 
 These files are the audit trail of the session. You can commit them to git to track what was decided and why.
@@ -283,7 +287,7 @@ Without this flag, the Lead cannot create a team and Team Mode will not work.
 You ──► Orchestrator
          │
          ├─[HITL]─► PM Agent              → .kairos/01-requirements.json
-         ├─[HITL]─► Architect Agent       → .kairos/02-architecture.json
+         ├─[HITL]─► Architect Agent       → .kairos/02-architecture.json + .md
          ├─[HITL]─► implementer-tdd-agent    → .kairos/03-implementation.json
          │           or
          │          implementer-coder-agent (code-only, no TDD)
@@ -293,9 +297,9 @@ You ──► Orchestrator
          │           ├── teammate-backend-agent  ┌
          │           ├── teammate-frontend-agent ├── parallel
          │           └── teammate-database-agent ┘
-         ├─[HITL]─► Code Reviewer         → .kairos/04-review.json
-         ├─[HITL]─► Test Verifier         → .kairos/05-test-verification.json
-         └─[HITL]─► Release Planner       → .kairos/06-deployment-plan.json
+         ├─[HITL]─► Code Reviewer         → .kairos/04-review.json + .md
+         ├─[HITL]─► Test Verifier         → .kairos/05-test-verification.json + .md
+         └─[HITL]─► Release Planner       → .kairos/06-deployment-plan.json + .md
 ```
 
 Each `[HITL]` gate is a pause where **you** review and approve before the next agent runs.

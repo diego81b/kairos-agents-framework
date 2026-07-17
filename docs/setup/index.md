@@ -68,14 +68,14 @@ your-project/
 │   ├── code-reviewer-agent.md
 │   ├── test-verifier-agent.md
 │   └── release-planner-agent.md
-└── .kairos/             ← Created at runtime, holds JSON phase outputs
+└── .kairos/             ← Created at runtime, holds phase outputs (JSON contract + Markdown report)
     └── issue-42_add-stripe/   ← one subfolder per feature
         ├── 01-requirements.json
-        ├── 02-architecture.json
+        ├── 02-architecture.json / .md
         ├── 03-implementation.json
-        ├── 04-review.json
-        ├── 05-test-verification.json
-        └── 06-deployment-plan.json
+        ├── 04-review.json / .md
+        ├── 05-test-verification.json / .md
+        └── 06-deployment-plan.json / .md
 ```
 
 The `agents/` folder lives at the **project root**. Each tool reads from it differently — see the individual setup pages for exact paths and steps.

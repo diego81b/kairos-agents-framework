@@ -31,7 +31,7 @@ Each file is a Markdown document with YAML frontmatter consumed by Claude Code o
 ---
 name: orchestrator-agent
 description: "..."
-tools: Read, Write, Edit, Bash, Grep, Glob
+tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion
 model: opus
 ---
 ```
@@ -47,12 +47,14 @@ KAIROS defines a 6-phase, human-gated pipeline:
 | Pre-A | `context-extractor-agent.md` | `00-context.json` |
 | Pre-B | `impact-assessment-agent.md` | `00b-impact.json` |
 | 1 | `pm-agent.md` | `01-requirements.json` |
-| 2 | `architect-agent.md` | `02-architecture.json` |
+| 2 | `architect-agent.md` | `02-architecture.json` + `02-architecture.md` |
 | 3 | `implementer-tdd-agent.md` or `implementer-coder-agent.md` | code + `03-implementation.json` |
-| 4 | `code-reviewer-agent.md` | `04-review.json` |
-| 4.5 | `security-reviewer-agent.md` *(optional)* | `04b-security.json` |
-| 5 | `test-verifier-agent.md` | `05-test-verification.json` |
-| 6 | `release-planner-agent.md` | `06-deployment-plan.json` |
+| 4 | `code-reviewer-agent.md` | `04-review.json` + `04-review.md` |
+| 4.5 | `security-reviewer-agent.md` *(optional)* | `04b-security-review.json` + `04b-security-review.md` |
+| 5 | `test-verifier-agent.md` | `05-test-verification.json` + `05-test-verification.md` |
+| 6 | `release-planner-agent.md` | `06-deployment-plan.json` + `06-deployment-plan.md` |
+
+Phases 2 and 4–6 (and the optional 4.5) split their output: the `.json` is a lean machine contract (status, counts, short refs), the `.md` is the actual human-reviewable report (data model, issues tables, findings, runbook) — see each agent file's "Output Format" section. Phases 1 and 3 stay JSON-only; their content doesn't grow large enough to need the split.
 
 All artifacts land in `.kairos/<feature_folder>/` inside the target project (not this repo). Each feature folder also contains a `ledger/` subdirectory with three living files — `constraints.md`, `decisions.md`, `open-questions.md` — that agents read at phase start and update at phase end (forced accounting model).
 
