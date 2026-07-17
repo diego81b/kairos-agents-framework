@@ -16,6 +16,7 @@ All notable changes to KAIROS Framework are documented in this file.
 - **All 12 gated agent files** — the v4.1.0 gate rewrite made `AskUserQuestion` mandatory unconditionally, which silently broke HITL enforcement on Cursor, JetBrains/Copilot, and Codex CLI (none of which have that tool — see `docs/setup/cursor.md` and `docs/setup/jetbrains.md`, which document HITL there as printed-menu-only). Restored the text-menu fallback for every gate.
 - **`CLAUDE.md`, `docs/workflow.md`, `docs/overview.md`, `docs/agents.md`, `docs/setup/*.md`** — pipeline tables, file-tree examples, and HITL checkpoint descriptions updated to reflect the new `.json` + `.md` output pairs and the `AskUserQuestion`-or-fallback gate mechanism; a stale security-reviewer output filename in `CLAUDE.md`'s pipeline table (`04b-security.json` → `04b-security-review.json`) corrected to match what every agent file actually uses.
 - **`agents/team/implementer-lead-agent.md`** — Step 2b's Contract Consistency Check still pointed the API/database contract verification at `02-architecture.json` alone; the data it compares against (API contracts, full schema) moved to `02-architecture.md`.
+- **`agents/test-verifier-agent.md`** — acceptance-criteria mapping pointed at `02-architecture.json`, a field architect-agent never produces (in either the `.json` or the new `.md`). Repointed to `success_criteria[]` in `01-requirements.json` (pm-agent), the field that actually holds them; since that list has no IDs, test-verifier now numbers them `AC-1`, `AC-2`, ... in list order.
 
 ---
 
