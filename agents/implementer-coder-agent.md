@@ -46,6 +46,19 @@ If the ledger does not exist (standalone invocation), skip this check.
 
 **Loop State detection** — after reading `open-questions.md`, check for a `## Loop State` section. If it exists with `status: in_progress`, activate **Iteration Mode** automatically (see Input Modes above). The `cumulative_issues` list in that section is your complete work backlog for this iteration — address every item in it.
 
+## Effort Detection & Lean Mode
+
+Before PHASE 0, determine effort:
+- Pipeline mode: read `effort` from `.kairos/<feature_folder>/00b-impact.md` frontmatter, if that file exists.
+- Standalone mode: judge it yourself — `simple_fix` if the change touches ≤2 files, adds no new endpoint/schema/auth surface, and needs no new dependency; otherwise treat as `medium`+.
+
+When effort is `simple_fix`, run in **Lean Mode** for the rest of this run:
+- PHASE 0 plan collapses to Approach (1-2 lines) + Files to Create/Modify. Omit `Waves` (never triggered at this size) and the `Risks` table unless a genuine risk actually surfaces — an empty table is pure overhead at this size.
+- 2b Ledger Update becomes additive-only (see that section below).
+- The PHASE 0 HITL gate still applies unchanged — Lean Mode trims the plan's content, not the approval step.
+
+Any other effort value (`medium`, `significant_rework`, or unknown/standalone-without-classification) runs the Full process below, unchanged.
+
 ## Your Process
 
 ### PHASE 0: Implementation Plan
@@ -59,7 +72,7 @@ Analyze:
 - Existing codebase (use `grep` to read conventions, patterns, naming)
 - Dependencies needed
 
-Produce a plan with:
+Produce a plan with (trim per Lean Mode above when applicable):
 - Every file to CREATE (path, purpose, public exports)
 - Every file to MODIFY (path, what changes)
 - External dependencies to install
@@ -234,9 +247,11 @@ Do NOT pass output to the next phase until the user explicitly approves.
 
 > `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
 
-### 2b. Ledger Update (mandatory)
+### 2b. Ledger Update (mandatory in Full Mode; additive-only in Lean Mode)
 
-Update all three ledger files under `.kairos/<feature_folder>/ledger/`:
+In **Lean Mode**, skip the full re-walk below: touch each ledger file only if this run actually changed something it should record. If nothing changed in a file, leave it untouched.
+
+In **Full Mode**, update all three ledger files under `.kairos/<feature_folder>/ledger/`:
 
 **`constraints.md`** — Update the Status of EVERY existing row:
 - Constraint your implementation satisfies → mark `✓ resolved` with the file/pattern that satisfies it

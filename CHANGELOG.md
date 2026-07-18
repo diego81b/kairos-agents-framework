@@ -4,6 +4,14 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v5.3.0 — July 18, 2026
+
+### Added
+
+- **`agents/implementer-tdd-agent.md` and `agents/implementer-coder-agent.md`** — gained Lean Mode, scaled to task effort: when `00b-impact.md` classifies the task as `effort: simple_fix` (or the agent's own standalone judgment agrees — ≤2 files, no new endpoint/schema/auth surface, no new dependency), the Phase 0 plan drops to Approach + file list (plus test names in the TDD agent), the Risks table and Waves section are omitted unless something genuinely surfaces, TDD test generation narrows to HAPPY PATH + ERROR CASES only, and the mandatory 2b Ledger Update becomes additive-only instead of a full re-walk of every row. Closes the gap where a 1-file fix paid the same fixed process cost as a multi-file feature — both implementers previously ran the same unconditional heavyweight process regardless of size, even though `impact-assessment-agent` already computes the effort classification needed to branch on. The Phase 0 HITL gate itself is unchanged — Lean Mode trims plan content, not the approval step.
+
+---
+
 ## v5.2.0 — July 18, 2026
 
 ### Added
