@@ -4,6 +4,19 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v5.2.0 — July 18, 2026
+
+### Added
+
+- **`agents/implementer-coder-agent.md`** — gained Iteration Mode, mirroring `implementer-tdd-agent.md`: detected automatically from `## Loop State` in `ledger/open-questions.md`, skips the Phase 0 plan gate, scopes work to `loop_state.cumulative_issues`, and emits a `## Changes This Iteration` section plus an `iteration_mode` frontmatter field. Closes the gap where this agent had no way to do a targeted fix pass — a full re-run would re-plan from scratch every time.
+
+### Fixed
+
+- **`agents/orchestrator-agent.md` — Phase 3 and Phase 4 Loop Actuators** — both auto-retry loops hardcoded a re-invocation of `implementer-tdd-agent`, regardless of which implementer variant actually ran Phase 3. If the user had picked `implementer-coder-agent` (explicitly for a project with no test suite) or Team Mode's `implementer-lead-agent` (after confirming its 3.5× cost gate) and enabled `auto` loop policy, a `NEEDS_FIXES` verdict would silently re-invoke `implementer-tdd-agent` instead — abandoning the chosen implementation strategy mid-pipeline with no warning. Both actuators now re-invoke whichever of `implementer-tdd-agent` / `implementer-coder-agent` was selected in Step 3's routing decision (both now support Iteration Mode). Step 0e's Loop Policy prompt is gated the same way: Team Mode forces `loop_policy` to `manual` for both phases with an explanation shown to the user, since `implementer-lead-agent` has no Iteration Mode yet — a full re-run there would re-spawn the whole team from scratch rather than apply a targeted fix. Building that (re-spawning only the teammates needed for a fix, with contracts pinned) is a larger design task, deferred as a follow-up rather than built this pass.
+- **`agents/team/implementer-lead-agent.md`** — Step 1 "Analyze Architect Output" still showed a JSON example for the architect's output, stale since v5.0.0 moved `02-architecture.md` to Markdown+frontmatter (Step 2b's Contract Consistency Check already read it correctly — Step 1's example didn't). Updated to point at the actual Markdown sections (`## API Contracts`, `## Data Model`, `## Integration Points`, `## Error Codes & Handling`).
+
+---
+
 ## v5.1.0 — July 18, 2026
 
 ### Added
