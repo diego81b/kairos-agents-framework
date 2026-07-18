@@ -44,18 +44,18 @@ Each subagent:
 
 | # | Agent | Role | Output |
 | --- | --- | --- | --- |
-| pre | **Context Extractor** | Full-repo scan → stack, patterns, conventions | `00-context.json` |
-| pre | **Impact Assessment** | Issue-scoped grounding → effort, domains, agent recommendations | `00b-impact.json` |
+| pre | **Context Extractor** | Full-repo scan → stack, patterns, conventions | `00-context.md` |
+| pre | **Impact Assessment** | Issue-scoped grounding → effort, domains, agent recommendations | `00b-impact.md` |
 | 0 | **Orchestrator** | Coordinates the pipeline, manages HITL | Routes & aggregates |
-| 1 | **PM Agent** | Requirements, constraints, acceptance criteria | `01-requirements.json` |
-| 2 | **Architect Agent** | 3 design options → recommended choice, API contracts, DB schema | `02-architecture.json` + `.md` |
-| 3 | **Implementer Agent** | Implementation plan → TDD cycle (tests first, then code) — **default for all features** | Code + `03-implementation.json` |
-| 4 | **Code Reviewer** | Standards, security, performance, contract compliance | `04-review.json` + `.md` |
-| 4b | **Security Reviewer** _(optional)_ | Adversarial security pass — IDOR, auth, injection, secrets, data exposure | `04b-security-review.json` + `.md` |
-| 5 | **Test Verifier** | Coverage adequacy (>80%), edge cases, assertion quality | `05-test-verification.json` + `.md` |
-| 6 | **Release Planner** | Deployment steps, rollback strategy, monitoring thresholds | `06-deployment-plan.json` + `.md` |
+| 1 | **PM Agent** | Requirements, constraints, acceptance criteria | `01-requirements.md` |
+| 2 | **Architect Agent** | 3 design options → recommended choice, API contracts, DB schema | `02-architecture.md` |
+| 3 | **Implementer Agent** | Implementation plan → TDD cycle (tests first, then code) — **default for all features** | Code + `03-implementation.md` |
+| 4 | **Code Reviewer** | Standards, security, performance, contract compliance | `04-review.md` |
+| 4b | **Security Reviewer** _(optional)_ | Adversarial security pass — IDOR, auth, injection, secrets, data exposure | `04b-security-review.md` |
+| 5 | **Test Verifier** | Coverage adequacy (>80%), edge cases, assertion quality | `05-test-verification.md` |
+| 6 | **Release Planner** | Deployment steps, rollback strategy, monitoring thresholds | `06-deployment-plan.md` |
 
-All output files are saved to `.kairos/<feature-folder>/` — one subfolder per feature, named from the issue reference (e.g. `PROJ-42_add-stripe-payments`). Phases 2 and 4–6 split into a lean `.json` contract and a `.md` human-readable report (data model, issues, findings, runbook) — see the [Workflow](/workflow) page for why.
+All output files are saved to `.kairos/<feature-folder>/` — one subfolder per feature, named from the issue reference (e.g. `PROJ-42_add-stripe-payments`). Each phase writes a single Markdown file: a small YAML frontmatter header (status, counts, next agent) followed by the human-readable report (data model, issues, findings, runbook) — see the [Workflow](/workflow) page for why.
 
 ### Team Mode — optional extension (Claude Code only)
 

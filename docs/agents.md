@@ -14,7 +14,7 @@ Every modification to an agent file must be accompanied by an entry in [`CHANGEL
 
 ## [Context Extractor](/agents/context-extractor-agent)
 
-Scans the codebase and an issue draft to produce a structured context file (`00-context.json`) that all downstream agents consume. Run this agent before launching the Orchestrator to give every phase accurate, verified knowledge of your stack, patterns, and conventions — without each agent re-scanning the repository independently.
+Scans the codebase and an issue draft to produce a structured context file (`00-context.md`) that all downstream agents consume. Run this agent before launching the Orchestrator to give every phase accurate, verified knowledge of your stack, patterns, and conventions — without each agent re-scanning the repository independently.
 
 ::: tip Optional enhancements
 **Skills:** `deep-research` (built-in), `audit-context-building` (Trail of Bits)  
@@ -27,9 +27,9 @@ Install: `claude plugin install trailofbits/skills/audit-context-building`
 
 Issue-scoped grounding agent. Run this before the Orchestrator (optionally, after Context Extractor) to answer three questions before you select agents: How big is this? What already exists and what is missing? Which pipeline agents does this issue actually need?
 
-Unlike the Context Extractor, which scans the full repository, this agent reads only the code the issue directly touches. It consumes `00-context.json` if already present rather than rescanning. Output is `00b-impact.json` with effort estimate (`simple_fix / medium / significant_rework`), domains touched (backend / frontend / db / auth / integrations), reusable assets with real file paths, gaps, risks, and a `recommended_agents` list with per-agent justification.
+Unlike the Context Extractor, which scans the full repository, this agent reads only the code the issue directly touches. It consumes `00-context.md` if already present rather than rescanning. Output is `00b-impact.md` with effort estimate (`simple_fix / medium / significant_rework`), domains touched (backend / frontend / db / auth / integrations), reusable assets with real file paths, gaps, risks, and a `recommended_agents` list with per-agent justification.
 
-The recommendation is advisory only. When the Orchestrator detects `00b-impact.json`, it displays the recommendation as a `💡 Impact Assessment` block above the agent selection menu — the human confirms or ignores it. Nothing is pre-selected.
+The recommendation is advisory only. When the Orchestrator detects `00b-impact.md`, it displays the recommendation as a `💡 Impact Assessment` block above the agent selection menu — the human confirms or ignores it. Nothing is pre-selected.
 
 ::: tip Optional enhancements
 **Skills:** `deep-research` (built-in)
@@ -58,7 +58,7 @@ Install: `claude plugin install trailofbits/skills/ask-questions-if-underspecifi
 
 Designs system architecture, plans database schema, designs API contracts, considers performance implications, and defines error handling patterns.
 
-Writes two files: a lean `02-architecture.json` contract (selected option, table/error-code names) and `02-architecture.md` — the actual design doc, with the full data model and API contracts as Markdown tables rather than nested JSON.
+Writes a single `02-architecture.md`: a YAML frontmatter header (selected option, table/error-code counts) followed by the design doc body — the full data model and API contracts as Markdown tables.
 
 ::: tip Optional enhancements
 **Skills:** `deep-research` (built-in)  
@@ -169,7 +169,7 @@ Covers seven categories: authorization and IDOR (including writes through nested
 
 Also includes a mandatory **contract enforcement check**: reads `02-architecture.md` and verifies that ownership constraints defined by the Architect are actually present in the implementation code. Gaps are flagged regardless of direct exploitability.
 
-Output is a lean `04b-security-review.json` contract (status, finding counts) plus `04b-security-review.md` with the full findings — each ranked by exploitable severity, with a concrete attack scenario and remediation. Because this agent is read-only, the Orchestrator writes and opens both output files on its behalf.
+Output is a single `04b-security-review.md`: frontmatter (status, finding counts) plus the full findings table — each ranked by exploitable severity, with a concrete attack scenario and remediation. Because this agent is read-only, the Orchestrator writes and opens the file on its behalf.
 
 ::: tip Optional enhancements
 **Skills:** `security-review` (built-in), `insecure-defaults` (Trail of Bits), `supply-chain-risk-auditor` (Trail of Bits), `variant-analysis` (Trail of Bits)  

@@ -43,7 +43,7 @@ No exceptions. A pull request that modifies an agent without a matching changelo
 
 ## Context Extractor
 
-Standalone pre-pipeline agent. Run this before the Orchestrator to produce `00-context.json`.
+Standalone pre-pipeline agent. Run this before the Orchestrator to produce `00-context.md`.
 
 <<< @/agents/context-extractor-agent.md{md}
 
@@ -51,7 +51,7 @@ Standalone pre-pipeline agent. Run this before the Orchestrator to produce `00-c
 
 ## Impact Assessment
 
-Standalone pre-pipeline agent. Run after Context Extractor (optional) to produce `00b-impact.json` — effort estimate, domains, and an advisory `recommended_agents` list shown by the Orchestrator before agent selection.
+Standalone pre-pipeline agent. Run after Context Extractor (optional) to produce `00b-impact.md` — effort estimate, domains, and an advisory `recommended_agents` list shown by the Orchestrator before agent selection.
 
 <<< @/agents/impact-assessment-agent.md{md}
 

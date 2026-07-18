@@ -11,7 +11,7 @@ flowchart TD
         PRE["Pre-pipeline (optional):
 context-extractor-agent
 impact-assessment-agent"] --> O
-        O[Orchestrator] --> ADV["💡 Impact advisory (if 00b-impact.json found)"]
+        O[Orchestrator] --> ADV["💡 Impact advisory (if 00b-impact.md found)"]
         ADV --> SEL[User selects active agents]
     end
 
@@ -86,7 +86,7 @@ creates binding contracts"]
 Tests · Review · Deploy plan"])
 ```
 
-Each HITL checkpoint is an interactive prompt (Claude Code's `AskUserQuestion` tool), not a text menu to reply to. It marks one option as recommended based on the phase's own status, and always leaves a free-text option for detailed feedback:
+Each HITL checkpoint is an interactive prompt (Claude Code's `AskUserQuestion` tool), not a text menu to reply to. Before it, if the phase's output has a Risks/Issues/Findings table with any row left undispositioned, the **Risk Disposition Loop** walks through those rows first — one at a time (or up to 4 per prompt), with **Accept / Mitigate now / Escalate / Defer** — instead of forcing an approve-or-reject on the whole table at once. Only once every row has a disposition does the whole-artifact gate below appear; it marks one option as recommended based on the phase's own status (an unresolved Escalate biases it toward Request changes), and always leaves a free-text option for detailed feedback:
 - ✅ **Approve** — continue to the next active agent
 - ✏️ **Request changes** — agent revises and re-presents
 - ⏭️ **Skip next** — approve this output, jump past the next active agent
@@ -94,22 +94,22 @@ Each HITL checkpoint is an interactive prompt (Claude Code's `AskUserQuestion` t
 
 Only selected agents run. Order is never changed.
 
-### Split Artifacts — JSON vs Markdown
+### Artifact Format — Markdown + Frontmatter
 
-Phases 2 and 4–6 (and the optional 4.5) write two files instead of one: a lean `.json` machine contract (status, counts, short refs — what the next agent or the orchestrator parses) and a `.md` report (data model tables, issues lists, findings, runbooks — what the human actually reads at the gate). A full schema or a long issues list renders as unreadable nested JSON but scans in seconds as a Markdown table, so anything tabular or long-form lives in the `.md`; the `.json` never repeats it. Phases 1 and 3 stay JSON-only since their output doesn't grow large enough to need the split.
+Every phase writes a single Markdown file: a small YAML frontmatter header (status, counts, `next_agent` — what the orchestrator branches on) followed by the report body (data model tables, issues lists, findings, runbooks — what the human actually reads at the gate). Nothing in this pipeline parses these files with real code — every consumer is either the next agent reading it as prompt text or a human at a gate — so a full schema or a long issues list is plain Markdown, not JSON: unreadable as nested JSON, but a table that scans in seconds. Any Risks/Issues/Findings table carries a `Disposition` column, left empty by the agent and filled in by the Risk Disposition Loop above.
 
 ---
 
 ## Phase 0: Prep & Agent Selection
 
 **Pre-pipeline (optional, both standalone):**
-- Run `@context-extractor-agent` first to produce `00-context.json` (full-repo scan — stack, patterns, conventions)
-- Run `@impact-assessment-agent` to produce `00b-impact.json` (issue-scoped grounding — effort, domains, recommended agents). Consumes `00-context.json` if present; does not rescan what it already covers.
+- Run `@context-extractor-agent` first to produce `00-context.md` (full-repo scan — stack, patterns, conventions)
+- Run `@impact-assessment-agent` to produce `00b-impact.md` (issue-scoped grounding — effort, domains, recommended agents). Consumes `00-context.md` if present; does not rescan what it already covers.
 
 **Pipeline start:**
 - Developer provides a natural-language feature request (with optional issue reference)
-- Orchestrator loads `00-context.json` and `00b-impact.json` if present
-- If `00b-impact.json` found, displays a `💡 Impact Assessment` advisory block before the selection menu (effort, domains, recommended agents) — advisory only, nothing pre-selected
+- Orchestrator loads `00-context.md` and `00b-impact.md` if present
+- If `00b-impact.md` found, displays a `💡 Impact Assessment` advisory block before the selection menu (effort, domains, recommended agents) — advisory only, nothing pre-selected
 - Orchestrator reads the `## KAIROS Pipeline` section from the issue body (if present), or shows an interactive numbered list — **no automatic inference**
 - User confirms or adjusts the agent selection; orchestrator announces the active pipeline before Phase 1
 
@@ -130,7 +130,7 @@ Only agents explicitly selected in Phase 0 will run. Phases for inactive agents 
 
 _Input: feature description + project context_
 _Output: structured JSON — scope, constraints, risks, success criteria_
-_Saved to: `.kairos/<feature_folder>/01-requirements.json`_
+_Saved to: `.kairos/<feature_folder>/01-requirements.md`_
 
 ::: info HITL checkpoint
 User reviews requirements, constraints and risks before any design work begins. Presented via `AskUserQuestion`, not a printed menu.
@@ -147,8 +147,8 @@ User reviews requirements, constraints and risks before any design work begins. 
 - Define error handling and integration patterns
 
 _Input: PM analysis JSON_
-_Output: a lean JSON contract (selected option, table/error-code names only) + a Markdown design doc (full data model, API contracts, tech choices) — see "Split Artifacts" above_
-_Saved to: `.kairos/<feature_folder>/02-architecture.json` + `.kairos/<feature_folder>/02-architecture.md`_
+_Output: a single Markdown file — frontmatter (selected option, table/error-code counts) + design doc body (full data model, API contracts, tech choices) — see "Artifact Format" above_
+_Saved to: `.kairos/<feature_folder>/02-architecture.md` + `.kairos/<feature_folder>/02-architecture.md`_
 
 ::: info HITL checkpoint
 User reviews the selected design option and API contracts (in `02-architecture.md`) before any code is written. Presented via `AskUserQuestion`, not a printed menu.
@@ -179,7 +179,7 @@ This phase has **two HITL checkpoints** — a plan gate before any file is writt
 
 _Input: architecture JSON + project profile_
 _Output: implementation plan → (approval) → code files + test files + coverage report_
-_Saved to: project paths + `.kairos/<feature_folder>/03-implementation.json`_
+_Saved to: project paths + `.kairos/<feature_folder>/03-implementation.md`_
 
 ::: info HITL checkpoint — Plan gate
 User reviews the implementation plan (files, test cases, approach) **before any code is written**. Reject at zero cost. Presented via `AskUserQuestion`, not a printed menu.
@@ -210,7 +210,7 @@ The Lead applies the same RED → GREEN → REFACTOR discipline as the single ag
 
 _Input: architecture JSON + project profile_
 _Output: all layer files + contract compliance report + coverage report_
-_Saved to: project paths + `.kairos/<feature_folder>/03-implementation.json`_
+_Saved to: project paths + `.kairos/<feature_folder>/03-implementation.md`_
 
 ::: warning Team Mode — Claude Code only (experimental)
 Team Mode requires **Claude Code's experimental Agent Teams feature**. Enable it by setting `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in `.claude/settings.json`. Requires Claude Code v2.1.32+.
@@ -241,8 +241,8 @@ Team Mode eliminates frontend/backend contract mismatches through binding contra
 - Check performance (N+1 queries, memory leaks)
 
 _Input: generated code + test files_
-_Output: a lean JSON contract (status, pass/fail checks, issue counts) + a Markdown report (full issues table with severity, file:line, description)_
-_Saved to: `.kairos/<feature_folder>/04-review.json` + `.kairos/<feature_folder>/04-review.md`_
+_Output: a single Markdown file — frontmatter (status, pass/fail checks, issue counts) + report body (full issues table with impact, file:line, description, fix, disposition)_
+_Saved to: `.kairos/<feature_folder>/04-review.md` + `.kairos/<feature_folder>/04-review.md`_
 
 ::: info HITL checkpoint
 User reviews the quality report (`04-review.md`). NEEDS\_FIXES sends the issues table back to the Implementer. Presented via `AskUserQuestion`, not a printed menu.
@@ -265,9 +265,9 @@ Adversarial pass — the agent asks "how do I break this" rather than checking c
 - **Dependency risks** — known CVEs, deprecated crypto
 - **Contract enforcement** — verifies that ownership constraints from `02-architecture.md` are actually present in code; gaps are flagged regardless of direct exploitability
 
-_Input: implementation code + `02-architecture.json` / `02-architecture.md`_
-_Output: a lean JSON contract (status, finding counts) + a Markdown report (each finding's attack scenario, evidence, and fix; contract enforcement table)_
-_Saved to: `.kairos/<feature_folder>/04b-security-review.json` + `.kairos/<feature_folder>/04b-security-review.md`_ (both written by Orchestrator — agent is read-only)
+_Input: implementation code + `02-architecture.md` / `02-architecture.md`_
+_Output: a single Markdown file — frontmatter (status, finding counts) + report body (each finding's attack scenario, evidence, fix, and disposition; contract enforcement table)_
+_Saved to: `.kairos/<feature_folder>/04b-security-review.md` + `.kairos/<feature_folder>/04b-security-review.md`_ (both written by Orchestrator — agent is read-only)
 
 ::: info HITL checkpoint
 User reviews findings in `04b-security-review.md`. "Request fixes" forwards the Findings section to the Implementer. Presented via `AskUserQuestion`, not a printed menu.
@@ -288,8 +288,8 @@ Select `security-reviewer-agent` whenever the feature touches: authentication or
 - Assess assertion quality
 
 _Input: test code + coverage report_
-_Output: a lean JSON contract (status, execution/coverage summary) + a Markdown report (uncovered lines, AC mapping, issues table)_
-_Saved to: `.kairos/<feature_folder>/05-test-verification.json` + `.kairos/<feature_folder>/05-test-verification.md`_
+_Output: a single Markdown file — frontmatter (status, execution/coverage summary) + report body (uncovered lines, AC mapping, issues table)_
+_Saved to: `.kairos/<feature_folder>/05-test-verification.md` + `.kairos/<feature_folder>/05-test-verification.md`_
 
 ::: info HITL checkpoint
 User confirms coverage is adequate from `05-test-verification.md`. FAIL sends the gap/issues table back to the Implementer. Presented via `AskUserQuestion`, not a printed menu.
@@ -306,8 +306,8 @@ User confirms coverage is adequate from `05-test-verification.md`. FAIL sends th
 - Define monitoring metrics and alert thresholds
 
 _Input: verified code + architecture + identified risks_
-_Output: a lean JSON contract (rollback/monitoring summary) + a Markdown runbook (deployment steps, risk mitigation table, rollback checklist, monitoring)_
-_Saved to: `.kairos/<feature_folder>/06-deployment-plan.json` + `.kairos/<feature_folder>/06-deployment-plan.md`_
+_Output: a single Markdown file — frontmatter (rollback/monitoring summary) + runbook body (deployment steps, risk mitigation table, rollback checklist, monitoring)_
+_Saved to: `.kairos/<feature_folder>/06-deployment-plan.md` + `.kairos/<feature_folder>/06-deployment-plan.md`_
 
 ::: info HITL checkpoint
 User approves the deployment runbook (`06-deployment-plan.md`). This is the final checkpoint — approval closes the KAIROS run. Presented via `AskUserQuestion`, not a printed menu.
@@ -341,7 +341,7 @@ Each KAIROS run maintains three living files under `.kairos/<feature_folder>/led
 
 ### Why this matters
 
-Without the ledger, information can be silently dropped between phases: a SOC2 compliance constraint captured by the PM but not echoed into `02-architecture.json` is invisible to the Implementer and Reviewer. The ledger eliminates this by making all cross-phase constraints and decisions explicit and persistent.
+Without the ledger, information can be silently dropped between phases: a SOC2 compliance constraint captured by the PM but not echoed into `02-architecture.md` is invisible to the Implementer and Reviewer. The ledger eliminates this by making all cross-phase constraints and decisions explicit and persistent.
 
 At pipeline end, the Orchestrator counts `🔴 open` items in `open-questions.md` and warns if any remain unresolved before shipping.
 

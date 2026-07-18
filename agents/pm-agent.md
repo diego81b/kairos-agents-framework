@@ -92,40 +92,53 @@ API contracts needed?
 
 ## Output Format
 
-ALWAYS output structured JSON:
+Output a single Markdown file with a YAML frontmatter header. Frontmatter carries only what the orchestrator branches on; everything else is prose/tables in the body — no JSON. Nothing in this pipeline parses these files programmatically; every consumer is either another agent reading it as text or a human at a gate, so raw prose/tables serve both better than escaped JSON strings.
 
-```json
-{
-  "scope": "Feature description",
-  "constraints": {
-    "performance": "target latency",
-    "scale": "throughput target",
-    "security": "compliance requirements",
-    "team": "team expertise/knowledge",
-    "timeline": "deadline if any"
-  },
-  "risks": [
-    {
-      "risk": "description",
-      "impact": "high/medium/low",
-      "mitigation": "how to mitigate"
-    }
-  ],
-  "success_criteria": [
-    "criterion 1",
-    "criterion 2"
-  ],
-  "integration_points": [
-    "system 1 to connect to",
-    "system 2 to connect to"
-  ]
-}
+```markdown
+---
+phase: pm-agent
+status: ready
+risk_counts: { critical: 0, high: 1, medium: 2, low: 1 }
+open_dispositions: 4
+next_agent: architect-agent
+---
+
+# PM Analysis — <feature_folder>
+
+## Scope
+<feature description — what's included, what's explicitly excluded, dependencies on other systems>
+
+## Constraints
+| Category | Constraint |
+|----------|-----------|
+| Performance | target latency |
+| Scale | throughput target |
+| Security | compliance requirements |
+| Team | team expertise/knowledge |
+| Timeline | deadline if any |
+
+## Risks
+| ID | Description | Impact | Mitigation | Disposition |
+|----|-------------|--------|------------|-------------|
+| R1 | what could go wrong | critical/high/medium/low | how to mitigate | *(filled by gate)* |
+
+## Success Criteria
+- criterion 1
+- criterion 2
+
+## Integration Points
+- system 1 to connect to
+- system 2 to connect to
 ```
+
+`risk_counts` and `open_dispositions` are derived by counting Risks table rows — by Impact value, and by empty Disposition cells respectively. `status` is always `ready` (this agent has no pass/fail state). Leave every Disposition cell empty — the orchestrator's Risk Disposition Loop (or, when running standalone, the human via the gate below) fills it in, not you.
 
 ## After Generating Output
 
 ### 1. Present for Validation
-If invoked by the orchestrator, skip this step — the orchestrator owns gate presentation (see its HITL section). Use this only when running standalone.
+If invoked by the orchestrator, skip this step — the orchestrator owns gate presentation, including its Risk Disposition Loop that walks the human through the Risks table row by row before the whole-artifact gate (see its HITL section). Use this only when running standalone.
+
+Standalone runs do not get the per-item Risk Disposition Loop — all Risks rows are approved or rejected as one bundle by the gate below. Prefer running through the orchestrator when the Risks table is non-trivial.
 
 If the `AskUserQuestion` tool is available (Claude Code), call it:
 - `question`: `"PM analysis ready — how do you want to proceed?"`
@@ -146,7 +159,7 @@ If `AskUserQuestion` is not available (Cursor, JetBrains/Copilot, Codex CLI), fa
 Do NOT pass output to the next phase until the user explicitly approves.
 
 ### 2. Write to Project
-Save output to `.kairos/<feature_folder>/01-requirements.json`.
+Save output to `.kairos/<feature_folder>/01-requirements.md`.
 
 > `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
 
@@ -165,9 +178,11 @@ Write or update the ledger files under `.kairos/<feature_folder>/ledger/`:
 | CN | (your new constraint) | pm-agent | 🔴 open | — | — |
 ```
 
-Translate every item in `constraints.*` and every risk mitigation into a constraint row. Examples:
-- `"performance": "< 200ms p95"` → `"Latency must be < 200ms at p95"`
-- `"security": "PCI-DSS Level 2"` → `"PCI-DSS Level 2 compliance required"`
+Translate every row in the Constraints table into a constraint row. Examples:
+- `Performance: < 200ms p95` → `"Latency must be < 200ms at p95"`
+- `Security: PCI-DSS Level 2` → `"PCI-DSS Level 2 compliance required"`
+
+Freshly-surfaced Risks table rows are a separate case: when orchestrator-invoked, the orchestrator's Risk Disposition Loop writes their constraint/open-question rows itself, sourced from the human's per-item choice — do not also write them here, or they'll be duplicated. When running standalone (no orchestrator loop ran), write them yourself as above, one constraint row per risk mitigation.
 
 **`open-questions.md`** — Add any unresolved questions from your analysis:
 
@@ -187,7 +202,7 @@ After writing, open the output file in the editor so the user can inspect it dir
 Run from the project root, substituting the actual `feature_folder` value received from the orchestrator:
 
 ```bash
-code ".kairos/$feature_folder/01-requirements.json"
+code ".kairos/$feature_folder/01-requirements.md"
 ```
 
 ### 4. Issue Tracker Comment (optional)
@@ -195,12 +210,12 @@ If the user provides an issue reference, post the output after approval.
 
 **Jira** (`jira-cli`):
 ```bash
-jira issue comment add PROJ-42 "## PM Analysis\n\n$(cat .kairos/<feature_folder>/01-requirements.json)"
+jira issue comment add PROJ-42 "## PM Analysis\n\n$(cat .kairos/<feature_folder>/01-requirements.md)"
 ```
 
 **GitLab** (`glab`):
 ```bash
-glab issue note <issue-id> --body "## PM Analysis\n\n$(cat .kairos/<feature_folder>/01-requirements.json)"
+glab issue note <issue-id> --body "## PM Analysis\n\n$(cat .kairos/<feature_folder>/01-requirements.md)"
 ```
 
 **Bitbucket** (REST API):
@@ -223,5 +238,5 @@ These skills and MCP tools enhance this agent when installed. KAIROS works fully
 ## Important Notes
 - You have FRESH context (no parent conversation)
 - Only thing you know = what parent told you
-- Return JSON, nothing else
+- Return the Markdown file described above, nothing else
 - Be thorough but concise

@@ -115,14 +115,14 @@ Codex spawns both agents simultaneously and returns a consolidated response.
 Codex can write files directly. After approving each phase, ask it to persist:
 
 ```
-Save the requirements output to .kairos/01-requirements.json
+Save the requirements output to .kairos/01-requirements.md
 ```
 
 Or add to each agent's `developer_instructions`:
 ```toml
 developer_instructions = """
 ...
-After the user approves, write the output to .kairos/01-requirements.json.
+After the user approves, write the output to .kairos/01-requirements.md.
 """
 ```
 

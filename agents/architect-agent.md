@@ -23,7 +23,7 @@ If any item below is missing from both sources, **stop immediately** and emit th
 
 | Required | How to supply it | Missing → emit this error |
 |----------|-----------------|---------------------------|
-| Requirements / scope | `01-requirements.json` from pm-agent, or a manual description in the prompt | 🚨 **AGENT ERROR — architect-agent: missing requirements**. Provide a feature description or run pm-agent first. |
+| Requirements / scope | `01-requirements.md` from pm-agent, or a manual description in the prompt | 🚨 **AGENT ERROR — architect-agent: missing requirements**. Provide a feature description or run pm-agent first. |
 | Tech stack / project profile | Project files, orchestrator context, or manual prompt (e.g. "Node/Express/PostgreSQL") | 🚨 **AGENT ERROR — architect-agent: missing tech stack**. Specify the technology stack so design choices can be grounded. |
 | `feature_folder` | Orchestrator context, or specify one manually | ⚠️ **WARNING — architect-agent: no `feature_folder` provided**. A default of `feature_unnamed` will be used. |
 
@@ -99,37 +99,26 @@ For selected option:
 
 ## Output Format
 
-Two files, two audiences. `02-architecture.json` is the machine contract — small, stable-shaped, consumed by the implementer and the orchestrator. `02-architecture.md` is the actual design doc — everything tabular or narrative (the full data model, every API contract, the option comparison) belongs there, as Markdown tables and prose, not as nested JSON. A schema with 40 columns across 12 tables renders as a readable set of Markdown tables in seconds; the same data as nested JSON is what makes review unreadable — that's the whole reason for this split.
+One file, `02-architecture.md`: a YAML frontmatter block holding the handful of machine-checkable fields the orchestrator branches on, then the design doc itself as the Markdown body. Everything tabular or narrative (the full data model, every API contract, the option comparison) lives in the body, as Markdown tables and prose, not as nested data. A schema with 40 columns across 12 tables renders as a readable set of Markdown tables in seconds; the same data as nested JSON is what makes review unreadable — which is exactly why the body is Markdown and the frontmatter stays minimal.
 
-### `02-architecture.json` — machine contract
-
-```json
-{
-  "selected_option": "Option A: description",
-  "rationale": "why this option, 1-3 sentences",
-  "report_doc": "02-architecture.md",
-  "database_changes": {
-    "new_tables": ["table1", "table2"],
-    "modified_tables": ["existing_table_with_changes"]
-  },
-  "error_codes": ["ERROR_CODE_1", "ERROR_CODE_2"],
-  "error_handling": "pattern to use (e.g., AppError class)",
-  "performance_targets": {
-    "latency_ms": "target",
-    "throughput_rps": "target"
-  }
-}
-```
-
-Keep every field here short: table *names* only (no columns), error *codes* only (no handling detail beyond the one-line pattern). Anything that would require a nested object-of-objects or an array with more than a handful of entries belongs in the `.md` instead.
-
-### `02-architecture.md` — design doc
+Keep the frontmatter minimal: just the scalars the orchestrator needs to route (selected option, summary counts, status). Full detail — every table's columns, the complete error-code list with handling, performance targets, rationale — lives in the body sections below.
 
 ````markdown
+---
+phase: architect
+status: ready
+selected_option: <Option A: description>
+database_changes_summary: { new_tables: N, modified_tables: N }
+error_codes_count: N
+risk_counts: { critical: 0, high: N, medium: N, low: N }
+open_dispositions: N
+next_agent: implementer-tdd-agent
+---
+
 # Architecture — <feature title>
 
 ## Selected Option
-<Option A/B/C comparison — approach + tradeoffs for each, then which was picked and why>
+<Option A/B/C comparison — approach + tradeoffs for each, then which was picked and why (the rationale, 1-3 sentences)>
 
 ## Technology Choices
 | Component | Choice | Why |
@@ -142,7 +131,7 @@ Keep every field here short: table *names* only (no columns), error *codes* only
 | ... | ... |
 
 ## Data Model
-One table per entity — every column, type, constraint, and FK goes here, not in the JSON:
+One table per entity — every column, type, constraint, and FK goes here. List new vs modified tables so they match the `database_changes_summary` counts in frontmatter:
 
 ### `table_name`
 | Column | Type | Constraints | FK |
@@ -162,11 +151,18 @@ One table per entity — every column, type, constraint, and FK goes here, not i
 ```
 
 ## Error Codes & Handling
-<table or list — code, meaning, handling pattern>
+<table or list — every code, its meaning, and handling pattern (e.g. AppError class); the count matches `error_codes_count` in frontmatter>
 
 ## Performance Targets
 <latency/throughput targets and how they were derived>
+
+## Risks
+| ID | Description | Impact | Mitigation/Fix | Disposition |
+|----|-------------|--------|-----------------|-------------|
+| R1 | architectural risk or trade-off (e.g. "single Redis instance = single point of failure") | critical/high/medium/low | concrete mitigation | *(filled by gate)* |
 ````
+
+`risk_counts` and `open_dispositions` are derived the same way as in `pm-agent.md`'s output: `risk_counts` tallies this table's rows by Impact, `open_dispositions` counts rows with an empty Disposition cell. Leave every Disposition cell empty — the orchestrator's Risk Disposition Loop (or the human, standalone) fills it in. Only list risks genuinely introduced or accepted by this design (scaling limits, vendor lock-in, migration risk, single points of failure) — don't pad the table for the sake of having rows. This table is also where the orchestrator's Constraint-Conflict Scan (see its HITL section) appends a row if this design contradicts a constraint an earlier phase already marked resolved.
 
 ## After Generating Output
 
@@ -189,12 +185,12 @@ If `AskUserQuestion` is not available (Cursor, JetBrains/Copilot, Codex CLI), fa
 ⛔ Stop
 ```
 
-Point the user at `02-architecture.md` for the full design review — the `.json` alone does not contain the data model or API contracts.
+Point the user at `02-architecture.md` for the full design review — frontmatter for the routing summary, the body for the data model and API contracts.
 
 Do NOT pass output to the next phase until the user explicitly approves.
 
 ### 2. Write to Project
-Save the machine contract to `.kairos/<feature_folder>/02-architecture.json` and the design doc to `.kairos/<feature_folder>/02-architecture.md`.
+Save the design doc to `.kairos/<feature_folder>/02-architecture.md` (frontmatter + Markdown body — a single file).
 
 > `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
 
@@ -231,15 +227,15 @@ Then add any new architectural constraints (e.g. "Redis required in infrastructu
 Do not skip this step. An unanswered constraint left `🔴 open` without acknowledgement will be visible to every downstream agent.
 
 ### 3. Open in Editor
-After writing, open both output files in the editor — the design doc first, since that's what the user actually reviews.
+After writing, open the output file in the editor.
 Run from the project root, substituting the actual `feature_folder` value received from the orchestrator:
 
 ```bash
-code ".kairos/$feature_folder/02-architecture.md" ".kairos/$feature_folder/02-architecture.json"
+code ".kairos/$feature_folder/02-architecture.md"
 ```
 
 ### 4. Issue Tracker Comment (optional)
-If the user provides an issue reference, post the design doc (not the raw JSON — reviewers on the tracker need the same readable tables the human gate sees) after approval.
+If the user provides an issue reference, post the design doc after approval — reviewers on the tracker get the same readable `02-architecture.md` the human gate sees.
 
 **Jira** (`jira-cli`):
 ```bash
@@ -272,5 +268,5 @@ These skills and MCP tools enhance this agent when installed. KAIROS works fully
 ## Important Notes
 - You have FRESH context
 - Receive only PM analysis
-- Return both the JSON contract and the Markdown design doc
-- Implementer will code based on the design doc's data model and API contracts, and the JSON's short fields
+- Return a single `02-architecture.md` — YAML frontmatter (machine-checkable fields) plus the Markdown design body
+- Implementer will code based on the design body's data model and API contracts, and the frontmatter's short fields
