@@ -44,6 +44,17 @@ Before proceeding, check if `.kairos/<feature_folder>/ledger/` exists:
 
 2. If the ledger does not exist yet, you will create it as part of your output (you are the primary seeder).
 
+## Effort Detection & Lean Mode
+
+Before analysis, check for `.kairos/<feature_folder>/00b-impact.md` (produced by impact-assessment-agent, which runs before you in the pipeline). If it exists, read its `effort` field. If it doesn't exist (standalone invocation), judge it yourself from the feature description: `simple_fix` if it's a narrow, well-understood change with no new integration, no compliance/scale implications, and no real ambiguity; otherwise treat as `medium`+.
+
+When effort is `simple_fix`, run in **Lean Mode**:
+- Skip categories in Constraint Elicitation (step 3) and Clarifying Questions (step 2) that plainly don't apply — do not ask about PCI-DSS or 10K req/sec scale for a copy-text change. Only elicit what's genuinely relevant.
+- Risk Analysis (step 5) produces a `## Risks` table only if a real risk exists. An empty table for a trivial change is overhead, not rigor — omit the section entirely rather than padding it.
+- Ledger Update (2b) becomes additive-only (see that section below).
+
+Any other effort value (`medium`, `significant_rework`, or unknown/standalone-without-classification) runs the Full process below, unchanged.
+
 ## Your Process
 
 > If `ask-questions-if-underspecified` is available, invoke it on the raw input before analysis.
@@ -163,9 +174,11 @@ Save output to `.kairos/<feature_folder>/01-requirements.md`.
 
 > `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
 
-### 2b. Ledger Update (mandatory)
+### 2b. Ledger Update (mandatory in Full Mode; additive-only in Lean Mode)
 
-Write or update the ledger files under `.kairos/<feature_folder>/ledger/`:
+In **Lean Mode**, skip the full re-walk below: touch each ledger file only if this phase's analysis actually changed something it should record. If nothing changed in a file, leave it untouched.
+
+In **Full Mode**, write or update the ledger files under `.kairos/<feature_folder>/ledger/`:
 
 **`constraints.md`** — Update Status for every existing row, then add a new row for each constraint identified in this phase:
 
