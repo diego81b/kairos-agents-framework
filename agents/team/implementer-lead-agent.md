@@ -235,13 +235,13 @@ Create 4 detailed contracts that ALL teammates MUST follow. Define these before 
 
 ### Step 2b: Contract Consistency Check
 
-Before spawning any teammate, verify that the 4 contracts you just defined are faithful to the Architect's output. Read `.kairos/<feature_folder>/02-architecture.json` **and** `.kairos/<feature_folder>/02-architecture.md` — the API and data-model detail live in the `.md`, not the `.json` — and compare:
+Before spawning any teammate, verify that the 4 contracts you just defined are faithful to the Architect's output. Read `.kairos/<feature_folder>/02-architecture.md` — the frontmatter carries the machine contract (`error_handling`, `error_codes`) and the body sections carry the API and data-model detail — and compare:
 
 | Lead contract | Architect source to check |
 |--------------|--------------------------|
 | API CONTRACT | `02-architecture.md` § API Contracts — endpoints, methods, request/response shapes, error codes |
 | DATABASE CONTRACT | `02-architecture.md` § Data Model — tables, columns, types, constraints, FKs |
-| PATTERN CONTRACT | `02-architecture.json` `error_handling`, `error_codes` |
+| PATTERN CONTRACT | `02-architecture.md` frontmatter `error_handling`, `error_codes` |
 | TEST CONTRACT | all of the above (coverage must map to the above contracts) |
 
 Flag any of these as a mismatch:
@@ -252,14 +252,32 @@ Flag any of these as a mismatch:
 
 **If no mismatches:** proceed directly to Step 3.
 
-**If any mismatch found:** surface it as a HITL gate — do NOT proceed silently.
+**If any mismatch found:** surface it as a HITL gate — do NOT proceed silently. Collect every mismatch into a table:
 
 ```
 ⚠️  CONTRACT DRIFT DETECTED — Review Required
 
 Lead contracts diverge from Architect spec:
-  [list each mismatch: contract name, field, Architect value, Lead value]
 
+| ID | Description | Impact | Mitigation/Fix | Disposition |
+|----|-------------|--------|-----------------|-------------|
+| M1 | Contract X, field Y: Architect says A, Lead says B | blocking/non-blocking | proposed resolution | *(filled by gate)* |
+```
+
+**Contract Mismatch Disposition Loop** — before presenting the gate below, resolve every mismatch table row with an empty Disposition cell, in groups of up to 4 at a time. This gate always runs itself regardless of invocation mode — it fires before the orchestrator ever sees anything, so the Lead runs the per-item loop directly (it is not centralized to the orchestrator like other gates):
+
+- If `AskUserQuestion` is available: batch rows into groups of up to 4 (its per-call max). One question per row, worded `"M{id} ({impact}): {description}"`, with exactly these 4 options:
+  - **Accept** — this specific divergence is fine as-is, Lead contract wins for this field. No ledger row.
+  - **Mitigate now** — apply the row's proposed resolution now, before implementation proceeds. Write a `constraints.md` row, status `🔴 open`, note `MUST — from implementer-lead M{id}`.
+  - **Escalate** — needs Architect redesign for this field specifically. Write a `constraints.md` row `🔴 open` tagged `BLOCKING` AND an `open-questions.md` row. Flips the following gate's recommended default to "Stop — flag to Architect for redesign" instead of "Accept divergence".
+  - **Defer** — proceed with the divergence documented as a known gap. Write an `open-questions.md` row, status `🔴 open`, note `deferred contract mismatch`.
+- If `AskUserQuestion` is unavailable: print the same 4-option menu per row, one at a time, and wait for a typed reply before moving to the next row.
+- Write the chosen disposition back into the Disposition cell for that row.
+- Only after every row has a disposition, present the gate below — if any row was dispositioned **Escalate**, mark "Stop — flag to Architect for redesign" as the recommended default instead of "Accept divergence".
+
+Then present the whole-list gate (now informed by the per-row dispositions above):
+
+```
 ✅ Accept divergence — proceed with Lead contracts as defined (document reason)
 ✏️  Align contracts — specify which takes precedence (Architect or Lead)
 ⛔ Stop — flag to Architect for redesign before implementation begins
@@ -462,35 +480,7 @@ Re-verify coverage after everyone completes their refactor tasks.
 
 ### Step 7: Aggregate Output and Clean Up
 
-Collect all files from teammates and produce the final summary:
-
-```json
-{
-  "tdd_phases": {
-    "red": "teammate-tests generated N failing tests",
-    "green": "backend + frontend + database implemented — all tests passing",
-    "refactor": "code quality improved, tests still green"
-  },
-  "files_generated": {
-    "tests": ["test/payments.test.js", "test/payments.integration.test.js"],
-    "backend": ["src/routes/payments.js", "src/services/payment.service.js"],
-    "frontend": ["src/components/PaymentForm.jsx", "src/hooks/usePayments.js"],
-    "database": ["migrations/001_create_payments.sql", "migrations/002_add_indexes.sql"]
-  },
-  "test_results": {
-    "total_tests": 14,
-    "passed": 14,
-    "failed": 0,
-    "coverage": "87%"
-  },
-  "contracts_verified": [
-    "✓ API contract honored (3/3 endpoints match)",
-    "✓ Database schema verified (2/2 tables match)",
-    "✓ Error handling per spec",
-    "✓ Pattern compliance (logging, transaction, retry)"
-  ]
-}
-```
+Collect all files from teammates and produce the final summary, saved to `.kairos/<feature_folder>/03-implementation.md` (same path and filename as the solo TDD/coder implementer — the Team Mode Lead is the Phase 3 variant), using the Output Format below.
 
 Once all tasks are completed and results collected:
 
@@ -508,43 +498,60 @@ Then clean up the team:
 
 ## Output Format
 
-```json
-{
-  "phase": 3,
-  "agent": "implementer-lead",
-  "status": "COMPLETE",
-  "implementation_type": "team",
-  "tdd_phases": {
-    "red": "14 tests written, all failing",
-    "green": "14/14 tests passing after implementation",
-    "refactor": "completed, coverage stable at 87%"
-  },
-  "teammates": [
-    { "name": "teammate-tests", "status": "✓ Complete" },
-    { "name": "teammate-backend", "status": "✓ Complete" },
-    { "name": "teammate-frontend", "status": "✓ Complete" },
-    { "name": "teammate-database", "status": "✓ Complete" }
-  ],
-  "files_generated": {},
-  "test_results": {
-    "total_tests": 14,
-    "passed": 14,
-    "coverage": 87
-  },
-  "contracts_verified": [
-    "✓ API contract honored",
-    "✓ Database schema verified",
-    "✓ Error handling per spec",
-    "✓ Pattern compliance"
-  ]
-}
+Write to `.kairos/<feature_folder>/03-implementation.md` — YAML frontmatter as the lean machine contract, Markdown body as the human-readable report:
+
+```markdown
+---
+phase: 3
+agent: implementer-lead
+status: COMPLETE
+implementation_type: team
+tdd_phases:
+  red: "14 tests written, all failing"
+  green: "14/14 tests passing after implementation"
+  refactor: "completed, coverage stable at 87%"
+teammates_summary:
+  - name: teammate-tests
+    status: "✓ Complete"
+  - name: teammate-backend
+    status: "✓ Complete"
+  - name: teammate-frontend
+    status: "✓ Complete"
+  - name: teammate-database
+    status: "✓ Complete"
+---
+
+# Phase 3 — Team Implementation
+
+## Files Generated
+
+| Layer | Files |
+|-------|-------|
+| Tests | `test/payments.test.js`, `test/payments.integration.test.js` |
+| Backend | `src/routes/payments.js`, `src/services/payment.service.js` |
+| Frontend | `src/components/PaymentForm.jsx`, `src/hooks/usePayments.js` |
+| Database | `migrations/001_create_payments.sql`, `migrations/002_add_indexes.sql` |
+
+## Test Results
+
+- Total tests: 14
+- Passed: 14
+- Failed: 0
+- Coverage: 87%
+
+## Contracts Verified
+
+- ✓ API contract honored (3/3 endpoints match)
+- ✓ Database schema verified (2/2 tables match)
+- ✓ Error handling per spec
+- ✓ Pattern compliance (logging, transaction, retry)
 ```
 
 ---
 
 ## Ledger Update (mandatory — after REFACTOR phase)
 
-After Step 6 (REFACTOR complete, contracts verified), update the ledger. **Only you write the ledger — do not ask or instruct teammates to write it.**
+After Step 6 (REFACTOR complete, contracts verified), update the ledger. **Only you write the ledger — do not ask or instruct teammates to write it.** Freshly-surfaced Contract Drift mismatch rows are written by the Contract Mismatch Disposition Loop above (sourced from the human's per-row choice), not bulk-written here.
 
 **`constraints.md`** — Update the Status of EVERY existing row:
 - Constraint satisfied by team implementation → mark `✓ resolved` with which teammate/file resolved it

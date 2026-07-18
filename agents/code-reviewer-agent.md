@@ -23,9 +23,9 @@ If any item below is missing from both sources, **stop immediately** and emit th
 
 | Required | How to supply it | Missing → emit this error |
 |----------|-----------------|---------------------------|
-| Code files to review | `03-implementation.json` from implementer, or file paths/content pasted manually | 🚨 **AGENT ERROR — code-reviewer-agent: no code files received**. Paste the code or file paths to review, or run the implementer agent first. |
+| Code files to review | `03-implementation.md` from implementer, or file paths/content pasted manually | 🚨 **AGENT ERROR — code-reviewer-agent: no code files received**. Paste the code or file paths to review, or run the implementer agent first. |
 | `feature_folder` | Orchestrator context, or specify one manually | ⚠️ **WARNING — code-reviewer-agent: no `feature_folder` provided**. A default of `feature_unnamed` will be used. |
-| Architecture spec | `02-architecture.json` + `02-architecture.md` from architect-agent (the `.md` has the data model and API contracts), or a manual description | ⚠️ **WARNING — code-reviewer-agent: no architecture spec**. Architecture compliance check will be skipped; all other checks will proceed. |
+| Architecture spec | `02-architecture.md` from architect-agent (has the data model and API contracts), or a manual description | ⚠️ **WARNING — code-reviewer-agent: no architecture spec**. Architecture compliance check will be skipped; all other checks will proceed. |
 
 Error format:
 > 🚨 **AGENT ERROR — code-reviewer-agent**  
@@ -84,33 +84,24 @@ If the ledger does not exist, proceed without it.
 
 ## Output Format
 
-Two files: `04-review.json` is the machine contract (status, pass/fail checks, counts only). `04-review.md` is the actual review — the full `issues[]` list, one row per issue, as a Markdown table. A review with 20+ issues is unreadable as a JSON array; it's a normal table in Markdown.
-
-### `04-review.json` — machine contract
-
-```json
-{
-  "status": "READY or NEEDS_FIXES",
-  "checks": {
-    "standards": "✓ PASS or ✗ FAIL",
-    "architecture": "✓ PASS or ✗ FAIL",
-    "security": "✓ PASS or ✗ FAIL",
-    "performance": "✓ PASS or ✗ FAIL",
-    "testing": "✓ PASS or ✗ FAIL"
-  },
-  "issues_summary": { "critical": 0, "high": 2, "medium": 1, "low": 3, "total": 6 },
-  "report_doc": "04-review.md",
-  "convergence_signal": {
-    "issues_critical_high": 2,
-    "issues_total": 5,
-    "iteration": 1
-  }
-}
-```
-
-### `04-review.md` — full review
+One file: `04-review.md`. YAML frontmatter carries the orchestrator-branching fields (status, pass/fail checks, counts, convergence signal); the Markdown body carries the human-reviewable review — the full Issues list, one row per issue, as a table. A review with 20+ issues is unreadable as a JSON array; it's a normal table in Markdown.
 
 ```markdown
+---
+phase: code-review
+status: READY   # or NEEDS_FIXES
+checks:
+  standards: "✓ PASS"      # or "✗ FAIL"
+  architecture: "✓ PASS"
+  security: "✓ PASS"
+  performance: "✓ PASS"
+  testing: "✓ PASS"
+issues_summary: { critical: 0, high: 2, medium: 1, low: 3, total: 6 }
+open_dispositions: 6   # count of Issues table rows with an empty Disposition cell
+convergence_signal: { issues_critical_high: 2, issues_total: 6, iteration: 1 }
+next_agent: test-verifier-agent
+---
+
 # Code Review — <feature title>
 
 ## Checks
@@ -120,11 +111,17 @@ Two files: `04-review.json` is the machine contract (status, pass/fail checks, c
 | ... | ... |
 
 ## Issues
-| Severity | Category | File:Line | Description |
-|----------|----------|-----------|--------------|
-| critical | security | `src/x.js:42` | what's wrong |
-| ... | ... | ... | ... |
+| ID | Description | Impact | Mitigation/Fix | Disposition |
+|----|-------------|--------|-----------------|-------------|
+| I1 | `src/x.js:42` (security) — what's wrong | critical | concrete fix suggestion | *(filled by gate)* |
+| I2 | ...                                     | high     | ...                     | *(filled by gate)* |
 ```
+
+- **ID** — stable per-issue handle (`I1`, `I2`, …) so the disposition loop and implementer can reference rows.
+- **Description** — what's wrong. Fold the file:line and category into it (e.g. `` `src/x.js:42` (security) — description text ``) so no location or category information is lost.
+- **Impact** — the severity scale (critical / high / medium / low). Same values as before; only the column name changed to match the universal shape.
+- **Mitigation/Fix** — a concrete fix suggestion for the issue. You already reason about what's wrong, so propose the remedy.
+- **Disposition** — leave empty (`*(filled by gate)*`). The orchestrator's Risk Disposition Loop fills it from the human's per-row choice; `open_dispositions` counts how many are still empty.
 
 ## After Generating Output
 
@@ -136,7 +133,7 @@ If the `AskUserQuestion` tool is available (Claude Code), call it:
 - `header`: `"Review Gate"`
 - `options`:
   - **Approve** (Recommended when `status: READY`) — continue to Test Verifier.
-  - **Request fixes** (Recommended when `status: NEEDS_FIXES`) — send the Issues table from `04-review.md` back to the implementer agent used in this run.
+  - **Request fixes** (Recommended when `status: NEEDS_FIXES`) — send the Issues table from `04-review.md` back to the implementer agent used in this run — when orchestrator-invoked, the table's Disposition column already reflects which issues the human wants mitigated/escalated versus accepted/deferred; standalone runs send the whole table since no per-item disposition ran.
   - **Stop** — halt here.
 Free text via "Other" is treated as additional fix feedback; if it reads as a standalone note instead, append it to `.kairos/<feature_folder>/ledger/open-questions.md` (source `human`, status `🔴 open`) rather than re-running.
 
@@ -150,7 +147,7 @@ If `AskUserQuestion` is not available (Cursor, JetBrains/Copilot, Codex CLI), fa
 Do NOT pass output to the next phase until the user explicitly approves.
 
 ### 2. Write to Project
-Save the machine contract to `.kairos/<feature_folder>/04-review.json` and the full review to `.kairos/<feature_folder>/04-review.md`.
+Save the review to `.kairos/<feature_folder>/04-review.md` (frontmatter + body in one file).
 
 > `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
 
@@ -163,6 +160,8 @@ Update all three ledger files under `.kairos/<feature_folder>/ledger/`:
 - Constraint the implementer marked resolved but code does NOT satisfy → re-open to `🔴 open` with the file/line evidence
 - Constraint not applicable to review → leave as-is
 - Add any new quality constraints found (e.g. "error responses must always include a `request_id` field")
+
+Freshly-surfaced Issues table rows are written by the orchestrator's Risk Disposition Loop when orchestrator-invoked (sourced from the human's per-row choice) — do not also write them here in that case. When running standalone, write them yourself as before. The constraint-row re-open/status-pass logic above and the Loop State `convergence_signal` write below are separate, existing mechanisms — leave them unchanged.
 
 **`decisions.md`** — Add any review-phase decisions (patterns enforced, deviations rejected and why).
 
@@ -180,15 +179,15 @@ convergence_signal:
 Do NOT create `## Loop State` yourself — only update it if the orchestrator already placed it there.
 
 ### 3. Open in Editor
-After writing, open both output files in the editor — the review doc first, since that's what the user actually reviews.
+After writing, open the review doc in the editor.
 Run from the project root, substituting the actual `feature_folder` value received from the orchestrator:
 
 ```bash
-code ".kairos/$feature_folder/04-review.md" ".kairos/$feature_folder/04-review.json"
+code ".kairos/$feature_folder/04-review.md"
 ```
 
 ### 4. Issue Tracker Comment (optional)
-If the user provides an issue reference, post the review doc (not the raw JSON) after approval.
+If the user provides an issue reference, post the review doc after approval.
 
 **Jira** (`jira-cli`):
 ```bash

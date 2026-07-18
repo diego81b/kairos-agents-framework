@@ -4,6 +4,19 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v5.0.0 — July 18, 2026
+
+### Changed
+
+- **BREAKING: every pipeline artifact is now a single Markdown file with a YAML frontmatter header, replacing every `.json` contract and `.json`+`.md` pair.** Nothing in this repo parses these files programmatically — every consumer is either another agent reading the file as prompt text or a human at a HITL gate — so JSON bought nothing and actively hurt legibility (a real `01-requirements.json` came back with 8 risk objects full of paragraph-length prose, unreadable as raw JSON — the finding that started this change). Filenames: `00-context.json` → `00-context.md`, `00b-impact.json` → `00b-impact.md`, `01-requirements.json` → `01-requirements.md`, `02-architecture.json` + `02-architecture.md` → single `02-architecture.md`, `03-implementation.json` → `03-implementation.md` (the implementer's Phase 0 plan now saves separately to `03-implementation-plan.md`, restoring the separation the old `03-implementation-plan.json` had — a shared filename would make a wave-2+ resume read wave 1's final summary instead of the original plan), `04-review.json` + `.md` → single `04-review.md`, `04b-security-review.json` + `.md` → single `04b-security-review.md`, `05-test-verification.json` + `.md` → single `05-test-verification.md`, `06-deployment-plan.json` + `.md` → single `06-deployment-plan.md`. Frontmatter carries only what the orchestrator branches on (`status`, count fields, `next_agent`); everything else is a Markdown body. Affects all 11 agent files, `agents/orchestrator-agent.md`, and every page under `docs/` plus `CLAUDE.md` that named these files.
+- **Every Risks/Issues/Findings table now carries a universal 5-column shape** — `ID | Description | Impact | Mitigation/Fix | Disposition` — normalizing formats that previously varied per agent: pm-agent's `{risk, impact, mitigation}`, impact-assessment's `{risk, implication}` (no impact rating), implementer's flat risk strings (no impact or mitigation), code-reviewer's `Severity|Category|File:Line|Description` (no fix column), security-reviewer's per-finding H3 blocks, release-planner's `Risk|Detection|Response` (no severity).
+
+### Added
+
+- **Risk Disposition Loop** (`agents/orchestrator-agent.md` HITL section) — when a phase's output has a Risks/Issues/Findings table with undispositioned rows, the human now resolves each one — **Accept / Mitigate now / Escalate / Defer** — before the whole-artifact Approve/Request changes/Skip next/Stop gate, instead of approving or rejecting every item as a single bundle. **Mitigate now** and **Escalate** write directly to `ledger/constraints.md` / `ledger/open-questions.md`, sourced from the human's per-row choice rather than the agent silently authoring the disposition itself. An unresolved **Escalate** biases the following gate's recommended default to Request changes without blocking Approve. `agents/impact-assessment-agent.md` and `agents/team/implementer-lead-agent.md` carry a local copy of the same mechanic, since both agents' gates never route through the orchestrator's HITL section.
+
+---
+
 ## v4.2.0 — July 17, 2026
 
 ### Added

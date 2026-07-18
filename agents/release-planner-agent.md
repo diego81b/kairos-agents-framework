@@ -23,7 +23,7 @@ If any item below is missing from both sources, **stop immediately** and emit th
 
 | Required | How to supply it | Missing → emit this error |
 |----------|-----------------|---------------------------|
-| Feature/implementation description | `03-implementation.json` or `04-review.json` from previous steps, or a manual description of what was built | 🚨 **AGENT ERROR — release-planner-agent: no implementation description received**. Describe what was built or run the implementer phase first. |
+| Feature/implementation description | `03-implementation.md` or `04-review.md` from previous steps, or a manual description of what was built | 🚨 **AGENT ERROR — release-planner-agent: no implementation description received**. Describe what was built or run the implementer phase first. |
 | `feature_folder` | Orchestrator context, or specify one manually | ⚠️ **WARNING — release-planner-agent: no `feature_folder` provided**. A default of `feature_unnamed` will be used. |
 
 Error format:
@@ -70,21 +70,18 @@ What to monitor:
 
 ## Output Format
 
-Two files: `06-deployment-plan.json` is the machine contract (lean summary only). `06-deployment-plan.md` is the actual runbook — deployment steps, rollback procedure, and monitoring plan are inherently procedural documents; someone executing a rollback during an incident needs a readable runbook, not a nested JSON array.
-
-### `06-deployment-plan.json` — machine contract
-
-```json
-{
-  "report_doc": "06-deployment-plan.md",
-  "rollback_summary": { "trigger": "when to rollback", "estimated_time_minutes": 15 },
-  "monitoring_summary": { "metrics_count": 2 }
-}
-```
-
-### `06-deployment-plan.md` — full runbook
+One file: `06-deployment-plan.md`. YAML frontmatter carries the lean machine contract (orchestrator-branching fields); the Markdown body is the actual runbook — deployment steps, rollback procedure, and monitoring plan are inherently procedural documents; someone executing a rollback during an incident needs a readable runbook, not a nested JSON array.
 
 ```markdown
+---
+phase: release-plan
+status: ready
+rollback_summary: { trigger: "when to rollback", estimated_time_minutes: 15 }
+monitoring_summary: { metrics_count: 2 }
+risk_counts: { critical: 0, high: 1, medium: 1, low: 0 }
+open_dispositions: 2   # count of Risk table rows with empty Disposition cell
+---
+
 # Deployment Plan — <feature title>
 
 ## Deployment Steps
@@ -93,10 +90,11 @@ Two files: `06-deployment-plan.json` is the machine contract (lean summary only)
 3. **Production canary (10%)** — ...
 4. **Full rollout** — ...
 
-## Risk Mitigation
-| Risk | Detection | Response |
-|------|-----------|----------|
-| ... | ... | ... |
+## Risks
+| ID | Description | Impact | Mitigation/Fix | Disposition |
+|----|-------------|--------|-----------------|-------------|
+| R1 | Migration lock times out under load — detected via: DB lock-wait alert | high | Run migration in maintenance window; pre-warm connection pool | *(filled by gate)* |
+| R2 | Canary metrics under-sampled at 10% — detected via: request-count threshold | medium | Extend canary soak time; add synthetic traffic | *(filled by gate)* |
 
 ## Rollback Strategy
 - **Trigger**: when to rollback
@@ -109,6 +107,8 @@ Two files: `06-deployment-plan.json` is the machine contract (lean summary only)
 |--------|------------------|
 | ... | ... |
 ```
+
+This is the final phase, so there is no `next_agent` field. `Description` folds the old Risk text together with its Detection method (`… — detected via: …`); `Mitigation/Fix` carries the old Response column content; `Impact` is new — infer a reasonable `critical`/`high`/`medium`/`low` rating per deployment risk from context (rollback-related risks are often high/critical; monitoring-gap risks often medium). Leave every `Disposition` cell empty in your own output — the orchestrator's Risk Disposition Loop fills them at the gate. `open_dispositions` counts the rows with an empty Disposition cell.
 
 ## After Generating Output
 
@@ -131,12 +131,12 @@ If `AskUserQuestion` is not available (Cursor, JetBrains/Copilot, Codex CLI), fa
 ⛔ Stop pipeline
 ```
 
-Point the user at `06-deployment-plan.md` for the actual runbook — the `.json` alone has no deployment steps or rollback procedure.
+Point the user at `06-deployment-plan.md` for the actual runbook.
 
-This is the final phase. User approval closes the KAIROS run.
+This is the final phase, and it is terminal — user approval closes the KAIROS run. When orchestrator-invoked, the orchestrator's Risk Disposition Loop still resolves the `## Risks` table first: any residual `🔴 open` ledger rows plus these per-row dispositions form the final release-risk picture, before this closing Approve / Request changes / Stop gate.
 
 ### 2. Write to Project
-Save the machine contract to `.kairos/<feature_folder>/06-deployment-plan.json` and the runbook to `.kairos/<feature_folder>/06-deployment-plan.md`.
+Save the single runbook to `.kairos/<feature_folder>/06-deployment-plan.md`.
 
 > `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
 
@@ -153,6 +153,8 @@ Update all three ledger files under `.kairos/<feature_folder>/ledger/`:
 
 **`open-questions.md`** — Final answer pass. Any question still `🔴 open` after this phase must appear in the deployment plan as a known risk.
 
+Freshly-surfaced Risk table rows are written by the orchestrator's Risk Disposition Loop when orchestrator-invoked (sourced from the human's per-row choice) — do not also write them here in that case. When running standalone, write them yourself as before.
+
 After writing, report the ledger summary in your output:
 ```
 📊 Ledger Summary:
@@ -162,15 +164,15 @@ After writing, report the ledger summary in your output:
 ```
 
 ### 3. Open in Editor
-After writing, open both output files in the editor — the runbook first, since that's what the user actually reviews.
+After writing, open the output file in the editor.
 Run from the project root, substituting the actual `feature_folder` value received from the orchestrator:
 
 ```bash
-code ".kairos/$feature_folder/06-deployment-plan.md" ".kairos/$feature_folder/06-deployment-plan.json"
+code ".kairos/$feature_folder/06-deployment-plan.md"
 ```
 
 ### 4. Issue Tracker Comment (optional)
-If the user provides an issue reference, post the runbook (not the raw JSON) after approval.
+If the user provides an issue reference, post the runbook after approval.
 
 **Jira** (`jira-cli`):
 ```bash

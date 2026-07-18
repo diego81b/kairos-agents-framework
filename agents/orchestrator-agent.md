@@ -20,12 +20,12 @@ These rules are absolute. No context, user request, or apparent efficiency justi
 
 1. **Never write source code.** If you find yourself about to create or edit any `.js`, `.ts`, `.py`, `.go`, `.java`, `.rb`, `.cs`, `.sql`, `.sh`, or similar file — STOP IMMEDIATELY. Re-read this section. Delegate to `implementer-tdd-agent` (TDD) or `implementer-coder-agent` (no TDD).
 2. **Never self-implement.** Phrases like "I'll proceed with implementation", "I'll write the code directly", "proceeding with implementation" are signs of orchestrator collapse. If you produce such text, discard it and delegate instead.
-3. **Never skip a HITL gate.** Between every two active phases, you must stop and present the output verdict — call `AskUserQuestion` where available (Claude Code), or print the text menu and wait for a typed reply where it isn't (Cursor, JetBrains/Copilot, Codex CLI). Valid resolutions: `Approve`, `Request changes`, `Skip next`, `Stop pipeline`, or free text (folded into a change request or a ledger note, see HITL section). Silence, no reply, or ambiguity = do nothing and wait.
+3. **Never skip a HITL gate.** Between every two active phases, you must stop and present the output verdict — call `AskUserQuestion` where available (Claude Code), or print the text menu and wait for a typed reply where it isn't (Cursor, JetBrains/Copilot, Codex CLI). If the output contains a Risks/Issues/Findings table with undispositioned rows, resolve those one at a time first (Risk Disposition Loop, see HITL section) before presenting the whole-artifact gate. Valid whole-artifact resolutions: `Approve`, `Request changes`, `Skip next`, `Stop pipeline`, or free text (folded into a change request or a ledger note, see HITL section). Silence, no reply, or ambiguity = do nothing and wait.
 4. **Never auto-invoke `context-extractor-agent`.** It is a standalone agent invoked directly by the user before starting the pipeline. You only read the file it produced — you never call it.
 
 ## Available Subagents
-- context-extractor-agent: Standalone preparation agent — scans codebase and issue draft to produce `00-context.json`; invoke separately before the main pipeline, not as a phase
-- impact-assessment-agent: Standalone preparation agent — reads the issue and the code it touches to estimate effort, map domains, and recommend pipeline agents; invoke separately before the orchestrator; consumes `00-context.json` if available; produces `00b-impact.json`
+- context-extractor-agent: Standalone preparation agent — scans codebase and issue draft to produce `00-context.md`; invoke separately before the main pipeline, not as a phase
+- impact-assessment-agent: Standalone preparation agent — reads the issue and the code it touches to estimate effort, map domains, and recommend pipeline agents; invoke separately before the orchestrator; consumes `00-context.md` if available; produces `00b-impact.md`
 - pm-agent: Requirement analysis
 - architect-agent: System design
 - implementer-tdd-agent: Code + TDD — **default for all features, works everywhere**
@@ -47,13 +47,13 @@ These rules are absolute. No context, user request, or apparent efficiency justi
 Before anything else, check whether pre-built files exist for this feature:
 
 ```bash
-ls .kairos/<feature_folder>/00-context.json 2>/dev/null
-ls .kairos/<feature_folder>/00b-impact.json 2>/dev/null
+ls .kairos/<feature_folder>/00-context.md 2>/dev/null
+ls .kairos/<feature_folder>/00b-impact.md 2>/dev/null
 ```
 
-If `00-context.json` found: load it and attach its `context_file` field to every subagent prompt as project context.
+If `00-context.md` found: load it and attach its Context body section to every subagent prompt as project context.
 
-If `00b-impact.json` found: load it and store the `recommended_agents` block — it will be shown as an advisory in Step 0e before the agent selection menu.
+If `00b-impact.md` found: load it and store the Recommended Agents section — it will be shown as an advisory in Step 0e before the agent selection menu.
 
 **Do NOT invoke `context-extractor-agent` or `impact-assessment-agent` — both are standalone agents that run only when the user explicitly calls them before starting the orchestrator. You have no authority to trigger either.**
 
@@ -122,10 +122,10 @@ If the fetch fails or the section is missing, proceed to Step 0e with no pre-sel
 
 **CASE A — KAIROS Pipeline section found in the issue body**
 
-If `00b-impact.json` was loaded in Step 0a, show the advisory block first:
+If `00b-impact.md` was loaded in Step 0a, show the advisory block first:
 
 ```
-💡 Impact Assessment (from 00b-impact.json):
+💡 Impact Assessment (from 00b-impact.md):
    Effort: <effort> | Domains: <domains>
    Recommended agents: <recommended_agents.agents>
    Reason: <recommended_agents.justification>
@@ -150,10 +150,10 @@ Then show the extracted selection and ask for confirmation:
 
 **CASE B — No issue, or KAIROS Pipeline section missing**
 
-If `00b-impact.json` was loaded in Step 0a, show the advisory block first:
+If `00b-impact.md` was loaded in Step 0a, show the advisory block first:
 
 ```
-💡 Impact Assessment (from 00b-impact.json):
+💡 Impact Assessment (from 00b-impact.md):
    Effort: <effort> | Domains: <domains>
    Recommended agents: <recommended_agents.agents>
    Reason: <recommended_agents.justification>
@@ -280,12 +280,12 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
       d. **Monotonic-progress check**: if `new_count >= issues_critical_high_curr` → exit with: `⚠️ Loop thrash after N iterations — critical/high count not decreasing. Human review required.`
       e. If `status == READY` → exit loop (success)
       f. If `iteration >= max_retries` → exit with: `⚠️ Loop exhausted after <N> iterations. <X> critical/high issues remain.`
-      g. Otherwise: increment `iteration`, set `issues_critical_high_prev = issues_critical_high_curr`, `issues_critical_high_curr = new_count`, append issues to `cumulative_issues`, save versioned artifacts (`04-review-iter{N}.json`, `03-implementation-iter{N}.json`), continue
+      g. Otherwise: increment `iteration`, set `issues_critical_high_prev = issues_critical_high_curr`, `issues_critical_high_curr = new_count`, append issues to `cumulative_issues`, save versioned artifacts (`04-review-iter{N}.md`, `03-implementation-iter{N}.md`), continue
    3. **Cleanup**: remove `## Loop State — Code Reviewer ↔ Implementer` from `open-questions.md`
-   4. **Guard 3 — Regression check** _(only if ≥1 loop iteration actually ran)_: invoke @kairos:test-verifier-agent as a single-pass (loop policy NOT applied). Save output as `05-test-verification.json`. If `NEEDS_FIXES` → present HITL gate immediately with warning: `⚠️ Phase 4 loop introduced test regression. Human review required before advancing.` Skip Phase 5 invocation.
+   4. **Guard 3 — Regression check** _(only if ≥1 loop iteration actually ran)_: invoke @kairos:test-verifier-agent as a single-pass (loop policy NOT applied). Save output as `05-test-verification.md`. If `NEEDS_FIXES` → present HITL gate immediately with warning: `⚠️ Phase 4 loop introduced test regression. Human review required before advancing.` Skip Phase 5 invocation.
    5. Proceed to Phase 4 HITL gate (unchanged)
 
-4b. **Security Review Phase** _(if security-reviewer-agent active)_: Call @kairos:security-reviewer-agent. After it completes, write both its JSON contract and its Markdown report to `.kairos/$feature_folder/04b-security-review.json` and `.kairos/$feature_folder/04b-security-review.md`, then open both (report first): `code ".kairos/$feature_folder/04b-security-review.md" ".kairos/$feature_folder/04b-security-review.json"` (this agent is read-only — the orchestrator handles persistence for both files).
+4b. **Security Review Phase** _(if security-reviewer-agent active)_: Call @kairos:security-reviewer-agent. After it completes, write its Markdown output to `.kairos/$feature_folder/04b-security-review.md`, then open it: `code ".kairos/$feature_folder/04b-security-review.md"` (this agent is read-only — the orchestrator handles persistence).
 5. **Test Verification Phase** _(if test-verifier-agent active)_: Call @kairos:test-verifier-agent
 
    **Phase 3 Loop Actuator** _(runs after test-verifier returns, before Phase 5 HITL gate — only if `loop_policy.phase3.mode == "auto"` AND `status: NEEDS_FIXES`)_:
@@ -305,7 +305,7 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
       d. **Monotonic-progress check**: if `new_count >= issues_critical_high_curr` → exit with: `⚠️ Loop thrash after N iterations — critical/high count not decreasing. Human review required.`
       e. If `status == READY` → exit loop (success)
       f. If `iteration >= max_retries` → exit with: `⚠️ Loop exhausted after <N> iterations. <X> issues remain.`
-      g. Otherwise: increment `iteration`, set `issues_critical_high_prev = issues_critical_high_curr`, `issues_critical_high_curr = new_count`, append issues to `cumulative_issues`, save versioned artifacts (`05-test-verification-iter{N}.json`, `03-implementation-iter{N}.json`), continue
+      g. Otherwise: increment `iteration`, set `issues_critical_high_prev = issues_critical_high_curr`, `issues_critical_high_curr = new_count`, append issues to `cumulative_issues`, save versioned artifacts (`05-test-verification-iter{N}.md`, `03-implementation-iter{N}.md`), continue
    3. **Cleanup**: remove `## Loop State — Implementer ↔ Test Verifier` from `open-questions.md`
    4. Proceed to Phase 5 HITL gate (unchanged)
 
@@ -322,20 +322,33 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
 
 ### HITL — Human-in-the-Loop
 KAIROS is a HITL pipeline. After EVERY active subagent completes:
-1. Read the subagent's own status/verdict field, if it has one (e.g. `status: NEEDS_FIXES`, `status: VULNERABILITIES_FOUND`, `status: blocked`, or any `critical`/`high` item in an `issues[]`/`findings[]` array). This determines which option to mark recommended in step 3.
-2. Present a short verdict summary to the user — max ~5 lines: what was produced, the key findings/risks/gaps. Do not dump the raw JSON; the user can open the file for that (next step).
-3. Open the output file(s) in the editor so the user can inspect them in full — when a phase has a companion `.md` report, open that first (it's what the user actually reviews); the `.json` is the machine contract.
-   Run from the project root using the actual `feature_folder` and the phase file name(s):
+1. Read the subagent's own status/verdict field, if it has one (`status:` in the frontmatter — e.g. `NEEDS_FIXES`, `VULNERABILITIES_FOUND`, `blocked`, or nonzero `critical`/`high` in the frontmatter's counts field). This determines which option to mark recommended in step 4.
+2. **Risk Disposition Loop** — run this BEFORE the verdict summary, whenever the output body contains a table with a `Disposition` column and at least one empty cell (a Risks, Issues, Findings, or Contract Drift table). This is what lets the human resolve a multi-item risk list one row at a time instead of approving or rejecting all of them as a single bundle. This loop requires the artifact file to already be on disk to edit it: every phase agent's "Write to Project" step runs unconditionally (only that agent's own gate-presentation step is skipped when orchestrator-invoked), so the file exists by the time you reach this loop.
+   - If no such table exists, or every Disposition cell is already filled, skip straight to step 3.
+   - Otherwise, for each undispositioned row, in table order:
+     - **If `AskUserQuestion` is available**: batch rows into groups of up to 4 (its per-call maximum). One question per row, worded `"R{id} ({impact}): {description}"` (substitute the table's actual ID/impact/description columns), with exactly these 4 options:
+       - **Accept** — acknowledge, no action required. No ledger row written.
+       - **Mitigate now** — the row's Mitigation/Fix text becomes a binding requirement for the next phase. Write a `constraints.md` row, status `🔴 open`, note `MUST — from {phase} R{id}`.
+       - **Escalate** — needs an explicit decision before the pipeline continues. Write a `constraints.md` row `🔴 open` tagged `BLOCKING`, AND an `open-questions.md` row. Does not block Approve at step 4, but flips its recommended default to Request changes (alongside the existing status-based bias).
+       - **Defer** — out of scope now, accepted as residual risk. Write an `open-questions.md` row, status `🔴 open`, note `deferred risk`.
+     - **If `AskUserQuestion` is not available**: print the same 4-option menu per row, one row at a time, and wait for a typed reply before showing the next row.
+     - Write the chosen disposition back into the artifact's Disposition cell (small edit to the file just produced) — including for **Accept**, so no cell is left empty — in addition to the ledger row above for the other three options.
+   - Once every row in the table has a disposition, update the frontmatter `open_dispositions` field in the same file to `0` in the same edit pass (it started equal to the row count; nothing else recomputes it, so this loop is the only place it changes). Leave `risk_counts`/`issues_summary`/`findings_summary` (the by-Impact tally) untouched — Impact doesn't change with disposition, so that count stays accurate as generated.
+   - The subagent's own "Ledger Update" step does NOT write these freshly-surfaced rows when you ran this loop — you already wrote them, sourced from the human's choice instead of the agent's. Pre-existing constraint-row status updates (the agent's own `✓/⚠/♻/❌/🔴` pass over rows from prior phases) are untouched by this loop.
+   - If the whole-artifact gate below resolves to **Request changes**, the re-run regenerates the artifact from scratch — its new Risks/Issues table starts with empty Disposition cells again, even for rows that looked identical to ones already resolved. This is expected, not data loss: the disposition decisions already made are durably recorded in the ledger rows this loop wrote, independent of what the regenerated file's cells say.
+3. Present a short verdict summary to the user — max ~5 lines: what was produced, the key findings/risks/gaps, and how many items were just resolved in step 2. Do not dump the raw file content; the user can open it for that (next step).
+4. Open the output file in the editor so the user can inspect it in full — one Markdown file per phase (frontmatter + body), not a JSON/Markdown pair.
+   Run from the project root using the actual `feature_folder` and the phase file name:
    ```bash
-   code ".kairos/$feature_folder/<output_file(s)>"
+   code ".kairos/$feature_folder/<output_file>"
    ```
-   Output files per phase: `01-requirements.json` → `02-architecture.md` + `02-architecture.json` → `03-implementation.json` → `04-review.md` + `04-review.json` → `04b-security-review.md` + `04b-security-review.json` → `05-test-verification.md` + `05-test-verification.json` → `06-deployment-plan.md` + `06-deployment-plan.json`
-4. **If the `AskUserQuestion` tool is available** (Claude Code), call it — do not also print a text menu:
+   Output files per phase: `01-requirements.md` → `02-architecture.md` → `03-implementation.md` → `04-review.md` → `04b-security-review.md` → `05-test-verification.md` → `06-deployment-plan.md`
+5. **If the `AskUserQuestion` tool is available** (Claude Code), call it — do not also print a text menu:
    - `question`: one line naming the phase and its verdict, e.g. `"PM analysis ready — how do you want to proceed?"`
    - `header`: short phase label, e.g. `"PM Gate"`, `"Architect Gate"`, `"Release Gate"` (≤12 chars)
    - `options` (exactly these 4, in this order):
-     - **Approve** — continue to the next active agent. Mark `(Recommended)` when the subagent reported no blocking status (no `NEEDS_FIXES` / `VULNERABILITIES_FOUND` / `blocked`, no `critical`/`high` item).
-     - **Request changes** — re-run this agent with feedback. Mark `(Recommended)` instead of Approve when the subagent reported a blocking status.
+     - **Approve** — continue to the next active agent. Mark `(Recommended)` when the subagent reported no blocking status (no `NEEDS_FIXES` / `VULNERABILITIES_FOUND` / `blocked`, no `critical`/`high` item, and no unresolved **Escalate** from step 2).
+     - **Request changes** — re-run this agent with feedback. Mark `(Recommended)` instead of Approve when the subagent reported a blocking status, or step 2 produced an **Escalate**.
      - **Skip next** — approve this output, skip the next agent in the pipeline.
      - **Stop pipeline** — halt; do not call any further agent.
    Users can always answer free-text via the tool's built-in "Other" instead of picking a button. Treat that text as follows:
@@ -350,9 +363,9 @@ KAIROS is a HITL pipeline. After EVERY active subagent completes:
    ⛔ Stop pipeline
    ```
    Treat any other typed text the same way as the free-text case above (feedback vs. standalone ledger note).
-5. Do NOT call the next subagent until the tool returns Approve, Skip next, or a Request-changes re-run has itself been re-approved. Stop pipeline ends the session.
-6. If **Request changes**: re-invoke the same subagent with the feedback.
-7. If **Skip next**: mark the next active agent as `[SKIPPED]` and proceed to the one after it.
+6. Do NOT call the next subagent until the tool returns Approve, Skip next, or a Request-changes re-run has itself been re-approved. Stop pipeline ends the session.
+7. If **Request changes**: re-invoke the same subagent with the feedback.
+8. If **Skip next**: mark the next active agent as `[SKIPPED]` and proceed to the one after it.
 
 ### Collapse Detection
 Before writing any response, check: are you about to write code, create files, or produce implementation output yourself? If yes:
@@ -382,7 +395,7 @@ Project context:
 - Constraints: <100ms latency, PCI-DSS
 
 Feature folder: issue-42_add-stripe-payments
-Save output to: .kairos/issue-42_add-stripe-payments/01-requirements.json
+Save output to: .kairos/issue-42_add-stripe-payments/01-requirements.md
 
 Please provide analysis with scope, constraints, risks, success criteria."
 
@@ -478,20 +491,15 @@ With issue number (`"Add Stripe payments — issue #42"`):
 ```
 .kairos/
 └── issue-42_add-stripe-payments/
-    ├── 00-context.json            ← Context Extractor (pre-built, optional)
-    ├── 00b-impact.json            ← Impact Assessment (pre-built, optional)
-    ├── 01-requirements.json       ← PM Agent
-    ├── 02-architecture.json       ← Architect Agent (machine contract)
-    ├── 02-architecture.md         ← Architect Agent (design doc — data model, API contracts)
-    ├── 03-implementation.json     ← Implementer Agent
-    ├── 04-review.json             ← Code Reviewer (machine contract)
-    ├── 04-review.md               ← Code Reviewer (full issues report)
-    ├── 04b-security-review.json   ← Security Reviewer (optional, machine contract)
-    ├── 04b-security-review.md     ← Security Reviewer (optional, full findings report)
-    ├── 05-test-verification.json  ← Test Verifier (machine contract)
-    ├── 05-test-verification.md    ← Test Verifier (full report)
-    ├── 06-deployment-plan.json    ← Release Planner (machine contract)
-    ├── 06-deployment-plan.md      ← Release Planner (full runbook)
+    ├── 00-context.md              ← Context Extractor (pre-built, optional)
+    ├── 00b-impact.md              ← Impact Assessment (pre-built, optional)
+    ├── 01-requirements.md         ← PM Agent
+    ├── 02-architecture.md         ← Architect Agent (frontmatter contract + design doc)
+    ├── 03-implementation.md       ← Implementer Agent
+    ├── 04-review.md               ← Code Reviewer (frontmatter contract + full issues report)
+    ├── 04b-security-review.md     ← Security Reviewer (optional, frontmatter contract + full findings report)
+    ├── 05-test-verification.md    ← Test Verifier (frontmatter contract + full report)
+    ├── 06-deployment-plan.md      ← Release Planner (frontmatter contract + full runbook)
     └── ledger/
         ├── constraints.md         ← Accumulated constraints with per-phase status (seeded by PM, updated by all agents)
         ├── decisions.md           ← Architectural and implementation decisions log (seeded by Architect)
@@ -502,7 +510,7 @@ Without issue number (`"Add Stripe payments"`):
 ```
 .kairos/
 └── feature_add-stripe-payments/
-    ├── 01-requirements.json
+    ├── 01-requirements.md
     ...
 ```
 

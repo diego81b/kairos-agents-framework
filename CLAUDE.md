@@ -44,17 +44,17 @@ KAIROS defines a 6-phase, human-gated pipeline:
 
 | Phase | Agent file | Output artifact |
 |-------|-----------|----------------|
-| Pre-A | `context-extractor-agent.md` | `00-context.json` |
-| Pre-B | `impact-assessment-agent.md` | `00b-impact.json` |
-| 1 | `pm-agent.md` | `01-requirements.json` |
-| 2 | `architect-agent.md` | `02-architecture.json` + `02-architecture.md` |
-| 3 | `implementer-tdd-agent.md` or `implementer-coder-agent.md` | code + `03-implementation.json` |
-| 4 | `code-reviewer-agent.md` | `04-review.json` + `04-review.md` |
-| 4.5 | `security-reviewer-agent.md` *(optional)* | `04b-security-review.json` + `04b-security-review.md` |
-| 5 | `test-verifier-agent.md` | `05-test-verification.json` + `05-test-verification.md` |
-| 6 | `release-planner-agent.md` | `06-deployment-plan.json` + `06-deployment-plan.md` |
+| Pre-A | `context-extractor-agent.md` | `00-context.md` |
+| Pre-B | `impact-assessment-agent.md` | `00b-impact.md` |
+| 1 | `pm-agent.md` | `01-requirements.md` |
+| 2 | `architect-agent.md` | `02-architecture.md` |
+| 3 | `implementer-tdd-agent.md` or `implementer-coder-agent.md` | code + `03-implementation.md` |
+| 4 | `code-reviewer-agent.md` | `04-review.md` |
+| 4.5 | `security-reviewer-agent.md` *(optional)* | `04b-security-review.md` |
+| 5 | `test-verifier-agent.md` | `05-test-verification.md` |
+| 6 | `release-planner-agent.md` | `06-deployment-plan.md` |
 
-Phases 2 and 4–6 (and the optional 4.5) split their output: the `.json` is a lean machine contract (status, counts, short refs), the `.md` is the actual human-reviewable report (data model, issues tables, findings, runbook) — see each agent file's "Output Format" section. Phases 1 and 3 stay JSON-only; their content doesn't grow large enough to need the split.
+Every phase (Pre-A through 6) writes a single Markdown file: a YAML frontmatter header carrying only what the orchestrator branches on (status, counts, `next_agent`), followed by a plain-Markdown body (data model, issues tables, findings, runbook) — see each agent file's "Output Format" section. No phase output is JSON: nothing in this repo parses these files programmatically, every consumer is either another agent reading the file as prompt text or a human at a HITL gate, so Markdown serves both better than escaped JSON strings. Any Risks/Issues/Findings table in the body carries a `Disposition` column, resolved row-by-row by the orchestrator's Risk Disposition Loop (see `orchestrator-agent.md`'s HITL section) before the whole-artifact gate is shown.
 
 All artifacts land in `.kairos/<feature_folder>/` inside the target project (not this repo). Each feature folder also contains a `ledger/` subdirectory with three living files — `constraints.md`, `decisions.md`, `open-questions.md` — that agents read at phase start and update at phase end (forced accounting model).
 
