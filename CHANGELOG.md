@@ -4,6 +4,15 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v5.1.0 — July 18, 2026
+
+### Added
+
+- **`agents/architect-agent.md`** — gained a `## Risks` table (universal 5-column shape, `risk_counts`/`open_dispositions` frontmatter fields), closing the one gap in v5.0.0's Risk Disposition Loop rollout: architecture-level trade-offs (single points of failure, vendor lock-in, migration risk) now resolve row-by-row at the gate like every other phase's risks, instead of living only as prose in "Selected Option".
+- **`agents/orchestrator-agent.md` HITL section — Constraint-Conflict Scan (step 1b)** — after each phase's own Ledger Update and before the Risk Disposition Loop, the orchestrator now reads `ledger/constraints.md` against the phase's actual output and checks whether it contradicts a constraint an *earlier* phase already marked resolved — a semantic read, not a status-symbol diff, since a constraint's Status cell records only what the acting agent claims, and no agent currently cross-checks its own output against constraints older than the immediately preceding phase. A genuine conflict is appended as a `high`-impact row to the phase's own Risks/Issues/Findings/Contract-Drift table (creating a minimal one under `## Flagged Conflicts` if the phase has none), feeding straight into the existing Risk Disposition Loop with no separate menu.
+
+---
+
 ## v5.0.0 — July 18, 2026
 
 ### Changed

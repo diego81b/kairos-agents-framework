@@ -110,6 +110,8 @@ status: ready
 selected_option: <Option A: description>
 database_changes_summary: { new_tables: N, modified_tables: N }
 error_codes_count: N
+risk_counts: { critical: 0, high: N, medium: N, low: N }
+open_dispositions: N
 next_agent: implementer-tdd-agent
 ---
 
@@ -153,7 +155,14 @@ One table per entity — every column, type, constraint, and FK goes here. List 
 
 ## Performance Targets
 <latency/throughput targets and how they were derived>
+
+## Risks
+| ID | Description | Impact | Mitigation/Fix | Disposition |
+|----|-------------|--------|-----------------|-------------|
+| R1 | architectural risk or trade-off (e.g. "single Redis instance = single point of failure") | critical/high/medium/low | concrete mitigation | *(filled by gate)* |
 ````
+
+`risk_counts` and `open_dispositions` are derived the same way as in `pm-agent.md`'s output: `risk_counts` tallies this table's rows by Impact, `open_dispositions` counts rows with an empty Disposition cell. Leave every Disposition cell empty — the orchestrator's Risk Disposition Loop (or the human, standalone) fills it in. Only list risks genuinely introduced or accepted by this design (scaling limits, vendor lock-in, migration risk, single points of failure) — don't pad the table for the sake of having rows. This table is also where the orchestrator's Constraint-Conflict Scan (see its HITL section) appends a row if this design contradicts a constraint an earlier phase already marked resolved.
 
 ## After Generating Output
 
