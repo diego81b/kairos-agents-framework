@@ -106,11 +106,23 @@ Example — what you'll find in the body:
 
 ---
 
+### Step 1b: Layer Scoping
+
+Not every feature touches all three implementation layers. Decide which of backend/frontend/database are actually in scope before writing contracts — spawning a teammate against an empty or trivial contract for an untouched layer is pure overhead:
+
+- **Database layer** — in scope only if `## Data Model` lists at least one new or modified table/field.
+- **Backend layer** — in scope only if `## API Contracts` lists at least one new or modified endpoint.
+- **Frontend layer** — in scope only if `01-requirements.md`'s Scope or the architecture's Selected Option describes a UI/client-facing change. Absent an explicit signal, treat a pure API/backend feature as frontend-out-of-scope rather than assuming a UI exists.
+
+`teammate-tests-agent` always spawns regardless — tests are needed for whichever layers are in scope. Record the result (e.g. `layers_in_scope: [backend, database]`) and use it everywhere below: contracts (Step 2), spawning (Step 4), compliance checks (Step 5), REFACTOR messaging (Step 6), and the output's `teammates_summary` (Step 7) all cover only the in-scope layers.
+
+---
+
 ### Step 2: Create Binding Contracts
 
 Before writing any contract, work through [`contract-checklist`](../../skills/contract-checklist/SKILL.md) for this feature. Resolve every applicable item — entity lifecycle, payload shape, ownership enforcement, idempotency, delete behavior, aggregate update diff, and error shape. Do NOT skip this step; unresolved questions become drift between teammates.
 
-Create 4 detailed contracts that ALL teammates MUST follow. Define these before spawning anyone.
+Create the contracts needed for the layers marked in scope by Step 1b. TEST and PATTERN contracts are always defined (every spawned teammate needs them); API CONTRACT only if backend is in scope; DATABASE CONTRACT only if database is in scope. Define these before spawning anyone.
 
 #### CONTRACT 1: TEST CONTRACT
 
@@ -326,7 +338,7 @@ Spawn one teammate using the `kairos:team:teammate-tests-agent` agent type with 
 Assign them the task: "RED phase — write all tests per TEST CONTRACT".
 ```
 
-Wait for `kairos:team:teammate-tests-agent` to complete their task before proceeding. The team's task list will show when the task moves to `completed`.
+Wait for `kairos:team:teammate-tests-agent` to complete their task before proceeding. The team's task list will show when the task moves to `completed`. Same stall handling as Step 4 applies: two silent checks with no progress → message them directly; a third with no response → surface to the human instead of waiting indefinitely.
 
 ---
 
@@ -366,7 +378,7 @@ Free text via "Other" is treated as revision feedback.
 
 ### Step 4 — GREEN Phase: Spawn Implementation Teammates in Parallel
 
-After test plan approval, add three teammates to the existing team simultaneously:
+After test plan approval, add teammates for whichever layers Step 1b marked in scope — not necessarily all three. A frontend-only UI change spawns only `teammate-frontend-agent`; skip `teammate-backend-agent`/`teammate-database-agent` entirely when their layer is out of scope (no contract, no spawn, no wait for them in this step or Steps 5-6).
 
 ```
 Spawn three more teammates in parallel:
@@ -417,29 +429,31 @@ Spawn three more teammates in parallel:
    Assign task: "GREEN phase — create schema and migrations per DB CONTRACT"
 ```
 
-All three work simultaneously. Monitor the shared task list to track their progress.
+All in-scope teammates work simultaneously. Monitor the shared task list to track their progress.
+
+**Stall handling**: if you check the task list twice (at reasonable intervals, not immediately back-to-back) and a teammate's task hasn't moved and no message from them explains why, don't keep waiting silently — message that teammate directly asking for status. If a third check still shows no progress and no response, surface it to the human: `⚠️ [teammate] has shown no progress across 3 checks — wait longer / message again / take over this layer yourself / abort the team and fall back to implementer-tdd-agent (single-agent path)`. Do not let one stalled teammate block the whole GREEN phase indefinitely with no visibility to the human.
 
 ---
 
 ### Step 5 — Contract Compliance Monitoring
 
-As teammates complete their tasks, review their output against the contracts:
+As teammates complete their tasks, review their output against the contracts — only run the checks for layers Step 1b marked in scope:
 
 ```
-BACKEND CHECK:
+BACKEND CHECK (if backend in scope):
 ✓ Endpoints match API contract?
 ✓ Request validation matches?
 ✓ Response structure matches?
 ✓ Error codes match?
 ✓ Database queries use schema from DB contract?
 
-FRONTEND CHECK:
+FRONTEND CHECK (if frontend in scope):
 ✓ Calls correct endpoints?
 ✓ Sends correct request structure?
 ✓ Expects correct response?
 ✓ Handles all error codes from contract?
 
-DATABASE CHECK:
+DATABASE CHECK (if database in scope):
 ✓ Tables match contract?
 ✓ Fields and types match?
 ✓ Constraints and indexes present?
@@ -459,13 +473,15 @@ message [teammate-name]: "Contract mismatch detected in [file]:
   Fix required before GREEN can be confirmed."
 ```
 
+**Cap on repeat mismatches**: track how many times you've messaged the same teammate about the same contract field. After the 2nd repeat on the same field with no resolution, stop re-sending the same correction and escalate to the human instead: `⚠️ [teammate] has missed the same contract requirement twice — human input needed: clarify the contract, take over this fix yourself, or accept the divergence as a documented gap.` This mirrors the orchestrator's monotonic-progress check on its own auto-loops — a correction that isn't landing after 2 tries won't land on the 5th either.
+
 Use `broadcast` sparingly — only if all teammates need to be aware of a global constraint change.
 
 ---
 
 ### Step 6 — REFACTOR Phase
 
-After all tests pass (GREEN confirmed), message each implementation teammate:
+After all tests pass (GREEN confirmed), message each **in-scope** implementation teammate (skip whichever of backend/frontend/database Step 1b marked out of scope — there's no teammate to message):
 
 ```
 message [backend-teammate-name]: "GREEN confirmed. Refactor for quality: naming,
@@ -480,7 +496,7 @@ message [database-teammate-name]: "GREEN confirmed. Review migration quality
 
 Assign each a task: "REFACTOR phase — improve quality, keep tests green".
 
-Re-verify coverage after everyone completes their refactor tasks.
+Re-verify coverage after everyone completes their refactor tasks. Apply the same stall handling as Step 4 (two silent checks → ask directly, a third with no response → surface to the human) rather than waiting indefinitely.
 
 ---
 
@@ -516,15 +532,15 @@ tdd_phases:
   red: "14 tests written, all failing"
   green: "14/14 tests passing after implementation"
   refactor: "completed, coverage stable at 87%"
+layers_in_scope: [backend, database]   # from Step 1b — omits any layer not spawned
 teammates_summary:
   - name: teammate-tests
     status: "✓ Complete"
   - name: teammate-backend
     status: "✓ Complete"
-  - name: teammate-frontend
-    status: "✓ Complete"
   - name: teammate-database
     status: "✓ Complete"
+  # only list teammates actually spawned per Step 1b — e.g. no teammate-frontend entry for a backend-only feature
 ---
 
 # Phase 3 — Team Implementation
@@ -586,7 +602,7 @@ These skills and MCP tools enhance this agent when installed. KAIROS works fully
 3. **Contracts are defined BEFORE any teammate is spawned** — no surprises
 4. **RED phase runs before GREEN** — tests exist before implementation, always
 5. **HITL between RED and GREEN** — user approves the test plan before backend/frontend/database are spawned
-6. **GREEN phase is parallel** — backend, frontend, database spawn simultaneously
+6. **GREEN phase is parallel** — whichever of backend, frontend, database are in scope (Step 1b) spawn simultaneously; out-of-scope layers are never spawned
 7. **REFACTOR only after GREEN is confirmed** — all tests must pass first
 8. **Verify contract compliance at every phase** — message the specific teammate directly if a mismatch is found
 9. **Clean up the team when done** — use `"Clean up the team"` only from the Lead after all teammates have shut down

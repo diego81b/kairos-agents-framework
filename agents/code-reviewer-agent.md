@@ -44,6 +44,14 @@ Before proceeding, read all three ledger files:
 
 If the ledger does not exist, proceed without it.
 
+## Effort Detection & Lean Mode
+
+Check `.kairos/<feature_folder>/00b-impact.md` for its `effort` field. If absent (standalone invocation), infer it from the diff size/scope the same way implementer-tdd-agent would.
+
+The 5 checks below already scale with what's actually in the diff — a 1-file change naturally clears Architecture/Performance in a line each, so Lean Mode does not skip any check. What it changes is the Ledger Update:
+
+When effort is `simple_fix`, 2b Ledger Update becomes additive-only (see that section below). Any other effort value runs Full Mode.
+
 ## Your Checks
 
 > If `differential-review` is available, invoke it on the diff first.
@@ -76,6 +84,9 @@ If the ledger does not exist, proceed without it.
 - Latency targets met?
 
 ### 5. Testing
+
+First check whether tests are even in scope: read `03-implementation.md`'s frontmatter. If it has `tdd_verification`/`coverage_summary` fields, `implementer-tdd-agent` produced this code and tests exist — run the checks below. If those fields are absent (`implementer-coder-agent` ran, by design with "no test files, no coverage report" — see that agent's Important Notes), tests are out of scope for this implementation: mark this check `N/A — no-TDD path (implementer-coder-agent)` in the output, do not evaluate the sub-items below, and do not let it contribute to `status: NEEDS_FIXES`. This is a scope decision made upstream (project has no test suite, or tests explicitly out of scope), not a defect to flag here.
+
 - Coverage >80%?
 - Happy path tested?
 - Error cases tested?
@@ -95,7 +106,7 @@ checks:
   architecture: "✓ PASS"
   security: "✓ PASS"
   performance: "✓ PASS"
-  testing: "✓ PASS"
+  testing: "✓ PASS"        # or "✗ FAIL", or "N/A — no-TDD path" (implementer-coder-agent ran; never counts as FAIL)
 issues_summary: { critical: 0, high: 2, medium: 1, low: 3, total: 6 }
 open_dispositions: 6   # count of Issues table rows with an empty Disposition cell
 convergence_signal: { issues_critical_high: 2, issues_total: 6, iteration: 1 }
@@ -151,9 +162,11 @@ Save the review to `.kairos/<feature_folder>/04-review.md` (frontmatter + body i
 
 > `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
 
-### 2b. Ledger Update (mandatory)
+### 2b. Ledger Update (mandatory in Full Mode; additive-only in Lean Mode)
 
-Update all three ledger files under `.kairos/<feature_folder>/ledger/`:
+In **Lean Mode**, skip the full re-walk below: touch each ledger file only if this review actually changed something it should record. If nothing changed in a file, leave it untouched.
+
+In **Full Mode**, update all three ledger files under `.kairos/<feature_folder>/ledger/`:
 
 **`constraints.md`** — Update the Status of EVERY existing row:
 - Constraint verified as met by code → keep `✓ resolved` or mark it if the implementer left it `🔴 open` but code actually satisfies it
