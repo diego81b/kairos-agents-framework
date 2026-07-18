@@ -49,6 +49,10 @@ Before proceeding, read all three ledger files:
 
 If the ledger does not exist, proceed without it.
 
+## Effort Detection & Lean Mode
+
+This agent only runs when explicitly selected (orchestrator recommends it for auth, payments, or write endpoints) — by the time you're invoked, the change has already been judged sensitive enough to warrant adversarial review, regardless of its `effort` classification. **The 7 checks below are never trimmed or skipped based on task size.** The only thing that scales with effort is the Ledger Update instruction you produce: when `.kairos/<feature_folder>/00b-impact.md` shows `effort: simple_fix`, instruct the orchestrator to touch each ledger file only if this review actually surfaced something to record, instead of re-walking every existing row.
+
 ## Your Checks
 
 > If `insecure-defaults` is available, invoke it first.
@@ -178,6 +182,8 @@ This agent cannot write project files (`tools: Read, Grep, Glob, AskUserQuestion
 
 ### Ledger Update
 Produce a ledger update block as part of your output. Instruct the orchestrator to apply it:
+
+In Lean Mode (`effort: simple_fix`, see Effort Detection above), instruct the orchestrator to touch a ledger file only if this review actually found something it should record — do not re-walk rows with nothing to say about them. Otherwise (Full Mode):
 
 - **`constraints.md`**: Update Status for every existing row. For each security finding that violates a constraint, re-open that row to `🔴 open` with the finding ID as evidence. Add new security constraints identified (e.g. "All tokens must be rotated after use"). Freshly-surfaced Findings table rows are written by the orchestrator's Risk Disposition Loop when orchestrator-invoked (sourced from the human's per-row choice) — this section's constraint re-opening logic for PRE-EXISTING rows is unchanged; it's only the brand-new Finding rows whose ledger write moves to the Loop.
 - **`decisions.md`**: Add any security decisions (e.g. "Adopted PKCE for OAuth flow").

@@ -49,6 +49,18 @@ Before proceeding, read all three ledger files:
 
 If the ledger does not exist, proceed without it.
 
+## Effort Detection & Lean Mode
+
+Check `.kairos/<feature_folder>/00b-impact.md` for its `effort` field. If absent (standalone invocation), infer it from `03-implementation.md`'s file count/scope the same way implementer-tdd-agent would.
+
+When effort is `simple_fix`, run in **Lean Mode** — this matters here specifically because implementer-tdd-agent's own Lean Mode (see its Effort Detection section) only generates HAPPY PATH + ERROR CASES tests by default for a `simple_fix`. Grading that output against the Full checklist below would flag missing boundary/edge tests that were never supposed to exist — the same category of mismatch as the code-reviewer/coder-agent coverage bug, just one phase over:
+- Test Comprehensiveness (check 1): only require happy path, error paths, and AC mapping. Boundaries/edge-cases are not required and their absence is not an issue — unless the implementation output's own plan flagged one as a real risk, in which case its absence IS still a gap.
+- Coverage Adequacy thresholds (check 2) are unchanged — a real line/branch/function percentage is a real signal regardless of task size, not process overhead.
+- Checks 3-7 (Assertion Strength, Determinism, Hygiene, Mocking Discipline, TDD Reality) are unchanged — these grade the quality of whatever tests actually exist, and already scale with actual test count; leaning them out would let real defects through.
+- 2b Ledger Update becomes additive-only (see that section below).
+
+Any other effort value, or Full Mode implementer output (categories beyond happy+error present), runs the Full checklist below.
+
 ## Your Process
 
 ### PHASE 0: Execute Test Suite
@@ -232,11 +244,13 @@ Save the single report to `.kairos/<feature_folder>/05-test-verification.md` (fr
 
 > `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
 
-### 2b. Ledger Update (mandatory)
+### 2b. Ledger Update (mandatory in Full Mode; additive-only in Lean Mode)
 
 Freshly-surfaced Issues table rows are written by the orchestrator's Risk Disposition Loop when orchestrator-invoked (sourced from the human's per-row choice) — do not also write them here in that case. When running standalone, write them yourself as before.
 
-Update all three ledger files under `.kairos/<feature_folder>/ledger/`:
+In **Lean Mode**, skip the full re-walk below: touch each ledger file only if this verification pass actually changed something it should record. If nothing changed in a file, leave it untouched.
+
+In **Full Mode**, update all three ledger files under `.kairos/<feature_folder>/ledger/`:
 
 **`constraints.md`** — Update the Status of EVERY existing row:
 - Coverage constraints met → mark `✓ resolved` with actual percentages

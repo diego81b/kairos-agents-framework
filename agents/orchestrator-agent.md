@@ -221,6 +221,8 @@ loop_policy.phase3 = { mode: "manual"|"auto", max_retries: N }
 loop_policy.phase4 = { mode: "manual"|"auto", max_retries: N }
 ```
 
+**Clamp `N` to a hard ceiling of 5** regardless of what the user typed — "recommended max: 3" above is a hint, not an enforced limit, and an unclamped `N` (e.g. a user or automated caller passing `auto 500`) defeats the point of the two Loop Actuators' iteration cap. If the user's reply exceeds 5, use 5 and tell them: `ℹ️  max_retries clamped to 5 (requested <N>).`
+
 If no implementer agent is active, skip this branch entirely and set both to `manual`.
 
 ### Step 0f: Announce Active Pipeline
@@ -274,6 +276,17 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
 
    **Phase 4 Loop Actuator** _(runs after code-reviewer returns, before Phase 4 HITL gate — only if `loop_policy.phase4.mode == "auto"`, `status: NEEDS_FIXES`, AND at least one `critical` or `high` issue in `issues[]`. Reachable only when `implementer-tdd-agent` or `implementer-coder-agent` is the active Phase-3 implementer — Step 0e forces `manual` for Team Mode, so this never fires when `implementer-lead-agent` was used)_:
 
+   0. **Prior-exhaustion check**: read `## Loop History — Code Reviewer ↔ Implementer` in `ledger/open-questions.md`, if present. If it already has an entry from earlier in this same pipeline run (a prior `exhausted` or `thrash` exit), do NOT silently re-arm a fresh `max_retries`-iteration loop. Show:
+      ```
+      ⚠️  This loop already ran this pipeline run and did not converge:
+          <prior Loop History entry — outcome, iterations, issues remaining>
+
+      Options:
+      1) Loop again anyway — fresh budget of <max_retries> iterations
+      2) Skip auto-loop this time — go straight to the manual HITL gate (recommended)
+      3) Stop pipeline
+      ```
+      Wait for the human's choice before proceeding. Only continue to step 1 on option 1; option 2 skips straight to step 5; option 3 halts.
    1. Create `## Loop State — Code Reviewer ↔ Implementer` in `ledger/open-questions.md`:
       ```
       status: in_progress
@@ -286,11 +299,11 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
       a. Re-invoke the active Phase-3 implementer — `implementer-tdd-agent` or `implementer-coder-agent`, whichever was selected in Step 3's routing decision (both detect Iteration Mode from the ledger automatically)
       b. Re-invoke @kairos:code-reviewer-agent (writes `convergence_signal` to `## Loop State`)
       c. Read `convergence_signal.issues_critical_high` from `## Loop State` as `new_count`
-      d. **Monotonic-progress check**: if `new_count >= issues_critical_high_curr` → exit with: `⚠️ Loop thrash after N iterations — critical/high count not decreasing. Human review required.`
-      e. If `status == READY` → exit loop (success)
-      f. If `iteration >= max_retries` → exit with: `⚠️ Loop exhausted after <N> iterations. <X> critical/high issues remain.`
+      d. **Monotonic-progress check**: if `new_count >= issues_critical_high_curr` → exit with: `⚠️ Loop thrash after N iterations — critical/high count not decreasing. Human review required.` — append this outcome to `## Loop History — Code Reviewer ↔ Implementer` (create it if absent) before exiting.
+      e. If `status == READY` → exit loop (success) — no `## Loop History` entry needed; a converged loop carries no cautionary memory forward.
+      f. If `iteration >= max_retries` → exit with: `⚠️ Loop exhausted after <N> iterations. <X> critical/high issues remain.` — append this outcome to `## Loop History — Code Reviewer ↔ Implementer` (create it if absent) before exiting.
       g. Otherwise: increment `iteration`, set `issues_critical_high_prev = issues_critical_high_curr`, `issues_critical_high_curr = new_count`, append issues to `cumulative_issues`, save versioned artifacts (`04-review-iter{N}.md`, `03-implementation-iter{N}.md`), continue
-   3. **Cleanup**: remove `## Loop State — Code Reviewer ↔ Implementer` from `open-questions.md`
+   3. **Cleanup**: remove `## Loop State — Code Reviewer ↔ Implementer` from `open-questions.md`. `## Loop History` (if written in step 2d/2f) is a separate, persistent section — do not remove it here; it is what step 0 checks on any later re-arm this run.
    4. **Guard 3 — Regression check** _(only if ≥1 loop iteration actually ran)_: invoke @kairos:test-verifier-agent as a single-pass (loop policy NOT applied). Save output as `05-test-verification.md`. If `NEEDS_FIXES` → present HITL gate immediately with warning: `⚠️ Phase 4 loop introduced test regression. Human review required before advancing.` Skip Phase 5 invocation.
    5. Proceed to Phase 4 HITL gate (unchanged)
 
@@ -299,6 +312,17 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
 
    **Phase 3 Loop Actuator** _(runs after test-verifier returns, before Phase 5 HITL gate — only if `loop_policy.phase3.mode == "auto"` AND `status: NEEDS_FIXES`. Reachable only when `implementer-tdd-agent` or `implementer-coder-agent` is the active Phase-3 implementer — Step 0e forces `manual` for Team Mode, so this never fires when `implementer-lead-agent` was used)_:
 
+   0. **Prior-exhaustion check**: read `## Loop History — Implementer ↔ Test Verifier` in `ledger/open-questions.md`, if present. If it already has an entry from earlier in this same pipeline run (a prior `exhausted` or `thrash` exit), do NOT silently re-arm a fresh `max_retries`-iteration loop. Show:
+      ```
+      ⚠️  This loop already ran this pipeline run and did not converge:
+          <prior Loop History entry — outcome, iterations, issues remaining>
+
+      Options:
+      1) Loop again anyway — fresh budget of <max_retries> iterations
+      2) Skip auto-loop this time — go straight to the manual HITL gate (recommended)
+      3) Stop pipeline
+      ```
+      Wait for the human's choice before proceeding. Only continue to step 1 on option 1; option 2 skips straight to step 4; option 3 halts.
    1. Create `## Loop State — Implementer ↔ Test Verifier` in `ledger/open-questions.md`:
       ```
       status: in_progress
@@ -311,11 +335,11 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
       a. Re-invoke the active Phase-3 implementer — `implementer-tdd-agent` or `implementer-coder-agent`, whichever was selected in Step 3's routing decision (both detect Iteration Mode from the ledger automatically)
       b. Re-invoke @kairos:test-verifier-agent (writes `convergence_signal` to `## Loop State`)
       c. Read `convergence_signal.issues_critical_high` from `## Loop State` as `new_count`
-      d. **Monotonic-progress check**: if `new_count >= issues_critical_high_curr` → exit with: `⚠️ Loop thrash after N iterations — critical/high count not decreasing. Human review required.`
-      e. If `status == READY` → exit loop (success)
-      f. If `iteration >= max_retries` → exit with: `⚠️ Loop exhausted after <N> iterations. <X> issues remain.`
+      d. **Monotonic-progress check**: if `new_count >= issues_critical_high_curr` → exit with: `⚠️ Loop thrash after N iterations — critical/high count not decreasing. Human review required.` — append this outcome to `## Loop History — Implementer ↔ Test Verifier` (create it if absent) before exiting.
+      e. If `status == READY` → exit loop (success) — no `## Loop History` entry needed; a converged loop carries no cautionary memory forward.
+      f. If `iteration >= max_retries` → exit with: `⚠️ Loop exhausted after <N> iterations. <X> issues remain.` — append this outcome to `## Loop History — Implementer ↔ Test Verifier` (create it if absent) before exiting.
       g. Otherwise: increment `iteration`, set `issues_critical_high_prev = issues_critical_high_curr`, `issues_critical_high_curr = new_count`, append issues to `cumulative_issues`, save versioned artifacts (`05-test-verification-iter{N}.md`, `03-implementation-iter{N}.md`), continue
-   3. **Cleanup**: remove `## Loop State — Implementer ↔ Test Verifier` from `open-questions.md`
+   3. **Cleanup**: remove `## Loop State — Implementer ↔ Test Verifier` from `open-questions.md`. `## Loop History` (if written in step 2d/2f) is a separate, persistent section — do not remove it here; it is what step 0 checks on any later re-arm this run.
    4. Proceed to Phase 5 HITL gate (unchanged)
 
 6. **Deployment Phase** _(if release-planner-agent active)_: Call @kairos:release-planner-agent
@@ -418,6 +442,7 @@ If subagent reports issues:
 - Flag to user
 - Ask if want to retry or skip step
 - Provide recommendations
+- Track retries of the same subagent, for the same underlying issue, within this phase. After the 3rd consecutive retry with no forward progress, say so explicitly before asking again: `⚠️ This is retry #<N> on the same issue with no progress — consider skip step, stop pipeline, or rephrasing the input instead of retrying as-is.` This is a nudge, not a hard cap — the human can still choose to retry — but silence past 3 attempts is how effort quietly compounds with nothing to show for it.
 - Continue to next step if appropriate
 
 ## Output To User

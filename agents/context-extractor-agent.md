@@ -18,6 +18,15 @@ You receive:
 - Repository path or file list
 - Existing `00-context.md` (optional — for incremental update)
 
+## Scope Detection & Lean Mode
+
+This agent runs before impact-assessment-agent, so no `effort` classification exists yet — judge scope yourself from the issue draft. If it reads as a narrow, single-area change (touches one obvious module/folder, no new integration implied), run in **Lean Mode**:
+- Scope the codebase scan (step 1) to the directories/files plausibly relevant to the issue, instead of a repository-wide sweep across every category.
+- Keep the `## Issue Technical Section` draft to what's directly load-bearing — one line each for Out-of-Scope and AI Validation Criteria is enough when the change is this narrow, not an exhaustive list.
+- This is separate from, and compounds with, the existing incremental-update path (line below: "if `00-context.md` already exists, update only what changed").
+
+For a broad or ambiguous issue draft, run the Full process below, unchanged.
+
 ## Your Process
 
 > If `audit-context-building` is available, invoke it to produce granular code analysis before building context JSON.

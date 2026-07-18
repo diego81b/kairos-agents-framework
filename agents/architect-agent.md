@@ -44,6 +44,18 @@ Before proceeding, read all three ledger files:
 
 If the ledger does not exist, proceed; the PM agent may not have run yet (standalone invocation).
 
+## Effort Detection & Lean Mode
+
+Before designing, check `.kairos/<feature_folder>/00b-impact.md` for its `effort` field (produced upstream by impact-assessment-agent). If it doesn't exist (standalone invocation), judge it yourself: `simple_fix` if the change needs no new endpoint, no schema change, no new integration, and has one obvious implementation approach; otherwise treat as `medium`+.
+
+When effort is `simple_fix`, run in **Lean Mode**:
+- Step 3 (Propose 3 Design Options) collapses to the one approach you'd actually recommend, with a 1-2 line rationale — do not manufacture two rejected alternatives for a change with no real design fork.
+- Step 5 (Pre-Contract Resolution) is unchanged in substance — a `simple_fix` by impact-assessment's own definition has no new endpoints/schema/auth impact, so this section is typically already "N/A" by the checklist's own escape hatch, not skipped by Lean Mode.
+- The `## Risks` table in the output is included only if a genuine architectural risk exists — omit the section for a design with none.
+- Ledger Update (2b) becomes additive-only (see that section below).
+
+Any other effort value (`medium`, `significant_rework`, or unknown/standalone-without-classification) runs the Full process below, unchanged.
+
 ## Your Process
 
 ### 1. Review Constraints
@@ -194,9 +206,11 @@ Save the design doc to `.kairos/<feature_folder>/02-architecture.md` (frontmatte
 
 > `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
 
-### 2b. Ledger Update (mandatory)
+### 2b. Ledger Update (mandatory in Full Mode; additive-only in Lean Mode)
 
-Update all three ledger files under `.kairos/<feature_folder>/ledger/`:
+In **Lean Mode**, skip the full re-walk below: touch each ledger file only if this design actually changed something it should record. If nothing changed in a file, leave it untouched.
+
+In **Full Mode**, update all three ledger files under `.kairos/<feature_folder>/ledger/`:
 
 **`constraints.md`** — Update the Status of EVERY existing row. This is the first major accounting pass:
 - Constraint your design resolves → mark `✓ resolved` with how
