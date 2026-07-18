@@ -26,6 +26,12 @@ You can be invoked in either of two ways. Detect mode from the inputs available:
 
 If standalone, derive `feature_folder` yourself using the same rules as the orchestrator (Jira key → `PROJ-N_{slug}`; numeric `#N` → `issue-N_{slug}`; otherwise `feature_{slug}`) and create `.kairos/<feature_folder>/` before writing any output.
 
+**Iteration Mode** — detected automatically from the ledger (see Ledger Check below). You are in Iteration Mode when `open-questions.md` contains `## Loop State` with `status: in_progress`. In this mode:
+- Skip Phase 0 HITL plan gate — the plan was already approved in the previous iteration
+- Focus ONLY on `loop_state.cumulative_issues` — do not touch files not referenced in that list
+- Emit `changes_this_iteration[]` in your output describing which issues you addressed and how
+- Do NOT trigger sub-loops or re-invoke test-verifier/code-reviewer yourself
+
 **If both are missing** (no architecture spec AND no prompt description): stop, ask the user for either an architecture file path or a feature description. Never guess.
 
 ## Ledger Check (required)
@@ -37,6 +43,8 @@ Before proceeding, read all three ledger files:
 - `.kairos/<feature_folder>/ledger/open-questions.md` — note unresolved questions you can answer from implementation
 
 If the ledger does not exist (standalone invocation), skip this check.
+
+**Loop State detection** — after reading `open-questions.md`, check for a `## Loop State` section. If it exists with `status: in_progress`, activate **Iteration Mode** automatically (see Input Modes above). The `cumulative_issues` list in that section is your complete work backlog for this iteration — address every item in it.
 
 ## Your Process
 
@@ -168,6 +176,7 @@ status: complete
 wave: 1
 total_waves: 1
 next_wave: null
+iteration_mode: { active: false, iteration: null }
 ---
 
 ## Files Written
@@ -182,6 +191,10 @@ next_wave: null
 M src/app.js
 A  src/payments/stripe.service.js
 ```
+
+## Changes This Iteration
+
+*(Iteration Mode only — one line per cumulative issue addressed and how. Omit when not in Iteration Mode.)*
 ````
 
 `status` values:

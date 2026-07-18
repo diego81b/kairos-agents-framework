@@ -76,26 +76,32 @@ Include relevant constraints in the contracts you define for teammates (TEST, AP
 
 ### Step 1: Analyze Architect Output
 
-Read the architect output carefully:
-- How many API endpoints?
-- How many database tables?
-- How many integration points?
-- What error scenarios?
+Read `.kairos/<feature_folder>/02-architecture.md` carefully — frontmatter has the routing summary, the body's `## API Contracts`, `## Data Model`, `## Integration Points`, and `## Error Codes & Handling` sections have the detail:
+- How many API endpoints? (`## API Contracts`)
+- How many database tables? (`## Data Model` — one subsection per table)
+- How many integration points? (`## Integration Points` table)
+- What error scenarios? (`## Error Codes & Handling`)
 
-Example:
-```json
-{
-  "api_contracts": [
-    { "endpoint": "/api/payments", "method": "POST" },
-    { "endpoint": "/api/payments/{id}", "method": "GET" },
-    { "endpoint": "/api/payments/{id}/refund", "method": "POST" }
-  ],
-  "database_schema": {
-    "tables": ["payments", "payment_events"]
-  },
-  "integration_points": ["stripe", "orders_service", "webhook"],
-  "error_handling_strategy": "Return 400 for validation, 503 for external errors"
-}
+Example — what you'll find in the body:
+```markdown
+## API Contracts
+### `POST /api/payments`
+### `GET /api/payments/{id}`
+### `POST /api/payments/{id}/refund`
+
+## Data Model
+### `payments`
+### `payment_events`
+
+## Integration Points
+| System | How to integrate |
+|--------|-------------------|
+| stripe | ... |
+| orders_service | ... |
+| webhook | ... |
+
+## Error Codes & Handling
+400 → validation_error, 503 → external service unavailable, ...
 ```
 
 ---

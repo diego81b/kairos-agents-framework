@@ -184,7 +184,16 @@ Accepted input formats:
 
 Do NOT proceed until the user explicitly confirms `active_agents`.
 
-Once `active_agents` is confirmed, if at least one implementer agent is selected, show the loop policy prompt:
+Once `active_agents` is confirmed and at least one implementer agent is selected, branch on which implementer variant is active:
+
+- **`implementer-lead-agent` (Team Mode)** — do NOT show the auto-retry prompt below. Force `loop_policy.phase3 = { mode: "manual" }` and `loop_policy.phase4 = { mode: "manual" }` unconditionally, and tell the user why:
+  ```
+  ℹ️  Loop Policy — Team Mode selected. Auto-retry isn't supported for implementer-lead-agent yet
+      (it has no Iteration Mode — a re-run would re-spawn the whole team from scratch instead of
+      applying a targeted fix). Both loop phases are forced to manual for this run.
+  ```
+  Skip straight to Step 0f.
+- **`implementer-tdd-agent` or `implementer-coder-agent`** — both support Iteration Mode (detected automatically from `## Loop State` in the ledger), so an auto-retry re-invocation targets the same agent and resumes correctly. Show the loop policy prompt:
 
 ```
 🔁 Loop Policy — optional, default: manual
@@ -212,7 +221,7 @@ loop_policy.phase3 = { mode: "manual"|"auto", max_retries: N }
 loop_policy.phase4 = { mode: "manual"|"auto", max_retries: N }
 ```
 
-If no implementer agent is active, skip this prompt entirely and set both to `manual`.
+If no implementer agent is active, skip this branch entirely and set both to `manual`.
 
 ### Step 0f: Announce Active Pipeline
 
@@ -263,7 +272,7 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
    If confirmed → call @kairos:team:implementer-lead-agent. If switched → call @kairos:implementer-tdd-agent instead. If cancelled → stop. Do NOT call any implementer without this confirmation.
 4. **Review Phase** _(if code-reviewer-agent active)_: Call @kairos:code-reviewer-agent
 
-   **Phase 4 Loop Actuator** _(runs after code-reviewer returns, before Phase 4 HITL gate — only if `loop_policy.phase4.mode == "auto"`, `status: NEEDS_FIXES`, AND at least one `critical` or `high` issue in `issues[]`)_:
+   **Phase 4 Loop Actuator** _(runs after code-reviewer returns, before Phase 4 HITL gate — only if `loop_policy.phase4.mode == "auto"`, `status: NEEDS_FIXES`, AND at least one `critical` or `high` issue in `issues[]`. Reachable only when `implementer-tdd-agent` or `implementer-coder-agent` is the active Phase-3 implementer — Step 0e forces `manual` for Team Mode, so this never fires when `implementer-lead-agent` was used)_:
 
    1. Create `## Loop State — Code Reviewer ↔ Implementer` in `ledger/open-questions.md`:
       ```
@@ -274,7 +283,7 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
       cumulative_issues: <all critical/high issues[] from code-reviewer output>
       ```
    2. **Loop** — repeat until exit condition:
-      a. Re-invoke @kairos:implementer-tdd-agent (detects Iteration Mode from ledger automatically)
+      a. Re-invoke the active Phase-3 implementer — `implementer-tdd-agent` or `implementer-coder-agent`, whichever was selected in Step 3's routing decision (both detect Iteration Mode from the ledger automatically)
       b. Re-invoke @kairos:code-reviewer-agent (writes `convergence_signal` to `## Loop State`)
       c. Read `convergence_signal.issues_critical_high` from `## Loop State` as `new_count`
       d. **Monotonic-progress check**: if `new_count >= issues_critical_high_curr` → exit with: `⚠️ Loop thrash after N iterations — critical/high count not decreasing. Human review required.`
@@ -288,7 +297,7 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
 4b. **Security Review Phase** _(if security-reviewer-agent active)_: Call @kairos:security-reviewer-agent. After it completes, write its Markdown output to `.kairos/$feature_folder/04b-security-review.md`, then open it: `code ".kairos/$feature_folder/04b-security-review.md"` (this agent is read-only — the orchestrator handles persistence).
 5. **Test Verification Phase** _(if test-verifier-agent active)_: Call @kairos:test-verifier-agent
 
-   **Phase 3 Loop Actuator** _(runs after test-verifier returns, before Phase 5 HITL gate — only if `loop_policy.phase3.mode == "auto"` AND `status: NEEDS_FIXES`)_:
+   **Phase 3 Loop Actuator** _(runs after test-verifier returns, before Phase 5 HITL gate — only if `loop_policy.phase3.mode == "auto"` AND `status: NEEDS_FIXES`. Reachable only when `implementer-tdd-agent` or `implementer-coder-agent` is the active Phase-3 implementer — Step 0e forces `manual` for Team Mode, so this never fires when `implementer-lead-agent` was used)_:
 
    1. Create `## Loop State — Implementer ↔ Test Verifier` in `ledger/open-questions.md`:
       ```
@@ -299,7 +308,7 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
       cumulative_issues: <all issues[] from test-verifier output>
       ```
    2. **Loop** — repeat until exit condition:
-      a. Re-invoke @kairos:implementer-tdd-agent (detects Iteration Mode from ledger automatically)
+      a. Re-invoke the active Phase-3 implementer — `implementer-tdd-agent` or `implementer-coder-agent`, whichever was selected in Step 3's routing decision (both detect Iteration Mode from the ledger automatically)
       b. Re-invoke @kairos:test-verifier-agent (writes `convergence_signal` to `## Loop State`)
       c. Read `convergence_signal.issues_critical_high` from `## Loop State` as `new_count`
       d. **Monotonic-progress check**: if `new_count >= issues_critical_high_curr` → exit with: `⚠️ Loop thrash after N iterations — critical/high count not decreasing. Human review required.`
