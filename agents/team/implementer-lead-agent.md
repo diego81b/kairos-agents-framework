@@ -126,128 +126,104 @@ Create the contracts needed for the layers marked in scope by Step 1b. TEST and 
 
 #### CONTRACT 1: TEST CONTRACT
 
-```json
-{
-  "test_coverage": {
-    "happy_paths": [
-      "POST /api/payments with valid input → 200 with client_secret",
-      "GET /api/payments/{id} → 200 with payment details",
-      "POST /api/payments/{id}/refund → 200 with refund status"
-    ],
-    "error_cases": [
-      "POST /api/payments with invalid amount → 400 validation_error",
-      "POST /api/payments with Stripe down → 503 stripe_unavailable",
-      "GET /api/payments/{id} with invalid ID → 404 not_found"
-    ],
-    "edge_cases": [
-      "Amount = 0 → 400 validation_error",
-      "Amount > 999999 → 400 validation_error",
-      "Duplicate request same order_id → idempotent"
-    ],
-    "integration_tests": [
-      "Stripe API failure → fallback to error response",
-      "Database transaction rollback → payment not saved",
-      "Webhook delivery timeout → retry logic works"
-    ],
-    "coverage_target": "> 80% lines, > 85% functions"
-  }
-}
-```
+**Coverage target:** > 80% lines, > 85% functions
+
+**Happy paths**
+- POST /api/payments with valid input → 200 with client_secret
+- GET /api/payments/{id} → 200 with payment details
+- POST /api/payments/{id}/refund → 200 with refund status
+
+**Error cases**
+- POST /api/payments with invalid amount → 400 validation_error
+- POST /api/payments with Stripe down → 503 stripe_unavailable
+- GET /api/payments/{id} with invalid ID → 404 not_found
+
+**Edge cases**
+- Amount = 0 → 400 validation_error
+- Amount > 999999 → 400 validation_error
+- Duplicate request same order_id → idempotent
+
+**Integration tests**
+- Stripe API failure → fallback to error response
+- Database transaction rollback → payment not saved
+- Webhook delivery timeout → retry logic works
 
 #### CONTRACT 2: API CONTRACT
 
-```json
-{
-  "endpoints": [
-    {
-      "endpoint": "/api/payments",
-      "method": "POST",
-      "request": {
-        "order_id": { "type": "UUID", "required": true },
-        "amount": { "type": "decimal", "required": true, "min": 0.01, "max": 999999 },
-        "currency": { "type": "string", "required": false, "default": "USD" }
-      },
-      "response_200": { "client_secret": "string", "payment_intent_id": "string" },
-      "response_400": { "error": "validation_error" },
-      "response_503": { "error": "stripe_unavailable" }
-    },
-    {
-      "endpoint": "/api/payments/{id}",
-      "method": "GET",
-      "response_200": { "id": "UUID", "order_id": "UUID", "amount": "decimal", "status": "enum: pending|succeeded|failed", "created_at": "timestamp" },
-      "response_404": { "error": "payment_not_found" }
-    },
-    {
-      "endpoint": "/api/payments/{id}/refund",
-      "method": "POST",
-      "response_200": { "refund_id": "string", "status": "succeeded" },
-      "response_503": { "error": "stripe_unavailable" }
-    }
-  ]
-}
-```
+##### `POST /api/payments`
+**Request**
+| Field | Type | Required | Constraints |
+|-------|------|----------|-------------|
+| order_id | UUID | yes | — |
+| amount | decimal | yes | min 0.01, max 999999 |
+| currency | string | no | default `USD` |
+
+**Responses**
+| Status | Body |
+|--------|------|
+| 200 | `client_secret` (string), `payment_intent_id` (string) |
+| 400 | `error: validation_error` |
+| 503 | `error: stripe_unavailable` |
+
+##### `GET /api/payments/{id}`
+**Responses**
+| Status | Body |
+|--------|------|
+| 200 | `id` (UUID), `order_id` (UUID), `amount` (decimal), `status` (enum: pending\|succeeded\|failed), `created_at` (timestamp) |
+| 404 | `error: payment_not_found` |
+
+##### `POST /api/payments/{id}/refund`
+**Responses**
+| Status | Body |
+|--------|------|
+| 200 | `refund_id` (string), `status: succeeded` |
+| 503 | `error: stripe_unavailable` |
 
 #### CONTRACT 3: DATABASE CONTRACT
 
-```json
-{
-  "tables": [
-    {
-      "name": "payments",
-      "fields": [
-        { "name": "id", "type": "UUID", "primary_key": true },
-        { "name": "order_id", "type": "UUID", "foreign_key": "orders.id" },
-        { "name": "stripe_payment_intent_id", "type": "varchar", "unique": true },
-        { "name": "amount", "type": "decimal(10,2)", "constraint": "CHECK (amount > 0)" },
-        { "name": "currency", "type": "varchar(3)", "default": "USD" },
-        { "name": "status", "type": "enum(pending|succeeded|failed)" },
-        { "name": "created_at", "type": "timestamp", "default": "CURRENT_TIMESTAMP" },
-        { "name": "updated_at", "type": "timestamp", "on_update": "CURRENT_TIMESTAMP" }
-      ],
-      "indexes": [
-        { "name": "idx_order_id", "columns": ["order_id"] },
-        { "name": "idx_stripe_id", "columns": ["stripe_payment_intent_id"] }
-      ]
-    },
-    {
-      "name": "payment_events",
-      "fields": [
-        { "name": "id", "type": "UUID", "primary_key": true },
-        { "name": "payment_id", "type": "UUID", "foreign_key": "payments.id" },
-        { "name": "event_type", "type": "varchar" },
-        { "name": "event_data", "type": "jsonb" },
-        { "name": "created_at", "type": "timestamp" }
-      ]
-    }
-  ]
-}
-```
+##### `payments`
+| Column | Type | Constraints | FK |
+|--------|------|-------------|-----|
+| id | UUID | PK | — |
+| order_id | UUID | — | orders.id |
+| stripe_payment_intent_id | varchar | unique | — |
+| amount | decimal(10,2) | CHECK (amount > 0) | — |
+| currency | varchar(3) | default USD | — |
+| status | enum(pending\|succeeded\|failed) | — | — |
+| created_at | timestamp | default CURRENT_TIMESTAMP | — |
+| updated_at | timestamp | on update CURRENT_TIMESTAMP | — |
+
+**Indexes:** `idx_order_id` (order_id), `idx_stripe_id` (stripe_payment_intent_id)
+
+##### `payment_events`
+| Column | Type | Constraints | FK |
+|--------|------|-------------|-----|
+| id | UUID | PK | — |
+| payment_id | UUID | — | payments.id |
+| event_type | varchar | — | — |
+| event_data | jsonb | — | — |
+| created_at | timestamp | — | — |
 
 #### CONTRACT 4: PATTERN CONTRACT
 
-```json
-{
-  "error_handling": {
-    "validation_error": "Return 400 with { error: 'validation_error' }",
-    "external_service_error": "Return 503 with { error: 'stripe_unavailable' }",
-    "not_found": "Return 404 with { error: 'payment_not_found' }",
-    "server_error": "Log and return 500 with generic message"
-  },
-  "logging": {
-    "request_logging": "Log method, path, user_id at INFO level",
-    "error_logging": "Log error with stack trace at ERROR level",
-    "tracing": "Include request_id in all logs"
-  },
-  "database_transactions": {
-    "payment_creation": "Wrap in transaction, rollback on error",
-    "stripe_sync": "Create payment_event record for each Stripe response"
-  },
-  "retry_logic": {
-    "stripe_failures": "Retry 3x with exponential backoff",
-    "timeout": "60 second timeout on external calls"
-  }
-}
-```
+**Error handling**
+- `validation_error` → 400 with `{ error: 'validation_error' }`
+- `external_service_error` → 503 with `{ error: 'stripe_unavailable' }`
+- `not_found` → 404 with `{ error: 'payment_not_found' }`
+- `server_error` → log and return 500 with generic message
+
+**Logging**
+- Request logging: method, path, user_id at INFO level
+- Error logging: error with stack trace at ERROR level
+- Tracing: include request_id in all logs
+
+**Database transactions**
+- Payment creation: wrap in transaction, rollback on error
+- Stripe sync: create payment_event record for each Stripe response
+
+**Retry logic**
+- Stripe failures: retry 3x with exponential backoff
+- Timeout: 60 second timeout on external calls
 
 ---
 
@@ -282,6 +258,8 @@ Lead contracts diverge from Architect spec:
 | M1 | Contract X, field Y: Architect says A, Lead says B | blocking/non-blocking | proposed resolution | *(filled by gate)* |
 ```
 
+If a mismatch's reasoning doesn't fit one row, keep a one-line Description with a "see below" pointer and add a short prose paragraph immediately under the table for that row — the table itself keeps exactly these 5 columns so the loop below can still parse it.
+
 **Contract Mismatch Disposition Loop** — before presenting the gate below, resolve every mismatch table row with an empty Disposition cell, in groups of up to 4 at a time. This gate always runs itself regardless of invocation mode — it fires before the orchestrator ever sees anything, so the Lead runs the per-item loop directly (it is not centralized to the orchestrator like other gates):
 
 - If `AskUserQuestion` is available: batch rows into groups of up to 4 (its per-call max). One question per row, worded `"M{id} ({impact}): {description}"`, with exactly these 4 options:
@@ -289,6 +267,7 @@ Lead contracts diverge from Architect spec:
   - **Mitigate now** — apply the row's proposed resolution now, before implementation proceeds. Write a `constraints.md` row, status `🔴 open`, note `MUST — from implementer-lead M{id}`.
   - **Escalate** — needs Architect redesign for this field specifically. Write a `constraints.md` row `🔴 open` tagged `BLOCKING` AND an `open-questions.md` row. Flips the following gate's recommended default to "Stop — flag to Architect for redesign" instead of "Accept divergence".
   - **Defer** — proceed with the divergence documented as a known gap. Write an `open-questions.md` row, status `🔴 open`, note `deferred contract mismatch`.
+- If the human's free-text reply for a row asks for more detail instead of picking one of the 4 options (e.g. "explain", "why", "perché", "spiega") — write 2-4 plain-language sentences on what this specific divergence changes for the code being built and what breaks if left unresolved, grounded in the row's actual fields/file references, not a generic definition of "contract mismatch" — then re-present the same 4 options for that row instead of moving on.
 - If `AskUserQuestion` is unavailable: print the same 4-option menu per row, one at a time, and wait for a typed reply before moving to the next row.
 - Write the chosen disposition back into the Disposition cell for that row.
 - Only after every row has a disposition, present the gate below — if any row was dispositioned **Escalate**, mark "Stop — flag to Architect for redesign" as the recommended default instead of "Accept divergence".
@@ -330,10 +309,10 @@ Spawn one teammate using the `kairos:team:teammate-tests-agent` agent type with 
  Target: >80% line coverage, >85% function coverage.
  Output: runnable test files using the project's test framework.
 
- TEST CONTRACT: [paste TEST CONTRACT JSON here]
- API CONTRACT: [paste API CONTRACT JSON here]
- DB CONTRACT: [paste DB CONTRACT JSON here]
- PATTERN CONTRACT: [paste PATTERN CONTRACT JSON here]"
+ TEST CONTRACT: [paste TEST CONTRACT section here]
+ API CONTRACT: [paste API CONTRACT section here]
+ DB CONTRACT: [paste DB CONTRACT section here]
+ PATTERN CONTRACT: [paste PATTERN CONTRACT section here]"
 
 Assign them the task: "RED phase — write all tests per TEST CONTRACT".
 ```

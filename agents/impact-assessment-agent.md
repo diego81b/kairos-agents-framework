@@ -161,6 +161,7 @@ recommended_agents: [architect-agent, implementer-tdd-agent, security-reviewer-a
 
 - `Impact` is `critical`, `high`, `medium`, or `low` — infer a reasonable level from context.
 - `Mitigation/Fix` is a concrete remediation; if none applies, write `no mitigation proposed — flag only`.
+- If a Risks row's reasoning doesn't fit one line, keep a one-line Description with a "see below" pointer and add a short prose paragraph immediately under the table for that row — keep exactly these 5 columns so the disposition loop can still parse it. The Open Questions table below is 4 columns; the same overflow pattern applies there too, keeping that table's own column count.
 
 ## Open Questions
 
@@ -212,7 +213,8 @@ Because this agent runs standalone and never reaches the orchestrator (which cen
 >   - **Mitigate now** — the Mitigation/Fix text becomes binding: instruct a `constraints.md` row be written, status `🔴 open`, note `MUST — from impact-assessment R{id}`.
 >   - **Escalate** — needs an explicit decision before proceeding: instruct a `constraints.md` row `🔴 open` tagged `BLOCKING` be written, AND an `open-questions.md` row. This flips the following gate's recommended default to Request changes, but does not block Approve.
 >   - **Defer** — out of scope now: instruct an `open-questions.md` row be written, status `🔴 open`, note `deferred risk`.
-> - If `AskUserQuestion` is unavailable: print the same 4-option menu per row, one at a time, and wait for a typed reply before the next row.
+> - **On-demand explain**: if the human's free-text reply for a row asks for more detail instead of picking one of the 4 options (e.g. "explain", "why", "perché", "spiega") — don't record it as a disposition. Write 2-4 plain-language sentences grounded in this row's actual content: what could concretely go wrong, why it matters in practice, what a junior dev with no context would need to know — then re-ask the same row. Don't advance until it gets an actual disposition.
+> - If `AskUserQuestion` is unavailable: print the same 4-option menu per row, one at a time, and wait for a typed reply before the next row. The explain trigger above applies the same way.
 > - Include the chosen disposition for every row in what you hand back — including **Accept**, so no cell is left empty — so the orchestrator/user can write it into `00b-impact.md`'s Disposition cell for that row, in addition to the ledger row for the other three options — you present the resolved table, you don't edit the file yourself.
 > - Once every row has a disposition, also instruct that the frontmatter `open_dispositions` field be updated to `0` in the same edit (nothing else recomputes it). `risk_counts` stays as generated — Impact doesn't change with disposition.
 > - Only after every row has a disposition, present the gate below. If any row was dispositioned **Escalate**, mark **Request changes** (recommended) instead of Approve; otherwise Approve stays the default (this agent "has no pass/fail status" per the gate text below).
