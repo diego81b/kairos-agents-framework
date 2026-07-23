@@ -4,6 +4,20 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v5.4.0 — July 23, 2026
+
+### Added
+
+- **`agents/orchestrator-agent.md`, `agents/impact-assessment-agent.md`, `agents/team/implementer-lead-agent.md`** — the Risk/Contract-Mismatch Disposition Loops gained an on-demand explain trigger: if a human replies "explain"/"why"/"perché"/"spiega" instead of picking Accept/Mitigate/Escalate/Defer for a row, the loop now writes 2-4 plain-language sentences grounded in that row's actual file/code/design content — what could concretely go wrong, why it matters, what someone with no prior context on the row needs to know — then re-asks the same row instead of advancing or misfiling the reply as fix feedback. Every row stays terse by default; the depth is generated only when asked for, so review output doesn't grow for rows nobody needs explained. Closes the readability gap where dense one-line Risk/Issue/Finding rows (tuned for fast disposition) gave a junior dev no path to the reasoning behind a row before deciding.
+- **`agents/pm-agent.md`, `agents/architect-agent.md`, `agents/code-reviewer-agent.md`, `agents/test-verifier-agent.md`, `agents/release-planner-agent.md`, `agents/impact-assessment-agent.md`, `agents/team/implementer-lead-agent.md`** — every Risks/Issues/Findings/Contract-Drift table gained the "see below" overflow pattern (previously only on `security-reviewer-agent.md`'s Findings table): when a row's reasoning doesn't fit one line, keep a one-line Description with a pointer and add a short prose paragraph under the table, instead of losing the reasoning to table-cell truncation. The explain trigger above reads from this same prose when present.
+
+### Changed
+
+- **`agents/architect-agent.md`** — the `## API Contracts` section's Request/Response examples changed from raw `json` code blocks to Markdown tables (Field | Type | Required | Constraints for requests; Status | Body for responses), matching the table style `## Data Model` already used in the same document. The two sections previously used two different conventions for structurally identical information.
+- **`agents/team/implementer-lead-agent.md`** — the 4 Team Mode contracts (TEST, API, DATABASE, PATTERN), previously defined as raw JSON blocks pasted into teammate spawn prompts, are now Markdown: TEST as grouped bullet lists, API as per-endpoint request/response tables, DATABASE as one table per entity (matching architect's Data Model style) plus a compact Indexes line, PATTERN as nested bullets. Spawn-prompt wording updated from "paste CONTRACT JSON here" to "paste CONTRACT section here". No behavior change — these contracts are read as prompt text by other agents, never machine-parsed, so the format carries no compatibility burden (same rationale as the v5.0.0 artifact-format migration, applied here to in-body content that migration didn't reach). The `.claude/settings.json` example in the same file is unchanged — that one is a real config file, not KAIROS's own artifact format.
+
+---
+
 ## v5.3.0 — July 18, 2026
 
 ### Added

@@ -154,13 +154,19 @@ One table per entity — every column, type, constraint, and FK goes here. List 
 ## API Contracts
 ### `POST /api/feature`
 **Request**
-```json
-{ "field": "type" }
-```
-**Response**
-```json
-{ "field": "type" }
-```
+| Field | Type | Required | Constraints |
+|-------|------|----------|-------------|
+| field | type | yes/no | default/min/max/etc. |
+
+**Response `200`**
+| Field | Type | Notes |
+|-------|------|-------|
+| field | type | ... |
+
+**Response `4xx/5xx`**
+| Status | Error | Meaning |
+|--------|-------|---------|
+| 400 | validation_error | ... |
 
 ## Error Codes & Handling
 <table or list — every code, its meaning, and handling pattern (e.g. AppError class); the count matches `error_codes_count` in frontmatter>
@@ -175,6 +181,8 @@ One table per entity — every column, type, constraint, and FK goes here. List 
 ````
 
 `risk_counts` and `open_dispositions` are derived the same way as in `pm-agent.md`'s output: `risk_counts` tallies this table's rows by Impact, `open_dispositions` counts rows with an empty Disposition cell. Leave every Disposition cell empty — the orchestrator's Risk Disposition Loop (or the human, standalone) fills it in. Only list risks genuinely introduced or accepted by this design (scaling limits, vendor lock-in, migration risk, single points of failure) — don't pad the table for the sake of having rows. This table is also where the orchestrator's Constraint-Conflict Scan (see its HITL section) appends a row if this design contradicts a constraint an earlier phase already marked resolved.
+
+If a risk's reasoning doesn't fit one row (why the trade-off exists, what breaks if it isn't mitigated), keep a one-line Description with a "see below" pointer and add a short prose paragraph immediately under the table for that risk — the table itself keeps exactly these 5 columns so the disposition loop can still parse it. This is also what the Risk Disposition Loop's on-demand explain trigger reads from when a human asks for more detail on a row (see the orchestrator's HITL section).
 
 ## After Generating Output
 

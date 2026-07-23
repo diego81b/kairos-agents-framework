@@ -208,6 +208,8 @@ next_agent: release-planner-agent
 
 Issues table columns: `Impact` carries the severity value (`critical | high | medium | low` — same scale, formerly `Severity`). `Mitigation/Fix` carries the concrete remediation (formerly `Fix`). `Category` and `File:Line` stay as leading columns before `Description` so no information is lost. Leave `Disposition` empty in your own output — it is filled at the gate.
 
+If an issue's reasoning doesn't fit one row, keep a one-line Description with a "see below" pointer and add a short prose paragraph immediately under the table for that issue — the table itself keeps exactly these 7 columns so the disposition loop can still parse it.
+
 `status` rules:
 - `READY` — zero `critical` and zero `high` issues, and coverage check is `PASS`.
 - `NEEDS_FIXES` — any `critical` or `high` issue, or coverage `FAIL`.
