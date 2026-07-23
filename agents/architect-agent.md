@@ -100,6 +100,12 @@ Questions to resolve for every contract that involves writes or collections:
 
 Do NOT proceed to step 6 until every applicable item is resolved.
 
+**Promptable Signal.** PROOF's "Promptable" criterion: an issue is ready when an agent could execute it — tests included — without asking a further question. Derive `promptable: yes|no` from what you actually observed while working through this step:
+- `yes` — every applicable Pre-Contract Resolution item is resolved or explicitly `N/A — [reason]`, AND no `🔴 open` constraint or open-question from `pm-agent`'s ledger rows bears directly on implementability (e.g. an unresolved ownership model, an unspecified delete behavior).
+- `no` — otherwise. List each concrete gap in the output (see Output Format) instead of just failing silently — the point is to catch this before the implementer has to guess or block.
+
+This is a design-time signal only — it does not block you from finishing this phase's output. It flips the standalone gate's default recommendation (see "After Generating Output" below) and gives the orchestrator's HITL step a blocking-status signal to read, the same way `NEEDS_FIXES` does for code-reviewer.
+
 ### 6. Detailed Design
 For selected option:
 - Technology choices (and why)
@@ -122,6 +128,7 @@ status: ready
 selected_option: <Option A: description>
 database_changes_summary: { new_tables: N, modified_tables: N }
 error_codes_count: N
+promptable: yes   # or no — see Promptable Signal in step 5
 risk_counts: { critical: 0, high: N, medium: N, low: N }
 open_dispositions: N
 next_agent: implementer-tdd-agent
@@ -174,13 +181,20 @@ One table per entity — every column, type, constraint, and FK goes here. List 
 ## Performance Targets
 <latency/throughput targets and how they were derived>
 
+## Promptable Gaps
+*(Only include this section when `promptable: no`. Omit entirely when `promptable: yes` — an empty section is not a finding.)*
+
+| Gap | Why it blocks execution without a further question |
+|-----|------------------------------------------------------|
+| e.g. delete behavior for `payments` unresolved (Pre-Contract Resolution §5) | implementer cannot choose soft- vs hard-delete without guessing |
+
 ## Risks
 | ID | Description | Impact | Mitigation/Fix | Disposition |
 |----|-------------|--------|-----------------|-------------|
 | R1 | architectural risk or trade-off (e.g. "single Redis instance = single point of failure") | critical/high/medium/low | concrete mitigation | *(filled by gate)* |
 ````
 
-`risk_counts` and `open_dispositions` are derived the same way as in `pm-agent.md`'s output: `risk_counts` tallies this table's rows by Impact, `open_dispositions` counts rows with an empty Disposition cell. Leave every Disposition cell empty — the orchestrator's Risk Disposition Loop (or the human, standalone) fills it in. Only list risks genuinely introduced or accepted by this design (scaling limits, vendor lock-in, migration risk, single points of failure) — don't pad the table for the sake of having rows. This table is also where the orchestrator's Constraint-Conflict Scan (see its HITL section) appends a row if this design contradicts a constraint an earlier phase already marked resolved.
+`promptable` is `yes` or `no` per the Promptable Signal rule in step 5 — not a tally, a direct judgment call you make once. `risk_counts` and `open_dispositions` are derived the same way as in `pm-agent.md`'s output: `risk_counts` tallies this table's rows by Impact, `open_dispositions` counts rows with an empty Disposition cell. Leave every Disposition cell empty — the orchestrator's Risk Disposition Loop (or the human, standalone) fills it in. Only list risks genuinely introduced or accepted by this design (scaling limits, vendor lock-in, migration risk, single points of failure) — don't pad the table for the sake of having rows. This table is also where the orchestrator's Constraint-Conflict Scan (see its HITL section) appends a row if this design contradicts a constraint an earlier phase already marked resolved.
 
 If a risk's reasoning doesn't fit one row (why the trade-off exists, what breaks if it isn't mitigated), keep a one-line Description with a "see below" pointer and add a short prose paragraph immediately under the table for that risk — the table itself keeps exactly these 5 columns so the disposition loop can still parse it. This is also what the Risk Disposition Loop's on-demand explain trigger reads from when a human asks for more detail on a row (see the orchestrator's HITL section).
 
@@ -193,8 +207,8 @@ If the `AskUserQuestion` tool is available (Claude Code), call it:
 - `question`: `"Architecture ready — how do you want to proceed?"`
 - `header`: `"Architect Gate"`
 - `options`:
-  - **Approve** (Recommended by default — this agent has no pass/fail status) — continue to Implementer Agent.
-  - **Request changes** — specify what to adjust; re-run this agent with that feedback.
+  - **Approve** (Recommended by default when `promptable: yes` — this agent otherwise has no pass/fail status) — continue to Implementer Agent.
+  - **Request changes** (Recommended instead when `promptable: no`) — the Promptable Gaps table lists exactly what's missing; specify what to adjust or resolve those gaps, then re-run this agent.
   - **Stop** — halt here.
 Free text via "Other" is treated as change feedback; if it reads as a standalone note instead, append it to `.kairos/<feature_folder>/ledger/open-questions.md` (source `human`, status `🔴 open`) rather than re-running.
 

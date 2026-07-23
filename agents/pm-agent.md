@@ -96,6 +96,8 @@ How to know this works?
 Metrics to measure?
 Acceptance criteria?
 
+Phrase each criterion in **EARS form** where the requirement genuinely has a trigger and a system response — `When <trigger>, the <system> shall <response>` (e.g. "When a charge request includes an expired card, the payment service shall return a `card_expired` error without contacting Stripe"). This is what makes a criterion machine-testable rather than a vague goal, and it's what `test-verifier-agent` maps tests against downstream (`AC-1`, `AC-2`, ...). Don't force the template onto a criterion that isn't actually a trigger/response pair (e.g. a pure data-shape requirement) — write it as plain prose instead rather than contorting it. In **Lean Mode** (`simple_fix`), only phrase a criterion this way if it was already going to be a criterion worth stating — do not manufacture EARS-shaped criteria for a trivial change that has none.
+
 ### 7. Integration Points
 Where does this connect?
 What existing systems involved?
@@ -134,8 +136,8 @@ next_agent: architect-agent
 | R1 | what could go wrong | critical/high/medium/low | how to mitigate | *(filled by gate)* |
 
 ## Success Criteria
-- criterion 1
-- criterion 2
+- When <trigger>, the <system> shall <response> (EARS form — use where the criterion has a real trigger/response; see step 6)
+- criterion 2 (plain prose is fine when there's no trigger/response to name)
 
 ## Integration Points
 - system 1 to connect to
