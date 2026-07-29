@@ -4,6 +4,14 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v6.0.1 — July 29, 2026
+
+### Fixed
+
+- **`agents/orchestrator-agent.md`** — added Hard Constraint 5: the orchestrator must never run headless (inside a backgrounded/detached task, a scripted multi-agent workflow, or a scheduled/cron run). HITL gates assume a live human either answers `AskUserQuestion` or reads/replies to the text-menu fallback (Constraint 3) — a fully non-interactive invocation has neither, so a gate would hang forever or get silently bypassed by the driving automation. Constraint 3's existing fallback wording was narrowed to make clear it covers a different case (a live human in a non-Claude-Code chat IDE), not headless execution.
+
+---
+
 ## v6.0.0 — July 23, 2026
 
 ### Added
