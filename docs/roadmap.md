@@ -28,6 +28,7 @@
 - VS Code Copilot (`.github/agents/` + native HITL handoffs)
 - JetBrains AI Assistant
 - OpenAI Codex CLI (`.codex/agents/` TOML format)
+- OpenCode (`.opencode/agents/`)
 
 **Issue tracker integration**
 - Jira (`jira-cli`) — auto-reads `## KAIROS Pipeline` from issue description

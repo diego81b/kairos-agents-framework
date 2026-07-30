@@ -25,7 +25,7 @@ features:
     details: $5-8 in API costs replaces $400+ in developer time per feature. Measurable from day one.
   - icon: 🔧
     title: Any Tool, Any Stack
-    details: Works with Claude Code, Cursor IDE, GitHub Copilot, Amazon CodeWhisperer, JetBrains, and VS Code.
+    details: Works with Claude Code, Cursor IDE, GitHub Copilot, Amazon CodeWhisperer, JetBrains, VS Code, and OpenCode.
   - icon: ✅
     title: Production-Ready Output
     details: "Every run produces code and a quality report. With the TDD implementer: tests with >80% coverage and a deployment checklist. With the code-only implementer: code for projects that have no test suite."

@@ -1,8 +1,10 @@
 ---
-name: pm-agent
 description: "Analyzes feature requirements and elicits constraints. Use when you have a vague feature request that needs structured analysis."
-tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion
-model: sonnet
+mode: subagent
+model: anthropic/claude-sonnet-5
+permission:
+  edit: allow
+  bash: ask
 ---
 
 # PM Agent - Requirement Analysis

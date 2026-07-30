@@ -1,8 +1,10 @@
 ---
-name: orchestrator-agent
 description: "Master coordinator for KAIROS Framework. Routes feature requests to specialist subagents and orchestrates the workflow."
-tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion
-model: opus
+mode: primary
+model: anthropic/claude-opus-5
+permission:
+  edit: allow
+  bash: ask
 ---
 
 # KAIROS Framework Orchestrator

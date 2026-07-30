@@ -232,7 +232,7 @@ If the `AskUserQuestion` tool is available (Claude Code), call it:
   - **Stop** — halt here.
 Free text via "Other" is treated as change feedback; if it reads as a standalone note instead, append it to `.kairos/<feature_folder>/ledger/open-questions.md` (source `human`, status `🔴 open`) rather than re-running.
 
-If `AskUserQuestion` is not available (Cursor, JetBrains/Copilot, Codex CLI), fall back to printing this menu and waiting for a typed reply:
+If `AskUserQuestion` is not available (Cursor, JetBrains/Copilot, Codex CLI, OpenCode), fall back to printing this menu and waiting for a typed reply:
 ```
 ✅ Approve implementation — continue to Code Reviewer
 ✏️  Request changes — specify what to adjust
