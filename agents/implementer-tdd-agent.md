@@ -53,7 +53,7 @@ Before PHASE 0, determine effort:
 - Standalone mode: judge it yourself — `simple_fix` if the change touches ≤2 files, adds no new endpoint/schema/auth surface, and needs no new dependency; otherwise treat as `medium`+.
 
 When effort is `simple_fix`, run in **Lean Mode** for the rest of this run:
-- PHASE 0 plan collapses to Approach (1-2 lines) + Files to Create/Modify + Test Cases (names only). Omit `Waves` (never triggered at this size) and the `Risks` table unless a genuine risk actually surfaces — an empty table is pure overhead at this size.
+- PHASE 0 plan collapses to Approach (1-2 lines) + Files to Create/Modify + Test Cases (name + a one-clause Intent each, no `Type` column). Omit `Waves` (never triggered at this size) and the `Risks` table unless a genuine risk actually surfaces — an empty table is pure overhead at this size.
 - PHASE 1 test cases cover HAPPY PATH and ERROR CASES only. Add BOUNDARIES/EDGE/PERFORMANCE only if the architecture spec or your own read of the change gives a concrete reason — do not generate them by default.
 - Coverage bar stays >80%, but only across the test categories actually warranted above — do not manufacture boundary/edge tests just to inflate the count.
 - 2b Ledger Update becomes additive-only (see that section below).
@@ -77,7 +77,7 @@ Analyze:
 Produce a plan with (trim per Lean Mode above when applicable):
 - Every file to CREATE (path, purpose, public exports)
 - Every file to MODIFY (path, what changes)
-- Full list of test cases to write (name, type, description)
+- Full list of test cases to write (name, type, **declared intent** — the specific behavior this test locks in, not a restatement of its name)
 - TDD execution order
 - External dependencies to install
 - Risks or ambiguities that need clarification
@@ -125,11 +125,13 @@ Brief description of the implementation strategy.
 
 ## Test Cases
 
-| Name | Type |
-|------|------|
-| createCharge succeeds with valid card | happy_path |
-| createCharge fails with expired card | error |
-| createCharge rejects amount=0 | boundary |
+| Name | Type | Intent |
+|------|------|--------|
+| createCharge succeeds with valid card | happy_path | locks in the successful charge response shape returned to the caller |
+| createCharge fails with expired card | error | locks in that an expired card is rejected before Stripe is called, not after |
+| createCharge rejects amount=0 | boundary | locks in the zero-amount guard so a future refactor can't silently drop it |
+
+`Intent` is a one-line statement of the specific behavior this test locks in — PROOF principle 4's "ogni test con intent dichiarato." It must say *what breaks if this test is deleted*, not restate the test's own name. `test-verifier-agent` cross-checks this against the actual assertion.
 
 ## TDD Order
 

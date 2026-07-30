@@ -4,6 +4,27 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v6.0.1 — July 29, 2026
+
+### Fixed
+
+- **`agents/orchestrator-agent.md`** — added Hard Constraint 5: the orchestrator must never run headless (inside a backgrounded/detached task, a scripted multi-agent workflow, or a scheduled/cron run). HITL gates assume a live human either answers `AskUserQuestion` or reads/replies to the text-menu fallback (Constraint 3) — a fully non-interactive invocation has neither, so a gate would hang forever or get silently bypassed by the driving automation. Constraint 3's existing fallback wording was narrowed to make clear it covers a different case (a live human in a non-Claude-Code chat IDE), not headless execution.
+
+---
+
+## v6.0.0 — July 23, 2026
+
+### Added
+
+- **`agents/implementer-tdd-agent.md`, `agents/test-verifier-agent.md`** — the Phase 0 Test Cases table gained a declared `Intent` column (one line: the specific behavior the test locks in, not a restatement of its name), and `test-verifier-agent`'s Assertion Strength check gained an intent-consistency sub-check that flags a test whose actual assertion is narrower than (`medium`) or unrelated to (`high`) its declared intent. Missing intent data is skipped and noted once, never fabricated or flagged as its own issue. Operationalizes the PROOF methodology's "ogni test con intent dichiarato" requirement, closing a gap confirmed by direct comparison against `internal/PROOF_Constitution_v2.md` — the prior format had no place to declare *why* a test exists, only its name and category.
+- **`agents/pm-agent.md`** — the Success Criteria step and output section now guide EARS-style phrasing (`When <trigger>, the <system> shall <response>`) wherever a criterion genuinely has a trigger and a response, instead of free-form prose only. Criteria that aren't trigger/response pairs stay plain prose — the template is guidance, not a mandatory mold — and Lean Mode (`simple_fix`) doesn't manufacture EARS-shaped criteria where none would otherwise exist. Tightens the same artifact `test-verifier-agent` already maps tests against (`AC-1`, `AC-2`, ...) and aligns with the Spec-Driven-Delivery positioning `internal/PROOF_v2_Proposta_Unificata.md` §5 stakes out (EARS is the notation Kiro/Spec-Kit converge on).
+- **`agents/architect-agent.md`** — the existing Pre-Contract Resolution step (§5) now derives an explicit `promptable: yes|no` frontmatter signal: `yes` when every applicable contract question is resolved (or `N/A`) and no blocking ledger item remains; `no` otherwise, with a new `## Promptable Gaps` table naming exactly what's missing. Operationalizes PROOF's "Promptable" signature (an issue executable by an agent without further questions) at the point in the pipeline where enough is actually known to judge it — piggybacks on work Pre-Contract Resolution was already doing, rather than adding a new pass.
+- **`agents/orchestrator-agent.md`** — the Architect Gate's default recommendation now reads `promptable: no` as a blocking signal (alongside `NEEDS_FIXES`/`VULNERABILITIES_FOUND`/`blocked`), flipping the default from Approve to Request changes and forwarding the Promptable Gaps table as re-run feedback. The final Present step gained an optional `RUN METRICS` block that surfaces the Phase 3/4 Loop Actuators' existing convergence data (first-pass vs. N-iterations-to-converge, thrash/exhausted outcomes) and the ledger's open-question count — explicitly labeled as this-run-only, not a substitute for PROOF's cross-run Velocity/Rework Ratio/Gate Pass Rate metrics, which need aggregation KAIROS's per-feature-folder model doesn't have.
+
+This release is the outcome of a full PROOF↔KAIROS fit panorama (every PROOF Constitution/Proposta concept checked against actual agent behavior, not assumed) — see the session's plan artifact for the complete mapping, including what was already matched, what's confirmed out of KAIROS's reach (team cadence, role/capacity limits, the cross-run metrics dashboard), and what was deliberately skipped (a literal Gate 1/3 two-signature split would need a real second human reviewer or would be theater — neither is a KAIROS agent-file change).
+
+---
+
 ## v5.4.0 — July 23, 2026
 
 ### Added
