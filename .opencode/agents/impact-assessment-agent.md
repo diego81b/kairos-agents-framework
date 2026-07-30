@@ -1,8 +1,10 @@
 ---
-name: impact-assessment-agent
 description: "Issue-scoped grounding agent. Reads the issue and the code it touches to estimate effort, map domains, surface reusable assets and gaps, and recommend which pipeline agents to run. Use before the orchestrator. Produces 00b-impact.md."
-tools: Read, Grep, Glob, AskUserQuestion
-model: opus
+mode: subagent
+model: anthropic/claude-opus-5
+permission:
+  edit: deny
+  bash: deny
 ---
 
 # Impact Assessment - Issue Grounding

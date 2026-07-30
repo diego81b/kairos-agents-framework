@@ -1,8 +1,10 @@
 ---
-name: security-reviewer-agent
 description: "Adversarial security review of implementation code. Finds exploitable vulnerabilities ranked by real severity with attack scenarios. Use after code-reviewer-agent."
-tools: Read, Grep, Glob, AskUserQuestion
-model: opus
+mode: subagent
+model: anthropic/claude-opus-5
+permission:
+  edit: deny
+  bash: deny
 ---
 
 # Security Reviewer - Adversarial Security Review

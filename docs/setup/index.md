@@ -37,10 +37,11 @@ The fields that matter:
 | [Cursor IDE](./cursor) | ✅ Full — `.cursor/agents/` | ✅ Each agent = fresh context | ⚠️ Via agent prompt wording | Low |
 | [VS Code](./vscode) | ✅ Full — `.github/agents/` | ✅ Each agent = fresh context | ⚠️ Via handoffs/agent prompt | Low |
 | [OpenAI Codex CLI](./codex) | ✅ Full — `.codex/agents/` (TOML) | ✅ Each agent = fresh context | ⚠️ Via AGENTS.md | Medium |
+| [OpenCode](./opencode) | ✅ Full — `.opencode/agents/` | ✅ Each agent = fresh context | ⚠️ Via text-menu fallback (no `AskUserQuestion`) | Medium |
 | [JetBrains](./jetbrains) | ⚠️ Preview — `.github/agents/` via Copilot | ⚠️ Depends on Copilot | ⚠️ Via agent prompt (no handoffs) | Medium |
 
 ::: tip Recommended: Claude Code, Cursor, or VS Code
-**Claude Code**, **Cursor**, **VS Code**, and **OpenAI Codex CLI** all support native subagent contexts with context isolation. Claude Code offers the most seamless experience: auto-delegation and zero-config `.kairos/` persistence. Cursor adds explicit `/agent-name` invocation. VS Code adds `handoffs` buttons for native HITL. Codex CLI uses TOML format.
+**Claude Code**, **Cursor**, **VS Code**, **OpenAI Codex CLI**, and **OpenCode** all support native subagent contexts with context isolation. Claude Code offers the most seamless experience: auto-delegation and zero-config `.kairos/` persistence. Cursor adds explicit `/agent-name` invocation. VS Code adds `handoffs` buttons for native HITL. Codex CLI uses TOML format. OpenCode uses Markdown + YAML frontmatter like Claude Code, but with different fields and no `AskUserQuestion` equivalent.
 
 JetBrains support is in public preview — functionality may change.
 :::
@@ -61,14 +62,19 @@ This is automatic in Claude Code (defined in `agents/orchestrator-agent.md`). In
 your-project/
 ├── agents/              ← KAIROS agent definitions (source of truth)
 │   ├── orchestrator-agent.md
+│   ├── context-extractor-agent.md  ← Pre-pipeline: full-repo context (standalone)
+│   ├── impact-assessment-agent.md  ← Pre-pipeline: issue grounding (standalone)
 │   ├── pm-agent.md
 │   ├── architect-agent.md
 │   ├── implementer-tdd-agent.md    ← TDD implementer (default)
 │   ├── implementer-coder-agent.md  ← Code-only implementer (no test suite)
 │   ├── code-reviewer-agent.md
+│   ├── security-reviewer-agent.md  ← Adversarial security review (optional)
 │   ├── test-verifier-agent.md
-│   └── release-planner-agent.md
-└── .kairos/             ← Created at runtime, holds phase outputs (Markdown with frontmatter)
+│   ├── release-planner-agent.md
+│   └── team/             ← Team Mode specialists (Claude Code only)
+├── .opencode/agents/     ← OpenCode mirror of the 11 core agents above (see Setup > OpenCode)
+└── .kairos/              ← Created at runtime, holds phase outputs (Markdown with frontmatter)
     └── issue-42_add-stripe/   ← one subfolder per feature
         ├── 01-requirements.md
         ├── 02-architecture.md

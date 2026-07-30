@@ -70,3 +70,17 @@ and add a matching entry to `CHANGELOG.md`.
 
 After making changes, present both the bumped `package.json` version
 and the new changelog block alongside the commit message.
+
+## OpenCode Mirror Sync
+
+Every file in `agents/` (the 11 core pipeline agents, **not** `agents/team/`) has a hand-maintained counterpart in `.opencode/agents/`. There is no conversion script — this mirror is kept in sync by hand, on purpose, to avoid a generated artifact drifting from a script no one maintains.
+
+**Rule: if a commit touches any `agents/*.md` file, it must also update the matching `.opencode/agents/*.md` file in the same commit.**
+
+- Body changes → copy the same body change into the mirror (bodies must stay byte-for-byte identical between the two).
+- Frontmatter changes (`description:`, `tools:`, `model:`) → re-derive the mirror's `description:`/`permission:`/`model:` fields using the mapping table in `docs/setup/opencode.md`.
+- New core agent file → add both `agents/<name>.md` and `.opencode/agents/<name>.md`.
+- Removed core agent file → remove both.
+- Before committing, diff the two directories' bodies (strip frontmatter from each side and compare) to confirm nothing drifted.
+
+**`agents/team/*.md` is explicitly out of scope for this mirror** — do not add a Team Mode file to `.opencode/agents/` just because this rule says "every `agents/*.md` file." Team Mode's coordination logic (Claude Code's Agent Teams flag, the `agent` tool for spawning, an unconditional `AskUserQuestion` call with no fallback in `implementer-lead-agent.md`) is Claude-Code-specific; a frontmatter-only port ships a non-functional agent. See `docs/setup/opencode.md`'s "No Team Mode mirror" note before changing this.

@@ -1,8 +1,10 @@
 ---
-name: context-extractor-agent
 description: "Scans a codebase and an issue draft to produce 00-context.md for downstream agents. Use before orchestrator to prepare LLM context."
-tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion
-model: opus
+mode: subagent
+model: anthropic/claude-opus-5
+permission:
+  edit: allow
+  bash: ask
 ---
 
 # Context Extractor - Codebase Analysis & Context Preparation

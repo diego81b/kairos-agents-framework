@@ -1,8 +1,10 @@
 ---
-name: code-reviewer-agent
 description: "Reviews code for quality, standards, security, and performance."
-tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion
-model: sonnet
+mode: subagent
+model: anthropic/claude-sonnet-5
+permission:
+  edit: allow
+  bash: ask
 ---
 
 # Code Reviewer - Quality Assurance
