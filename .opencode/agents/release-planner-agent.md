@@ -1,8 +1,10 @@
 ---
-name: release-planner-agent
 description: "Plans deployment strategy and rollback procedures."
-tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion
-model: sonnet
+mode: subagent
+model: anthropic/claude-sonnet-5
+permission:
+  edit: allow
+  bash: ask
 ---
 
 # Release Planner - Deployment

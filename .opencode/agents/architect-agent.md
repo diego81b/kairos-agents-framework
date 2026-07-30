@@ -1,8 +1,10 @@
 ---
-name: architect-agent
 description: "Designs system architecture based on requirements and constraints. Use after PM analysis."
-tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion
-model: opus
+mode: subagent
+model: anthropic/claude-opus-5
+permission:
+  edit: allow
+  bash: ask
 ---
 
 # Architect Agent - System Design

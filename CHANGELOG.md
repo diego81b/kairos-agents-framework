@@ -4,6 +4,18 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v6.1.0 — July 30, 2026
+
+### Added
+
+- **`.opencode/agents/`** — new, hand-maintained mirror of the 11 core KAIROS agent files (`agents/`, not `agents/team/`), translated to OpenCode's frontmatter schema: `tools:` CSV → granular `permission:` object (`edit`/`bash` set per agent's actual write/exec access), `model: alias` → provider-prefixed model id, new `mode: primary|subagent` field (`orchestrator-agent` is the only `primary`), `name:` dropped (no equivalent). Every body is byte-for-byte identical to its `agents/` source — only frontmatter changed. The 5 Team Mode files (`agents/team/`) are deliberately excluded: their bodies depend on Claude Code's Agent Teams feature throughout (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`, spawning via Claude Code's `agent` tool, an unconditional `AskUserQuestion` call in `implementer-lead-agent.md`'s Test Plan Gate with no fallback) — a frontmatter-only port would ship a non-functional agent. No conversion script ships in this repo; the mirror is maintained by hand on purpose (see `.claude/CLAUDE.md`'s new "OpenCode Mirror Sync" rule and root `CLAUDE.md`'s "OpenCode Mirror" section).
+- **`docs/setup/opencode.md`** — new setup guide for [OpenCode](https://opencode.ai): copying the shipped `.opencode/agents/` pack into a project, the frontmatter mapping table (for re-deriving the mirror by hand after an agent edit), a worked `pm-agent.md` example, `AGENTS.md` project-context setup, HITL via the existing text-menu fallback (OpenCode has no `AskUserQuestion`), a feature-comparison table, troubleshooting, and an explicit note on why Team Mode has no mirror. Verified against the current official OpenCode docs (`opencode.ai/docs/agents/`, `/docs/permissions/`, `/docs/tools/`, `/docs/rules/`), not the unofficial `open-code.ai` mirror.
+- **`docs/.vitepress/config.js`, `docs/setup/index.md`, `docs/index.md`, `docs/roadmap.md`** — wired OpenCode into the Setup nav/sidebar, the tool-comparison table, and the "works with" / multi-tool-support enumerations alongside the other supported tools.
+- **11 gated agent files** (`architect-agent.md`, `code-reviewer-agent.md`, `context-extractor-agent.md`, `impact-assessment-agent.md`, `implementer-coder-agent.md`, `implementer-tdd-agent.md`, `orchestrator-agent.md`, `pm-agent.md`, `release-planner-agent.md`, `security-reviewer-agent.md`, `test-verifier-agent.md`) — added "OpenCode" to the `AskUserQuestion`-unavailable fallback's example-host parenthetical, for consistency with the other non-Claude-Code hosts already listed. Cosmetic only — the fallback behavior was already host-agnostic. (`agents/team/implementer-lead-agent.md` has no equivalent host-listing text to edit, and its `AskUserQuestion` calls are intentionally left as-is — see above.)
+- **`CLAUDE.md`, `.claude/CLAUDE.md`** — documented the `.opencode/agents/` mirror, the mandatory rule that any change to an `agents/*.md` file must update its `.opencode/agents/` counterpart in the same commit, and the explicit Team Mode exclusion.
+
+---
+
 ## v6.0.1 — July 29, 2026
 
 ### Fixed

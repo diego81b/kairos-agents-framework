@@ -61,6 +61,7 @@ export default withMermaid(defineConfig({
           { text: 'VS Code', link: '/setup/vscode' },
           { text: 'JetBrains', link: '/setup/jetbrains' },
           { text: 'OpenAI Codex CLI', link: '/setup/codex' },
+          { text: 'OpenCode', link: '/setup/opencode' },
           { text: 'Pipeline Templates', link: '/setup/templates' }
         ]
       },
@@ -91,6 +92,7 @@ export default withMermaid(defineConfig({
           { text: 'VS Code', link: '/setup/vscode' },
           { text: 'JetBrains', link: '/setup/jetbrains' },
           { text: 'OpenAI Codex CLI', link: '/setup/codex' },
+          { text: 'OpenCode', link: '/setup/opencode' },
           { text: 'Pipeline Templates', link: '/setup/templates' }
         ]
       },

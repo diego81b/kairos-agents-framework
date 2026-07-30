@@ -1,8 +1,10 @@
 ---
-name: test-verifier-agent
 description: "Verifies test quality, coverage adequacy, assertion strength, determinism, and TDD compliance. Loops back to implementer with actionable findings."
-tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion
-model: sonnet
+mode: subagent
+model: anthropic/claude-sonnet-5
+permission:
+  edit: allow
+  bash: ask
 ---
 
 # Test Verifier - Test Quality

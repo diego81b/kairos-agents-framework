@@ -1,8 +1,10 @@
 ---
-name: implementer-tdd-agent
 description: "TDD implementer — generates code and tests using real TDD (RED→GREEN→REFACTOR). Use after architecture design when the project has a test suite. For projects without a test suite, use implementer-coder-agent instead."
-tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion
-model: sonnet
+mode: subagent
+model: anthropic/claude-sonnet-5
+permission:
+  edit: allow
+  bash: ask
 ---
 
 # Implementer Agent - Code Generation
