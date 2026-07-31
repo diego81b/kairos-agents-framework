@@ -302,6 +302,24 @@ Each `[HITL]` gate is a pause where **you** review and approve before the next a
 
 ---
 
+## Customizing models
+
+KAIROS's shipped frontmatter splits agents into two tiers — `opus` for the 5 reasoning-heavy agents (`orchestrator`, `architect`, `context-extractor`, `impact-assessment`, `security-reviewer`) and `sonnet` for the 6 execution agents (`pm`, `implementer-tdd`, `implementer-coder`, `code-reviewer`, `test-verifier`, `release-planner`). Claude Code has no plugin-install-time or config-file mechanism for per-agent models, but there are three ways to change them:
+
+1. **Edit the `model:` frontmatter** in your `.claude/agents/` copies. Aliases (`sonnet`, `opus`, `haiku`), full model IDs (e.g. `claude-opus-5`), and `inherit` (follow the main conversation) are all accepted. Downgrading the execution tier to `haiku` is the easiest token-saver; keep `orchestrator-agent` and `architect-agent` on stronger models. Downside: your edits are local forks — re-apply them after re-copying updated KAIROS agents.
+2. **Global subagent override** — the `CLAUDE_CODE_SUBAGENT_MODEL` environment variable wins over every subagent's frontmatter `model:` (resolution order: env var → per-invocation override → frontmatter → main conversation model). Settable in `settings.json`:
+   ```json
+   {
+     "env": { "CLAUDE_CODE_SUBAGENT_MODEL": "haiku" }
+   }
+   ```
+   Coarse but zero-maintenance: **all** subagents — including architect and security review — run on that one model, so it's a blunt cost cut, not a per-tier tuning.
+3. **Shadow copy for plugin installs** — if you installed KAIROS as a plugin, a same-named agent file in your project's `.claude/agents/` outranks the plugin's copy (project scope > plugin scope), so you can override just the agents whose model you want to change. Same fork caveat as option 1.
+
+There is intentionally no KAIROS-side config file for this: Claude Code offers no hook the plugin could use to rewrite frontmatter at install time.
+
+---
+
 ## Suggested Models
 
 Claude Code accepts short aliases that always resolve to the latest model in each family, or full versioned IDs (e.g. `claude-sonnet-4-6`) to pin a specific release.

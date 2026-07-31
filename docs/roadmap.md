@@ -29,6 +29,7 @@
 - JetBrains AI Assistant
 - OpenAI Codex CLI (`.codex/agents/` TOML format)
 - OpenCode (`.opencode/agents/`)
+- Kimi Code (`.kimi-code/agents/`)
 
 **Issue tracker integration**
 - Jira (`jira-cli`) — auto-reads `## KAIROS Pipeline` from issue description

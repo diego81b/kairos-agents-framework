@@ -84,3 +84,16 @@ Every file in `agents/` (the 11 core pipeline agents, **not** `agents/team/`) ha
 - Before committing, diff the two directories' bodies (strip frontmatter from each side and compare) to confirm nothing drifted.
 
 **`agents/team/*.md` is explicitly out of scope for this mirror** — do not add a Team Mode file to `.opencode/agents/` just because this rule says "every `agents/*.md` file." Team Mode's coordination logic (Claude Code's Agent Teams flag, the `agent` tool for spawning, an unconditional `AskUserQuestion` call with no fallback in `implementer-lead-agent.md`) is Claude-Code-specific; a frontmatter-only port ships a non-functional agent. See `docs/setup/opencode.md`'s "No Team Mode mirror" note before changing this.
+
+## Kimi Code Mirror Sync
+
+Every file in `agents/` (the 11 core pipeline agents, **not** `agents/team/`) also has a hand-maintained counterpart in `.kimi-code/agents/`. Same discipline as the OpenCode mirror: no conversion script, kept in sync by hand, on purpose.
+
+**Rule: if a commit touches any `agents/*.md` file, it must also update the matching `.kimi-code/agents/*.md` file in the same commit.**
+
+- Body changes → copy the same body change into the mirror (bodies must stay byte-for-byte identical between the two).
+- Frontmatter changes (`description:`, `tools:`, `model:`) → re-derive the mirror's fields using the mapping table in `docs/setup/kimi-code.md`. Unlike the OpenCode mirror, `name:`/`description:`/`tools:` CSV copy over unchanged (Kimi Code accepts Claude-Code-style frontmatter and shares the same tool names, `AskUserQuestion` included); the only translation is `model: opus` → `model_preference: primary` and `model: sonnet` → `model_preference: secondary` (symbolic — resolves to the user's configured Kimi models, never concrete Claude model ids).
+- New core agent file → add both `agents/<name>.md` and `.kimi-code/agents/<name>.md`. Removed core agent file → remove both.
+- Before committing, diff the two directories' bodies (strip frontmatter from each side and compare) to confirm nothing drifted.
+
+**`agents/team/*.md` is explicitly out of scope for this mirror too** — same rationale as the OpenCode exclusion above. See `docs/setup/kimi-code.md`'s "No Team Mode mirror" note before changing this.
