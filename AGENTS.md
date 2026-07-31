@@ -64,6 +64,8 @@ any change to `docs/`, `agents/`, or `skills/` (agent files are embedded in the 
 - `skills/contract-checklist/SKILL.md` — shared reference skill invoked by `architect-agent`
   and `implementer-lead-agent`; published with the plugin.
 - `.claude-plugin/` — Claude Code plugin metadata (`plugin.json`, `marketplace.json`).
+- `commands/` — Claude Code plugin slash commands (`/kairos:setup` — guided model
+  configuration). Plugin root is the repo root, so these are auto-discovered.
 - `.claude/CLAUDE.md`, `.github/copilot-instructions.md` — copies of the commit/versioning
   conventions; keep them consistent with this file when the conventions change.
 - `internal/` — internal reference docs (cost analysis, routing logic, PROOF methodology).

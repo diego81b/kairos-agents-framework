@@ -63,6 +63,7 @@
 |----------|---------|
 | `.claude-plugin/plugin.json` | Plugin manifest |
 | `.claude-plugin/marketplace.json` | Self-hosted marketplace manifest (same repo) |
+| `commands/setup.md` | Guided model setup slash command (`/kairos:setup`) — added v6.2.0 |
 
 ---
 
