@@ -1,6 +1,6 @@
 # The KAIROS Agents
 
-KAIROS orchestrates a core pipeline of 11 specialized AI agents, plus an optional team of 5 specialists for Team Mode. Two agents run standalone before the main pipeline (Context Extractor and Impact Assessment); the remaining core agents run in sequence coordinated by the Orchestrator. Team Mode agents are Claude Code only and activated on explicit request.
+KAIROS orchestrates a core pipeline of 14 specialized AI agents, plus an optional team of 5 specialists for Team Mode. Two agents run standalone before the main pipeline (Context Extractor and Impact Assessment); the numbered core agents run in sequence coordinated by the Orchestrator, including an optional Phase 6b (Documentation Agent). Two more agents — Retrospective Agent and Improvement Advisor — are standalone and run after work on a feature stops, never invoked by the Orchestrator. Team Mode agents are Claude Code only and activated on explicit request.
 
 ::: tip Copy agents directly from the documentation
 Need the raw agent definition to paste into your tool? Go to **[Agent Files](/agent-files)** — every agent is embedded as a ready-to-copy code block, auto-synced from the source files.
@@ -199,6 +199,32 @@ Plans deployment steps, creates rollback procedures, identifies deployment risks
 **Skills:** `verify` / `run` (built-in)  
 Note: No generic deploy MCP available — all deploy MCPs are vendor-specific (Vercel, Buildkite, etc.).
 :::
+
+---
+
+## [Documentation Agent](/agents/documentation-agent)
+
+Optional Phase 6b, runs after Release Planner. Writes feature-facing documentation in the **target project** — README updates, API reference entries, a CHANGELOG entry, migration notes for breaking changes — matching whatever doc conventions the project already has. The second agent in the framework, after the Phase 3 implementer, permitted to write real files outside `.kairos/`; scoped strictly to documentation, never source code.
+
+Output is `06b-documentation.md`: a Docs Touched table plus the drafted content, and a Documentation Gaps table (same 5-column shape as every other Risks/Findings table) for anything it can't confidently write without inventing details.
+
+---
+
+## [Retrospective Agent](/agents/retrospective-agent)
+
+Standalone, post-pipeline. Run any time after work on a feature stops — not necessarily after Release Planning; a `simple_fix` that skipped Phase 6 still has lessons worth capturing. Reads everything already on disk for that one feature (its phase artifacts and ledger) and distills 3–8 lessons, split Diataxis-style into **Why This Happened** (root cause) and **What To Do Differently** (actionable). Appends one dated entry to the project-root `.kairos/_lessons.md` — the only write in the framework that targets a path outside the current feature folder.
+
+::: tip Optional enhancements
+**Skills:** `deep-research` (built-in)
+:::
+
+---
+
+## [Improvement Advisor](/agents/improvement-advisor-agent)
+
+Standalone and infrequent — run every few features, not every run. Reads the accumulated `.kairos/_lessons.md` across all past features and looks for friction confirmed in 3 or more of them. For each confirmed pattern, drafts a new `.kairos/decisions/ADR-*.md` (`Status: Proposed`) proposing a concrete framework change, and refreshes `_lessons.md`'s curated `Recurring Patterns` table (capped at 10 rows — the only section the Orchestrator injects into every subagent prompt).
+
+Never edits `agents/*.md`, `.opencode/`, `.kimi-code/`, or `docs/` itself — every ADR is a proposal a human applies by hand, the same "never self-implement" principle the Orchestrator follows for source code, applied here to the framework's own definition files.
 
 ---
 

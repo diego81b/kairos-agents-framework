@@ -73,9 +73,12 @@ your-project/
 │   ├── security-reviewer-agent.md  ← Adversarial security review (optional)
 │   ├── test-verifier-agent.md
 │   ├── release-planner-agent.md
+│   ├── documentation-agent.md      ← Feature-facing docs (optional, Phase 6b)
+│   ├── retrospective-agent.md      ← Lessons capture (standalone, post-pipeline)
+│   ├── improvement-advisor-agent.md ← Framework change proposals (standalone, infrequent)
 │   └── team/             ← Team Mode specialists (Claude Code only)
-├── .opencode/agents/     ← OpenCode mirror of the 11 core agents above (see Setup > OpenCode)
-├── .kimi-code/agents/    ← Kimi Code mirror of the 11 core agents above (see Setup > Kimi Code)
+├── .opencode/agents/     ← OpenCode mirror of the 14 core agents above (see Setup > OpenCode)
+├── .kimi-code/agents/    ← Kimi Code mirror of the 14 core agents above (see Setup > Kimi Code)
 └── .kairos/              ← Created at runtime, holds phase outputs (Markdown with frontmatter)
     └── issue-42_add-stripe/   ← one subfolder per feature
         ├── 01-requirements.md

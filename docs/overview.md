@@ -54,8 +54,11 @@ Each subagent:
 | 4b | **Security Reviewer** _(optional)_ | Adversarial security pass — IDOR, auth, injection, secrets, data exposure | `04b-security-review.md` |
 | 5 | **Test Verifier** | Coverage adequacy (>80%), edge cases, assertion quality | `05-test-verification.md` |
 | 6 | **Release Planner** | Deployment steps, rollback strategy, monitoring thresholds | `06-deployment-plan.md` |
+| 6b | **Documentation Agent** _(optional)_ | Feature-facing docs in the target project — README, API reference, CHANGELOG | `06b-documentation.md` |
 
 All output files are saved to `.kairos/<feature-folder>/` — one subfolder per feature, named from the issue reference (e.g. `PROJ-42_add-stripe-payments`). Each phase writes a single Markdown file: a small YAML frontmatter header (status, counts, next agent) followed by the human-readable report (data model, issues, findings, runbook) — see the [Workflow](/workflow) page for why.
+
+Two more agents sit outside this table entirely: **Retrospective Agent** and **Improvement Advisor** are standalone, invoked directly by you after work on a feature stops — never auto-invoked by the Orchestrator. Retrospective Agent distills a finished feature's own artifacts into lessons, appended to the project-root `.kairos/_lessons.md`; Improvement Advisor reads that file back every few features and proposes framework changes as ADR records, never editing an agent file itself. See [All Agents](./agents) for both.
 
 ### Team Mode — optional extension (Claude Code only)
 
@@ -111,6 +114,7 @@ Reply with numbers (e.g. "1 3 4") or paste a KAIROS template block:
    4b. security-reviewer-agent — Adversarial security review (optional — recommended for auth, payments, write endpoints)
 5. test-verifier             — Test quality & coverage
 6. release-planner           — Deployment planning
+   6b. documentation-agent   — Feature-facing docs (optional — recommended when API contracts or user-facing behavior changed)
 ```
 
 If the issue already contains a `## KAIROS Pipeline` checklist block (placed there by you or a team template), the orchestrator reads it automatically and just asks you to confirm.
@@ -157,6 +161,9 @@ agents/
 ├── security-reviewer-agent.md   ← Adversarial security review (optional, read-only)
 ├── test-verifier-agent.md       ← Test quality
 ├── release-planner-agent.md     ← Deployment planning
+├── documentation-agent.md       ← Feature-facing docs (optional, Phase 6b)
+├── retrospective-agent.md       ← Standalone, post-pipeline: lessons capture
+├── improvement-advisor-agent.md ← Standalone, infrequent: framework change proposals (ADRs)
 ├── shared/
 │   └── contract-checklist.md    ← Shared reference: 9 questions to resolve before any contract
 └── team/                        ← Team Mode specialists

@@ -73,7 +73,7 @@ and the new changelog block alongside the commit message.
 
 ## OpenCode Mirror Sync
 
-Every file in `agents/` (the 11 core pipeline agents, **not** `agents/team/`) has a hand-maintained counterpart in `.opencode/agents/`. There is no conversion script — this mirror is kept in sync by hand, on purpose, to avoid a generated artifact drifting from a script no one maintains.
+Every file in `agents/` (the 14 core pipeline agents, **not** `agents/team/`) has a hand-maintained counterpart in `.opencode/agents/`. There is no conversion script — this mirror is kept in sync by hand, on purpose, to avoid a generated artifact drifting from a script no one maintains.
 
 **Rule: if a commit touches any `agents/*.md` file, it must also update the matching `.opencode/agents/*.md` file in the same commit.**
 
@@ -87,7 +87,7 @@ Every file in `agents/` (the 11 core pipeline agents, **not** `agents/team/`) ha
 
 ## Kimi Code Mirror Sync
 
-Every file in `agents/` (the 11 core pipeline agents, **not** `agents/team/`) also has a hand-maintained counterpart in `.kimi-code/agents/`. Same discipline as the OpenCode mirror: no conversion script, kept in sync by hand, on purpose.
+Every file in `agents/` (the 14 core pipeline agents, **not** `agents/team/`) also has a hand-maintained counterpart in `.kimi-code/agents/`. Same discipline as the OpenCode mirror: no conversion script, kept in sync by hand, on purpose.
 
 **Rule: if a commit touches any `agents/*.md` file, it must also update the matching `.kimi-code/agents/*.md` file in the same commit.**
 

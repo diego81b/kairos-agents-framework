@@ -113,6 +113,7 @@ Based on what you found, recommend which pipeline agents this issue needs. Use t
 | `medium` or `significant_rework` effort | `code-reviewer-agent` |
 | TDD implementer selected | `test-verifier-agent` |
 | Schema migrations or new deployment steps present | `release-planner-agent` |
+| API contract changed, or any user-facing behavior (CLI, config, UI) changed | `documentation-agent` |
 
 State the justification for each recommended agent. Also state which agents you are NOT recommending and why, if the reason is non-obvious.
 

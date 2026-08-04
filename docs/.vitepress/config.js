@@ -118,7 +118,10 @@ export default withMermaid(defineConfig({
               { text: 'Code Reviewer', link: '/agent-files#code-reviewer' },
               { text: 'Security Reviewer', link: '/agent-files#security-reviewer' },
               { text: 'Test Verifier', link: '/agent-files#test-verifier' },
-              { text: 'Release Planner', link: '/agent-files#release-planner' }
+              { text: 'Release Planner', link: '/agent-files#release-planner' },
+              { text: 'Documentation Agent', link: '/agent-files#documentation-agent' },
+              { text: 'Retrospective Agent', link: '/agent-files#retrospective-agent' },
+              { text: 'Improvement Advisor', link: '/agent-files#improvement-advisor' }
             ]
           },
           { text: 'Context Extractor', link: '/agents/context-extractor-agent' },
@@ -132,6 +135,9 @@ export default withMermaid(defineConfig({
           { text: 'Security Reviewer', link: '/agents/security-reviewer-agent' },
           { text: 'Test Verifier', link: '/agents/test-verifier-agent' },
           { text: 'Release Planner', link: '/agents/release-planner-agent' },
+          { text: 'Documentation Agent', link: '/agents/documentation-agent' },
+          { text: 'Retrospective Agent', link: '/agents/retrospective-agent' },
+          { text: 'Improvement Advisor', link: '/agents/improvement-advisor-agent' },
           { text: 'Contract Checklist', link: '/skills/contract-checklist/SKILL' },
           { text: 'Skills & MCP Enhancements', link: '/skills-mcp' }
         ]

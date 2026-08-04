@@ -17,7 +17,7 @@ curl -fsSL https://opencode.ai/install | bash
 
 ## Step 1 — Copy agents to `.opencode/agents/`
 
-KAIROS ships a ready-made OpenCode agent pack at [`.opencode/agents/`](https://github.com/diego81b/kairos-agents-framework/tree/main/.opencode/agents) in this repository — the 11 core pipeline agents, already converted (note the **plural** "agents"). Copy the whole folder into your project:
+KAIROS ships a ready-made OpenCode agent pack at [`.opencode/agents/`](https://github.com/diego81b/kairos-agents-framework/tree/main/.opencode/agents) in this repository — the 14 core pipeline agents, already converted (note the **plural** "agents"). Copy the whole folder into your project:
 
 ```bash
 # From your project root
@@ -83,18 +83,21 @@ OpenCode is a gateway to many providers, and hardcoding one `provider/model-id` 
   "$schema": "https://opencode.ai/config.json",
   "agent": {
     // Reasoning tier (canonical model: opus)
-    "orchestrator-agent":       { "model": "{env:KAIROS_STRONG_MODEL}" },
-    "architect-agent":          { "model": "{env:KAIROS_STRONG_MODEL}" },
-    "context-extractor-agent":  { "model": "{env:KAIROS_STRONG_MODEL}" },
-    "impact-assessment-agent":  { "model": "{env:KAIROS_STRONG_MODEL}" },
-    "security-reviewer-agent":  { "model": "{env:KAIROS_STRONG_MODEL}" },
+    "orchestrator-agent":        { "model": "{env:KAIROS_STRONG_MODEL}" },
+    "architect-agent":           { "model": "{env:KAIROS_STRONG_MODEL}" },
+    "context-extractor-agent":   { "model": "{env:KAIROS_STRONG_MODEL}" },
+    "impact-assessment-agent":   { "model": "{env:KAIROS_STRONG_MODEL}" },
+    "security-reviewer-agent":   { "model": "{env:KAIROS_STRONG_MODEL}" },
+    "improvement-advisor-agent": { "model": "{env:KAIROS_STRONG_MODEL}" },
     // Execution tier (canonical model: sonnet)
-    "pm-agent":                 { "model": "{env:KAIROS_FAST_MODEL}" },
-    "implementer-tdd-agent":    { "model": "{env:KAIROS_FAST_MODEL}" },
-    "implementer-coder-agent":  { "model": "{env:KAIROS_FAST_MODEL}" },
-    "code-reviewer-agent":      { "model": "{env:KAIROS_FAST_MODEL}" },
-    "test-verifier-agent":      { "model": "{env:KAIROS_FAST_MODEL}" },
-    "release-planner-agent":    { "model": "{env:KAIROS_FAST_MODEL}" }
+    "pm-agent":                  { "model": "{env:KAIROS_FAST_MODEL}" },
+    "implementer-tdd-agent":     { "model": "{env:KAIROS_FAST_MODEL}" },
+    "implementer-coder-agent":   { "model": "{env:KAIROS_FAST_MODEL}" },
+    "code-reviewer-agent":       { "model": "{env:KAIROS_FAST_MODEL}" },
+    "test-verifier-agent":       { "model": "{env:KAIROS_FAST_MODEL}" },
+    "release-planner-agent":     { "model": "{env:KAIROS_FAST_MODEL}" },
+    "documentation-agent":       { "model": "{env:KAIROS_FAST_MODEL}" },
+    "retrospective-agent":       { "model": "{env:KAIROS_FAST_MODEL}" }
   }
 }
 ```
@@ -106,7 +109,7 @@ export KAIROS_STRONG_MODEL="anthropic/claude-opus-4-5"   # any configured provid
 export KAIROS_FAST_MODEL="openai/gpt-5-mini"             # e.g. a cheaper tier entirely
 ```
 
-This preserves KAIROS's two-tier split (5 reasoning agents vs 6 execution agents) while letting each tier point at any provider OpenCode can reach — including mixing providers across tiers. To flatten costs further, point both tiers at the same small model; to max out quality, point both at your strongest. Global fallback: the top-level `model` key in `opencode.json` applies to agents with no per-agent `model:` anywhere.
+This preserves KAIROS's two-tier split (6 reasoning agents vs 8 execution agents) while letting each tier point at any provider OpenCode can reach — including mixing providers across tiers. To flatten costs further, point both tiers at the same small model; to max out quality, point both at your strongest. Global fallback: the top-level `model` key in `opencode.json` applies to agents with no per-agent `model:` anywhere.
 
 ## Step 3 — Add `AGENTS.md` for KAIROS context
 

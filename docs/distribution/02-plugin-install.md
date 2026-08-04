@@ -50,7 +50,7 @@ Installed components:
 
 | Component | Count | Access |
 |-----------|-------|--------|
-| Core pipeline agents | 11 | `kairos:<agent-name>` |
+| Core pipeline agents | 14 | `kairos:<agent-name>` |
 | Team Mode agents | 5 | `kairos:team:<agent-name>` |
 | Contract checklist skill | 1 | `/kairos:contract-checklist` |
 | Guided model setup command | 1 | `/kairos:setup` |
@@ -82,6 +82,9 @@ All KAIROS agents are scoped under the `kairos:` plugin namespace. Bare names (`
 | Security Reviewer | `kairos:security-reviewer-agent` |
 | Test Verifier | `kairos:test-verifier-agent` |
 | Release Planner | `kairos:release-planner-agent` |
+| Documentation Agent | `kairos:documentation-agent` |
+| Retrospective Agent | `kairos:retrospective-agent` |
+| Improvement Advisor | `kairos:improvement-advisor-agent` |
 
 ### Team Mode Agents
 

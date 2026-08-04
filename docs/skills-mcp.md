@@ -26,7 +26,7 @@ No install required — these ship with Claude Code.
 | `code-review` | `code-reviewer-agent` |
 | `security-review` | `security-reviewer-agent`, `teammate-backend-agent` |
 | `verify` / `run` | `implementer-tdd-agent`, `implementer-coder-agent`, `test-verifier-agent`, `teammate-tests-agent`, `teammate-frontend-agent`, `release-planner-agent` |
-| `deep-research` | `context-extractor-agent`, `impact-assessment-agent`, `pm-agent`, `architect-agent` |
+| `deep-research` | `context-extractor-agent`, `impact-assessment-agent`, `pm-agent`, `architect-agent`, `retrospective-agent` |
 | `outcome-issue-generator` | `pm-agent` |
 
 ### karpathy-guidelines
@@ -100,6 +100,9 @@ claude plugin install multica-ai/andrej-karpathy-skills
 | `security-reviewer-agent` | 4 | `security-review` | `insecure-defaults`, `supply-chain-risk-auditor`, `variant-analysis` | — |
 | `test-verifier-agent` | 5 | `verify`/`run` | `property-based-testing`, `mutation-testing`, `sarif-parsing`, `fp-check` | Chrome DevTools MCP, Playwright MCP |
 | `release-planner-agent` | 6 | `verify`/`run` | — | — |
+| `documentation-agent` | 6b | — | — | — |
+| `retrospective-agent` | Post | `deep-research` | — | — |
+| `improvement-advisor-agent` | Post | — | — | — |
 | `implementer-lead-agent` | Team | `karpathy-guidelines` | — | — |
 | `teammate-backend-agent` | Team | `karpathy-guidelines`, `security-review` | `sharp-edges`, `insecure-defaults` | — |
 | `teammate-database-agent` | Team | `karpathy-guidelines` | — | — |
