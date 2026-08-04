@@ -103,7 +103,7 @@ VitePress `srcDir` is set to `..` (repo root), so the site sources Markdown from
 
 ### Skills (`skills/`)
 
-`skills/contract-checklist/SKILL.md` is a shared reference invoked by `architect-agent` and `implementer-lead-agent`. Skills here are published as part of the plugin.
+`skills/contract-checklist/SKILL.md` is a shared reference invoked by `architect-agent` and `implementer-lead-agent`. `skills/code-simplification/SKILL.md` is a shared reference invoked by `implementer-tdd-agent` and `implementer-coder-agent`'s REFACTOR step. Skills here are published as part of the plugin.
 
 ### Plugin (`​.claude-plugin/`)
 

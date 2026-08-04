@@ -4,6 +4,18 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v6.5.0 — August 4, 2026
+
+### Added
+
+- **`skills/code-simplification/SKILL.md`** — new shared reference for the REFACTOR step of implementation, adapted from Anthropic's official `code-simplifier` plugin into a stack-agnostic checklist: five simplification principles (preserve behavior exactly, follow project conventions, clarity over cleverness, maintain balance against over-simplification, scope to what changed), a pattern table for structural/naming/redundancy issues, and a verification checklist that branches on whether the project has a test suite. Wired into `agents/implementer-tdd-agent.md` (PHASE 5) and `agents/implementer-coder-agent.md` (PHASE 2), plus their `.opencode/agents/` and `.kimi-code/agents/` mirrors — same "work through `X` while doing this" pattern already used for `contract-checklist` in `architect-agent.md`.
+
+### Changed
+
+- **`docs/agent-files.md`, `docs/.vitepress/config.js`, `CLAUDE.md`** — registered the new skill alongside the existing `contract-checklist` pointer: a consumer-naming sentence on the agent-files index page, a sidebar nav entry, and a paragraph in the root `### Skills (skills/)` section.
+
+---
+
 ## v6.4.0 — August 4, 2026
 
 ### Added

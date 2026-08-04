@@ -139,6 +139,7 @@ export default withMermaid(defineConfig({
           { text: 'Retrospective Agent', link: '/agents/retrospective-agent' },
           { text: 'Improvement Advisor', link: '/agents/improvement-advisor-agent' },
           { text: 'Contract Checklist', link: '/skills/contract-checklist/SKILL' },
+          { text: 'Code Simplification', link: '/skills/code-simplification/SKILL' },
           { text: 'Skills & MCP Enhancements', link: '/skills-mcp' }
         ]
       },

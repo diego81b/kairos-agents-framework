@@ -41,6 +41,8 @@ No exceptions. A pull request that modifies an agent without a matching changelo
 > Team Mode agent files are on a [separate page](/agent-files-team).
 >
 > The shared [Contract Checklist](skills/contract-checklist/SKILL.md) used by Architect Agent and Implementer Lead is in `skills/contract-checklist/SKILL.md`.
+>
+> The shared [Code Simplification](skills/code-simplification/SKILL.md) checklist used by the Implementer Agent (TDD and Code Only) REFACTOR step is in `skills/code-simplification/SKILL.md`.
 
 ---
 

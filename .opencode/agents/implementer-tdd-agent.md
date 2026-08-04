@@ -228,6 +228,8 @@ Coverage must be >80%.
 Same rule as PHASE 2: if the command fails to run at all, set `green_phase_verified: unknown` and record why — never fabricate a pass.
 
 ### PHASE 5: Refactor + Verify
+Work through [`code-simplification`](../skills/code-simplification/SKILL.md) while doing this — it maps concrete patterns (deep nesting, long functions, duplication, unclear names) to their fix.
+
 Improve code while tests still pass:
 - Better variable names
 - Extract functions
