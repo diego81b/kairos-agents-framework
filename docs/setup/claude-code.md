@@ -302,6 +302,25 @@ Each `[HITL]` gate is a pause where **you** review and approve before the next a
 
 ---
 
+## Customizing models
+
+KAIROS's shipped frontmatter splits agents into two tiers — `opus` for the 5 reasoning-heavy agents (`orchestrator`, `architect`, `context-extractor`, `impact-assessment`, `security-reviewer`) and `sonnet` for the 6 execution agents (`pm`, `implementer-tdd`, `implementer-coder`, `code-reviewer`, `test-verifier`, `release-planner`). Claude Code has no plugin-install-time or config-file mechanism for per-agent models, but there are four ways to change them:
+
+0. **`/kairos:setup` (plugin users, recommended)** — the plugin ships a guided setup command that asks for a strategy (Default / Economy / Inherit / Custom) and applies it: on copy-installs it rewrites the `model:` frontmatter of your `.claude/agents/` files per tier; on plugin-only installs it can materialize project copies (rewriting the scoped `@kairos:` calls to bare names so routing stays self-contained) or, if you prefer, set a single global subagent model via `CLAUDE_CODE_SUBAGENT_MODEL` in `settings.json`.
+1. **Edit the `model:` frontmatter** in your `.claude/agents/` copies. Aliases (`sonnet`, `opus`, `haiku`), full model IDs (e.g. `claude-opus-5`), and `inherit` (follow the main conversation) are all accepted. Downgrading the execution tier to `haiku` is the easiest token-saver; keep `orchestrator-agent` and `architect-agent` on stronger models. Downside: your edits are local forks — re-apply them after re-copying updated KAIROS agents.
+2. **Global subagent override** — the `CLAUDE_CODE_SUBAGENT_MODEL` environment variable wins over every subagent's frontmatter `model:` (resolution order: env var → per-invocation override → frontmatter → main conversation model). Settable in `settings.json`:
+   ```json
+   {
+     "env": { "CLAUDE_CODE_SUBAGENT_MODEL": "haiku" }
+   }
+   ```
+   Coarse but zero-maintenance: **all** subagents — including architect and security review — run on that one model, so it's a blunt cost cut, not a per-tier tuning.
+3. **Shadow copy (manual variant of option 0)** — a same-named agent file in your project's `.claude/agents/` outranks the plugin's copy for the **bare** name (project scope > plugin scope). Caveat: the plugin's orchestrator routes via scoped calls (`@kairos:pm-agent`, …), which keep resolving to the plugin's agents with shipped models — so a lone shadow copy only affects direct bare-name invocations. For pipeline-wide effect, copy all 11 core agents and rewrite the scoped `@kairos:` calls to bare names (this is exactly what `/kairos:setup` automates).
+
+There is intentionally no KAIROS-side config file for this: Claude Code offers no hook the plugin could use to rewrite frontmatter at install time.
+
+---
+
 ## Suggested Models
 
 Claude Code accepts short aliases that always resolve to the latest model in each family, or full versioned IDs (e.g. `claude-sonnet-4-6`) to pin a specific release.

@@ -74,6 +74,40 @@ permission:
 
 `AskUserQuestion` has no OpenCode equivalent, but nothing needs to change in the body: every gated agent already contains a fallback branch ("If `AskUserQuestion` is not available ... fall back to printing this menu and waiting for a typed reply") — OpenCode always takes that branch. Don't confuse this with the `question` permission key, which governs OpenCode's own tool-approval prompts and is unrelated to KAIROS's HITL gate text.
 
+## Step 2b — Customize models without forking the pack (optional)
+
+OpenCode is a gateway to many providers, and hardcoding one `provider/model-id` per agent in the mirror can't fit everyone. You don't need to edit the shipped `.opencode/agents/*.md` files to change models: OpenCode's `opencode.json` **configures agents by name**, so a config entry overrides the matching markdown agent's `model:` while the pack files stay pristine (and re-copyable after KAIROS updates without losing your model choices). Put it in your project root (`opencode.json`, safe to commit) or globally (`~/.config/opencode/opencode.json`):
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    // Reasoning tier (canonical model: opus)
+    "orchestrator-agent":       { "model": "{env:KAIROS_STRONG_MODEL}" },
+    "architect-agent":          { "model": "{env:KAIROS_STRONG_MODEL}" },
+    "context-extractor-agent":  { "model": "{env:KAIROS_STRONG_MODEL}" },
+    "impact-assessment-agent":  { "model": "{env:KAIROS_STRONG_MODEL}" },
+    "security-reviewer-agent":  { "model": "{env:KAIROS_STRONG_MODEL}" },
+    // Execution tier (canonical model: sonnet)
+    "pm-agent":                 { "model": "{env:KAIROS_FAST_MODEL}" },
+    "implementer-tdd-agent":    { "model": "{env:KAIROS_FAST_MODEL}" },
+    "implementer-coder-agent":  { "model": "{env:KAIROS_FAST_MODEL}" },
+    "code-reviewer-agent":      { "model": "{env:KAIROS_FAST_MODEL}" },
+    "test-verifier-agent":      { "model": "{env:KAIROS_FAST_MODEL}" },
+    "release-planner-agent":    { "model": "{env:KAIROS_FAST_MODEL}" }
+  }
+}
+```
+
+The `{env:...}` substitution is OpenCode's own config feature (unset variables become empty strings — in that case set plain `provider/model-id` strings instead). With the variables exported:
+
+```bash
+export KAIROS_STRONG_MODEL="anthropic/claude-opus-4-5"   # any configured provider works
+export KAIROS_FAST_MODEL="openai/gpt-5-mini"             # e.g. a cheaper tier entirely
+```
+
+This preserves KAIROS's two-tier split (5 reasoning agents vs 6 execution agents) while letting each tier point at any provider OpenCode can reach — including mixing providers across tiers. To flatten costs further, point both tiers at the same small model; to max out quality, point both at your strongest. Global fallback: the top-level `model` key in `opencode.json` applies to agents with no per-agent `model:` anywhere.
+
 ## Step 3 — Add `AGENTS.md` for KAIROS context
 
 Unlike Codex, OpenCode's `AGENTS.md` support is native (not a convention borrowed from elsewhere): it's read from the project root, searched by walking up from the current directory, before falling back to a global `~/.config/opencode/AGENTS.md`.

@@ -14,6 +14,8 @@ runtime beyond the documentation site build. The deliverables are:
   files to users (published at https://kairos-docs.vercel.app).
 - **`.opencode/agents/`** — a hand-maintained mirror of the 11 core agent files,
   translated to OpenCode's frontmatter schema (see "OpenCode Mirror Sync" below).
+- **`.kimi-code/agents/`** — a hand-maintained mirror of the 11 core agent files,
+  translated to Kimi Code's frontmatter schema (see "Kimi Code Mirror Sync" below).
 
 KAIROS defines a 6-phase, human-gated (HITL) pipeline. Each phase is one agent file
 that produces one Markdown artifact in the *target project's* `.kairos/<feature_folder>/`
@@ -55,12 +57,15 @@ any change to `docs/`, `agents/`, or `skills/` (agent files are embedded in the 
 
 - `agents/` — 11 core pipeline agents (canonical source) + `team/` (5 Team Mode agents, Claude Code only).
 - `.opencode/agents/` — OpenCode mirror of the 11 core agents (derived, kept in sync by hand).
+- `.kimi-code/agents/` — Kimi Code mirror of the 11 core agents (derived, kept in sync by hand).
 - `docs/` — VitePress site. Config: `docs/.vitepress/config.js` (nav, sidebar, `srcDir: '..'`).
-- `docs/setup/` — per-tool setup guides (Claude Code, Cursor, VS Code, JetBrains, Codex, OpenCode, templates).
+- `docs/setup/` — per-tool setup guides (Claude Code, Cursor, VS Code, JetBrains, Codex, OpenCode, Kimi Code, templates).
 - `docs/distribution/` — distribution roadmap docs (discovery, plugin mapping, install).
 - `skills/contract-checklist/SKILL.md` — shared reference skill invoked by `architect-agent`
   and `implementer-lead-agent`; published with the plugin.
 - `.claude-plugin/` — Claude Code plugin metadata (`plugin.json`, `marketplace.json`).
+- `commands/` — Claude Code plugin slash commands (`/kairos:setup` — guided model
+  configuration). Plugin root is the repo root, so these are auto-discovered.
 - `.claude/CLAUDE.md`, `.github/copilot-instructions.md` — copies of the commit/versioning
   conventions; keep them consistent with this file when the conventions change.
 - `internal/` — internal reference docs (cost analysis, routing logic, PROOF methodology).
@@ -120,6 +125,34 @@ mirror is kept in sync by hand, on purpose.
 coordination logic (the Agent Teams flag, the `agent` tool for spawning, an unconditional
 `AskUserQuestion` call with no fallback in `implementer-lead-agent.md`) is
 Claude-Code-specific; a frontmatter-only port ships a non-functional agent.
+
+## Kimi Code Mirror Sync
+
+Every file in `agents/` (the 11 core pipeline agents, **not** `agents/team/`) has a
+hand-maintained counterpart in `.kimi-code/agents/`. Same discipline as the OpenCode
+mirror: no conversion script, kept in sync by hand, on purpose.
+
+**Rule: if a commit touches any `agents/*.md` file, it must also update the matching
+`.kimi-code/agents/*.md` file in the same commit.**
+
+- Body changes → copy the same body change into the mirror (bodies must stay
+  byte-for-byte identical between the two).
+- Frontmatter changes (`description:`, `tools:`, `model:`) → re-derive the mirror's
+  fields using the mapping table in `docs/setup/kimi-code.md`. This mirror is much
+  closer to the canonical format than OpenCode's: `name:`, `description:`, and the
+  `tools:` CSV all copy over unchanged (Kimi Code accepts Claude-Code-style
+  frontmatter and shares the same tool names, `AskUserQuestion` included). The only
+  translation is `model: opus` → `model_preference: primary` and
+  `model: sonnet` → `model_preference: secondary` — symbolic preferences that
+  resolve to the user's configured Kimi models, never concrete Claude model ids.
+- New core agent file → add both `agents/<name>.md` and `.kimi-code/agents/<name>.md`.
+  Removed core agent file → remove both.
+- Before committing, diff the two directories' bodies (strip frontmatter from each side
+  and compare) to confirm nothing drifted.
+
+**`agents/team/*.md` is explicitly out of scope for this mirror too** — same rationale
+as the OpenCode exclusion: Team Mode's coordination logic is Claude-Code-specific, and
+a frontmatter-only port ships a non-functional agent.
 
 ## Docs Site Conventions
 

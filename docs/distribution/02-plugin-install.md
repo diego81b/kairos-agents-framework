@@ -53,6 +53,13 @@ Installed components:
 | Core pipeline agents | 11 | `kairos:<agent-name>` |
 | Team Mode agents | 5 | `kairos:team:<agent-name>` |
 | Contract checklist skill | 1 | `/kairos:contract-checklist` |
+| Guided model setup command | 1 | `/kairos:setup` |
+
+---
+
+## Model Configuration
+
+Run `/kairos:setup` after installing to choose which models the agents use. The command asks for a strategy (Default opus/sonnet split, Economy, Inherit, or Custom per tier) and applies it — either by materializing project copies in `.claude/agents/` with per-tier `model:` frontmatter (full two-tier control), or by setting a single global subagent model (`CLAUDE_CODE_SUBAGENT_MODEL` in `settings.json`). See the [Claude Code setup guide](/setup/claude-code#customizing-models) for the details and trade-offs.
 
 ---
 

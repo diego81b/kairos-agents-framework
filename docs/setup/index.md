@@ -38,10 +38,11 @@ The fields that matter:
 | [VS Code](./vscode) | ✅ Full — `.github/agents/` | ✅ Each agent = fresh context | ⚠️ Via handoffs/agent prompt | Low |
 | [OpenAI Codex CLI](./codex) | ✅ Full — `.codex/agents/` (TOML) | ✅ Each agent = fresh context | ⚠️ Via AGENTS.md | Medium |
 | [OpenCode](./opencode) | ✅ Full — `.opencode/agents/` | ✅ Each agent = fresh context | ⚠️ Via text-menu fallback (no `AskUserQuestion`) | Medium |
+| [Kimi Code](./kimi-code) | ✅ Full — `.kimi-code/agents/` | ✅ Each agent = fresh context | ✅ Native `AskUserQuestion`, same as Claude Code | Low |
 | [JetBrains](./jetbrains) | ⚠️ Preview — `.github/agents/` via Copilot | ⚠️ Depends on Copilot | ⚠️ Via agent prompt (no handoffs) | Medium |
 
-::: tip Recommended: Claude Code, Cursor, or VS Code
-**Claude Code**, **Cursor**, **VS Code**, **OpenAI Codex CLI**, and **OpenCode** all support native subagent contexts with context isolation. Claude Code offers the most seamless experience: auto-delegation and zero-config `.kairos/` persistence. Cursor adds explicit `/agent-name` invocation. VS Code adds `handoffs` buttons for native HITL. Codex CLI uses TOML format. OpenCode uses Markdown + YAML frontmatter like Claude Code, but with different fields and no `AskUserQuestion` equivalent.
+::: tip Recommended: Claude Code, Cursor, VS Code, or Kimi Code
+**Claude Code**, **Cursor**, **VS Code**, **OpenAI Codex CLI**, **OpenCode**, and **Kimi Code** all support native subagent contexts with context isolation. Claude Code offers the most seamless experience: auto-delegation and zero-config `.kairos/` persistence. Kimi Code is the closest match behind it: it accepts Claude-Code-style frontmatter as-is and has a native `AskUserQuestion`, so HITL gates work exactly like Claude Code's. Cursor adds explicit `/agent-name` invocation. VS Code adds `handoffs` buttons for native HITL. Codex CLI uses TOML format. OpenCode uses Markdown + YAML frontmatter like Claude Code, but with different fields and no `AskUserQuestion` equivalent.
 
 JetBrains support is in public preview — functionality may change.
 :::
@@ -74,6 +75,7 @@ your-project/
 │   ├── release-planner-agent.md
 │   └── team/             ← Team Mode specialists (Claude Code only)
 ├── .opencode/agents/     ← OpenCode mirror of the 11 core agents above (see Setup > OpenCode)
+├── .kimi-code/agents/    ← Kimi Code mirror of the 11 core agents above (see Setup > Kimi Code)
 └── .kairos/              ← Created at runtime, holds phase outputs (Markdown with frontmatter)
     └── issue-42_add-stripe/   ← one subfolder per feature
         ├── 01-requirements.md
