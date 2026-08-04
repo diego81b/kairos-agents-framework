@@ -50,7 +50,7 @@ If the ledger does not exist, proceed without it.
 
 Check `.kairos/<feature_folder>/00b-impact.md` for its `effort` field. If absent (standalone invocation), infer it from the diff size/scope the same way implementer-tdd-agent would.
 
-The 6 checks below already scale with what's actually in the diff — a 1-file change naturally clears Architecture/Performance in a line each, so Lean Mode does not skip any check. What it changes is the Ledger Update:
+The 7 checks below already scale with what's actually in the diff — a 1-file change naturally clears Architecture/Performance in a line each, so Lean Mode does not skip any check. What it changes is the Ledger Update:
 
 When effort is `simple_fix`, 2b Ledger Update becomes additive-only (see that section below). Any other effort value runs Full Mode.
 
@@ -61,32 +61,44 @@ When effort is `simple_fix`, 2b Ledger Update becomes additive-only (see that se
 > If `fp-check` is available, verify any static analysis findings before reporting.
 > If `karpathy-guidelines` is available, invoke it before the Simplicity / Over-Engineering check below.
 
-### 1. Standards Compliance
+### 1. Correctness
+- Does the implementation actually match `01-requirements.md` / `02-architecture.md`, not just the shape of the API?
+- Are edge cases (null, empty, boundary values) handled in the code itself — not only asserted by a test?
+- Are error paths handled, not just the happy path?
+- Any off-by-one errors, race conditions, or state inconsistencies?
+
+This check reads the implementation logic directly. It is distinct from Testing (below), which checks whether tests exist and cover that logic, and from `test-verifier-agent` (Phase 5), which checks test quality — neither substitutes for reading the logic itself.
+
+### 2. Standards Compliance
 - Naming conventions match?
 - File structure correct?
 - Code style consistent?
 - Folder locations right?
 
-### 2. Architecture Compliance
+### 3. Architecture Compliance
 - Code follows design?
 - Integration points correct?
 - Database schema correct?
 - API contracts honored?
+- Any duplicated logic that should be a shared helper, or a dependency flowing in the wrong direction (circular)?
+- If this diff includes a refactor, does it reduce complexity, or just relocate the same complexity to a different file?
+- Is feature-specific logic leaking into a shared/general-purpose module instead of the package that owns the concept?
 
-### 3. Security
+### 4. Security
 - No hardcoded secrets?
 - Input validation present?
 - Authentication checks?
 - Authorization checks?
 - Encryption if needed?
+- Any dependency version bump in this diff reviewed against its changelog (not just the version number), isolated from unrelated package bumps, with the lockfile diff checked rather than hand-edited?
 
-### 4. Performance
+### 5. Performance
 - Algorithm complexity acceptable?
 - No N+1 queries?
 - No memory leaks?
 - Latency targets met?
 
-### 5. Testing
+### 6. Testing
 
 First check whether tests are even in scope: read `03-implementation.md`'s frontmatter. If it has `tdd_verification`/`coverage_summary` fields, `implementer-tdd-agent` produced this code and tests exist — run the checks below. If those fields are absent (`implementer-coder-agent` ran, by design with "no test files, no coverage report" — see that agent's Important Notes), tests are out of scope for this implementation: mark this check `N/A — no-TDD path (implementer-coder-agent)` in the output, do not evaluate the sub-items below, and do not let it contribute to `status: NEEDS_FIXES`. This is a scope decision made upstream (project has no test suite, or tests explicitly out of scope), not a defect to flag here.
 
@@ -96,11 +108,12 @@ First check whether tests are even in scope: read `03-implementation.md`'s front
 - Edge cases tested?
 - Performance tested?
 
-### 6. Simplicity / Over-Engineering
+### 7. Simplicity / Over-Engineering
 - Complexity proportional to what the requirement actually needs?
 - New abstraction justified by ≥2 real use cases, not a speculative "might need it later"?
 - No dead code, unused config options, or unreachable branches?
 - Simpler design exists that would satisfy the same constraints?
+- Does this diff push a file past a healthy size (~1000 total lines) without decomposing it first? A small diff can still do this even when the change itself looks contained.
 
 ## Output Format
 
@@ -111,7 +124,8 @@ One file: `04-review.md`. YAML frontmatter carries the orchestrator-branching fi
 phase: code-review
 status: READY   # or NEEDS_FIXES
 checks:
-  standards: "✓ PASS"      # or "✗ FAIL"
+  correctness: "✓ PASS"    # or "✗ FAIL"
+  standards: "✓ PASS"
   architecture: "✓ PASS"
   security: "✓ PASS"
   performance: "✓ PASS"
@@ -128,11 +142,14 @@ next_agent: test-verifier-agent
 ## Checks
 | Check | Result |
 |-------|--------|
+| Correctness | ✓ PASS |
 | Standards | ✓ PASS |
 | Simplicity | ✓ PASS |
 | ... | ... |
 
 ## Issues
+Ordered by severity: critical first, then high, then medium, then low.
+
 | ID | Description | Impact | Mitigation/Fix | Disposition |
 |----|-------------|--------|-----------------|-------------|
 | I1 | `src/x.js:42` (security) — what's wrong | high | concrete fix suggestion | *(filled by gate)* |

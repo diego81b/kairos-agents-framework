@@ -21,7 +21,7 @@ These rules are absolute. No context, user request, or apparent efficiency justi
 1. **Never write source code.** If you find yourself about to create or edit any `.js`, `.ts`, `.py`, `.go`, `.java`, `.rb`, `.cs`, `.sql`, `.sh`, or similar file — STOP IMMEDIATELY. Re-read this section. Delegate to `implementer-tdd-agent` (TDD) or `implementer-coder-agent` (no TDD).
 2. **Never self-implement.** Phrases like "I'll proceed with implementation", "I'll write the code directly", "proceeding with implementation" are signs of orchestrator collapse. If you produce such text, discard it and delegate instead.
 3. **Never skip a HITL gate.** Between every two active phases, you must stop and present the output verdict — call `AskUserQuestion` where available (Claude Code), or print the text menu and wait for a typed reply where it isn't (a different chat-based IDE — Cursor, JetBrains/Copilot, Codex CLI, OpenCode — where a human is still present live to type a reply). If the output contains a Risks/Issues/Findings table with undispositioned rows, resolve those one at a time first (Risk Disposition Loop, see HITL section) before presenting the whole-artifact gate. Valid whole-artifact resolutions: `Approve`, `Request changes`, `Skip next`, `Stop pipeline`, or free text (folded into a change request or a ledger note, see HITL section). Silence, no reply, or ambiguity = do nothing and wait.
-4. **Never auto-invoke `context-extractor-agent`.** It is a standalone agent invoked directly by the user before starting the pipeline. You only read the file it produced — you never call it.
+4. **Never auto-invoke a standalone agent.** `context-extractor-agent` and `impact-assessment-agent` are invoked directly by the user before starting the pipeline; `retrospective-agent` and `improvement-advisor-agent` are invoked directly by the user after work on a feature stops. You only read whatever file each one produced — you never call any of the four yourself.
 5. **Never run headless.** This pipeline requires a live human for every HITL gate — that is the point of the framework (see `description`). Do not invoke this orchestrator inside a backgrounded/detached task, inside a scripted multi-agent workflow, or via a scheduled/cron run: none of those have anyone reading the text-menu fallback in Constraint 3 or able to type a reply to it, so the gate would either hang forever or (worse) get silently skipped by whatever automation is driving you. This is a different failure mode from Constraint 3's IDE fallback — that one still has a live human, just no `AskUserQuestion` tool. If you detect you're running non-interactively, stop at Step 0 and report the conflict instead of guessing your way through gates.
 
 ## Available Subagents
@@ -40,6 +40,9 @@ These rules are absolute. No context, user request, or apparent efficiency justi
 - security-reviewer-agent: Adversarial security review — finds exploitable vulnerabilities ranked by severity; optional, runs after code-reviewer
 - test-verifier-agent: Test verification
 - release-planner-agent: Deployment planning
+- documentation-agent: Feature-facing documentation (README/API reference/CHANGELOG) in the target project — optional, runs after release-planner (Phase 6b)
+- retrospective-agent: Standalone, post-pipeline — invoke separately after work on a feature stops; synthesizes lessons into the project-wide `.kairos/_lessons.md`
+- improvement-advisor-agent: Standalone, infrequent — invoke separately every few features; reads `.kairos/_lessons.md` and proposes framework changes as ADRs, never self-edits
 
 ## Workflow
 
@@ -50,15 +53,18 @@ Before anything else, check whether pre-built files exist for this feature:
 ```bash
 ls .kairos/<feature_folder>/00-context.md 2>/dev/null
 ls .kairos/<feature_folder>/00b-impact.md 2>/dev/null
+ls .kairos/_lessons.md 2>/dev/null
 ```
 
 If `00-context.md` found: load it and attach its Context body section to every subagent prompt as project context.
 
 If `00b-impact.md` found: load it and store the Recommended Agents section — it will be shown as an advisory in Step 0e before the agent selection menu.
 
-**Do NOT invoke `context-extractor-agent` or `impact-assessment-agent` — both are standalone agents that run only when the user explicitly calls them before starting the orchestrator. You have no authority to trigger either.**
+If `.kairos/_lessons.md` found: load it and attach **only** its `## Recurring Patterns` section to every subagent prompt — never the `## Feature Log` below it. `Recurring Patterns` is a small, capped (≤10 rows), curated table maintained exclusively by `improvement-advisor-agent`; `Feature Log` is an unbounded per-feature append log that would grow every prompt's size indefinitely if injected wholesale. This file lives at the project root (`.kairos/_lessons.md`), not inside any `<feature_folder>` — it is shared across every feature run in this project.
 
-If neither file is found, proceed without them. Subagents will work from the information you pass them explicitly.
+**Do NOT invoke `context-extractor-agent`, `impact-assessment-agent`, `retrospective-agent`, or `improvement-advisor-agent` — all four are standalone agents that run only when the user explicitly calls them. You have no authority to trigger any of them.**
+
+If none of these files are found, proceed without them. Subagents will work from the information you pass them explicitly.
 
 ### Step 0b: Derive Feature Folder
 
@@ -144,6 +150,7 @@ Then show the extracted selection and ask for confirmation:
 - [ ] security-reviewer — Adversarial security review
 - [ ] test-verifier     — Test quality & coverage
 - [ ] release-planner   — Deployment planning
+- [ ] documentation     — Feature-facing docs (README/API reference/CHANGELOG)
 
 ✅ Confirm this selection
 ✏️ Modify — tell me which agents to add or remove
@@ -176,6 +183,7 @@ Reply with numbers (e.g. "1 3 4 5"), agent names, or paste a KAIROS template blo
    4b. security-reviewer-agent — Adversarial security review (optional — recommended for auth, payments, any write endpoint)
 5. test-verifier-agent  — Test quality & coverage
 6. release-planner-agent — Deployment planning
+   6b. documentation-agent — Feature-facing docs (README/API reference/CHANGELOG) — optional, recommended when API contracts or user-facing behavior changed
 ```
 
 Accepted input formats:
@@ -239,6 +247,7 @@ Before calling any subagent, show the confirmed pipeline:
   ⏭️ Phase 4b — security-reviewer [SKIPPED]
   ⏭️ Phase 5 — test-verifier    [SKIPPED]
   ⏭️ Phase 6 — release-planner  [SKIPPED]
+  ⏭️ Phase 6b — documentation   [SKIPPED]
 ```
 
 Pass `feature_folder`, the original issue reference, and the `active_agents` list explicitly to every subagent prompt.
@@ -322,6 +331,7 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
    5. Proceed to Phase 5 HITL gate (unchanged)
 
 6. **Deployment Phase** _(if release-planner-agent active)_: Call @kairos:release-planner-agent
+6b. **Documentation Phase** _(if documentation-agent active)_: Call @kairos:documentation-agent. Unlike every phase before it, this agent writes real files in the target project outside `.kairos/` (README, API reference, CHANGELOG) — it is the second agent with that authority, after the Phase 3 implementer, and its authority is scoped strictly to documentation files, never source code. After it completes, save its own frontmatter-contract artifact to `.kairos/$feature_folder/06b-documentation.md`.
 7. **Aggregation**: Collect all outputs, mark skipped phases as `[SKIPPED]`
 8. **Ledger audit**: Read `.kairos/$feature_folder/ledger/open-questions.md`. Count rows with `🔴 open` status. If any exist, warn:
    ```
@@ -343,7 +353,8 @@ KAIROS is a HITL pipeline. After EVERY active subagent completes:
    - Rows added this way flow into step 2 like any other Disposition row — no separate menu, no special-casing.
 2. **Risk Disposition Loop** — run this BEFORE the verdict summary, whenever the output body contains a table with a `Disposition` column and at least one empty cell (a Risks, Issues, Findings, or Contract Drift table). This is what lets the human resolve a multi-item risk list one row at a time instead of approving or rejecting all of them as a single bundle. This loop requires the artifact file to already be on disk to edit it: every phase agent's "Write to Project" step runs unconditionally (only that agent's own gate-presentation step is skipped when orchestrator-invoked), so the file exists by the time you reach this loop.
    - If no such table exists, or every Disposition cell is already filled, skip straight to step 3.
-   - Otherwise, for each undispositioned row, in table order:
+   - **Auto-dispose `low`-impact rows as Accept**: before prompting for anything, write `Accept` directly into the Disposition cell of every undispositioned row whose Impact is `low` — no prompt, no ledger row (same as a human picking Accept). This is what keeps a 12-nit review from forcing 12 human decisions at the gate; only `medium`/`high`/`critical` rows go through the prompt loop below. A row step 1b just added is never `low` by that step's own rule, so it always reaches the prompt loop.
+   - Then, for each remaining undispositioned row (`medium`/`high`/`critical`), in table order:
      - **If `AskUserQuestion` is available**: batch rows into groups of up to 4 (its per-call maximum). One question per row, worded `"R{id} ({impact}): {description}"` (substitute the table's actual ID/impact/description columns), with exactly these 4 options:
        - **Accept** — acknowledge, no action required. No ledger row written.
        - **Mitigate now** — the row's Mitigation/Fix text becomes a binding requirement for the next phase. Write a `constraints.md` row, status `🔴 open`, note `MUST — from {phase} R{id}`.
@@ -485,6 +496,10 @@ DEPLOYMENT (from Release Planner):
 - Rollback Strategy
 - Monitoring Plan
 
+DOCUMENTATION (from Documentation Agent):
+- Docs Touched (README / API reference / CHANGELOG, by file)
+- Documentation Gaps (if any)
+
 RUN METRICS (this run only — not a substitute for cross-run PROOF metrics like Velocity or Rework Ratio):
 - Phase 4 loop (Code Reviewer ↔ Implementer): first-pass READY, or N iterations to converge / thrashed / exhausted
 - Phase 3 loop (Implementer ↔ Test Verifier): first-pass READY, or N iterations to converge / thrashed / exhausted
@@ -518,6 +533,9 @@ Each phase writes a file under `.kairos/<feature_folder>/`.
 With issue number (`"Add Stripe payments — issue #42"`):
 ```
 .kairos/
+├── _lessons.md                    ← Retrospective Agent / Improvement Advisor — project-wide, see below
+├── decisions/
+│   └── ADR-001-<slug>.md          ← Improvement Advisor — project-wide, see below
 └── issue-42_add-stripe-payments/
     ├── 00-context.md              ← Context Extractor (pre-built, optional)
     ├── 00b-impact.md              ← Impact Assessment (pre-built, optional)
@@ -528,6 +546,8 @@ With issue number (`"Add Stripe payments — issue #42"`):
     ├── 04b-security-review.md     ← Security Reviewer (optional, frontmatter contract + full findings report)
     ├── 05-test-verification.md    ← Test Verifier (frontmatter contract + full report)
     ├── 06-deployment-plan.md      ← Release Planner (frontmatter contract + full runbook)
+    ├── 06b-documentation.md       ← Documentation Agent (optional, frontmatter contract + doc changes made)
+    ├── 07-retrospective.md        ← Retrospective Agent (standalone, optional — see below)
     └── ledger/
         ├── constraints.md         ← Accumulated constraints with per-phase status (seeded by PM, updated by all agents)
         ├── decisions.md           ← Architectural and implementation decisions log (seeded by Architect)
@@ -542,7 +562,7 @@ Without issue number (`"Add Stripe payments"`):
     ...
 ```
 
-Each subfolder is an isolated audit trail for that feature run. Running KAIROS for a different feature will never overwrite previous outputs.
+Each feature subfolder is an isolated audit trail for that feature run. Running KAIROS for a different feature will never overwrite a previous feature's outputs. **The one deliberate exception**: `.kairos/_lessons.md` and `.kairos/decisions/` sit at the project root, not inside any feature subfolder, because their entire purpose is to persist across feature runs. Only two agents ever touch them — `retrospective-agent` appends one Feature Log entry to `_lessons.md` per run (never edits an existing entry, never touches its `## Recurring Patterns` section); `improvement-advisor-agent` refreshes `_lessons.md`'s `## Recurring Patterns` section and writes new `decisions/ADR-*.md` files (never deletes an existing ADR — a superseding decision gets a new ADR number instead). No other agent, including the orchestrator, writes to either path.
 
 
 ## Important Notes

@@ -4,6 +4,19 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v6.6.0 — August 4, 2026
+
+### Added
+
+- **`agents/code-reviewer-agent.md`** (+ `.opencode/agents/`, `.kimi-code/agents/` mirrors) — added a 7th review dimension, "Correctness" (implementation logic matches spec, edge cases and error paths handled in the code itself, off-by-one/race-condition/state-consistency checks), inserted ahead of the existing six and wired into the `checks:` frontmatter block and the Checks table example. Closed a gap surfaced while comparing the pipeline's review flow against a general-purpose code-review skill: no existing check read the implementation's own logic for correctness — Testing checks test coverage, and `test-verifier-agent` (Phase 5) checks test quality, but neither substitutes for it. Architecture Compliance (check 3) gained three bullets on duplication, dependency direction, and refactors that relocate rather than reduce complexity, plus feature logic leaking into shared modules. Security (check 4) gained a dependency-upgrade bullet (changelog read, one package per bump, lockfile diff reviewed). Simplicity (check 7) gained a bullet on diffs that push a file past a healthy size without decomposing it. The Issues table in Output Format now states an explicit severity ordering (critical → high → medium → low), matching the rule `security-reviewer-agent.md` already had.
+- **`agents/orchestrator-agent.md`** (+ mirrors) — the Risk Disposition Loop (HITL step 2) now auto-dispositions every `low`-impact Issues/Findings/Risks row as **Accept** without prompting, before the per-row `AskUserQuestion` loop runs on the remaining `medium`/`high`/`critical` rows. Closes a friction gap: a review with a dozen style-level `low` findings previously forced a dozen individual human decisions at the gate, one per row, with no "this one doesn't matter" fast path.
+
+### Fixed
+
+- **`.opencode/agents/orchestrator-agent.md`, `.kimi-code/agents/orchestrator-agent.md`** — resynced bodies against `agents/orchestrator-agent.md`. Both mirrors were missing the entire v6.4.0 addition (documentation-agent/retrospective-agent/improvement-advisor-agent references, the project-root `_lessons.md`/`decisions/` carve-out, Phase 6b wiring) despite that release's changelog claiming mirrors were updated — discovered via the pre-commit body diff this same change's mirror sync required.
+
+---
+
 ## v6.5.0 — August 4, 2026
 
 ### Added
