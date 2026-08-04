@@ -74,9 +74,11 @@ Classify as one of three levels and document your reasoning:
 
 | Level | Criteria |
 |-------|----------|
-| `simple_fix` | ≤ 3 files modified, no new endpoints, no schema changes, no auth impact |
+| `simple_fix` | ≤ 2 files modified, no new endpoints, no schema changes, no auth impact |
 | `medium` | 3–10 files, 1–3 new/modified endpoints, possible schema changes, no auth redesign |
 | `significant_rework` | > 10 files, new subsystem or domain, auth changes, schema migrations, cross-domain impact |
+
+All criteria in a row must hold for that row to apply. A change matching the file count for one level but a higher-impact criterion for another (e.g. 2 files but a new endpoint) classifies at the higher level — a new endpoint, schema change, or auth impact always escalates past `simple_fix` regardless of file count.
 
 Reasoning must be specific — list the files and changes that drove the classification, not just a label.
 
@@ -126,8 +128,8 @@ The frontmatter carries only a lean machine-readable contract; the body holds th
 ---
 phase: impact-assessment
 effort: simple_fix | medium | significant_rework
-risk_counts: { critical: 0, high: 1, medium: 1, low: 0 }
-open_dispositions: 3
+risk_counts: { critical: 0, high: 1, medium: 0, low: 0 }
+open_dispositions: 2
 recommended_agents: [architect-agent, implementer-tdd-agent, security-reviewer-agent, code-reviewer-agent, test-verifier-agent]
 ---
 

@@ -39,15 +39,18 @@ migrations/001_create_payments.sql
 Per DB CONTRACT:
 
 ```sql
+-- Postgres. Confirm the project's actual database engine (existing migrations,
+-- Project Profile input) before assuming this dialect — adapt types/syntax if it differs.
 CREATE TABLE payments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   order_id UUID NOT NULL REFERENCES orders(id),
   stripe_payment_intent_id VARCHAR NOT NULL UNIQUE,
   amount DECIMAL(10, 2) NOT NULL CHECK (amount > 0),
   currency VARCHAR(3) NOT NULL DEFAULT 'USD',
-  status ENUM('pending', 'succeeded', 'failed') NOT NULL DEFAULT 'pending',
+  status VARCHAR NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'succeeded', 'failed')),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  -- Postgres has no ON UPDATE clause — refreshing updated_at needs a BEFORE UPDATE trigger.
 );
 ```
 
@@ -84,6 +87,21 @@ migrations/
 schema/
 └─ payments.sql (schema reference)
 ```
+
+## Owned Paths
+
+Yours: `migrations/`, `schema/` (or wherever this project's schema/migration files actually live). Backend routes/services, frontend components, and test files belong to the other three teammates. Never create or edit a file outside your own paths, even to fix something that looks broken — message the lead instead:
+
+```
+message [lead]: "<path> needs a change outside my domain: <what and why>."
+```
+
+## Progress Signals
+
+Report progress to the Lead at each milestone, not only at completion — going silent for the whole task looks identical to being stalled:
+- `message [lead]: "Started: <task>."` right after receiving the task.
+- `message [lead]: "<N>/<M> tables done: <what just finished>."` at each table/migration, not per line of SQL.
+- `message [lead]: "Completed: <summary>."` right before marking the task completed on the shared task list.
 
 ## Important
 

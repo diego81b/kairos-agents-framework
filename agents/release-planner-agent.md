@@ -75,7 +75,7 @@ One file: `06-deployment-plan.md`. YAML frontmatter carries the lean machine con
 ```markdown
 ---
 phase: release-plan
-status: ready
+status: ready   # or blocked
 rollback_summary: { trigger: "when to rollback", estimated_time_minutes: 15 }
 monitoring_summary: { metrics_count: 2 }
 risk_counts: { critical: 0, high: 1, medium: 1, low: 0 }
@@ -112,6 +112,10 @@ This is the final phase, so there is no `next_agent` field. `Description` folds 
 
 If a risk's reasoning doesn't fit one row, keep a one-line Description with a "see below" pointer and add a short prose paragraph immediately under the table for that risk — the table itself keeps exactly these 5 columns so the disposition loop can still parse it.
 
+`status` rules:
+- `ready` — no ledger constraint or open question flagged as a release blocker (step 2b), and no `critical` risk in the Risks table.
+- `blocked` — any release-blocking constraint/open question, or any `critical` risk.
+
 ## After Generating Output
 
 ### 1. Present for Validation
@@ -121,8 +125,8 @@ If the `AskUserQuestion` tool is available (Claude Code), call it:
 - `question`: `"Deployment plan ready — how do you want to proceed?"`
 - `header`: `"Release Gate"`
 - `options`:
-  - **Approve** (Recommended by default — this agent has no pass/fail status) — pipeline complete.
-  - **Request changes** — specify what to adjust; re-run this agent with that feedback.
+  - **Approve** (Recommended when `status: ready`) — pipeline complete.
+  - **Request changes** (Recommended when `status: blocked`) — the blocking constraint(s), open question(s), or critical risk listed in the plan need resolving first; specify what to adjust or resolve them, then re-run this agent.
   - **Stop** — halt here.
 Free text via "Other" is treated as change feedback; if it reads as a standalone note instead, append it to `.kairos/<feature_folder>/ledger/open-questions.md` (source `human`, status `🔴 open`) rather than re-running.
 
@@ -149,7 +153,7 @@ Update all three ledger files under `.kairos/<feature_folder>/ledger/`:
 **`constraints.md`** — Final accounting. Update the Status of EVERY remaining row:
 - Deployment constraints met → mark `✓ resolved`
 - Constraints deferred to post-release monitoring → mark `⚠ deferred` with monitoring plan reference
-- Any constraint still `🔴 open` → this is a release blocker; list it in your deployment plan risks section
+- Any constraint still `🔴 open` → this is a release blocker; list it in your deployment plan risks section and set this artifact's frontmatter `status` to `blocked`
 
 **`decisions.md`** — Add deployment decisions (rollback strategy, canary percentage, feature flag choices).
 

@@ -117,7 +117,7 @@ One Markdown file, `04b-security-review.md`: YAML frontmatter carries the orches
 ```markdown
 ---
 phase: security-review
-status: SECURE   # or VULNERABILITIES_FOUND
+status: VULNERABILITIES_FOUND   # or SECURE
 contract_enforcement_summary: { gaps_count: 1 }
 findings_summary: { critical: 0, high: 1, medium: 2, low: 0, total: 3 }
 open_dispositions: 3   # count of Findings table rows with empty Disposition cell
@@ -136,7 +136,7 @@ Ordered by severity: `critical` first, then `high`, then `medium`, then `low`.
 
 | ID | Description | Impact | Mitigation/Fix | Disposition |
 |----|-------------|--------|-----------------|-------------|
-| F1 | `[authorization]` at `path/to/file:42` — how an attacker sets up the request and what they gain | critical | concrete, specific remediation — what to add, change, or remove | *(filled by gate)* |
+| F1 | `[authorization]` at `path/to/file:42` — how an attacker sets up the request and what they gain | high | concrete, specific remediation — what to add, change, or remove | *(filled by gate)* |
 ```
 
 Table columns:

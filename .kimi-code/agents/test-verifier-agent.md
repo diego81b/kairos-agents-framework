@@ -162,7 +162,7 @@ One file: `05-test-verification.md`. YAML frontmatter carries the machine contra
 ```markdown
 ---
 phase: test-verify
-status: READY   # or NEEDS_FIXES
+status: NEEDS_FIXES   # or READY
 execution:
   framework: jest   # jest|vitest|pytest|go|...
   command: "npm test -- --coverage"
@@ -206,7 +206,7 @@ next_agent: release-planner-agent
 ## Issues
 | ID | Category | File:Line | Description | Impact | Mitigation/Fix | Disposition |
 |----|----------|-----------|-------------|--------|-----------------|-------------|
-| I1 | assertion_strength | `__tests__/stripe.service.test.js:88` | Test 'createCharge handles expired card' has no assertion — only awaits the call. | critical | Add `expect(result).toEqual({ status: 'declined', code: 'card_expired' })` after the await. | *(filled by gate)* |
+| I1 | assertion_strength | `__tests__/stripe.service.test.js:88` | Test 'createCharge handles expired card' has no assertion — only awaits the call. | high | Add `expect(result).toEqual({ status: 'declined', code: 'card_expired' })` after the await. | *(filled by gate)* |
 ```
 
 Issues table columns: `Impact` carries the severity value (`critical | high | medium | low` — same scale, formerly `Severity`). `Mitigation/Fix` carries the concrete remediation (formerly `Fix`). `Category` and `File:Line` stay as leading columns before `Description` so no information is lost. Leave `Disposition` empty in your own output — it is filled at the gate.
@@ -332,4 +332,4 @@ These skills and MCP tools enhance this agent when installed. KAIROS works fully
 - Coverage % alone is not a quality signal — assertion strength and determinism matter more.
 - Flag real issues only. No nits without remediation value.
 - Never fabricate coverage numbers. If execution failed, say so.
-- Loop back to implementer with a structured `issues[]`, not prose.
+- Loop back to implementer with the Issues table rows (see "If user picks 'Request fixes'" above), not a prose summary.

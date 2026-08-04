@@ -262,13 +262,12 @@ If a mismatch's reasoning doesn't fit one row, keep a one-line Description with 
 
 **Contract Mismatch Disposition Loop** — before presenting the gate below, resolve every mismatch table row with an empty Disposition cell, in groups of up to 4 at a time. This gate always runs itself regardless of invocation mode — it fires before the orchestrator ever sees anything, so the Lead runs the per-item loop directly (it is not centralized to the orchestrator like other gates):
 
-- If `AskUserQuestion` is available: batch rows into groups of up to 4 (its per-call max). One question per row, worded `"M{id} ({impact}): {description}"`, with exactly these 4 options:
+Batch rows into groups of up to 4 (`AskUserQuestion`'s per-call max — always available in this Claude-Code-only agent). One question per row, worded `"M{id} ({impact}): {description}"`, with exactly these 4 options:
   - **Accept** — this specific divergence is fine as-is, Lead contract wins for this field. No ledger row.
   - **Mitigate now** — apply the row's proposed resolution now, before implementation proceeds. Write a `constraints.md` row, status `🔴 open`, note `MUST — from implementer-lead M{id}`.
   - **Escalate** — needs Architect redesign for this field specifically. Write a `constraints.md` row `🔴 open` tagged `BLOCKING` AND an `open-questions.md` row. Flips the following gate's recommended default to "Stop — flag to Architect for redesign" instead of "Accept divergence".
   - **Defer** — proceed with the divergence documented as a known gap. Write an `open-questions.md` row, status `🔴 open`, note `deferred contract mismatch`.
 - If the human's free-text reply for a row asks for more detail instead of picking one of the 4 options (e.g. "explain", "why", "perché", "spiega") — write 2-4 plain-language sentences on what this specific divergence changes for the code being built and what breaks if left unresolved, grounded in the row's actual fields/file references, not a generic definition of "contract mismatch" — then re-present the same 4 options for that row instead of moving on.
-- If `AskUserQuestion` is unavailable: print the same 4-option menu per row, one at a time, and wait for a typed reply before moving to the next row.
 - Write the chosen disposition back into the Disposition cell for that row.
 - Only after every row has a disposition, present the gate below — if any row was dispositioned **Escalate**, mark "Stop — flag to Architect for redesign" as the recommended default instead of "Accept divergence".
 
@@ -317,7 +316,7 @@ Spawn one teammate using the `kairos:team:teammate-tests-agent` agent type with 
 Assign them the task: "RED phase — write all tests per TEST CONTRACT".
 ```
 
-Wait for `kairos:team:teammate-tests-agent` to complete their task before proceeding. The team's task list will show when the task moves to `completed`. Same stall handling as Step 4 applies: two silent checks with no progress → message them directly; a third with no response → surface to the human instead of waiting indefinitely.
+Wait for `kairos:team:teammate-tests-agent` to complete their task before proceeding. The team's task list will show when the task moves to `completed`. Same stall handling as Step 4 applies: two silent checks with no progress → message them directly; a third with no response → surface to the human instead of waiting indefinitely. Relay its progress signals (see Step 4's "Progress relay") to the human as they arrive — RED phase can take a while and the human has no other visibility into it.
 
 ---
 
@@ -411,6 +410,8 @@ Spawn three more teammates in parallel:
 All in-scope teammates work simultaneously. Monitor the shared task list to track their progress.
 
 **Stall handling**: if you check the task list twice (at reasonable intervals, not immediately back-to-back) and a teammate's task hasn't moved and no message from them explains why, don't keep waiting silently — message that teammate directly asking for status. If a third check still shows no progress and no response, surface it to the human: `⚠️ [teammate] has shown no progress across 3 checks — wait longer / message again / take over this layer yourself / abort the team and fall back to implementer-tdd-agent (single-agent path)`. Do not let one stalled teammate block the whole GREEN phase indefinitely with no visibility to the human.
+
+**Progress relay**: each teammate messages you at defined milestones (see their own Progress Signals section — start, per-unit checkpoints, completion). Surface these to the human as short status lines as they arrive, e.g. `🔧 teammate-backend: 2/3 endpoints done`, rather than only reporting at phase boundaries. This is what actually answers "what are they doing right now" for a human watching four parallel teammates — the stall-detection above only tells them when something's wrong, not what's going right.
 
 ---
 

@@ -196,10 +196,21 @@ Output: RUNNABLE test code
 Format: Using project's testing framework
 
 ### PHASE 2: Run Tests (RED)
-Generate tests as executable code.
-When user runs tests: ALL FAIL (no implementation yet)
-This is RED phase.
-Verify they fail for right reasons.
+Generate tests as executable code, then run the project's test command **yourself** — do not ask the user to run it and report back. Detect the framework from project files:
+
+| Stack | Command |
+|-------|---------|
+| Node + Jest | `npm test -- --coverage` |
+| Node + Vitest | `npx vitest run --coverage` |
+| Python + pytest | `pytest --cov` |
+| Go | `go test ./... -cover` |
+| Other | use project README / `package.json` scripts |
+
+Paste the raw output (pass/fail counts, failing test names) into the final output's `## Test Execution — RED` section. Every test must fail for the right reason — an assertion failure on behavior that doesn't exist yet — not an import error, syntax error, or test-collection failure; the latter means the test itself is broken and must be fixed before writing any implementation.
+
+If the command fails to run at all (missing deps, config error, no runner found), do NOT fabricate a result: record the failure and set `red_phase_verified: unknown` in the final output — never `true`, and never silently `false` for a check that never actually ran.
+
+This is RED phase. Do not proceed to PHASE 3 until every test is confirmed failing for the right reason.
 
 ### PHASE 3: Generate Implementation
 Write code to PASS all tests:
@@ -210,9 +221,11 @@ Write code to PASS all tests:
 - Follow project's code style
 
 ### PHASE 4: Run Tests (GREEN)
-When user runs tests: ALL PASS
-Coverage must be >80%
-This is GREEN phase.
+Re-run the same test command from PHASE 2 **yourself**. Paste the raw output into `## Test Execution — GREEN`. All tests must now pass — if any still fail, this is not GREEN; return to PHASE 3.
+
+Coverage must be >80%.
+
+Same rule as PHASE 2: if the command fails to run at all, set `green_phase_verified: unknown` and record why — never fabricate a pass.
 
 ### PHASE 5: Refactor + Verify
 Improve code while tests still pass:
@@ -253,6 +266,14 @@ iteration_mode: { active: false, iteration: null }
 | src/path/to/file.js | code | 84 |
 | __tests__/test.js | test | 56 |
 
+## Test Execution — RED
+
+*(raw output from PHASE 2's test run — pass/fail counts, failing test names)*
+
+## Test Execution — GREEN
+
+*(raw output from PHASE 4's re-run — pass/fail counts; must show zero failures)*
+
 ## Git Status
 
 ```
@@ -265,6 +286,8 @@ A  __tests__/stripe.service.test.js
 
 *(Iteration Mode only — one line per cumulative issue addressed and how. Omit when not in Iteration Mode.)*
 ````
+
+`red_phase_verified` / `green_phase_verified` are `true`, `false`, or `unknown` — `true` only when the pasted raw output actually shows the expected result (all failing for RED, all passing for GREEN); `unknown` when the test command itself could not run (missing deps, config error, no runner found); never `false` for a check that never actually executed.
 
 `status` values:
 - `complete` — all waves done, pipeline can advance to code-reviewer

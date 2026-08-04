@@ -126,7 +126,7 @@ next_agent: test-verifier-agent
 ## Issues
 | ID | Description | Impact | Mitigation/Fix | Disposition |
 |----|-------------|--------|-----------------|-------------|
-| I1 | `src/x.js:42` (security) — what's wrong | critical | concrete fix suggestion | *(filled by gate)* |
+| I1 | `src/x.js:42` (security) — what's wrong | high | concrete fix suggestion | *(filled by gate)* |
 | I2 | ...                                     | high     | ...                     | *(filled by gate)* |
 ```
 

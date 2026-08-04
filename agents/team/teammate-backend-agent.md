@@ -110,6 +110,21 @@ src/
    └─ validation.js         (request validation)
 ```
 
+## Owned Paths
+
+Yours: `src/routes/`, `src/services/`, `src/middleware/` (or wherever this project's backend code actually lives). Frontend components, database migrations, and test files belong to the other three teammates. Never create or edit a file outside your own paths, even to fix something that looks broken — message the lead instead:
+
+```
+message [lead]: "<path> needs a change outside my domain: <what and why>."
+```
+
+## Progress Signals
+
+Report progress to the Lead at each milestone, not only at completion — going silent for the whole task looks identical to being stalled:
+- `message [lead]: "Started: <task>."` right after receiving the task.
+- `message [lead]: "<N>/<M> endpoints done: <what just finished>."` at each endpoint, not per line of code.
+- `message [lead]: "Completed: <summary>."` right before marking the task completed on the shared task list.
+
 ## Important
 
 - Implement EXACTLY per API CONTRACT

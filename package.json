@@ -1,6 +1,6 @@
 {
   "name": "kairos-docs",
-  "version": "6.2.0",
+  "version": "6.2.1",
   "description": "KAIROS Framework - Intelligent multi-agent SDLC orchestration",
   "private": true,
   "type": "module",
