@@ -21,7 +21,7 @@ These rules are absolute. No context, user request, or apparent efficiency justi
 1. **Never write source code.** If you find yourself about to create or edit any `.js`, `.ts`, `.py`, `.go`, `.java`, `.rb`, `.cs`, `.sql`, `.sh`, or similar file — STOP IMMEDIATELY. Re-read this section. Delegate to `implementer-tdd-agent` (TDD) or `implementer-coder-agent` (no TDD).
 2. **Never self-implement.** Phrases like "I'll proceed with implementation", "I'll write the code directly", "proceeding with implementation" are signs of orchestrator collapse. If you produce such text, discard it and delegate instead.
 3. **Never skip a HITL gate.** Between every two active phases, you must stop and present the output verdict — call `AskUserQuestion` where available (Claude Code), or print the text menu and wait for a typed reply where it isn't (a different chat-based IDE — Cursor, JetBrains/Copilot, Codex CLI, OpenCode — where a human is still present live to type a reply). If the output contains a Risks/Issues/Findings table with undispositioned rows, resolve those one at a time first (Risk Disposition Loop, see HITL section) before presenting the whole-artifact gate. Valid whole-artifact resolutions: `Approve`, `Request changes`, `Skip next`, `Stop pipeline`, or free text (folded into a change request or a ledger note, see HITL section). Silence, no reply, or ambiguity = do nothing and wait.
-4. **Never auto-invoke `context-extractor-agent`.** It is a standalone agent invoked directly by the user before starting the pipeline. You only read the file it produced — you never call it.
+4. **Never auto-invoke a standalone agent.** `context-extractor-agent` and `impact-assessment-agent` are invoked directly by the user before starting the pipeline; `retrospective-agent` and `improvement-advisor-agent` are invoked directly by the user after work on a feature stops. You only read whatever file each one produced — you never call any of the four yourself.
 5. **Never run headless.** This pipeline requires a live human for every HITL gate — that is the point of the framework (see `description`). Do not invoke this orchestrator inside a backgrounded/detached task, inside a scripted multi-agent workflow, or via a scheduled/cron run: none of those have anyone reading the text-menu fallback in Constraint 3 or able to type a reply to it, so the gate would either hang forever or (worse) get silently skipped by whatever automation is driving you. This is a different failure mode from Constraint 3's IDE fallback — that one still has a live human, just no `AskUserQuestion` tool. If you detect you're running non-interactively, stop at Step 0 and report the conflict instead of guessing your way through gates.
 
 ## Available Subagents
@@ -40,6 +40,9 @@ These rules are absolute. No context, user request, or apparent efficiency justi
 - security-reviewer-agent: Adversarial security review — finds exploitable vulnerabilities ranked by severity; optional, runs after code-reviewer
 - test-verifier-agent: Test verification
 - release-planner-agent: Deployment planning
+- documentation-agent: Feature-facing documentation (README/API reference/CHANGELOG) in the target project — optional, runs after release-planner (Phase 6b)
+- retrospective-agent: Standalone, post-pipeline — invoke separately after work on a feature stops; synthesizes lessons into the project-wide `.kairos/_lessons.md`
+- improvement-advisor-agent: Standalone, infrequent — invoke separately every few features; reads `.kairos/_lessons.md` and proposes framework changes as ADRs, never self-edits
 
 ## Workflow
 
@@ -50,15 +53,18 @@ Before anything else, check whether pre-built files exist for this feature:
 ```bash
 ls .kairos/<feature_folder>/00-context.md 2>/dev/null
 ls .kairos/<feature_folder>/00b-impact.md 2>/dev/null
+ls .kairos/_lessons.md 2>/dev/null
 ```
 
 If `00-context.md` found: load it and attach its Context body section to every subagent prompt as project context.
 
 If `00b-impact.md` found: load it and store the Recommended Agents section — it will be shown as an advisory in Step 0e before the agent selection menu.
 
-**Do NOT invoke `context-extractor-agent` or `impact-assessment-agent` — both are standalone agents that run only when the user explicitly calls them before starting the orchestrator. You have no authority to trigger either.**
+If `.kairos/_lessons.md` found: load it and attach **only** its `## Recurring Patterns` section to every subagent prompt — never the `## Feature Log` below it. `Recurring Patterns` is a small, capped (≤10 rows), curated table maintained exclusively by `improvement-advisor-agent`; `Feature Log` is an unbounded per-feature append log that would grow every prompt's size indefinitely if injected wholesale. This file lives at the project root (`.kairos/_lessons.md`), not inside any `<feature_folder>` — it is shared across every feature run in this project.
 
-If neither file is found, proceed without them. Subagents will work from the information you pass them explicitly.
+**Do NOT invoke `context-extractor-agent`, `impact-assessment-agent`, `retrospective-agent`, or `improvement-advisor-agent` — all four are standalone agents that run only when the user explicitly calls them. You have no authority to trigger any of them.**
+
+If none of these files are found, proceed without them. Subagents will work from the information you pass them explicitly.
 
 ### Step 0b: Derive Feature Folder
 
@@ -144,6 +150,7 @@ Then show the extracted selection and ask for confirmation:
 - [ ] security-reviewer — Adversarial security review
 - [ ] test-verifier     — Test quality & coverage
 - [ ] release-planner   — Deployment planning
+- [ ] documentation     — Feature-facing docs (README/API reference/CHANGELOG)
 
 ✅ Confirm this selection
 ✏️ Modify — tell me which agents to add or remove
@@ -176,6 +183,7 @@ Reply with numbers (e.g. "1 3 4 5"), agent names, or paste a KAIROS template blo
    4b. security-reviewer-agent — Adversarial security review (optional — recommended for auth, payments, any write endpoint)
 5. test-verifier-agent  — Test quality & coverage
 6. release-planner-agent — Deployment planning
+   6b. documentation-agent — Feature-facing docs (README/API reference/CHANGELOG) — optional, recommended when API contracts or user-facing behavior changed
 ```
 
 Accepted input formats:
@@ -239,6 +247,7 @@ Before calling any subagent, show the confirmed pipeline:
   ⏭️ Phase 4b — security-reviewer [SKIPPED]
   ⏭️ Phase 5 — test-verifier    [SKIPPED]
   ⏭️ Phase 6 — release-planner  [SKIPPED]
+  ⏭️ Phase 6b — documentation   [SKIPPED]
 ```
 
 Pass `feature_folder`, the original issue reference, and the `active_agents` list explicitly to every subagent prompt.
@@ -275,9 +284,9 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
    If confirmed → call @kairos:team:implementer-lead-agent. If switched → call @kairos:implementer-tdd-agent instead. If cancelled → stop. Do NOT call any implementer without this confirmation.
 4. **Review Phase** _(if code-reviewer-agent active)_: Call @kairos:code-reviewer-agent
 
-   **Phase 4 Loop Actuator** _(runs after code-reviewer returns, before Phase 4 HITL gate — only if `loop_policy.phase4.mode == "auto"`, `status: NEEDS_FIXES`, AND at least one `critical` or `high` issue in `issues[]`. Reachable only when `implementer-tdd-agent` or `implementer-coder-agent` is the active Phase-3 implementer — Step 0e forces `manual` for Team Mode, so this never fires when `implementer-lead-agent` was used)_:
+   **Loop Actuator Procedure** _(shared shape for both loops below — steps 0-3 are identical; only the pair name `{pair}`, the checker agent `{checker}`, and the checker's own artifact filename differ)_:
 
-   0. **Prior-exhaustion check**: read `## Loop History — Code Reviewer ↔ Implementer` in `ledger/open-questions.md`, if present. If it already has an entry from earlier in this same pipeline run (a prior `exhausted` or `thrash` exit), do NOT silently re-arm a fresh `max_retries`-iteration loop. Show:
+   0. **Prior-exhaustion check**: read `## Loop History — {pair}` in `ledger/open-questions.md`, if present. If it already has an entry from earlier in this same pipeline run (a prior `exhausted` or `thrash` exit), do NOT silently re-arm a fresh `max_retries`-iteration loop. Show:
       ```
       ⚠️  This loop already ran this pipeline run and did not converge:
           <prior Loop History entry — outcome, iterations, issues remaining>
@@ -287,63 +296,42 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
       2) Skip auto-loop this time — go straight to the manual HITL gate (recommended)
       3) Stop pipeline
       ```
-      Wait for the human's choice before proceeding. Only continue to step 1 on option 1; option 2 skips straight to step 5; option 3 halts.
-   1. Create `## Loop State — Code Reviewer ↔ Implementer` in `ledger/open-questions.md`:
+      Wait for the human's choice before proceeding. Only continue to step 1 on option 1; option 2 skips straight to the phase's Guard step below; option 3 halts.
+   1. Create `## Loop State — {pair}` in `ledger/open-questions.md`:
       ```
       status: in_progress
       iteration: 1 of <max_retries>
       issues_critical_high_prev: null
-      issues_critical_high_curr: <count of critical/high from issues[]>
-      cumulative_issues: <all critical/high issues[] from code-reviewer output>
+      issues_critical_high_curr: <count of critical/high from {checker}'s output>
+      cumulative_issues: <all critical/high issues[] from {checker}'s output>
       ```
    2. **Loop** — repeat until exit condition:
       a. Re-invoke the active Phase-3 implementer — `implementer-tdd-agent` or `implementer-coder-agent`, whichever was selected in Step 3's routing decision (both detect Iteration Mode from the ledger automatically)
-      b. Re-invoke @kairos:code-reviewer-agent (writes `convergence_signal` to `## Loop State`)
+      b. Re-invoke `{checker}` (writes `convergence_signal` to `## Loop State`)
       c. Read `convergence_signal.issues_critical_high` from `## Loop State` as `new_count`
-      d. **Monotonic-progress check**: if `new_count >= issues_critical_high_curr` → exit with: `⚠️ Loop thrash after N iterations — critical/high count not decreasing. Human review required.` — append this outcome to `## Loop History — Code Reviewer ↔ Implementer` (create it if absent) before exiting.
+      d. **Monotonic-progress check**: if `new_count >= issues_critical_high_curr` → exit with: `⚠️ Loop thrash after N iterations — critical/high count not decreasing. Human review required.` — append this outcome to `## Loop History — {pair}` (create it if absent) before exiting.
       e. If `status == READY` → exit loop (success) — no `## Loop History` entry needed; a converged loop carries no cautionary memory forward.
-      f. If `iteration >= max_retries` → exit with: `⚠️ Loop exhausted after <N> iterations. <X> critical/high issues remain.` — append this outcome to `## Loop History — Code Reviewer ↔ Implementer` (create it if absent) before exiting.
-      g. Otherwise: increment `iteration`, set `issues_critical_high_prev = issues_critical_high_curr`, `issues_critical_high_curr = new_count`, append issues to `cumulative_issues`, save versioned artifacts (`04-review-iter{N}.md`, `03-implementation-iter{N}.md`), continue
-   3. **Cleanup**: remove `## Loop State — Code Reviewer ↔ Implementer` from `open-questions.md`. `## Loop History` (if written in step 2d/2f) is a separate, persistent section — do not remove it here; it is what step 0 checks on any later re-arm this run.
-   4. **Guard 3 — Regression check** _(only if ≥1 loop iteration actually ran)_: invoke @kairos:test-verifier-agent as a single-pass (loop policy NOT applied). Save output as `05-test-verification.md`. If `NEEDS_FIXES` → present HITL gate immediately with warning: `⚠️ Phase 4 loop introduced test regression. Human review required before advancing.` Skip Phase 5 invocation.
+      f. If `iteration >= max_retries` → exit with: `⚠️ Loop exhausted after <N> iterations. <X> critical/high issues remain.` — append this outcome to `## Loop History — {pair}` (create it if absent) before exiting.
+      g. Otherwise: increment `iteration`, set `issues_critical_high_prev = issues_critical_high_curr`, `issues_critical_high_curr = new_count`, append issues to `cumulative_issues`, save versioned artifacts (`{checker's artifact}-iter{N}.md`, `03-implementation-iter{N}.md`), continue
+   3. **Cleanup**: remove `## Loop State — {pair}` from `open-questions.md`. `## Loop History` (if written in step 2d/2f) is a separate, persistent section — do not remove it here; it is what step 0 checks on any later re-arm this run.
+
+   Both loops below apply this procedure with their own `{pair}`/`{checker}`, then run their own Guard step.
+
+   **Phase 4 Loop Actuator** _(runs after code-reviewer returns, before Phase 4 HITL gate — only if `loop_policy.phase4.mode == "auto"`, `status: NEEDS_FIXES`, AND at least one `critical` or `high` issue in `issues[]`. Reachable only when `implementer-tdd-agent` or `implementer-coder-agent` is the active Phase-3 implementer — Step 0e forces `manual` for Team Mode, so this never fires when `implementer-lead-agent` was used)_. Apply the Loop Actuator Procedure with `{pair}` = "Code Reviewer ↔ Implementer" and `{checker}` = @kairos:code-reviewer-agent (artifact `04-review.md`). Then:
+
+   4. **Guard — Regression check** _(only if ≥1 loop iteration actually ran)_: invoke @kairos:test-verifier-agent as a single-pass (loop policy NOT applied). This single-pass run **is** the Phase 5 artifact — save its output as `05-test-verification.md` and do NOT invoke test-verifier-agent again later in this run for the normal Phase 5 step, whether this check passes or fails. If `NEEDS_FIXES` → present HITL gate immediately with warning: `⚠️ Phase 4 loop introduced a test regression. Human review required before advancing.`
    5. Proceed to Phase 4 HITL gate (unchanged)
 
 4b. **Security Review Phase** _(if security-reviewer-agent active)_: Call @kairos:security-reviewer-agent. After it completes, write its Markdown output to `.kairos/$feature_folder/04b-security-review.md`, then open it: `code ".kairos/$feature_folder/04b-security-review.md"` (this agent is read-only — the orchestrator handles persistence).
 5. **Test Verification Phase** _(if test-verifier-agent active)_: Call @kairos:test-verifier-agent
 
-   **Phase 3 Loop Actuator** _(runs after test-verifier returns, before Phase 5 HITL gate — only if `loop_policy.phase3.mode == "auto"` AND `status: NEEDS_FIXES`. Reachable only when `implementer-tdd-agent` or `implementer-coder-agent` is the active Phase-3 implementer — Step 0e forces `manual` for Team Mode, so this never fires when `implementer-lead-agent` was used)_:
+   **Phase 3 Loop Actuator** _(runs after test-verifier returns, before Phase 5 HITL gate — only if `loop_policy.phase3.mode == "auto"` AND `status: NEEDS_FIXES`. Reachable only when `implementer-tdd-agent` or `implementer-coder-agent` is the active Phase-3 implementer — Step 0e forces `manual` for Team Mode, so this never fires when `implementer-lead-agent` was used)_. Apply the Loop Actuator Procedure above with `{pair}` = "Implementer ↔ Test Verifier" and `{checker}` = @kairos:test-verifier-agent (artifact `05-test-verification.md`). Then:
 
-   0. **Prior-exhaustion check**: read `## Loop History — Implementer ↔ Test Verifier` in `ledger/open-questions.md`, if present. If it already has an entry from earlier in this same pipeline run (a prior `exhausted` or `thrash` exit), do NOT silently re-arm a fresh `max_retries`-iteration loop. Show:
-      ```
-      ⚠️  This loop already ran this pipeline run and did not converge:
-          <prior Loop History entry — outcome, iterations, issues remaining>
-
-      Options:
-      1) Loop again anyway — fresh budget of <max_retries> iterations
-      2) Skip auto-loop this time — go straight to the manual HITL gate (recommended)
-      3) Stop pipeline
-      ```
-      Wait for the human's choice before proceeding. Only continue to step 1 on option 1; option 2 skips straight to step 4; option 3 halts.
-   1. Create `## Loop State — Implementer ↔ Test Verifier` in `ledger/open-questions.md`:
-      ```
-      status: in_progress
-      iteration: 1 of <max_retries>
-      issues_critical_high_prev: null
-      issues_critical_high_curr: <convergence_signal.issues_critical_high from test-verifier output>
-      cumulative_issues: <all issues[] from test-verifier output>
-      ```
-   2. **Loop** — repeat until exit condition:
-      a. Re-invoke the active Phase-3 implementer — `implementer-tdd-agent` or `implementer-coder-agent`, whichever was selected in Step 3's routing decision (both detect Iteration Mode from the ledger automatically)
-      b. Re-invoke @kairos:test-verifier-agent (writes `convergence_signal` to `## Loop State`)
-      c. Read `convergence_signal.issues_critical_high` from `## Loop State` as `new_count`
-      d. **Monotonic-progress check**: if `new_count >= issues_critical_high_curr` → exit with: `⚠️ Loop thrash after N iterations — critical/high count not decreasing. Human review required.` — append this outcome to `## Loop History — Implementer ↔ Test Verifier` (create it if absent) before exiting.
-      e. If `status == READY` → exit loop (success) — no `## Loop History` entry needed; a converged loop carries no cautionary memory forward.
-      f. If `iteration >= max_retries` → exit with: `⚠️ Loop exhausted after <N> iterations. <X> issues remain.` — append this outcome to `## Loop History — Implementer ↔ Test Verifier` (create it if absent) before exiting.
-      g. Otherwise: increment `iteration`, set `issues_critical_high_prev = issues_critical_high_curr`, `issues_critical_high_curr = new_count`, append issues to `cumulative_issues`, save versioned artifacts (`05-test-verification-iter{N}.md`, `03-implementation-iter{N}.md`), continue
-   3. **Cleanup**: remove `## Loop State — Implementer ↔ Test Verifier` from `open-questions.md`. `## Loop History` (if written in step 2d/2f) is a separate, persistent section — do not remove it here; it is what step 0 checks on any later re-arm this run.
-   4. Proceed to Phase 5 HITL gate (unchanged)
+   4. **Guard — Regression check** _(only if ≥1 loop iteration actually ran)_: code-reviewer already ran earlier in this pipeline (Phase 4, before test-verifier) — this re-checks whether the fixes applied during *this* loop introduced a quality/security regression in code that already passed review once, which nothing else in the pipeline would otherwise catch. Invoke @kairos:code-reviewer-agent as a single-pass (loop policy NOT applied) against the code as it now stands. Save its output as `04-review-recheck.md` — do NOT overwrite `04-review.md`, which is Phase 4's own artifact from before this loop ran. If `NEEDS_FIXES` with any `critical`/`high` issue → present HITL gate immediately with warning: `⚠️ Phase 3 loop introduced a quality/security regression. Human review required before advancing.`
+   5. Proceed to Phase 5 HITL gate (unchanged)
 
 6. **Deployment Phase** _(if release-planner-agent active)_: Call @kairos:release-planner-agent
+6b. **Documentation Phase** _(if documentation-agent active)_: Call @kairos:documentation-agent. Unlike every phase before it, this agent writes real files in the target project outside `.kairos/` (README, API reference, CHANGELOG) — it is the second agent with that authority, after the Phase 3 implementer, and its authority is scoped strictly to documentation files, never source code. After it completes, save its own frontmatter-contract artifact to `.kairos/$feature_folder/06b-documentation.md`.
 7. **Aggregation**: Collect all outputs, mark skipped phases as `[SKIPPED]`
 8. **Ledger audit**: Read `.kairos/$feature_folder/ledger/open-questions.md`. Count rows with `🔴 open` status. If any exist, warn:
    ```
@@ -357,7 +345,7 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
 
 ### HITL — Human-in-the-Loop
 KAIROS is a HITL pipeline. After EVERY active subagent completes:
-1. Read the subagent's own status/verdict field, if it has one (`status:` in the frontmatter — e.g. `NEEDS_FIXES`, `VULNERABILITIES_FOUND`, `blocked`, or nonzero `critical`/`high` in the frontmatter's counts field). For `architect-agent` specifically, also read `promptable:` — `no` is a blocking signal the same way `NEEDS_FIXES` is elsewhere, even though this agent's own `status` field stays `ready` (it has no pass/fail state otherwise). This determines which option to mark recommended in step 4.
+1. Read the subagent's own status/verdict field, if it has one (`status:` in the frontmatter — e.g. `NEEDS_FIXES`, `VULNERABILITIES_FOUND`, `blocked`, or nonzero `critical`/`high` in the frontmatter's counts field). For `architect-agent` specifically, also read `promptable:` — `no` is a blocking signal the same way `NEEDS_FIXES` is elsewhere, even though this agent's own `status` field stays `ready` (it has no pass/fail state otherwise). This determines which option to mark recommended in step 5.
 1b. **Constraint-Conflict Scan** — run this after the subagent's own Ledger Update, before the Risk Disposition Loop (step 2). Read `ledger/constraints.md` and the phase's own artifact body you just received. For every row already marked `✓ resolved` or `♻ modified` by an *earlier* phase, judge — this is a semantic read of the actual output, not a symbol diff — whether this phase's design/code/findings actually contradict it. A constraint's Status cell only records what the acting agent *claims* happened; the acting agent does not cross-check its own output against constraints from phases before the previous one, so this is the only place such drift gets caught.
    - Skip entirely if `ledger/constraints.md` doesn't exist yet (no prior phase to conflict with).
    - If you find a genuine contradiction: append a row to the artifact's Risks/Issues/Findings/Contract-Drift table — `Impact: high`, `Description: Constraint conflict: contradicts C{id} ({how it was resolved}) — {what this phase's output does instead}`, `Mitigation/Fix` left as a concrete suggestion, `Disposition` left empty. If the artifact has no such table at all, create a minimal one (same 5 columns: `ID | Description | Impact | Mitigation/Fix | Disposition`) under a new `## Flagged Conflicts` heading and add just this row.
@@ -365,7 +353,8 @@ KAIROS is a HITL pipeline. After EVERY active subagent completes:
    - Rows added this way flow into step 2 like any other Disposition row — no separate menu, no special-casing.
 2. **Risk Disposition Loop** — run this BEFORE the verdict summary, whenever the output body contains a table with a `Disposition` column and at least one empty cell (a Risks, Issues, Findings, or Contract Drift table). This is what lets the human resolve a multi-item risk list one row at a time instead of approving or rejecting all of them as a single bundle. This loop requires the artifact file to already be on disk to edit it: every phase agent's "Write to Project" step runs unconditionally (only that agent's own gate-presentation step is skipped when orchestrator-invoked), so the file exists by the time you reach this loop.
    - If no such table exists, or every Disposition cell is already filled, skip straight to step 3.
-   - Otherwise, for each undispositioned row, in table order:
+   - **Auto-dispose `low`-impact rows as Accept**: before prompting for anything, write `Accept` directly into the Disposition cell of every undispositioned row whose Impact is `low` — no prompt, no ledger row (same as a human picking Accept). This is what keeps a 12-nit review from forcing 12 human decisions at the gate; only `medium`/`high`/`critical` rows go through the prompt loop below. A row step 1b just added is never `low` by that step's own rule, so it always reaches the prompt loop.
+   - Then, for each remaining undispositioned row (`medium`/`high`/`critical`), in table order:
      - **If `AskUserQuestion` is available**: batch rows into groups of up to 4 (its per-call maximum). One question per row, worded `"R{id} ({impact}): {description}"` (substitute the table's actual ID/impact/description columns), with exactly these 4 options:
        - **Accept** — acknowledge, no action required. No ledger row written.
        - **Mitigate now** — the row's Mitigation/Fix text becomes a binding requirement for the next phase. Write a `constraints.md` row, status `🔴 open`, note `MUST — from {phase} R{id}`.
@@ -507,6 +496,10 @@ DEPLOYMENT (from Release Planner):
 - Rollback Strategy
 - Monitoring Plan
 
+DOCUMENTATION (from Documentation Agent):
+- Docs Touched (README / API reference / CHANGELOG, by file)
+- Documentation Gaps (if any)
+
 RUN METRICS (this run only — not a substitute for cross-run PROOF metrics like Velocity or Rework Ratio):
 - Phase 4 loop (Code Reviewer ↔ Implementer): first-pass READY, or N iterations to converge / thrashed / exhausted
 - Phase 3 loop (Implementer ↔ Test Verifier): first-pass READY, or N iterations to converge / thrashed / exhausted
@@ -540,6 +533,9 @@ Each phase writes a file under `.kairos/<feature_folder>/`.
 With issue number (`"Add Stripe payments — issue #42"`):
 ```
 .kairos/
+├── _lessons.md                    ← Retrospective Agent / Improvement Advisor — project-wide, see below
+├── decisions/
+│   └── ADR-001-<slug>.md          ← Improvement Advisor — project-wide, see below
 └── issue-42_add-stripe-payments/
     ├── 00-context.md              ← Context Extractor (pre-built, optional)
     ├── 00b-impact.md              ← Impact Assessment (pre-built, optional)
@@ -550,6 +546,8 @@ With issue number (`"Add Stripe payments — issue #42"`):
     ├── 04b-security-review.md     ← Security Reviewer (optional, frontmatter contract + full findings report)
     ├── 05-test-verification.md    ← Test Verifier (frontmatter contract + full report)
     ├── 06-deployment-plan.md      ← Release Planner (frontmatter contract + full runbook)
+    ├── 06b-documentation.md       ← Documentation Agent (optional, frontmatter contract + doc changes made)
+    ├── 07-retrospective.md        ← Retrospective Agent (standalone, optional — see below)
     └── ledger/
         ├── constraints.md         ← Accumulated constraints with per-phase status (seeded by PM, updated by all agents)
         ├── decisions.md           ← Architectural and implementation decisions log (seeded by Architect)
@@ -564,7 +562,7 @@ Without issue number (`"Add Stripe payments"`):
     ...
 ```
 
-Each subfolder is an isolated audit trail for that feature run. Running KAIROS for a different feature will never overwrite previous outputs.
+Each feature subfolder is an isolated audit trail for that feature run. Running KAIROS for a different feature will never overwrite a previous feature's outputs. **The one deliberate exception**: `.kairos/_lessons.md` and `.kairos/decisions/` sit at the project root, not inside any feature subfolder, because their entire purpose is to persist across feature runs. Only two agents ever touch them — `retrospective-agent` appends one Feature Log entry to `_lessons.md` per run (never edits an existing entry, never touches its `## Recurring Patterns` section); `improvement-advisor-agent` refreshes `_lessons.md`'s `## Recurring Patterns` section and writes new `decisions/ADR-*.md` files (never deletes an existing ADR — a superseding decision gets a new ADR number instead). No other agent, including the orchestrator, writes to either path.
 
 
 ## Important Notes

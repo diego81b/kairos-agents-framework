@@ -172,6 +172,8 @@ Write code to fulfil the approved plan:
 - Follow project's code style
 
 ### PHASE 2: Refactor + Verify
+Work through [`code-simplification`](../skills/code-simplification/SKILL.md) while doing this — it maps concrete patterns (deep nesting, long functions, duplication, unclear names) to their fix.
+
 Review your own output before presenting it:
 - Improve clarity (variable names, function decomposition)
 - Remove duplication

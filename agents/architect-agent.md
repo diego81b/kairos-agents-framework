@@ -81,6 +81,8 @@ For each constraint combination:
 - Option B: [approach + tradeoffs]
 - Option C: [approach + tradeoffs]
 
+Prefer the simplest option that satisfies every constraint from Step 1. Added complexity (new service, new abstraction layer, new infra dependency) must trace to a specific constraint — not to a hypothetical future one.
+
 ### 4. Recommend Best Option
 Explain why it's best given constraints.
 

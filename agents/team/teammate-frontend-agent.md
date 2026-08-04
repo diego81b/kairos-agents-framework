@@ -39,7 +39,7 @@ function PaymentForm({ onSuccess }) {
 
 ### 2. Call Backend APIs
 
-Per API CONTRACT:
+Per API CONTRACT. `fetch` does not reject on 4xx/5xx — only on network failure — so parse the body once and branch on `status` before touching any success-only field:
 
 ```javascript
 const handleSubmit = async (formData) => {
@@ -47,6 +47,7 @@ const handleSubmit = async (formData) => {
     // Call EXACTLY per contract
     const response = await fetch("/api/payments", {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         order_id: formData.order_id,    // Per contract
         amount: formData.amount,         // Per contract
@@ -54,13 +55,10 @@ const handleSubmit = async (formData) => {
       })
     });
 
-    // Parse response per contract
-    const { client_secret, payment_intent_id } = await response.json();
-    
-    // Use per contract
-    return { client_secret, payment_intent_id };
+    const body = await response.json();
+    return handleResponse(response.status, body);
   } catch (error) {
-    // Handle per pattern contract
+    // Network failure only — fetch does not reject on 4xx/5xx
     handleError(error);
   }
 };
@@ -75,15 +73,19 @@ DO NOT:
 ### 3. Handle Responses
 
 ```javascript
-if (response.status === 200) {
-  // Handle success per contract
-  onSuccess(client_secret);
-} else if (response.status === 400) {
-  // Handle validation error per contract
-  showValidationError(error);
-} else if (response.status === 503) {
-  // Handle service error per contract
-  showServiceError("Payment service unavailable");
+function handleResponse(status, body) {
+  if (status === 200) {
+    // Handle success per contract
+    const { client_secret, payment_intent_id } = body;
+    onSuccess(client_secret);
+    return { client_secret, payment_intent_id };
+  } else if (status === 400) {
+    // Handle validation error per contract
+    showValidationError(body.error);
+  } else if (status === 503) {
+    // Handle service error per contract
+    showServiceError("Payment service unavailable");
+  }
 }
 ```
 
@@ -108,6 +110,21 @@ src/components/
 src/hooks/
 └─ usePayments.js         (API hook)
 ```
+
+## Owned Paths
+
+Yours: `src/components/`, `src/hooks/` (or wherever this project's frontend code actually lives). Backend routes/services, database migrations, and test files belong to the other three teammates. Never create or edit a file outside your own paths, even to fix something that looks broken — message the lead instead:
+
+```
+message [lead]: "<path> needs a change outside my domain: <what and why>."
+```
+
+## Progress Signals
+
+Report progress to the Lead at each milestone, not only at completion — going silent for the whole task looks identical to being stalled:
+- `message [lead]: "Started: <task>."` right after receiving the task.
+- `message [lead]: "<N>/<M> components done: <what just finished>."` at each component, not per line of code.
+- `message [lead]: "Completed: <summary>."` right before marking the task completed on the shared task list.
 
 ## Important
 

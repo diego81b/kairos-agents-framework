@@ -310,7 +310,7 @@ _Output: a single Markdown file — frontmatter (rollback/monitoring summary) + 
 _Saved to: `.kairos/<feature_folder>/06-deployment-plan.md` + `.kairos/<feature_folder>/06-deployment-plan.md`_
 
 ::: info HITL checkpoint
-User approves the deployment runbook (`06-deployment-plan.md`). This is the final checkpoint — approval closes the KAIROS run. Presented via `AskUserQuestion`, not a printed menu.
+User approves the deployment runbook (`06-deployment-plan.md`). This is the final checkpoint of the numbered pipeline — approval closes this KAIROS run (Phases 1–6, or 1–6b if `documentation-agent` was also selected). It does not preclude running `retrospective-agent` afterward — a separate, standalone, non-orchestrated follow-up invoked directly by the user whenever they consider the feature done. Presented via `AskUserQuestion`, not a printed menu.
 
 `✅ Approve` · `✏️ Request changes` · `⛔ Stop`
 :::

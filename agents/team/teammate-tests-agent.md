@@ -85,6 +85,21 @@ When all tests pass, message the Lead directly:
 message [lead]: "GREEN confirmed. All [N] tests passing. Coverage at [X]%. Task complete."
 ```
 
+## Owned Paths
+
+Yours: `test/` (or wherever this project's test files actually live). Backend routes/services, frontend components, and database migrations belong to the other three teammates. Never create or edit a file outside your own paths, even to fix something that looks broken — message the lead instead:
+
+```
+message [lead]: "<path> needs a change outside my domain: <what and why>."
+```
+
+## Progress Signals
+
+Report progress to the Lead at each milestone, not only at completion — going silent for the whole RED phase looks identical to being stalled:
+- `message [lead]: "Started: writing test suite per TEST CONTRACT."` right after receiving the task.
+- `message [lead]: "<N>/<M> endpoints covered: <what just finished>."` at each endpoint's happy/error/edge cases, not per test.
+- The existing "GREEN confirmed" message above serves as the completion signal — no separate one needed for GREEN phase.
+
 ### Coverage Target
 
 - Minimum 80% code coverage

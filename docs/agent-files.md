@@ -34,10 +34,15 @@ No exceptions. A pull request that modifies an agent without a matching changelo
 | [Security Reviewer](#security-reviewer) | `agents/security-reviewer-agent.md` |
 | [Test Verifier](#test-verifier) | `agents/test-verifier-agent.md` |
 | [Release Planner](#release-planner) | `agents/release-planner-agent.md` |
+| [Documentation Agent](#documentation-agent) | `agents/documentation-agent.md` |
+| [Retrospective Agent](#retrospective-agent) | `agents/retrospective-agent.md` |
+| [Improvement Advisor](#improvement-advisor) | `agents/improvement-advisor-agent.md` |
 
 > Team Mode agent files are on a [separate page](/agent-files-team).
 >
 > The shared [Contract Checklist](skills/contract-checklist/SKILL.md) used by Architect Agent and Implementer Lead is in `skills/contract-checklist/SKILL.md`.
+>
+> The shared [Code Simplification](skills/code-simplification/SKILL.md) checklist used by the Implementer Agent (TDD and Code Only) REFACTOR step is in `skills/code-simplification/SKILL.md`.
 
 ---
 
@@ -126,3 +131,27 @@ Test quality verification — coverage, assertion quality, edge-case coverage.
 Deployment planning — rollback procedures, monitoring, canary strategy.
 
 <<< @/agents/release-planner-agent.md{md}
+
+---
+
+## Documentation Agent
+
+Optional Phase 6b, runs after Release Planner. Feature-facing documentation (README, API reference, CHANGELOG) in the target project — the second agent, after the Phase 3 implementer, permitted to write outside `.kairos/`, scoped strictly to documentation files.
+
+<<< @/agents/documentation-agent.md{md}
+
+---
+
+## Retrospective Agent
+
+Standalone post-pipeline agent. Run any time after work on a feature stops to synthesize its own artifacts and ledger into lessons, appended to the project-root `.kairos/_lessons.md`.
+
+<<< @/agents/retrospective-agent.md{md}
+
+---
+
+## Improvement Advisor
+
+Standalone, infrequent agent. Run every few features to read the accumulated `.kairos/_lessons.md` and propose framework changes as `.kairos/decisions/ADR-*.md` records. Never edits `agents/*.md` itself — proposals only.
+
+<<< @/agents/improvement-advisor-agent.md{md}

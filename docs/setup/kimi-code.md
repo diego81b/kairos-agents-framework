@@ -14,7 +14,7 @@ Two differences matter for KAIROS:
 
 ## Step 1 — Copy agents to `.kimi-code/agents/`
 
-KAIROS ships a ready-made Kimi Code agent pack at [`.kimi-code/agents/`](https://github.com/diego81b/kairos-agents-framework/tree/main/.kimi-code/agents) in this repository — the 11 core pipeline agents, already converted. Copy the whole folder into your project:
+KAIROS ships a ready-made Kimi Code agent pack at [`.kimi-code/agents/`](https://github.com/diego81b/kairos-agents-framework/tree/main/.kimi-code/agents) in this repository — the 14 core pipeline agents, already converted. Copy the whole folder into your project:
 
 ```bash
 # From your project root
@@ -41,8 +41,8 @@ The mapping below is what actually produced the files in `.kimi-code/agents/` �
 | `name:` | `name:` | Direct copy — supported natively (it would default to the kebab-case filename anyway). |
 | `description:` | `description:` | Direct copy — Kimi Code's main agent reads it for auto-delegation, same as Claude Code. |
 | `tools: CSV` | `tools:` CSV | Direct copy — Kimi Code accepts the comma-separated form, and every tool KAIROS lists (`Read`, `Write`, `Edit`, `Bash`, `Grep`, `Glob`, `AskUserQuestion`) exists under the same name. |
-| `model: opus` | `model_preference: primary` | **Symbolic** — resolves to your session's main model (`default_model` in `config.toml`, e.g. a Kimi K-series model). Used for the 5 reasoning-heavy agents: `orchestrator`, `architect`, `context-extractor`, `impact-assessment`, `security-reviewer`. |
-| `model: sonnet` | `model_preference: secondary` | **Symbolic** — resolves to `[secondary_model] model` in `config.toml` (typically a cheaper Kimi model). Used for the 6 execution agents: `pm`, `implementer-tdd`, `implementer-coder`, `code-reviewer`, `test-verifier`, `release-planner`. |
+| `model: opus` | `model_preference: primary` | **Symbolic** — resolves to your session's main model (`default_model` in `config.toml`, e.g. a Kimi K-series model). Used for the 6 reasoning-heavy agents: `orchestrator`, `architect`, `context-extractor`, `impact-assessment`, `security-reviewer`, `improvement-advisor`. |
+| `model: sonnet` | `model_preference: secondary` | **Symbolic** — resolves to `[secondary_model] model` in `config.toml` (typically a cheaper Kimi model). Used for the 8 execution agents: `pm`, `implementer-tdd`, `implementer-coder`, `code-reviewer`, `test-verifier`, `release-planner`, `documentation`, `retrospective`. |
 
 One fully worked example — `pm-agent.md`:
 
@@ -116,7 +116,7 @@ Run Kimi Code with the orchestrator as the main agent:
 kimi --agent orchestrator-agent
 ```
 
-Or start a default session and let it delegate: the main agent discovers the 11 custom agents automatically and routes to them based on each agent's `description`, the same way Claude Code's auto-delegation works. You can also name an agent explicitly in conversation ("use pm-agent to analyze this feature request"), or bind one file for a single launch with `kimi --agent-file path/to/agent.md`.
+Or start a default session and let it delegate: the main agent discovers the 14 custom agents automatically and routes to them based on each agent's `description`, the same way Claude Code's auto-delegation works. You can also name an agent explicitly in conversation ("use pm-agent to analyze this feature request"), or bind one file for a single launch with `kimi --agent-file path/to/agent.md`.
 
 The orchestrator is bound at session creation and restored on resume (`kimi --continue` / `--session`) — no flag needed on resume, and none is allowed.
 

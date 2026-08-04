@@ -8,18 +8,19 @@ KAIROS is an intelligent multi-agent SDLC orchestration framework, distributed a
 **documentation-only project**. There is no compiled code, no test suite, and no
 runtime beyond the documentation site build. The deliverables are:
 
-- **`agents/`** — the framework artifact itself: 11 core AI agent definition files
+- **`agents/`** — the framework artifact itself: 14 core AI agent definition files
   (Markdown + YAML frontmatter) plus 5 optional Team Mode agents in `agents/team/`.
 - **`docs/`** — a VitePress site that documents the framework and exposes the agent
   files to users (published at https://kairos-docs.vercel.app).
-- **`.opencode/agents/`** — a hand-maintained mirror of the 11 core agent files,
+- **`.opencode/agents/`** — a hand-maintained mirror of the 14 core agent files,
   translated to OpenCode's frontmatter schema (see "OpenCode Mirror Sync" below).
-- **`.kimi-code/agents/`** — a hand-maintained mirror of the 11 core agent files,
+- **`.kimi-code/agents/`** — a hand-maintained mirror of the 14 core agent files,
   translated to Kimi Code's frontmatter schema (see "Kimi Code Mirror Sync" below).
 
-KAIROS defines a 6-phase, human-gated (HITL) pipeline. Each phase is one agent file
-that produces one Markdown artifact in the *target project's* `.kairos/<feature_folder>/`
-directory (never in this repo):
+KAIROS defines a 6-phase, human-gated (HITL) pipeline, plus an optional Phase 6b and two
+standalone post-pipeline agents. Each phase is one agent file that produces one Markdown
+artifact in the *target project's* `.kairos/<feature_folder>/` directory (never in this
+repo):
 
 | Phase | Agent file | Output artifact |
 |-------|-----------|----------------|
@@ -32,6 +33,15 @@ directory (never in this repo):
 | 4.5 | `security-reviewer-agent.md` *(optional)* | `04b-security-review.md` |
 | 5 | `test-verifier-agent.md` | `05-test-verification.md` |
 | 6 | `release-planner-agent.md` | `06-deployment-plan.md` |
+| 6b | `documentation-agent.md` *(optional)* | `06b-documentation.md` |
+
+Pre-A, Pre-B, and Phase 6b are all orchestrator-callable but optional. Two further agents
+sit entirely outside the orchestrated sequence — `retrospective-agent.md` and
+`improvement-advisor-agent.md` are standalone, invoked directly by the user after work on
+a feature stops, never auto-invoked by the orchestrator (same category as Pre-A/Pre-B).
+`retrospective-agent` appends to the project-root `.kairos/_lessons.md`; `improvement-advisor-agent`
+reads it back every few features and proposes framework changes as `.kairos/decisions/ADR-*.md`
+records, never editing `agents/*.md` itself.
 
 The orchestrator (`orchestrator-agent.md`) routes between phases and enforces the HITL
 gates. Team Mode (`agents/team/`) replaces phase 3 with a lead agent spawning 4 parallel
@@ -55,9 +65,9 @@ any change to `docs/`, `agents/`, or `skills/` (agent files are embedded in the 
 
 ## Repository Layout
 
-- `agents/` — 11 core pipeline agents (canonical source) + `team/` (5 Team Mode agents, Claude Code only).
-- `.opencode/agents/` — OpenCode mirror of the 11 core agents (derived, kept in sync by hand).
-- `.kimi-code/agents/` — Kimi Code mirror of the 11 core agents (derived, kept in sync by hand).
+- `agents/` — 14 core pipeline agents (canonical source) + `team/` (5 Team Mode agents, Claude Code only).
+- `.opencode/agents/` — OpenCode mirror of the 14 core agents (derived, kept in sync by hand).
+- `.kimi-code/agents/` — Kimi Code mirror of the 14 core agents (derived, kept in sync by hand).
 - `docs/` — VitePress site. Config: `docs/.vitepress/config.js` (nav, sidebar, `srcDir: '..'`).
 - `docs/setup/` — per-tool setup guides (Claude Code, Cursor, VS Code, JetBrains, Codex, OpenCode, Kimi Code, templates).
 - `docs/distribution/` — distribution roadmap docs (discovery, plugin mapping, install).
@@ -102,7 +112,7 @@ Rules that apply when editing agent files:
 
 ## OpenCode Mirror Sync
 
-Every file in `agents/` (the 11 core pipeline agents, **not** `agents/team/`) has a
+Every file in `agents/` (the 14 core pipeline agents, **not** `agents/team/`) has a
 hand-maintained counterpart in `.opencode/agents/`. There is no conversion script — the
 mirror is kept in sync by hand, on purpose.
 
@@ -128,7 +138,7 @@ Claude-Code-specific; a frontmatter-only port ships a non-functional agent.
 
 ## Kimi Code Mirror Sync
 
-Every file in `agents/` (the 11 core pipeline agents, **not** `agents/team/`) has a
+Every file in `agents/` (the 14 core pipeline agents, **not** `agents/team/`) has a
 hand-maintained counterpart in `.kimi-code/agents/`. Same discipline as the OpenCode
 mirror: no conversion script, kept in sync by hand, on purpose.
 
