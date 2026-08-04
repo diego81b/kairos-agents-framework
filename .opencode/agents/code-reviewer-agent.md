@@ -50,7 +50,7 @@ If the ledger does not exist, proceed without it.
 
 Check `.kairos/<feature_folder>/00b-impact.md` for its `effort` field. If absent (standalone invocation), infer it from the diff size/scope the same way implementer-tdd-agent would.
 
-The 5 checks below already scale with what's actually in the diff — a 1-file change naturally clears Architecture/Performance in a line each, so Lean Mode does not skip any check. What it changes is the Ledger Update:
+The 6 checks below already scale with what's actually in the diff — a 1-file change naturally clears Architecture/Performance in a line each, so Lean Mode does not skip any check. What it changes is the Ledger Update:
 
 When effort is `simple_fix`, 2b Ledger Update becomes additive-only (see that section below). Any other effort value runs Full Mode.
 
@@ -59,6 +59,7 @@ When effort is `simple_fix`, 2b Ledger Update becomes additive-only (see that se
 > If `differential-review` is available, invoke it on the diff first.
 > If `static-analysis/semgrep` is available, run Semgrep scan.
 > If `fp-check` is available, verify any static analysis findings before reporting.
+> If `karpathy-guidelines` is available, invoke it before the Simplicity / Over-Engineering check below.
 
 ### 1. Standards Compliance
 - Naming conventions match?
@@ -95,6 +96,12 @@ First check whether tests are even in scope: read `03-implementation.md`'s front
 - Edge cases tested?
 - Performance tested?
 
+### 6. Simplicity / Over-Engineering
+- Complexity proportional to what the requirement actually needs?
+- New abstraction justified by ≥2 real use cases, not a speculative "might need it later"?
+- No dead code, unused config options, or unreachable branches?
+- Simpler design exists that would satisfy the same constraints?
+
 ## Output Format
 
 One file: `04-review.md`. YAML frontmatter carries the orchestrator-branching fields (status, pass/fail checks, counts, convergence signal); the Markdown body carries the human-reviewable review — the full Issues list, one row per issue, as a table. A review with 20+ issues is unreadable as a JSON array; it's a normal table in Markdown.
@@ -109,6 +116,7 @@ checks:
   security: "✓ PASS"
   performance: "✓ PASS"
   testing: "✓ PASS"        # or "✗ FAIL", or "N/A — no-TDD path" (implementer-coder-agent ran; never counts as FAIL)
+  simplicity: "✓ PASS"     # or "✗ FAIL"
 issues_summary: { critical: 0, high: 2, medium: 1, low: 3, total: 6 }
 open_dispositions: 6   # count of Issues table rows with an empty Disposition cell
 convergence_signal: { issues_critical_high: 2, issues_total: 6, iteration: 1 }
@@ -121,6 +129,7 @@ next_agent: test-verifier-agent
 | Check | Result |
 |-------|--------|
 | Standards | ✓ PASS |
+| Simplicity | ✓ PASS |
 | ... | ... |
 
 ## Issues
@@ -231,6 +240,7 @@ These skills and MCP tools enhance this agent when installed. KAIROS works fully
 
 **Skills** — invoke via `Skill` tool when available:
 - `code-review` (built-in) — baseline code review
+- `karpathy-guidelines` — anti-overengineering / surgical-change heuristics, backs the Simplicity check
 - `differential-review` (Trail of Bits) — security-focused diff review
 - `static-analysis/semgrep` (Trail of Bits) — Semgrep static analysis
 - `static-analysis/codeql` (Trail of Bits) — CodeQL queries (requires CodeQL CLI installed)

@@ -4,6 +4,15 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v6.3.0 — August 4, 2026
+
+### Added
+
+- **`agents/code-reviewer-agent.md`** (+ `.opencode/agents/`, `.kimi-code/agents/` mirrors) — added a 6th review dimension, "Simplicity / Over-Engineering" (unjustified abstraction, dead code, complexity disproportionate to the requirement). Wired in as a `simplicity` frontmatter check field, a Checks-table row, and an optional `karpathy-guidelines` skill invocation backing it — closes a gap where over-engineered code had no review dimension to be flagged under.
+- **`agents/architect-agent.md`** (+ mirrors) — added a YAGNI guardrail to Step 3 (Propose 3 Design Options): the simplest option satisfying every Step-1 constraint is preferred, and added complexity must trace to a specific constraint rather than a hypothetical future one.
+
+---
+
 ## v6.2.1 — August 4, 2026
 
 ### Fixed
