@@ -215,6 +215,8 @@ Issues table columns: `Impact` carries the severity value (`critical | high | me
 
 If an issue's reasoning doesn't fit one row, keep a one-line Description with a "see below" pointer and add a short prose paragraph immediately under the table for that issue — the table itself keeps exactly these 7 columns so the disposition loop can still parse it.
 
+Follow [`artifact-bookkeeping`](../skills/artifact-bookkeeping/SKILL.md) for the exact recount, `status` derivation, and AC-coverage counting rule.
+
 `status` rules:
 - `READY` — zero `critical` and zero `high` issues, and coverage check is `PASS`.
 - `NEEDS_FIXES` — any `critical` or `high` issue, or coverage `FAIL`.

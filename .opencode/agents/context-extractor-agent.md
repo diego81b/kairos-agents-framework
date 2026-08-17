@@ -4,7 +4,7 @@ mode: subagent
 model: anthropic/claude-opus-5
 permission:
   edit: allow
-  bash: ask
+  bash: deny
 ---
 
 # Context Extractor - Codebase Analysis & Context Preparation
@@ -163,15 +163,14 @@ Save output to `.kairos/<feature_folder>/00-context.md`.
 > `feature_folder` is provided by the user or derived from the issue reference (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
 
 ### 3. Open in Editor
-After writing, open the output file in the editor so the user can inspect it directly.
-Run from the project root, substituting the actual `feature_folder` value derived from the issue reference:
+This agent has no `Bash` tool, so it cannot shell out to open the file itself. Print the path for the user to open directly:
 
-```bash
-code ".kairos/$feature_folder/00-context.md"
+```
+📝 Review at: .kairos/$feature_folder/00-context.md
 ```
 
 ### 4. Issue Tracker Comment (optional)
-If the user provides an issue reference, post the `## Issue Technical Section` from `00-context.md` after approval. Extract that section from the file and pass it as the comment body.
+If the user provides an issue reference, this agent has no `Bash` tool to run the commands below itself — extract the `## Issue Technical Section` from `00-context.md` as the comment body and hand it (and the matching command) to the user or orchestrator to run.
 
 **Jira** (`jira-cli`):
 ```bash
@@ -200,6 +199,7 @@ These skills and MCP tools enhance this agent when installed. KAIROS works fully
 - `audit-context-building` (Trail of Bits) — ultra-granular code analysis for audit-quality context
 
 ## Important Notes
+- Tool grant is intentionally narrower than most pipeline agents: no `Edit`, no `Bash`. This agent's own contract — read-only, single new output file — is a single new file, never an edit to an existing one, so the grant now matches the claim mechanically, not just by instruction.
 - Do NOT invent stack, patterns, or file paths — only report what you find in the codebase
 - Every file path in the output must be real and verified against the repository
 - A human must review and approve the output before it is saved

@@ -191,6 +191,8 @@ recommended_agents: [architect-agent, implementer-tdd-agent, security-reviewer-a
 | release-planner-agent | no new infrastructure or deployment steps |
 ```
 
+Follow [`artifact-bookkeeping`](../skills/artifact-bookkeeping/SKILL.md) for the exact recount rule — recompute after every edit, never hand-increment a single field.
+
 Frontmatter field notes:
 - `risk_counts` — tally of the Risks table rows by their Impact rating.
 - `open_dispositions` — count of table rows (Risks + Open Questions combined) whose Disposition cell is still empty. It starts equal to the total row count and drops to `0` once the Risk Disposition Loop resolves every row.

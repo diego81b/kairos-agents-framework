@@ -4,7 +4,7 @@ mode: subagent
 model: anthropic/claude-sonnet-5
 permission:
   edit: allow
-  bash: ask
+  bash: deny
 ---
 
 # Documentation Agent - Feature-Facing Documentation
@@ -118,6 +118,8 @@ open_dispositions: 1
 
 This is the final phase of the numbered pipeline when selected, so there is no `next_agent` field — same reasoning as `release-planner-agent`. The `## Documentation Gaps` table uses the same 5-column shape as every other Risks/Findings table in this framework so the orchestrator's Risk Disposition Loop can parse it identically; omit the section entirely if there are no gaps rather than leaving an empty table.
 
+Follow [`artifact-bookkeeping`](../skills/artifact-bookkeeping/SKILL.md) for the exact recount and `status` derivation rule.
+
 `status` rules:
 - `ready` — every user-facing surface identified in step 2 has documentation drafted, no gap above `low` impact.
 - `needs_input` — any `medium`+ Documentation Gap remains.
@@ -159,16 +161,14 @@ Save `.kairos/<feature_folder>/06b-documentation.md` first. Then, only after app
 If the ledger does not exist, skip this step.
 
 ### 3. Open in Editor
-Open the primary artifact; for the real project files, print a summary line instead of force-opening every one:
-```bash
-code ".kairos/$feature_folder/06b-documentation.md"
+This agent has no `Bash` tool, so it cannot shell out to open either file itself. Print both paths instead of force-opening either:
 ```
-```
+📝 Review at: .kairos/$feature_folder/06b-documentation.md
 📝 Updated: README.md, CHANGELOG.md, docs/api/payments.md
 ```
 
 ### 4. Issue Tracker Comment (optional)
-If the user provides an issue reference, post the `## CHANGELOG Entry` section after approval.
+If the user provides an issue reference, this agent has no `Bash` tool to run the commands below itself — extract the `## CHANGELOG Entry` section as the comment body and hand it (and the matching command) to the user or orchestrator to run.
 
 **Jira** (`jira-cli`):
 ```bash
@@ -189,6 +189,7 @@ curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issu
 ```
 
 ## Important Notes
+- No `Bash` in the tool grant — every action this agent takes is a file read or a Markdown/doc write, never a command. `Write`/`Edit` stay for the real README/CHANGELOG/docs edits the Hard Constraint above permits.
 - Never write source code — see Hard Constraint above.
 - Never invent an example, parameter, or error case you're not confident about — flag it as a Documentation Gap instead.
 - Match the target project's existing documentation conventions before falling back to a default.
