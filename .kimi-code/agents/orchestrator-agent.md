@@ -203,14 +203,7 @@ Do NOT proceed until the user explicitly confirms `active_agents`.
 
 Once `active_agents` is confirmed and at least one implementer agent is selected, branch on which implementer variant is active:
 
-- **`implementer-lead-agent` (Team Mode)** — do NOT show the auto-retry prompt below. Force `loop_policy.phase3 = { mode: "manual" }` and `loop_policy.phase4 = { mode: "manual" }` unconditionally, and tell the user why:
-  ```
-  ℹ️  Loop Policy — Team Mode selected. Auto-retry isn't supported for implementer-lead-agent yet
-      (it has no Iteration Mode — a re-run would re-spawn the whole team from scratch instead of
-      applying a targeted fix). Both loop phases are forced to manual for this run.
-  ```
-  Skip straight to Step 0f.
-- **`implementer-tdd-agent` or `implementer-coder-agent`** — both support Iteration Mode (detected automatically from `## Loop State` in the ledger), so an auto-retry re-invocation targets the same agent and resumes correctly. Show the loop policy prompt:
+- **`implementer-tdd-agent`, `implementer-coder-agent`, or `implementer-lead-agent`** — all three support Iteration Mode (detected automatically from `## Loop State` in the ledger), so an auto-retry re-invocation targets the same agent and applies a targeted fix instead of restarting from scratch. Show the loop policy prompt:
 
 ```
 🔁 Loop Policy — optional, default: manual
@@ -227,10 +220,21 @@ Once `active_agents` is confirmed and at least one implementer agent is selected
        Up to 6 extra implementer + 3 test-verifier + 3 code-reviewer calls (all sonnet).
        Orchestrator stays active (opus) for the full loop duration.
        Total worst-case: up to 12 additional subagent invocations.
-
-   Reply with values per phase, or press Enter to keep both as manual.
-   Example: "phase3: auto 3 / phase4: manual"
 ```
+
+If `implementer-lead-agent` (Team Mode) is the active Phase-3 implementer, append instead of the plain cost estimate above:
+
+```
+   ⚠️  Cost estimate — TEAM MODE (recommended max: 2, not 3):
+       Each iteration is a full opus Lead invocation plus a narrowed-scope team
+       spawn (Agent Teams), NOT a single sonnet call like the estimate above.
+       Worst case (auto 2, both phases): up to 4 extra Lead+team iterations,
+       each priced closer to the ~$0.242/feature Team Mode figure than to a
+       single sonnet call. max_retries is clamped to 2 for Team Mode (not 5).
+```
+
+Reply with values per phase, or press Enter to keep both as manual.
+Example: "phase3: auto 3 / phase4: manual"
 
 Save the response as `loop_policy`:
 ```
@@ -238,7 +242,7 @@ loop_policy.phase3 = { mode: "manual"|"auto", max_retries: N }
 loop_policy.phase4 = { mode: "manual"|"auto", max_retries: N }
 ```
 
-**Clamp `N` to a hard ceiling of 5** regardless of what the user typed — "recommended max: 3" above is a hint, not an enforced limit, and an unclamped `N` (e.g. a user or automated caller passing `auto 500`) defeats the point of the two Loop Actuators' iteration cap. If the user's reply exceeds 5, use 5 and tell them: `ℹ️  max_retries clamped to 5 (requested <N>).`
+**Clamp `N` to a hard ceiling of 5** regardless of what the user typed — "recommended max: 3" above is a hint, not an enforced limit, and an unclamped `N` (e.g. a user or automated caller passing `auto 500`) defeats the point of the two Loop Actuators' iteration cap. If the user's reply exceeds 5, use 5 and tell them: `ℹ️  max_retries clamped to 5 (requested <N>).` **If `implementer-lead-agent` (Team Mode) is the active Phase-3 implementer, the ceiling is 2 instead of 5** — each iteration is a full opus Lead + team spawn, not a single sonnet call. If the user's reply exceeds 2, use 2 and tell them: `ℹ️  max_retries clamped to 2 for Team Mode (requested <N>).`
 
 If no implementer agent is active, skip this branch entirely and set both to `manual`.
 
@@ -314,7 +318,7 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
       cumulative_issues: <all critical/high issues[] from {checker}'s output>
       ```
    2. **Loop** — repeat until exit condition:
-      a. Re-invoke the active Phase-3 implementer — `implementer-tdd-agent` or `implementer-coder-agent`, whichever was selected in Step 3's routing decision (both detect Iteration Mode from the ledger automatically)
+      a. Re-invoke the active Phase-3 implementer — `implementer-tdd-agent`, `implementer-coder-agent`, or `implementer-lead-agent`, whichever was selected in Step 3's routing decision (all three detect Iteration Mode from the ledger automatically)
       b. Re-invoke `{checker}` (writes `convergence_signal` to `## Loop State`)
       c. Read `convergence_signal.issues_critical_high` from `## Loop State` as `new_count`
       d. **Monotonic-progress check**: if `new_count >= issues_critical_high_curr` → exit with: `⚠️ Loop thrash after N iterations — critical/high count not decreasing. Human review required.` — append this outcome to `## Loop History — {pair}` (create it if absent) before exiting.
@@ -325,7 +329,7 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
 
    Both loops below apply this procedure with their own `{pair}`/`{checker}`, then run their own Guard step.
 
-   **Phase 4 Loop Actuator** _(runs after code-reviewer returns, before Phase 4 HITL gate — only if `loop_policy.phase4.mode == "auto"`, `status: NEEDS_FIXES`, AND at least one `critical` or `high` issue in `issues[]`. Reachable only when `implementer-tdd-agent` or `implementer-coder-agent` is the active Phase-3 implementer — Step 0e forces `manual` for Team Mode, so this never fires when `implementer-lead-agent` was used)_. Apply the Loop Actuator Procedure with `{pair}` = "Code Reviewer ↔ Implementer" and `{checker}` = @kairos:code-reviewer-agent (artifact `04-review.md`). Then:
+   **Phase 4 Loop Actuator** _(runs after code-reviewer returns, before Phase 4 HITL gate — only if `loop_policy.phase4.mode == "auto"`, `status: NEEDS_FIXES`, AND at least one `critical` or `high` issue in `issues[]`. Reachable regardless of which Phase-3 implementer variant is active — `implementer-tdd-agent`, `implementer-coder-agent`, and `implementer-lead-agent` all support Iteration Mode, though Team Mode's `max_retries` ceiling is 2, not 5 — see Step 0e)_. Apply the Loop Actuator Procedure with `{pair}` = "Code Reviewer ↔ Implementer" and `{checker}` = @kairos:code-reviewer-agent (artifact `04-review.md`). Then:
 
    4. **Guard — Regression check** _(only if ≥1 loop iteration actually ran)_: invoke @kairos:test-verifier-agent as a single-pass (loop policy NOT applied). This single-pass run **is** the Phase 5 artifact — save its output as `05-test-verification.md` and do NOT invoke test-verifier-agent again later in this run for the normal Phase 5 step, whether this check passes or fails. If `NEEDS_FIXES` → present HITL gate immediately with warning: `⚠️ Phase 4 loop introduced a test regression. Human review required before advancing.`
    5. Proceed to Phase 4 HITL gate (unchanged)
@@ -333,7 +337,7 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
 4b. **Security Review Phase** _(if security-reviewer-agent active)_: Call @kairos:security-reviewer-agent. After it completes, write its Markdown output to `.kairos/$feature_folder/04b-security-review.md`, then open it: `code ".kairos/$feature_folder/04b-security-review.md"` (this agent is read-only — the orchestrator handles persistence).
 5. **Test Verification Phase** _(if test-verifier-agent active)_: Call @kairos:test-verifier-agent
 
-   **Phase 3 Loop Actuator** _(runs after test-verifier returns, before Phase 5 HITL gate — only if `loop_policy.phase3.mode == "auto"` AND `status: NEEDS_FIXES`. Reachable only when `implementer-tdd-agent` or `implementer-coder-agent` is the active Phase-3 implementer — Step 0e forces `manual` for Team Mode, so this never fires when `implementer-lead-agent` was used)_. Apply the Loop Actuator Procedure above with `{pair}` = "Implementer ↔ Test Verifier" and `{checker}` = @kairos:test-verifier-agent (artifact `05-test-verification.md`). Then:
+   **Phase 3 Loop Actuator** _(runs after test-verifier returns, before Phase 5 HITL gate — only if `loop_policy.phase3.mode == "auto"` AND `status: NEEDS_FIXES`. Reachable regardless of which Phase-3 implementer variant is active — `implementer-tdd-agent`, `implementer-coder-agent`, and `implementer-lead-agent` all support Iteration Mode, though Team Mode's `max_retries` ceiling is 2, not 5 — see Step 0e)_. Apply the Loop Actuator Procedure above with `{pair}` = "Implementer ↔ Test Verifier" and `{checker}` = @kairos:test-verifier-agent (artifact `05-test-verification.md`). Then:
 
    4. **Guard — Regression check** _(only if ≥1 loop iteration actually ran)_: code-reviewer already ran earlier in this pipeline (Phase 4, before test-verifier) — this re-checks whether the fixes applied during *this* loop introduced a quality/security regression in code that already passed review once, which nothing else in the pipeline would otherwise catch. Invoke @kairos:code-reviewer-agent as a single-pass (loop policy NOT applied) against the code as it now stands. Save its output as `04-review-recheck.md` — do NOT overwrite `04-review.md`, which is Phase 4's own artifact from before this loop ran. If `NEEDS_FIXES` with any `critical`/`high` issue → present HITL gate immediately with warning: `⚠️ Phase 3 loop introduced a quality/security regression. Human review required before advancing.`
    5. Proceed to Phase 5 HITL gate (unchanged)

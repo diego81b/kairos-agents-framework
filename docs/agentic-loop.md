@@ -15,6 +15,8 @@ Two independent loops are available:
 
 The default for both is `manual` — identical to the v3.x behavior. Loops are opt-in per pipeline run.
 
+Both loops work with any Phase-3 implementer — `implementer-tdd-agent`, `implementer-coder-agent`, or Team Mode's `implementer-lead-agent` — since all three detect Iteration Mode from the ledger. Team Mode has a lower `max_retries` ceiling (2, not 5) and its own cost estimate — see below.
+
 ## How to Enable
 
 The orchestrator asks at agent selection time:
@@ -74,6 +76,7 @@ If the Phase 4 loop (Code Reviewer ↔ Implementer) ran at least one iteration, 
 | Phase 3: `auto 3` only | Up to 3 extra implementer + 3 test-verifier (sonnet) |
 | Phase 4: `auto 3` only | Up to 3 extra code-reviewer + 3 implementer (sonnet) |
 | Both `auto 3` | Up to 12 extra subagent invocations (all sonnet) |
+| Team Mode, both `auto 2` (ceiling) | Up to 4 extra opus Lead + narrowed-team-spawn iterations, each priced closer to the ~$0.242/feature Team Mode figure than to a single sonnet call |
 
 Orchestrator remains active (opus) throughout.
 

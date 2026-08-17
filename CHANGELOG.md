@@ -4,6 +4,19 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v6.8.0 — August 17, 2026
+
+### Added
+
+- **`agents/team/implementer-lead-agent.md`** — Team Mode's Lead agent now supports **Iteration Mode**, the last of the five structural items deferred from the v6.7.0 harness audit (deferred since v5.2.0). Detected automatically from `## Loop State` in `open-questions.md`, mirroring the solo implementers' existing mechanism. On a fix iteration the Lead skips RED phase, the Test Plan HITL gate, and REFACTOR entirely, narrows `layers_in_scope` to only the layers touched by `loop_state.cumulative_issues`, and spawns only those teammates with a targeted fix prompt instead of the full GREEN implementation prompt — replacing the previous "re-spawn the whole team from scratch" behavior that made Team Mode ineligible for auto-retry. The four binding contracts are now persisted to a new `.kairos/<feature_folder>/03-contracts.md` at the end of Step 2b so a fix iteration reads them back verbatim instead of re-deriving them (re-deriving would silently skip the Step 2b drift-check gate a second time, risking contract drift between the initiating pass and the fix). Output gains an optional `changes_this_iteration[]` frontmatter field.
+- **`agents/orchestrator-agent.md`** (+ mirrors) — the Step 0e loop-policy gate no longer forces `manual` when `implementer-lead-agent` (Team Mode) is the active Phase-3 implementer; it now shows the same auto-retry prompt as the solo implementers, with a Team-Mode-specific cost callout (each iteration is a full opus Lead + narrowed team spawn, not a single sonnet call) and a lower `max_retries` ceiling of 2 (vs. 5 for solo implementers) to bound worst-case cost. Both Loop Actuators (Phase 3 and Phase 4) are now reachable with Team Mode active.
+
+### Changed
+
+- **`docs/agentic-loop.md`** — documents Team Mode's Iteration Mode support, its lower retry ceiling, and adds a Team Mode row to the cost-estimate table.
+
+---
+
 ## v6.7.0 — August 17, 2026
 
 ### Added
