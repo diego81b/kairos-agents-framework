@@ -91,6 +91,14 @@ If it already exists, ask before touching it. Where `AskUserQuestion` is availab
 
 Where it isn't available (Cursor, JetBrains/Copilot, Codex CLI, OpenCode), print the same three options as a menu and wait for a typed reply instead.
 
+If **Resume existing** is chosen, determine where the previous run actually stopped before invoking anything — do not guess from memory of an earlier turn:
+
+```bash
+ls ".kairos/$feature_folder"/0*.md 2>/dev/null
+```
+
+Match the highest-numbered phase file present against the phase order (`00-context` → `00b-impact` → `01-requirements` → `02-architecture` → `03-implementation` → `04-review` → `04b-security-review` → `05-test-verification` → `06-deployment-plan` → `06b-documentation`). The phase immediately after the last one present is `next_agent`. Show this for confirmation before invoking anything: `📍 Resume point: last completed phase is <N>-<name> — next up: <next_agent>. Confirm?` A `-iter{N}`/`-recheck` suffix on the highest file still counts as that phase being complete, not a phase of its own. If no `0*.md` files exist yet, resuming is equivalent to a fresh start at Phase 1.
+
 Notify the user: `📁 Feature folder: .kairos/PROJ-42_add-stripe-payments/`
 
 ### Step 0c: Initialize Ledger Directory
@@ -345,6 +353,7 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
 
 ### HITL — Human-in-the-Loop
 KAIROS is a HITL pipeline. After EVERY active subagent completes:
+0. **Artifact Contract Check** — before reading anything else, confirm the artifact this subagent just wrote actually has a parseable frontmatter block and, inside it, the phase-appropriate verdict field (`status:` for most phases, `promptable:` for architect-agent) with a non-empty value drawn from that phase's documented set. If the frontmatter is missing, malformed, or the value isn't one of the documented options, do not treat this as "no blocking status found" — that reading only applies once this check has passed. Instead report `⚠️ Malformed artifact from <agent> — missing/invalid <field>. Re-running this phase.` and re-invoke the same subagent once with that specific error before falling back to the retry-tracking in `## Error Handling` below.
 1. Read the subagent's own status/verdict field, if it has one (`status:` in the frontmatter — e.g. `NEEDS_FIXES`, `VULNERABILITIES_FOUND`, `blocked`, or nonzero `critical`/`high` in the frontmatter's counts field). For `architect-agent` specifically, also read `promptable:` — `no` is a blocking signal the same way `NEEDS_FIXES` is elsewhere, even though this agent's own `status` field stays `ready` (it has no pass/fail state otherwise). This determines which option to mark recommended in step 5.
 1b. **Constraint-Conflict Scan** — run this after the subagent's own Ledger Update, before the Risk Disposition Loop (step 2). Read `ledger/constraints.md` and the phase's own artifact body you just received. For every row already marked `✓ resolved` or `♻ modified` by an *earlier* phase, judge — this is a semantic read of the actual output, not a symbol diff — whether this phase's design/code/findings actually contradict it. A constraint's Status cell only records what the acting agent *claims* happened; the acting agent does not cross-check its own output against constraints from phases before the previous one, so this is the only place such drift gets caught.
    - Skip entirely if `ledger/constraints.md` doesn't exist yet (no prior phase to conflict with).
@@ -393,6 +402,7 @@ KAIROS is a HITL pipeline. After EVERY active subagent completes:
    ⛔ Stop pipeline
    ```
    Treat any other typed text the same way as the free-text case above (feedback vs. standalone ledger note).
+5b. **Audit Log Append** — once the gate above resolves (Approve, Request changes, Skip next, or Stop pipeline), append one line to `.kairos/$feature_folder/ledger/audit-log.md` (create it with a one-line header if it doesn't exist yet): phase name, the verdict field read in step 1, the human's chosen option, and a timestamp from `date -u +%Y-%m-%dT%H:%M:%SZ`. The per-row Risk Disposition Loop choices already land in the ledger, but the whole-artifact choice itself (Approve/Skip next/Stop pipeline) otherwise leaves no durable record outside the chat session — this is that record.
 6. Do NOT call the next subagent until the tool returns Approve, Skip next, or a Request-changes re-run has itself been re-approved. Stop pipeline ends the session.
 7. If **Request changes**: re-invoke the same subagent with the feedback.
 8. If **Skip next**: mark the next active agent as `[SKIPPED]` and proceed to the one after it.
@@ -551,7 +561,8 @@ With issue number (`"Add Stripe payments — issue #42"`):
     └── ledger/
         ├── constraints.md         ← Accumulated constraints with per-phase status (seeded by PM, updated by all agents)
         ├── decisions.md           ← Architectural and implementation decisions log (seeded by Architect)
-        └── open-questions.md      ← Cross-phase questions with answers (any agent raises, any agent answers)
+        ├── open-questions.md      ← Cross-phase questions with answers (any agent raises, any agent answers)
+        └── audit-log.md           ← One line per HITL gate resolution — phase, verdict, human's choice, timestamp (written by the orchestrator, step 5b)
 ```
 
 Without issue number (`"Add Stripe payments"`):

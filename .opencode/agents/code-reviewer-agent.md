@@ -162,6 +162,8 @@ Ordered by severity: critical first, then high, then medium, then low.
 - **Mitigation/Fix** — a concrete fix suggestion for the issue. You already reason about what's wrong, so propose the remedy.
 - **Disposition** — leave empty (`*(filled by gate)*`). The orchestrator's Risk Disposition Loop fills it from the human's per-row choice; `open_dispositions` counts how many are still empty.
 
+Follow [`artifact-bookkeeping`](../skills/artifact-bookkeeping/SKILL.md) for the exact recount and `status` derivation rule.
+
 If an issue's reasoning doesn't fit one row, keep a one-line Description with a "see below" pointer and add a short prose paragraph immediately under the table for that issue — the table itself keeps exactly these 5 columns so the disposition loop can still parse it.
 
 ## After Generating Output

@@ -24,7 +24,7 @@ You can be invoked in either of two ways. Detect mode from the inputs available:
 - Free-form feature description in the prompt
 - No `.kairos/` folder, no prior phase files
 
-If standalone, derive `feature_folder` yourself using the same rules as the orchestrator (Jira key → `PROJ-N_{slug}`; numeric `#N` → `issue-N_{slug}`; otherwise `feature_{slug}`) and create `.kairos/<feature_folder>/` before writing any output.
+If standalone, derive `feature_folder` using the same algorithm the orchestrator defines in its Step 0b (`agents/orchestrator-agent.md` is the canonical definition — this restates it, it doesn't duplicate it): Jira key → `PROJ-N_{slug}`; numeric `#N` → `issue-N_{slug}`; otherwise `feature_{slug}`. Create `.kairos/<feature_folder>/` before writing any output.
 
 **Iteration Mode** — detected automatically from the ledger (see Ledger Check below). You are in Iteration Mode when `open-questions.md` contains `## Loop State` with `status: in_progress`. In this mode:
 - Skip Phase 0 HITL plan gate — the plan was already approved in the previous iteration
@@ -154,7 +154,7 @@ medium
 | R1 | Stripe SDK version mismatch with Node 18 | high | Pin stripe@^14 and add engines check in package.json | |
 | R2 | Webhook signature verification omitted | medium | Verify `Stripe-Signature` header before processing events | |
 
-Infer a reasonable impact level (`critical`/`high`/`medium`/`low`) per risk from context and give a concrete mitigation, or `no mitigation proposed — flag only` if none applies. Leave every Disposition cell empty — the orchestrator's Risk Disposition Loop fills it in one row at a time; standalone runs approve/reject the whole table as one bundle at the Phase 0 gate below.
+Infer a reasonable impact level (`critical`/`high`/`medium`/`low`) per risk from context and give a concrete mitigation, or `no mitigation proposed — flag only` if none applies. Compute `risk_counts`/`open_dispositions` per [`artifact-bookkeeping`](../skills/artifact-bookkeeping/SKILL.md). Leave every Disposition cell empty — the orchestrator's Risk Disposition Loop fills it in one row at a time; standalone runs approve/reject the whole table as one bundle at the Phase 0 gate below.
 
 ## Waves
 

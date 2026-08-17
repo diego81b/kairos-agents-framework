@@ -146,6 +146,8 @@ next_agent: architect-agent
 - system 2 to connect to
 ```
 
+Follow [`artifact-bookkeeping`](../skills/artifact-bookkeeping/SKILL.md) for the exact recount rule — recompute after every edit, never hand-increment a single field.
+
 `risk_counts` and `open_dispositions` are derived by counting Risks table rows — by Impact value, and by empty Disposition cells respectively. `status` is always `ready` (this agent has no pass/fail state). Leave every Disposition cell empty — the orchestrator's Risk Disposition Loop (or, when running standalone, the human via the gate below) fills it in, not you.
 
 If a risk's reasoning doesn't fit one row, keep a one-line Description with a "see below" pointer and add a short prose paragraph immediately under the table for that risk — the table itself keeps exactly these 5 columns so the disposition loop can still parse it.

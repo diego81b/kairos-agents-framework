@@ -148,6 +148,8 @@ Table columns:
 - **Mitigation/Fix** — the concrete remediation for this finding.
 - **Disposition** — leave empty. The orchestrator's Risk Disposition Loop fills it (Accept / Mitigate now / Escalate / Defer) when orchestrator-invoked.
 
+Follow [`artifact-bookkeeping`](../skills/artifact-bookkeeping/SKILL.md) for the exact recount and `status` derivation rule.
+
 `status` rules:
 - `SECURE` — zero `critical` and zero `high` findings, and no contract-enforcement gaps.
 - `VULNERABILITIES_FOUND` — any `critical` or `high` finding, or any contract-enforcement gap.

@@ -68,6 +68,10 @@ What to monitor:
 - Alert thresholds
 - Health checks
 
+### 5. Scope Coverage Check
+
+Before writing the runbook, re-read `01-requirements.md`'s `## Scope` section (if it exists) alongside what `03-implementation.md`'s Files Written actually shipped. For each item explicitly listed as included in scope, confirm it is traceable to a file, endpoint, or test that was actually produced — not inferred from the architecture spec alone, since a selected-agent subset (see orchestrator Step 0e) may have skipped architect-agent entirely. List any scope item with no traceable implementation as a `## Scope Gaps` table row (same 5-column shape as Risks) rather than silently proceeding to the deployment plan. If `01-requirements.md` doesn't exist (pm-agent wasn't run), state explicitly in the runbook that no scope-coverage check was possible — do not silently omit the section.
+
 ## Output Format
 
 One file: `06-deployment-plan.md`. YAML frontmatter carries the lean machine contract (orchestrator-branching fields); the Markdown body is the actual runbook — deployment steps, rollback procedure, and monitoring plan are inherently procedural documents; someone executing a rollback during an incident needs a readable runbook, not a nested JSON array.
@@ -112,9 +116,11 @@ This is the final phase, so there is no `next_agent` field. `Description` folds 
 
 If a risk's reasoning doesn't fit one row, keep a one-line Description with a "see below" pointer and add a short prose paragraph immediately under the table for that risk — the table itself keeps exactly these 5 columns so the disposition loop can still parse it.
 
+Follow [`artifact-bookkeeping`](../skills/artifact-bookkeeping/SKILL.md) for the exact recount and `status` derivation rule.
+
 `status` rules:
-- `ready` — no ledger constraint or open question flagged as a release blocker (step 2b), and no `critical` risk in the Risks table.
-- `blocked` — any release-blocking constraint/open question, or any `critical` risk.
+- `ready` — no ledger constraint or open question flagged as a release blocker (step 2b), no `critical` risk in the Risks table, and no unresolved row in `## Scope Gaps` (if that section exists).
+- `blocked` — any release-blocking constraint/open question, any `critical` risk, or any unresolved `## Scope Gaps` row.
 
 ## After Generating Output
 
