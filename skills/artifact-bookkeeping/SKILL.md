@@ -41,3 +41,23 @@ Given the numbered `AC-1, AC-2, ...` list from `01-requirements.md`'s Success Cr
 - `gapIds` — AC numbers with an empty Tests column (a `—` in the Gap column).
 
 Same recount discipline as §1, applied to a different table.
+
+## 4. Required frontmatter fields per phase
+
+The orchestrator's Artifact Contract Check (`orchestrator-agent.md` HITL step 0) validates more than the phase's verdict field — it also confirms every field below is present with a non-null value before treating the artifact as well-formed. A missing field is a malformed artifact, same as an unparseable verdict field: re-run the phase once with that specific error before falling back to `## Error Handling`'s retry-tracking. This is presence-only — confirming the field exists and holds a value from its documented shape — not a deep type/schema validator; each field's own agent file remains the source of truth for what a *valid* value looks like.
+
+| Phase | Required fields (beyond `phase`) |
+|-------|-----------------------------------|
+| `pm-agent` | `status`, `risk_counts`, `open_dispositions`, `next_agent` |
+| `architect-agent` | `status`, `promptable`, `risk_counts`, `open_dispositions`, `next_agent`, `database_changes_summary`, `error_codes_count`, `selected_option` |
+| `impact-assessment-agent` | `risk_counts`, `open_dispositions`, `effort`, `recommended_agents` |
+| `context-extractor-agent` | `status` |
+| `implementer-tdd-agent` | `status`, `risk_counts`, `open_dispositions`, `iteration_mode`, `wave`, `total_waves`, `next_wave`, `tdd_verification`, `coverage_summary` |
+| `implementer-coder-agent` | `status`, `risk_counts`, `open_dispositions`, `iteration_mode`, `wave`, `total_waves`, `next_wave` |
+| `code-reviewer-agent` | `status`, `checks`, `issues_summary`, `open_dispositions`, `convergence_signal`, `next_agent` |
+| `security-reviewer-agent` | `status`, `findings_summary`, `open_dispositions`, `contract_enforcement_summary`, `next_agent` |
+| `test-verifier-agent` | `status`, `execution`, `coverage_summary`, `checks`, `issues_summary`, `open_dispositions`, `convergence_signal`, `next_agent` |
+| `release-planner-agent` | `status`, `risk_counts`, `open_dispositions`, `monitoring_summary`, `rollback_summary` |
+| `documentation-agent` | `status`, `findings_summary`, `open_dispositions`, `docs_touched` |
+
+`risk_counts` / `issues_summary` / `findings_summary` are the by-Impact tally from §1 (`{ critical, high, medium, low, total }`) regardless of which name a given phase uses for it. This table is a presence checklist derived from each agent's own Output Format block — if an agent file's frontmatter template changes, update its row here in the same edit.
