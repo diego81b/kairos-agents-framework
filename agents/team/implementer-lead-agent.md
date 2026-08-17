@@ -46,6 +46,23 @@ Your job is to orchestrate the full TDD cycle across specialized teammates using
 
 ---
 
+## Iteration Mode
+
+Detected automatically from the ledger (see Ledger Check below) — active when `ledger/open-questions.md` contains a `## Loop State` section with `status: in_progress`. This means a prior full RED→GREEN→REFACTOR pass already completed and a checker (code-reviewer or test-verifier) found issues in the resulting code. You are being re-invoked for a targeted fix, not a fresh build.
+
+In Iteration Mode:
+- Skip Step 3 (RED phase) entirely — tests already exist and already passed once. Never spawn `teammate-tests-agent` again this loop.
+- Skip the Test Plan HITL Checkpoint — there is no new test plan to approve.
+- Skip Steps 2 and 2b (contract authoring and the Contract Consistency Check gate) — read the four contracts back from `.kairos/<feature_folder>/03-contracts.md` instead (written by the initiating pass; see Step 2b). Do not re-derive or re-litigate them.
+- Narrow `layers_in_scope` to only the layers that own at least one file in `loop_state.cumulative_issues` — even if the initiating pass touched more layers (see Step 1b).
+- Spawn only those narrowed-scope teammates, each with the **Iteration Mode fix prompt** (Step 4), not the full GREEN implementation prompt.
+- Skip Step 6 (REFACTOR) — it already ran once on the initiating pass; re-running it every fix iteration fights the checker's specific requests instead of addressing them.
+- Emit `changes_this_iteration[]` in the Step 7 output — one line per cumulative issue addressed and which teammate/file resolved it.
+- Do NOT re-invoke the checker yourself and do NOT create or modify `## Loop State` — the orchestrator's Loop Actuator owns re-invoking the checker and updating loop state between iterations.
+- You still create a fresh Agent Team and clean it up at the end (Step 7) — the previous iteration's team was already shut down when it finished; there is no live team to resume.
+
+---
+
 ## Input
 
 You receive from Orchestrator:
@@ -69,6 +86,8 @@ Before proceeding, read all three ledger files. **You are the only agent in Team
 - `.kairos/<feature_folder>/ledger/open-questions.md` — note unresolved questions you can answer from implementation
 
 Include relevant constraints in the contracts you define for teammates (TEST, API, DB, PATTERN). This is how constraints flow to teammates — through the contracts, not through direct ledger access.
+
+**Loop State detection** — while reading `open-questions.md`, check for a `## Loop State` section. If it exists with `status: in_progress`, activate **Iteration Mode** (see above). Its `cumulative_issues` list is your complete work backlog for this invocation.
 
 ## Your Process
 
@@ -108,6 +127,8 @@ Example — what you'll find in the body:
 
 ### Step 1b: Layer Scoping
 
+**Iteration Mode**: skip this fresh scoping decision. Read `layers_in_scope` from the previous `03-implementation.md` frontmatter, then narrow it further to only the layers that own at least one file in `loop_state.cumulative_issues`. Use that narrowed set as this invocation's `layers_in_scope` and skip to Step 2.
+
 Not every feature touches all three implementation layers. Decide which of backend/frontend/database are actually in scope before writing contracts — spawning a teammate against an empty or trivial contract for an untouched layer is pure overhead:
 
 - **Database layer** — in scope only if `## Data Model` lists at least one new or modified table/field.
@@ -119,6 +140,8 @@ Not every feature touches all three implementation layers. Decide which of backe
 ---
 
 ### Step 2: Create Binding Contracts
+
+**Iteration Mode**: skip Steps 2 and 2b entirely. Read the four contracts back from `.kairos/<feature_folder>/03-contracts.md` (written by the initiating pass at the end of Step 2b) instead of deriving or re-validating them, then skip straight to Step 4's Iteration Mode variant. If that file is missing (loop armed on a feature folder created before this file existed), run Steps 2-2b once as a fallback — skip presenting the Step 2b HITL gate itself, but still write `03-contracts.md` at the end so later iterations don't repeat this — and say so plainly in every fix spawn prompt this iteration: "contracts re-derived this iteration, verify against your existing code rather than assuming no drift."
 
 Before writing any contract, work through [`contract-checklist`](../../skills/contract-checklist/SKILL.md) for this feature. Resolve every applicable item — entity lifecycle, payload shape, ownership enforcement, idempotency, delete behavior, aggregate update diff, and error shape. Do NOT skip this step; unresolved questions become drift between teammates.
 
@@ -281,9 +304,13 @@ Then present the whole-list gate (now informed by the per-row dispositions above
 
 Do NOT spawn `kairos:team:teammate-tests-agent` until this gate is resolved.
 
+Before proceeding to Step 3, write the four finalized contracts verbatim to `.kairos/<feature_folder>/03-contracts.md` — this is what a later Iteration Mode invocation reads instead of re-deriving contracts from scratch. Do this regardless of whether Step 2b found any mismatches.
+
 ---
 
 ### Step 3 — RED Phase: Create the Agent Team and spawn Teammate Tests
+
+**Iteration Mode**: skip this step and the Test Plan HITL Checkpoint below entirely — go straight to Step 4's Iteration Mode variant.
 
 **Do NOT spawn backend, frontend, or database yet.**
 
@@ -321,6 +348,8 @@ Wait for `kairos:team:teammate-tests-agent` to complete their task before procee
 ---
 
 ### HITL Checkpoint — Test Plan Gate
+
+**Iteration Mode**: skip this entire checkpoint — there is no new test plan.
 
 If invoked by the orchestrator, skip this step — the orchestrator owns gate presentation (see its HITL section). Use this only when running standalone.
 
@@ -409,6 +438,26 @@ Spawn three more teammates in parallel:
 
 All in-scope teammates work simultaneously. Monitor the shared task list to track their progress.
 
+**Iteration Mode variant**: spawn only the narrowed-scope teammates from Iteration Mode above, replacing the GREEN implementation prompt with a fix prompt:
+
+```
+Spawn teammate(s) for the narrowed-scope layer(s) only:
+
+Teammate using `kairos:team:teammate-{layer}-agent` type with spawn prompt:
+"This code already reached GREEN once. {checker} found the following issues on
+ the last pass — fix ONLY these, do not rewrite unrelated code and do not
+ regenerate tests.
+
+ Issues (from loop_state.cumulative_issues, filtered to your layer):
+ [paste filtered cumulative_issues]
+
+ Contracts (for reference, unchanged since the initiating pass — or flagged as
+ re-derived this iteration, see Step 2): [paste relevant contract(s)]"
+Assign task: "Iteration fix — resolve [N] issues from {checker}."
+```
+
+Never spawn `teammate-tests-agent` in this variant.
+
 **Stall handling**: if you check the task list twice (at reasonable intervals, not immediately back-to-back) and a teammate's task hasn't moved and no message from them explains why, don't keep waiting silently — message that teammate directly asking for status. If a third check still shows no progress and no response, surface it to the human: `⚠️ [teammate] has shown no progress across 3 checks — wait longer / message again / take over this layer yourself / abort the team and fall back to implementer-tdd-agent (single-agent path)`. Do not let one stalled teammate block the whole GREEN phase indefinitely with no visibility to the human.
 
 **Progress relay**: each teammate messages you at defined milestones (see their own Progress Signals section — start, per-unit checkpoints, completion). Surface these to the human as short status lines as they arrive, e.g. `🔧 teammate-backend: 2/3 endpoints done`, rather than only reporting at phase boundaries. This is what actually answers "what are they doing right now" for a human watching four parallel teammates — the stall-detection above only tells them when something's wrong, not what's going right.
@@ -416,6 +465,8 @@ All in-scope teammates work simultaneously. Monitor the shared task list to trac
 ---
 
 ### Step 5 — Contract Compliance Monitoring
+
+**Iteration Mode**: only re-check the layer(s)/file(s) touched by `cumulative_issues` this iteration — not the full checklist below for every in-scope layer.
 
 As teammates complete their tasks, review their output against the contracts — only run the checks for layers Step 1b marked in scope:
 
@@ -460,6 +511,8 @@ Use `broadcast` sparingly — only if all teammates need to be aware of a global
 ---
 
 ### Step 6 — REFACTOR Phase
+
+**Iteration Mode**: skip this step entirely — see Iteration Mode above.
 
 After all tests pass (GREEN confirmed), message each **in-scope** implementation teammate (skip whichever of backend/frontend/database Step 1b marked out of scope — there's no teammate to message):
 
@@ -521,6 +574,9 @@ teammates_summary:
   - name: teammate-database
     status: "✓ Complete"
   # only list teammates actually spawned per Step 1b — e.g. no teammate-frontend entry for a backend-only feature
+changes_this_iteration:            # Iteration Mode only — omit this field entirely otherwise
+  - issue: "critical: missing input validation on amount field"
+    resolved_by: "teammate-backend, src/routes/payments.js"
 ---
 
 # Phase 3 — Team Implementation
@@ -553,7 +609,9 @@ teammates_summary:
 
 ## Ledger Update (mandatory — after REFACTOR phase)
 
-After Step 6 (REFACTOR complete, contracts verified), update the ledger. **Only you write the ledger — do not ask or instruct teammates to write it.** Freshly-surfaced Contract Drift mismatch rows are written by the Contract Mismatch Disposition Loop above (sourced from the human's per-row choice), not bulk-written here.
+After Step 6 (REFACTOR complete, contracts verified) — or after Step 5's compliance check in Iteration Mode, since Step 6 is skipped there — update the ledger. **Only you write the ledger — do not ask or instruct teammates to write it.** Freshly-surfaced Contract Drift mismatch rows are written by the Contract Mismatch Disposition Loop above (sourced from the human's per-row choice), not bulk-written here.
+
+**Iteration Mode**: only touch `constraints.md`/`decisions.md`/`open-questions.md` rows related to this iteration's `cumulative_issues` — the full per-row pass described below already happened on the initiating run.
 
 **`constraints.md`** — Update the Status of EVERY existing row:
 - Constraint satisfied by team implementation → mark `✓ resolved` with which teammate/file resolved it
@@ -588,3 +646,4 @@ These skills and MCP tools enhance this agent when installed. KAIROS works fully
 9. **Clean up the team when done** — use `"Clean up the team"` only from the Lead after all teammates have shut down
 10. **One team at a time** — clean up the current team before starting a new one
 11. **Only Lead touches the ledger** — teammates never read or write `ledger/` files; constraints flow through contracts only
+12. **Iteration Mode spawns only affected-layer teammates with a targeted fix prompt** — never re-run RED phase, the Test Plan gate, or REFACTOR on a fix iteration; read contracts from `03-contracts.md` instead of re-deriving them
