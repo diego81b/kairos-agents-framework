@@ -14,9 +14,9 @@ Intelligent multi-agent SDLC orchestration
 
 KAIROS agents declare optional enhancements via skills and MCP tools. The framework works fully without them — enhancements are additive only.
 
+KAIROS does not depend on or recommend any third-party skill plugin — coding-discipline and security-review heuristics ship natively as part of this plugin's own `skills/` directory, installed automatically with KAIROS itself.
+
 **Recommended installs:**
-- [karpathy-guidelines](https://github.com/multica-ai/andrej-karpathy-skills) — coding best practices for all implementer agents (167k+ stars)
-- [Trail of Bits security plugins](https://github.com/trailofbits/skills) — security audit suite for reviewer agents (5.5k stars)
 - [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp) — behavioral verification for test agents (42.8k stars)
 - [Playwright MCP](https://github.com/microsoft/playwright-mcp) — E2E automation for test agents (33.3k stars)
 

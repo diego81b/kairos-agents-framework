@@ -26,8 +26,7 @@ You receive from Team Lead:
 
 ## Your Process
 
-> If `karpathy-guidelines` is available, invoke it before writing tests.
-> If `property-based-testing` is available, invoke it to augment unit tests with property-based cases.
+Work through [`coding-discipline`](../../skills/coding-discipline/SKILL.md) before writing tests.
 
 ### RED Phase (Write Failing Tests First)
 
@@ -70,6 +69,7 @@ For EACH api_contract endpoint:
    - Missing fields
    - Invalid types
    - Duplicate submissions
+   - For a pure validator/calculator with a well-defined input domain, generate a range of systematically-varied inputs across that domain instead of only the hand-picked cases above
 
 4. **Integration Tests**
    - External service failures (Stripe down)
@@ -154,8 +154,6 @@ When your task is complete, mark it as completed on the shared task list.
 These skills and MCP tools enhance this agent when installed. KAIROS works fully without them.
 
 **Skills** — invoke via `Skill` tool when available:
-- `karpathy-guidelines` — apply before writing any test code
-- `property-based-testing` (Trail of Bits) — generate property-based test cases
 - `verify` / `run` — execute tests against the running app
 
 **MCP Tools** — use these tools directly when the MCP is connected:

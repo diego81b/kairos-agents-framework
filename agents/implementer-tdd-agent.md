@@ -65,7 +65,7 @@ Any other effort value (`medium`, `significant_rework`, or unknown/standalone-wi
 
 ### PHASE 0: Implementation Plan
 
-> If `karpathy-guidelines` is available, invoke it before starting implementation.
+Work through [`coding-discipline`](../skills/coding-discipline/SKILL.md) before starting implementation.
 
 Before writing any file, output a structured plan and wait for user approval.
 
@@ -387,7 +387,6 @@ curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issu
 These skills and MCP tools enhance this agent when installed. KAIROS works fully without them.
 
 **Skills** — invoke via `Skill` tool when available:
-- `karpathy-guidelines` — apply before writing any code
 - `verify` / `run` — verify implementation in the running app after coding
 
 ## Important Notes

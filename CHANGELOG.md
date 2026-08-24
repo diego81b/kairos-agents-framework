@@ -4,6 +4,32 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v7.0.0 — August 24, 2026
+
+KAIROS no longer recommends or depends on any third-party Skill marketplace. `karpathy-guidelines` (plugin `multica-ai/andrej-karpathy-skills`) and all 11 approved Trail of Bits plugins (`differential-review`, `insecure-defaults`, `supply-chain-risk-auditor`, `static-analysis`, `variant-analysis`, `sharp-edges`, `property-based-testing`, `mutation-testing`, `fp-check`, `ask-questions-if-underspecified`, `audit-context-building`) are removed from every agent file, mirror, and doc that referenced them. Anthropic's own Claude Code built-ins (`code-review`, `security-review`, `verify`/`run`, `deep-research`, `outcome-issue-generator`) and MCP servers (Chrome DevTools MCP, Playwright MCP) are unaffected — this only removes third-party *Skill* dependencies. Every removed skill's guidance was rewritten as a native, unconditional instruction in the consuming agent — nothing is lost by not installing a plugin, and the new internal skill below ships automatically with the KAIROS plugin itself (same `skills/` auto-discovery as the 3 existing internal skills), so it is never a separate install.
+
+### Added
+
+- **`skills/coding-discipline/SKILL.md`** — new internal, KAIROS-authored skill replacing `karpathy-guidelines`: scope discipline, no speculative abstraction, surfacing assumptions, verifiable success criteria, and trust-boundary validation. Referenced by `agents/implementer-tdd-agent.md`, `agents/implementer-coder-agent.md` (+ `.opencode/agents/` and `.kimi-code/agents/` mirrors), and by `agents/team/implementer-lead-agent.md` and all four `agents/team/teammate-*-agent.md` files (no mirror — Team Mode is out of scope for both mirrors).
+
+### Changed
+
+- **`agents/security-reviewer-agent.md`** (+ mirrors) — the 3 conditional Trail of Bits trigger lines (`insecure-defaults`, `supply-chain-risk-auditor`, `variant-analysis`) are removed; the 7-check OWASP-style checklist that was already the stated inline fallback now runs unconditionally.
+- **`agents/code-reviewer-agent.md`** (+ mirrors) — removed the `differential-review`/`static-analysis`/`fp-check`/`karpathy-guidelines` trigger block. Check 1 (Correctness) gains a known-error-prone-pattern bullet (`sharp-edges`' intent); check 4 (Security) gains a first-pass grep-for-risky-patterns bullet (`semgrep`'s intent); check 7 (Simplicity) now points at `coding-discipline`; a false-positive-verification instruction (`fp-check`'s intent) is added near Output Format. `static-analysis/codeql` and `sarif-parsing` are dropped outright — no inline equivalent without the external CLI/tool itself.
+- **`agents/test-verifier-agent.md`** (+ mirrors) — removed the 4 Trail of Bits bullets from Optional Enhancements (none had a trigger line). Check 1 (Test Comprehensiveness) gains a property-based-testing-style bullet for pure functions with a defined input domain; check 3 (Assertion Strength) gains an explicit mutation-style reasoning step; a false-positive-verification instruction is added near Output Format; `sarif-parsing` is dropped outright.
+- **`agents/pm-agent.md`** (+ mirrors) — removed the `ask-questions-if-underspecified` trigger and bullet; step 2 ("Ask Clarifying Questions") already covers this unconditionally.
+- **`agents/context-extractor-agent.md`** (+ mirrors) — removed the `audit-context-building` trigger and bullet; step 1 (Codebase Scan) gains a call-graph/entry-point tracing bullet, matching `architect-agent.md`'s existing inline-fallback pattern.
+- **`agents/implementer-tdd-agent.md`, `agents/implementer-coder-agent.md`** (+ mirrors) — the conditional `karpathy-guidelines` trigger at PHASE 0 is now an unconditional pointer to `coding-discipline`.
+- **`agents/team/implementer-lead-agent.md`** — `karpathy-guidelines` trigger replaced with an unconditional `coding-discipline` pointer, preserving the "share the principles with all teammate agents in your coordination prompt" clause. The now-empty `## Optional Enhancements` section is removed.
+- **`agents/team/teammate-backend-agent.md`** — `karpathy-guidelines` trigger replaced with `coding-discipline`; `sharp-edges` and `insecure-defaults` folded into two new rows in the existing Contract Compliance Checklist (no hardcoded secrets; no error-prone patterns).
+- **`agents/team/teammate-database-agent.md`** — `karpathy-guidelines` trigger replaced with `coding-discipline`; the `**Skills**` sub-header (now empty) is removed, keeping the existing database-MCP gap note.
+- **`agents/team/teammate-frontend-agent.md`** — `karpathy-guidelines` trigger replaced with `coding-discipline`.
+- **`agents/team/teammate-tests-agent.md`** — `karpathy-guidelines` trigger replaced with `coding-discipline`; `property-based-testing` folded into the RED Phase's Edge Cases step (generated/systematically-varied inputs for pure functions).
+- **`docs/skills-mcp.md`** — removed the `karpathy-guidelines` and `Trail of Bits plugins` subsections, their install-command blocks, and the "Trail of Bits plugins" column from the agent × enhancement map. Added an "Internal (KAIROS-authored) skills" subsection listing all 4 internal skills, including the new `coding-discipline`.
+- **`docs/agents.md`** — every per-agent `Optional enhancements` callout has its `karpathy-guidelines`/Trail-of-Bits names and `Install:` lines removed; `coding-discipline` (internal) replaces `karpathy-guidelines` where applicable.
+- **`docs/agent-files.md`, `docs/agent-files-team.md`** — added a pointer to the new `skills/coding-discipline/SKILL.md`, matching the existing `contract-checklist`/`code-simplification`/`artifact-bookkeeping` pointers.
+- **`README.md`** — removed the `karpathy-guidelines` and `Trail of Bits security plugins` bullets from "Recommended installs"; added a line stating KAIROS has no third-party skill dependency.
+
 ## v6.9.1 — August 24, 2026
 
 ### Fixed

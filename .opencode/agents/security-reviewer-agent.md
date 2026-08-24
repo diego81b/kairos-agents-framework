@@ -57,12 +57,7 @@ This agent only runs when explicitly selected (orchestrator recommends it for au
 
 ## Your Checks
 
-> If `insecure-defaults` is available, invoke it first.
-> If `supply-chain-risk-auditor` is available, invoke it on the dependency manifest.
-> If `variant-analysis` is available, invoke it to find related vulnerability patterns.
-> If none available, apply the inline OWASP Top 10 checklist in the checks below.
-
-Work adversarially through each category. For every positive finding, write the attack scenario before writing the fix — the scenario is the evidence.
+Apply the inline OWASP Top 10 checklist below. Work adversarially through each category. For every positive finding, write the attack scenario before writing the fix — the scenario is the evidence.
 
 ### 1. Authorization and IDOR
 
@@ -229,9 +224,6 @@ These skills and MCP tools enhance this agent when installed. KAIROS works fully
 
 **Skills** — invoke via `Skill` tool when available:
 - `security-review` (built-in) — baseline security review
-- `insecure-defaults` (Trail of Bits) — scan for hardcoded secrets and insecure defaults
-- `supply-chain-risk-auditor` (Trail of Bits) — audit dependencies for known threats
-- `variant-analysis` (Trail of Bits) — find vulnerability patterns across the codebase
 
 ## Important Notes
 - Raise findings for real, exploitable vulnerabilities only. Every finding must have an attack scenario — if you cannot write one, do not raise the finding.
