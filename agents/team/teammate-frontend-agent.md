@@ -25,7 +25,7 @@ You receive from Team Lead:
 
 ## Your Process
 
-> If `karpathy-guidelines` is available, invoke it before writing any component code.
+Work through [`coding-discipline`](../../skills/coding-discipline/SKILL.md) before writing any component code.
 
 For EACH ui_component:
 
@@ -159,7 +159,6 @@ When your implementation is complete and checklist verified, mark your task as c
 These skills and MCP tools enhance this agent when installed. KAIROS works fully without them.
 
 **Skills** — invoke via `Skill` tool when available:
-- `karpathy-guidelines` — apply before writing any component code
 - `verify` / `run` — verify component behavior in a real browser
 
 **MCP Tools** — use these tools directly when the MCP is connected:

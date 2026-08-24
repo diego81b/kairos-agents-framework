@@ -56,16 +56,12 @@ When effort is `simple_fix`, 2b Ledger Update becomes additive-only (see that se
 
 ## Your Checks
 
-> If `differential-review` is available, invoke it on the diff first.
-> If `static-analysis/semgrep` is available, run Semgrep scan.
-> If `fp-check` is available, verify any static analysis findings before reporting.
-> If `karpathy-guidelines` is available, invoke it before the Simplicity / Over-Engineering check below.
-
 ### 1. Correctness
 - Does the implementation actually match `01-requirements.md` / `02-architecture.md`, not just the shape of the API?
 - Are edge cases (null, empty, boundary values) handled in the code itself — not only asserted by a test?
 - Are error paths handled, not just the happy path?
 - Any off-by-one errors, race conditions, or state inconsistencies?
+- Known error-prone patterns: floating-point equality comparisons, mutable default arguments, unguarded array/object index access, implicit type coercion in comparisons, a promise created but never awaited.
 
 This check reads the implementation logic directly. It is distinct from Testing (below), which checks whether tests exist and cover that logic, and from `test-verifier-agent` (Phase 5), which checks test quality — neither substitutes for reading the logic itself.
 
@@ -85,6 +81,7 @@ This check reads the implementation logic directly. It is distinct from Testing 
 - Is feature-specific logic leaking into a shared/general-purpose module instead of the package that owns the concept?
 
 ### 4. Security
+- First pass: grep the diff for known risky patterns — hardcoded key-like strings (`AKIA`, `sk_live_`, `-----BEGIN`), `eval(`/shell calls with interpolated input, string-concatenated SQL — before the manual read below.
 - No hardcoded secrets?
 - Input validation present?
 - Authentication checks?
@@ -109,6 +106,7 @@ First check whether tests are even in scope: read `03-implementation.md`'s front
 - Performance tested?
 
 ### 7. Simplicity / Over-Engineering
+Apply [`coding-discipline`](../skills/coding-discipline/SKILL.md) — this check is where its scope-discipline and anti-speculative-abstraction principles get graded against the actual diff.
 - Complexity proportional to what the requirement actually needs?
 - New abstraction justified by ≥2 real use cases, not a speculative "might need it later"?
 - No dead code, unused config options, or unreachable branches?
@@ -163,6 +161,8 @@ Ordered by severity: critical first, then high, then medium, then low.
 - **Disposition** — leave empty (`*(filled by gate)*`). The orchestrator's Risk Disposition Loop fills it from the human's per-row choice; `open_dispositions` counts how many are still empty.
 
 Follow [`artifact-bookkeeping`](../skills/artifact-bookkeeping/SKILL.md) for the exact recount and `status` derivation rule.
+
+Before adding an issue to the table, verify it isn't a false positive: trace the actual code path (e.g. confirm input flagged as unvalidated isn't actually validated by upstream middleware) rather than flagging from pattern match alone.
 
 If an issue's reasoning doesn't fit one row, keep a one-line Description with a "see below" pointer and add a short prose paragraph immediately under the table for that issue — the table itself keeps exactly these 5 columns so the disposition loop can still parse it.
 
@@ -259,13 +259,6 @@ These skills and MCP tools enhance this agent when installed. KAIROS works fully
 
 **Skills** — invoke via `Skill` tool when available:
 - `code-review` (built-in) — baseline code review
-- `karpathy-guidelines` — anti-overengineering / surgical-change heuristics, backs the Simplicity check
-- `differential-review` (Trail of Bits) — security-focused diff review
-- `static-analysis/semgrep` (Trail of Bits) — Semgrep static analysis
-- `static-analysis/codeql` (Trail of Bits) — CodeQL queries (requires CodeQL CLI installed)
-- `static-analysis/sarif-parsing` (Trail of Bits) — parse static analyzer output
-- `sharp-edges` (Trail of Bits) — detect error-prone API usage
-- `fp-check` (Trail of Bits) — verify findings are not false positives
 
 ## Important Notes
 - Be thorough but concise

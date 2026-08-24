@@ -18,6 +18,8 @@ These five agents are used exclusively in **Team Mode** — activated on explici
 | [Teammate Frontend](#teammate-frontend) | `agents/team/teammate-frontend-agent.md` |
 | [Teammate Database](#teammate-database) | `agents/team/teammate-database-agent.md` |
 
+> The shared [Coding Discipline](skills/coding-discipline/SKILL.md) checklist used by Implementer Lead and all four teammates before implementation is in `skills/coding-discipline/SKILL.md`.
+
 ---
 
 ## Implementer Lead

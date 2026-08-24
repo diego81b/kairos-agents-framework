@@ -17,8 +17,7 @@ Every modification to an agent file must be accompanied by an entry in [`CHANGEL
 Scans the codebase and an issue draft to produce a structured context file (`00-context.md`) that all downstream agents consume. Run this agent before launching the Orchestrator to give every phase accurate, verified knowledge of your stack, patterns, and conventions — without each agent re-scanning the repository independently.
 
 ::: tip Optional enhancements
-**Skills:** `deep-research` (built-in), `audit-context-building` (Trail of Bits)  
-Install: `claude plugin install trailofbits/skills/audit-context-building`
+**Skills:** `deep-research` (built-in)
 :::
 
 ---
@@ -48,8 +47,7 @@ Master coordinator — initiates workflow, routes tasks to specialist agents, ma
 Analyzes requirements, creates detailed specifications, identifies edge cases, and documents acceptance criteria. Transforms a vague feature request into a precise implementation brief.
 
 ::: tip Optional enhancements
-**Skills:** `deep-research` (built-in), `outcome-issue-generator` (built-in), `ask-questions-if-underspecified` (Trail of Bits)  
-Install: `claude plugin install trailofbits/skills/ask-questions-if-underspecified`
+**Skills:** `deep-research` (built-in), `outcome-issue-generator` (built-in)
 :::
 
 ---
@@ -72,7 +70,7 @@ Note: `trailmark/diagramming-code` skipped — plugin installs 10 skills, only 1
 Implements code using **real TDD** (tests written before code). Runs tests iteratively until they pass, applies team coding patterns, and handles error cases explicitly. This is the **default implementer for all features** — works with Claude Code, API, and local models.
 
 ::: tip Optional enhancements
-**Skills:** `karpathy-guidelines` (`claude plugin install multica-ai/andrej-karpathy-skills`), `verify` / `run` (built-in)
+**Skills:** `coding-discipline` (internal), `verify` / `run` (built-in)
 :::
 
 ---
@@ -84,7 +82,7 @@ Generates production-ready code **without a TDD cycle**. Use this agent when the
 > **Note:** If your project has a test suite, prefer `implementer-tdd-agent` — TDD catches design issues that pure code generation does not.
 
 ::: tip Optional enhancements
-**Skills:** `karpathy-guidelines` (`claude plugin install multica-ai/andrej-karpathy-skills`), `verify` / `run` (built-in)
+**Skills:** `coding-discipline` (internal), `verify` / `run` (built-in)
 :::
 
 ---
@@ -108,7 +106,7 @@ Team coordinator — applies the full TDD discipline across specialized teammate
 Monitors contract compliance throughout, flags mismatches, and aggregates the final output. Does not write code itself.
 
 ::: tip Optional enhancements
-**Skills:** `karpathy-guidelines` (`claude plugin install multica-ai/andrej-karpathy-skills`)
+**Skills:** `coding-discipline` (internal)
 :::
 
 ### [Teammate Tests](/agents/team/teammate-tests-agent)
@@ -116,9 +114,8 @@ Monitors contract compliance throughout, flags mismatches, and aggregates the fi
 Test specialist — generates the full test suite following the RED phase of TDD (failing tests first). Covers happy paths, error cases, edge cases, and integration tests. Target: >80% coverage.
 
 ::: tip Optional enhancements
-**Skills:** `karpathy-guidelines` (`claude plugin install multica-ai/andrej-karpathy-skills`), `verify` / `run` (built-in), `property-based-testing` (Trail of Bits)  
-**MCP:** Chrome DevTools MCP, Playwright MCP  
-Install: `claude plugin install trailofbits/skills/property-based-testing`
+**Skills:** `coding-discipline` (internal), `verify` / `run` (built-in)  
+**MCP:** Chrome DevTools MCP, Playwright MCP
 :::
 
 ### [Teammate Backend](/agents/team/teammate-backend-agent)
@@ -126,8 +123,7 @@ Install: `claude plugin install trailofbits/skills/property-based-testing`
 Backend specialist — implements API routes and business logic exactly per the API contract defined by the Lead. Validates input, calls services, returns responses, and handles errors as specified.
 
 ::: tip Optional enhancements
-**Skills:** `karpathy-guidelines` (`claude plugin install multica-ai/andrej-karpathy-skills`), `security-review` (built-in), `sharp-edges` (Trail of Bits), `insecure-defaults` (Trail of Bits)  
-Install: `claude plugin install trailofbits/skills/sharp-edges trailofbits/skills/insecure-defaults`
+**Skills:** `coding-discipline` (internal), `security-review` (built-in)
 :::
 
 ### [Teammate Frontend](/agents/team/teammate-frontend-agent)
@@ -135,7 +131,7 @@ Install: `claude plugin install trailofbits/skills/sharp-edges trailofbits/skill
 Frontend specialist — implements UI components and client code that calls the Backend APIs exactly per the API contract. Handles all response and error codes defined in the contract.
 
 ::: tip Optional enhancements
-**Skills:** `karpathy-guidelines` (`claude plugin install multica-ai/andrej-karpathy-skills`), `verify` / `run` (built-in)  
+**Skills:** `coding-discipline` (internal), `verify` / `run` (built-in)  
 **MCP:** Chrome DevTools MCP, Playwright MCP
 :::
 
@@ -144,7 +140,7 @@ Frontend specialist — implements UI components and client code that calls the 
 Database specialist — creates schema migrations and rollback scripts exactly per the database contract. Adds indexes and constraints as specified.
 
 ::: tip Optional enhancements
-**Skills:** `karpathy-guidelines` (`claude plugin install multica-ai/andrej-karpathy-skills`)  
+**Skills:** `coding-discipline` (internal)  
 Note: No generic database MCP available — all database MCPs are vendor-specific.
 :::
 
@@ -155,8 +151,7 @@ Note: No generic database MCP available — all database MCPs are vendor-specifi
 Checks code quality against standards, verifies pattern compliance, reviews architecture alignment, and suggests improvements before the code reaches test verification.
 
 ::: tip Optional enhancements
-**Skills:** `code-review` (built-in), `security-review` (built-in), `differential-review` (Trail of Bits), `static-analysis/semgrep` (Trail of Bits), `static-analysis/sarif-parsing` (Trail of Bits), `sharp-edges` (Trail of Bits), `fp-check` (Trail of Bits)  
-Install: `claude plugin install trailofbits/skills/differential-review trailofbits/skills/static-analysis trailofbits/skills/sharp-edges trailofbits/skills/fp-check`
+**Skills:** `code-review` (built-in), `security-review` (built-in), `coding-discipline` (internal, backs the Simplicity check)
 :::
 
 ---
@@ -172,8 +167,7 @@ Also includes a mandatory **contract enforcement check**: reads `02-architecture
 Output is a single `04b-security-review.md`: frontmatter (status, finding counts) plus the full findings table — each ranked by exploitable severity, with a concrete attack scenario and remediation. Because this agent is read-only, the Orchestrator writes and opens the file on its behalf.
 
 ::: tip Optional enhancements
-**Skills:** `security-review` (built-in), `insecure-defaults` (Trail of Bits), `supply-chain-risk-auditor` (Trail of Bits), `variant-analysis` (Trail of Bits)  
-Install: `claude plugin install trailofbits/skills/insecure-defaults trailofbits/skills/supply-chain-risk-auditor trailofbits/skills/variant-analysis`
+**Skills:** `security-review` (built-in)
 :::
 
 ---
@@ -183,9 +177,8 @@ Install: `claude plugin install trailofbits/skills/insecure-defaults trailofbits
 Verifies test quality, checks that coverage is >80%, validates assertion quality, and ensures edge cases are covered. Blocks progression if test quality is insufficient.
 
 ::: tip Optional enhancements
-**Skills:** `verify` / `run` (built-in), `property-based-testing` (Trail of Bits), `mutation-testing` (Trail of Bits), `sarif-parsing` (Trail of Bits `static-analysis`), `fp-check` (Trail of Bits)  
+**Skills:** `verify` / `run` (built-in)  
 **MCP:** Chrome DevTools MCP, Playwright MCP  
-Install: `claude plugin install trailofbits/skills/property-based-testing trailofbits/skills/mutation-testing trailofbits/skills/static-analysis trailofbits/skills/fp-check`  
 Note: `coverage-analysis` skipped — `testing-handbook-skills` installs 15 skills (AFL++, fuzzing stack, etc.), only 1 needed. Inline coverage check used instead.
 :::
 

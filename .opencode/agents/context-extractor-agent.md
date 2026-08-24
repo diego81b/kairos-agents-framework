@@ -31,8 +31,6 @@ For a broad or ambiguous issue draft, run the Full process below, unchanged.
 
 ## Your Process
 
-> If `audit-context-building` is available, invoke it to produce granular code analysis before building `00-context.md`.
-
 ### 1. Codebase Scan
 Read the repository to extract:
 - **Stack and versions**: `package.json`, `pyproject.toml`, `go.mod`, `pom.xml`, `Cargo.toml` — exact names and versions only
@@ -40,6 +38,7 @@ Read the repository to extract:
 - **Existing patterns**: hooks, services, utils, middleware — list each with relative file path as reference
 - **Naming and folder conventions**: how are files named? How are folders structured? (e.g. `kebab-case`, feature folders, co-located tests)
 - **Test setup**: test framework, coverage tool, current coverage if reported, test file location pattern
+- **Call graph for granularity**: for the modules the issue draft plausibly touches, trace entry points, service boundaries, and data flow paths using Read + Grep — not just a file listing
 
 ### 2. Issue Analysis
 Cross-reference the issue draft against what you found in step 1:
@@ -196,7 +195,6 @@ These skills and MCP tools enhance this agent when installed. KAIROS works fully
 
 **Skills** — invoke via `Skill` tool when available:
 - `deep-research` — enrich context with external domain knowledge
-- `audit-context-building` (Trail of Bits) — ultra-granular code analysis for audit-quality context
 
 ## Important Notes
 - Tool grant is intentionally narrower than most pipeline agents: no `Edit`, no `Bash`. This agent's own contract — read-only, single new output file — is a single new file, never an edit to an existing one, so the grant now matches the claim mechanically, not just by instruction.

@@ -101,6 +101,7 @@ Run the checks below. Each check produces zero or more issues.
 - Boundaries covered (min, max, zero, empty, null, undefined, off-by-one)?
 - Edge cases (concurrency, timezone, locale, large input)?
 - Acceptance criteria from `01-requirements.md`'s Success Criteria list (numbered `AC-1`, `AC-2`, ... in list order) each mapped to ≥1 test?
+- For a pure function with a well-defined input domain (parser, validator, calculator), are there tests over generated/randomized or systematically-varied inputs, not only a handful of hand-picked examples?
 
 #### 2. Coverage Adequacy
 - Line coverage ≥ 80%?
@@ -115,6 +116,7 @@ Flag tests where:
 - Assertion does not depend on SUT behavior (would pass even if SUT returned the wrong value).
 - Snapshot tests with no semantic assertion alongside.
 - **Intent-consistency** (PROOF principle 4 — "ogni test con intent dichiarato"): if the test's declared `Intent` (from `03-implementation-plan.md`'s Test Cases table) is available, does the actual assertion verify that specific behavior? This is stricter than the non-triviality checks above — a non-trivial assertion can still miss its own declared intent (e.g. intent says "locks in that an expired card is rejected before Stripe is called," but the assertion only checks the HTTP status code and never verifies the Stripe client wasn't invoked). Flag as `medium` when the assertion is real but narrower than the declared intent; flag as `high` when the assertion checks something unrelated to the declared intent entirely. If no Intent column was supplied, skip this sub-check and say so once in the report — do not flag missing intent data itself as an issue, and do not fabricate an intent to check against.
+- **Mutation check** (done by reasoning, not a tool): for each assertion, mentally flip a comparison operator or boundary constant in the SUT — would this test actually fail? If no existing test would catch that mutation, the assertion is too weak even if it isn't trivial by the checks above.
 
 #### 4. Determinism / Flakiness
 Flag tests using:
@@ -219,6 +221,8 @@ If an issue's reasoning doesn't fit one row, keep a one-line Description with a 
 
 Follow [`artifact-bookkeeping`](../skills/artifact-bookkeeping/SKILL.md) for the exact recount, `status` derivation, and AC-coverage counting rule.
 
+Before adding a finding to the Issues table, verify it isn't a false positive: re-check the actual test and SUT code, not just the pattern that triggered the flag.
+
 `status` rules:
 - `READY` — zero `critical` and zero `high` issues, and coverage check is `PASS`.
 - `NEEDS_FIXES` — any `critical` or `high` issue, or coverage `FAIL`.
@@ -320,10 +324,6 @@ These skills and MCP tools enhance this agent when installed. KAIROS works fully
 
 **Skills** — invoke via `Skill` tool when available:
 - `verify` — run the app and observe real behavior before signing off
-- `property-based-testing` (Trail of Bits) — validate test suite covers property-based cases
-- `mutation-testing` (Trail of Bits) — check test suite catches mutations
-- `sarif-parsing` (Trail of Bits `static-analysis`) — parse static analysis output included in test artifacts
-- `fp-check` (Trail of Bits) — verify static analysis findings are not false positives
 
 **MCP Tools** — use these tools directly when the MCP is connected:
 - `take_screenshot` (via Chrome DevTools MCP) — visual verification post-implementation

@@ -45,6 +45,8 @@ No exceptions. A pull request that modifies an agent without a matching changelo
 > The shared [Code Simplification](skills/code-simplification/SKILL.md) checklist used by the Implementer Agent (TDD and Code Only) REFACTOR step is in `skills/code-simplification/SKILL.md`.
 >
 > The shared [Artifact Bookkeeping](skills/artifact-bookkeeping/SKILL.md) reference — the recount and status-derivation rules used by PM, Architect, Impact Assessment, both Implementers, Code Reviewer, Security Reviewer, Test Verifier, Release Planner, and Documentation Agent, plus the per-phase required-frontmatter-fields table the Orchestrator's Artifact Contract Check validates against — is in `skills/artifact-bookkeeping/SKILL.md`.
+>
+> The shared [Coding Discipline](skills/coding-discipline/SKILL.md) checklist — scope discipline, anti-speculative-abstraction, and verifiable success criteria, applied before implementation by both Implementer agents and (Team Mode) Implementer Lead and all four teammates — is in `skills/coding-discipline/SKILL.md`.
 
 ---
 

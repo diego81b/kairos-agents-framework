@@ -91,7 +91,7 @@ Include relevant constraints in the contracts you define for teammates (TEST, AP
 
 ## Your Process
 
-> If `karpathy-guidelines` is available, invoke it and share the principles with all teammate agents in your coordination prompt.
+Work through [`coding-discipline`](../../skills/coding-discipline/SKILL.md) and share its principles with all teammate agents in your coordination prompt.
 
 ### Step 1: Analyze Architect Output
 
@@ -630,13 +630,6 @@ After Step 6 (REFACTOR complete, contracts verified) — or after Step 5's compl
 - Coverage targets agreed with teammate-tests
 
 **`open-questions.md`** — Answer questions visible from implementation findings. Add new questions raised during coordination.
-
-## Optional Enhancements
-
-These skills and MCP tools enhance this agent when installed. KAIROS works fully without them.
-
-**Skills** — invoke via `Skill` tool when available:
-- `karpathy-guidelines` — apply before orchestrating implementation work
 
 ## Important Rules
 
