@@ -343,6 +343,8 @@ Each KAIROS run maintains three living files under `.kairos/<feature_folder>/led
 
 Without the ledger, information can be silently dropped between phases: a SOC2 compliance constraint captured by the PM but not echoed into `02-architecture.md` is invisible to the Implementer and Reviewer. The ledger eliminates this by making all cross-phase constraints and decisions explicit and persistent.
 
+**Constraint & Decision Conflict Scan** — after every phase's own ledger update, the Orchestrator re-reads `constraints.md` and `decisions.md` and checks this phase's actual output against every row an *earlier* phase already resolved or recorded. A row's own Status cell only records what the acting agent *claims* happened — it never cross-checks itself against constraints or decisions from more than one phase back — so this is the only place that drift gets caught. A genuine contradiction becomes a `high`-impact row in the phase's own Risks/Issues table, resolved through the same HITL gate as everything else there.
+
 At pipeline end, the Orchestrator counts `🔴 open` items in `open-questions.md` and warns if any remain unresolved before shipping.
 
 > **Team Mode**: only `implementer-lead-agent` reads and writes the ledger. Teammates receive constraints through their binding contracts, not by direct ledger access.

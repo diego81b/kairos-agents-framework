@@ -13,6 +13,10 @@ KAIROS agents declare **optional enhancements** via skills and MCP tools. The fr
 
 Chrome DevTools MCP enables screenshot capture, console inspection, network monitoring, Lighthouse audits, and custom in-browser assertions. Playwright MCP enables full E2E test execution against a running app.
 
+::: warning Subagent tool access requires an explicit frontmatter grant
+Installing the MCP server is not enough. `test-verifier-agent`, `teammate-tests-agent`, and `teammate-frontend-agent` run as Claude Code subagents (via the `Agent`/`Task` tool), whose `tools:` frontmatter is a strict allowlist — a tool not listed there is unreachable even if the MCP is connected session-wide, and even if the agent's body prose tells it to use that tool. `agents/test-verifier-agent.md`, `agents/team/teammate-tests-agent.md`, and `agents/team/teammate-frontend-agent.md` all list `mcp__chrome-devtools__*, mcp__playwright__*` in `tools:` for exactly this reason — if you add MCP tools to another agent, grant them the same way (`mcp__<server>__*` wildcards a whole server) or the agent will silently never call them.
+:::
+
 ---
 
 ## Skills

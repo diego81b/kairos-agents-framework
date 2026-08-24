@@ -4,6 +4,31 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v6.9.1 — August 24, 2026
+
+### Fixed
+
+- **`agents/test-verifier-agent.md`, `agents/team/teammate-tests-agent.md`, `agents/team/teammate-frontend-agent.md`** — added `mcp__chrome-devtools__*, mcp__playwright__*` to `tools:` frontmatter. These agents' bodies have told them to use Chrome DevTools MCP / Playwright MCP since v3.3.0, but the tools were never actually granted in `tools:` — since that field is a strict allowlist for Claude Code subagents, the tools were unreachable regardless of whether the MCP was connected. Mirrored to `.opencode/agents/test-verifier-agent.md` (as `permission: { "chrome-devtools_*": allow, "playwright_*": allow }`) and `.kimi-code/agents/test-verifier-agent.md`.
+- **`docs/setup/opencode.md`, `docs/setup/kimi-code.md`** — documented the `tools:`/`permission:` mapping for MCP-server wildcard grants, so future MCP additions don't repeat this gap.
+- **`docs/skills-mcp.md`** — added a note explaining that granting an MCP to a subagent requires the `tools:` frontmatter entry, not just installing the server.
+
+## v6.9.0 — August 17, 2026
+
+Re-audit of the v6.7.0 harness-audit follow-up list (4 remaining structural items) against current code. One item — ledger archiving/digest — was scoped, found to have no safe trigger point without contradicting an existing agent's own stated read-only contract for a thin payoff, and cut rather than shipped speculatively. The other three:
+
+### Added
+
+- **`agents/orchestrator-agent.md`** (+ mirrors) — HITL step 1b, previously **Constraint-Conflict Scan**, is now **Constraint & Decision Conflict Scan**: it also reads `ledger/decisions.md` and checks the current phase's output against every decision an earlier phase already recorded, not just constraints. `decisions.md` has no Status column, so the predicate there is simply "recorded before this phase ran," not "already resolved." Also fixes a drift between this step's own instructions and `artifact-bookkeeping` §1: the step previously told the orchestrator to hand-increment a single tally bucket by 1 when appending a conflict row — now it re-runs the full recount instead, per the skill's own "never hand-increment" rule.
+- **`skills/artifact-bookkeeping/SKILL.md`** — new §4, a per-phase table of required frontmatter fields (beyond the verdict field already checked), derived from each agent's own Output Format block. Wired into `orchestrator-agent.md`'s Step 0 **Artifact Contract Check** (+ mirrors): a phase artifact missing one of its required fields is now treated as malformed — same one-time re-run behavior as an invalid verdict field — instead of only checking that the verdict field itself parses.
+- **`agents/team/implementer-lead-agent.md`** — Step 4 gains **Cross-domain change requests**, the receiver-side handling that was missing for the escalation message every `teammate-*-agent.md` already sends (`message [lead]: "<path> needs a change outside my domain"`) when it needs to touch a file outside its own Owned Paths. The Lead never writes code itself (Rule 1), so it routes: relay to the in-scope teammate that actually owns the path, escalate to the human if the owning layer wasn't spawned this pass, or — for a genuinely shared file with no single owner (a shared type/interface, a barrel/index, root config, a package manifest) — assign exactly one teammate as sole owner for the rest of the pass and record the assignment in `03-contracts.md` under a new `## File Ownership Overrides` section, so it survives past a mid-pass `broadcast` and is visible to a later Iteration Mode re-spawn. New Important Rule 13 summarizes it. No mirrors — `agents/team/` is out of scope for both mirrors.
+
+### Changed
+
+- **`docs/workflow.md`** — Shared Ledger section documents the Constraint & Decision Conflict Scan (previously undocumented even for the v6.7.0 constraints-only version).
+- **`docs/agent-files.md`, `CLAUDE.md`** — `artifact-bookkeeping` pointer sentences updated to mention its new §4 frontmatter-fields table and the Orchestrator's Artifact Contract Check as a consumer.
+
+---
+
 ## v6.8.0 — August 17, 2026
 
 ### Added

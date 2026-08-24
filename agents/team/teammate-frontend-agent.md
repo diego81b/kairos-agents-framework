@@ -1,7 +1,7 @@
 ---
 name: teammate-frontend-agent
 description: "Frontend specialist: implements UI components and client code"
-tools: Read, Write, Edit, Bash, Grep, Glob
+tools: Read, Write, Edit, Bash, Grep, Glob, mcp__chrome-devtools__*, mcp__playwright__*
 model: haiku
 model_note: "Implementation-only - use cheap model, follows precise instructions"
 ---
