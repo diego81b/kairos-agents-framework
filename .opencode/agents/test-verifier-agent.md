@@ -5,6 +5,8 @@ model: anthropic/claude-sonnet-5
 permission:
   edit: allow
   bash: ask
+  "chrome-devtools_*": allow
+  "playwright_*": allow
 ---
 
 # Test Verifier - Test Quality

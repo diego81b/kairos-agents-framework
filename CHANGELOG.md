@@ -4,6 +4,14 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v6.9.1 — August 24, 2026
+
+### Fixed
+
+- **`agents/test-verifier-agent.md`, `agents/team/teammate-tests-agent.md`, `agents/team/teammate-frontend-agent.md`** — added `mcp__chrome-devtools__*, mcp__playwright__*` to `tools:` frontmatter. These agents' bodies have told them to use Chrome DevTools MCP / Playwright MCP since v3.3.0, but the tools were never actually granted in `tools:` — since that field is a strict allowlist for Claude Code subagents, the tools were unreachable regardless of whether the MCP was connected. Mirrored to `.opencode/agents/test-verifier-agent.md` (as `permission: { "chrome-devtools_*": allow, "playwright_*": allow }`) and `.kimi-code/agents/test-verifier-agent.md`.
+- **`docs/setup/opencode.md`, `docs/setup/kimi-code.md`** — documented the `tools:`/`permission:` mapping for MCP-server wildcard grants, so future MCP additions don't repeat this gap.
+- **`docs/skills-mcp.md`** — added a note explaining that granting an MCP to a subagent requires the `tools:` frontmatter entry, not just installing the server.
+
 ## v6.9.0 — August 17, 2026
 
 Re-audit of the v6.7.0 harness-audit follow-up list (4 remaining structural items) against current code. One item — ledger archiving/digest — was scoped, found to have no safe trigger point without contradicting an existing agent's own stated read-only contract for a thin payoff, and cut rather than shipped speculatively. The other three:

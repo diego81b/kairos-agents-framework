@@ -1,7 +1,7 @@
 ---
 name: test-verifier-agent
 description: "Verifies test quality, coverage adequacy, assertion strength, determinism, and TDD compliance. Loops back to implementer with actionable findings."
-tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion
+tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion, mcp__chrome-devtools__*, mcp__playwright__*
 model_preference: secondary
 ---
 
