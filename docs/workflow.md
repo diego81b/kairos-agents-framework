@@ -104,11 +104,12 @@ Every phase writes a single Markdown file: a small YAML frontmatter header (stat
 
 **Pre-pipeline (optional, both standalone):**
 - Run `@context-extractor-agent` first to produce `00-context.md` (full-repo scan — stack, patterns, conventions)
-- Run `@impact-assessment-agent` to produce `00b-impact.md` (issue-scoped grounding — effort, domains, recommended agents). Consumes `00-context.md` if present; does not rescan what it already covers.
+- Run `@impact-assessment-agent` to produce `00b-impact.md` (issue-scoped grounding — effort, domains, recommended agents). Consumes `00-context.md` if present; does not rescan what it already covers. `test-verifier-agent` is only recommended when a TDD implementer is selected AND effort is `medium` or `significant_rework` — a `simple_fix` on the TDD path relies on `code-reviewer-agent`'s own Testing check instead of a dedicated verification phase.
 
 **Pipeline start:**
 - Developer provides a natural-language feature request (with optional issue reference)
 - Orchestrator loads `00-context.md` and `00b-impact.md` if present
+- **Quick-Fix Check** (skipped only when a `## KAIROS Pipeline` template section was found in the issue body): one question — "Quick fix, or full feature?" Quick fix presets `active_agents` to `implementer-coder-agent` + `code-reviewer-agent`, sets `loop_policy` to `auto 1`, and widens the Risk Disposition Loop's auto-accept threshold to `medium` for this run — skipping the full selection menu and the loop-policy prompt below entirely. Full feature proceeds as before.
 - If `00b-impact.md` found, displays a `💡 Impact Assessment` advisory block before the selection menu (effort, domains, recommended agents) — advisory only, nothing pre-selected
 - Orchestrator reads the `## KAIROS Pipeline` section from the issue body (if present), or shows an interactive numbered list — **no automatic inference**
 - User confirms or adjusts the agent selection; orchestrator announces the active pipeline before Phase 1
@@ -118,6 +119,10 @@ _Output: confirmed `active_agents` list + `feature_folder` path_
 
 ::: tip Selective pipeline
 Only agents explicitly selected in Phase 0 will run. Phases for inactive agents are skipped automatically. Use [Pipeline Templates](/setup/templates) to pre-configure agent selection in your issue tracker.
+:::
+
+::: tip Quick-Fix Check trades TDD discipline for speed
+Choosing "Quick fix" routes to `implementer-coder-agent` (no TDD cycle, no `test-verifier-agent` phase) even in a repo with a test suite. If you want tests generated for a small change, pick "Full feature" or hand-pick `implementer-tdd-agent` from the selection menu instead.
 :::
 
 ---
@@ -248,6 +253,10 @@ _Saved to: `.kairos/<feature_folder>/04-review.md` + `.kairos/<feature_folder>/0
 User reviews the quality report (`04-review.md`). NEEDS\_FIXES sends the issues table back to the Implementer. Presented via `AskUserQuestion`, not a printed menu.
 
 `✅ Approve` · `✏️ Request changes` · `⏭️ Skip next` · `⛔ Stop`
+:::
+
+::: tip Lean Mode for simple fixes
+When `effort: simple_fix` (from `00b-impact.md`, or self-inferred standalone), Architecture Compliance and Performance collapse to a one-line N/A unless the diff actually adds an endpoint/schema/integration point or touches a loop/query/hot path; the dependency-changelog check only runs when a dependency version actually changed. Correctness, Security, Simplicity, and Standards always run in full — those are what actually catch bugs on a small diff.
 :::
 
 ---

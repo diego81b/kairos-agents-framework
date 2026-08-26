@@ -4,6 +4,27 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v7.1.0 — August 26, 2026
+
+Reduces roundtrips and per-phase overhead for small fixes, without touching the pipeline's behavior on real features. Three changes target three distinct sources of friction: the orchestrator's own gate machinery, `test-verifier-agent` being pulled in regardless of size, and `code-reviewer-agent` running full-depth checks on trivial diffs.
+
+### Added
+
+- **`agents/orchestrator-agent.md`** (+ both mirrors) — new **Quick-Fix Check** at Step 0e, asked once before the agent-selection menu (skipped only when the issue body already carries a `## KAIROS Pipeline` template section). Choosing "Quick fix" presets `active_agents` to `implementer-coder-agent` + `code-reviewer-agent`, sets `loop_policy` to `auto 1`, and sets `quick_fix_mode` for the run — skipping the full 9-item selection menu and the separate loop-policy prompt entirely. Choosing "Full feature" proceeds exactly as before. Trades TDD discipline for speed by design; pick "Full feature" (or hand-pick `implementer-tdd-agent` from the menu) when tests should be generated.
+- **`agents/orchestrator-agent.md`** (+ both mirrors) — Risk Disposition Loop's auto-accept now also covers `medium`-impact rows when `quick_fix_mode` is active, on top of the existing `low`-only auto-accept. `high`/`critical` rows are never auto-disposed, in or out of quick-fix mode.
+
+### Changed
+
+- **`agents/impact-assessment-agent.md`** (+ both mirrors) — `test-verifier-agent` is now only recommended when a TDD implementer is selected AND effort is `medium` or `significant_rework`. Previously it was recommended whenever TDD was selected regardless of effort, pulling a full extra phase + gate into every simple fix in a tested repo. `code-reviewer-agent`'s own Testing check covers this signal at lighter weight for `simple_fix`.
+- **`agents/code-reviewer-agent.md`** (+ both mirrors) — Lean Mode now actually trims check content for `simple_fix`, not just the Ledger Update: Architecture Compliance and Performance collapse to a one-line N/A absent real signal (no new endpoint/schema/integration point, no loop/query/hot-path change), and the dependency-changelog/lockfile sub-check only runs when a dependency version actually changed in the diff. Correctness, Security, Simplicity, and Standards Compliance always run in full — these are what actually catch bugs on a small diff.
+- **`docs/workflow.md`** — documents the Quick-Fix Check in the Phase 0 section (with a tip on its TDD tradeoff), the effort-gated `test-verifier-agent` recommendation, and `code-reviewer-agent`'s real Lean Mode behavior in the Phase 4 section.
+
+### Fixed
+
+- **`.opencode/agents/impact-assessment-agent.md`, `.kimi-code/agents/impact-assessment-agent.md`** — both mirrors were missing the `documentation-agent` row from the Recommend Active Agents table (pre-existing drift from an earlier release, caught by this change's mirror-sync diff check, unrelated to the effort-gating change above).
+
+---
+
 ## v7.0.0 — August 24, 2026
 
 KAIROS no longer recommends or depends on any third-party Skill marketplace. `karpathy-guidelines` (plugin `multica-ai/andrej-karpathy-skills`) and all 11 approved Trail of Bits plugins (`differential-review`, `insecure-defaults`, `supply-chain-risk-auditor`, `static-analysis`, `variant-analysis`, `sharp-edges`, `property-based-testing`, `mutation-testing`, `fp-check`, `ask-questions-if-underspecified`, `audit-context-building`) are removed from every agent file, mirror, and doc that referenced them. Anthropic's own Claude Code built-ins (`code-review`, `security-review`, `verify`/`run`, `deep-research`, `outcome-issue-generator`) and MCP servers (Chrome DevTools MCP, Playwright MCP) are unaffected — this only removes third-party *Skill* dependencies. Every removed skill's guidance was rewritten as a native, unconditional instruction in the consuming agent — nothing is lost by not installing a plugin, and the new internal skill below ships automatically with the KAIROS plugin itself (same `skills/` auto-discovery as the 3 existing internal skills), so it is never a separate install.

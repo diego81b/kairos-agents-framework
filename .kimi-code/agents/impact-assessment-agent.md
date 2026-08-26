@@ -111,8 +111,11 @@ Based on what you found, recommend which pipeline agents this issue needs. Use t
 | `significant_rework` with full-stack parallelism worth the cost | `implementer-lead-agent` (note the 3.5× cost) |
 | Any of: auth domain, write endpoints, payments, user-owned data | `security-reviewer-agent` |
 | `medium` or `significant_rework` effort | `code-reviewer-agent` |
-| TDD implementer selected | `test-verifier-agent` |
+| TDD implementer selected, and effort is `medium` or `significant_rework` | `test-verifier-agent` |
 | Schema migrations or new deployment steps present | `release-planner-agent` |
+| API contract changed, or any user-facing behavior (CLI, config, UI) changed | `documentation-agent` |
+
+A `simple_fix` on the TDD path does NOT get `test-verifier-agent` — `code-reviewer-agent`'s own Testing check (coverage, happy/error path presence) already covers this at lighter weight, and a dedicated verification phase plus its own gate is disproportionate to the size of the change. Recommend `test-verifier-agent` explicitly once effort escalates past `simple_fix`, or if the human asks for it regardless of effort.
 
 State the justification for each recommended agent. Also state which agents you are NOT recommending and why, if the reason is non-obvious.
 
