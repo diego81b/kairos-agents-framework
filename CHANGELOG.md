@@ -4,6 +4,16 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v7.1.2 — August 26, 2026
+
+Follow-up to v7.1.1's delegation fix: while evaluating whether Team Mode's `implementer-lead-agent` needed the same `Agent`-tool fix (it didn't — Agent Teams already grants it regardless of `tools:` declaration), live probing against real kairos agents found that `AskUserQuestion` is unavailable to any spawned subagent — a general Claude Code fact, not specific to Agent Teams or to any particular IDE.
+
+### Fixed
+
+- **`agents/team/implementer-lead-agent.md`** (single file, not mirrored) — its Contract Mismatch Disposition Loop and Test Plan Gate both called `AskUserQuestion` unconditionally, one of them explicitly forbidding the text-menu fallback ("do not print a text menu"), on the stated assumption that `AskUserQuestion` is always available "in this Claude-Code-only agent." Confirmed empirically that this is false: `AskUserQuestion` is unavailable to any spawned subagent, in Claude Code or otherwise. Both gates now have the same conditional text-menu fallback every other kairos gate already uses, so a real Team Mode run no longer stalls or errors at either checkpoint.
+
+---
+
 ## v7.1.1 — August 26, 2026
 
 Fixes a Claude-Code-specific gap that let a live pipeline run silently skip agent-selection and human-in-the-loop gates: the orchestrator itself had no way to invoke other agents.
