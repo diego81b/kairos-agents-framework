@@ -285,11 +285,13 @@ If a mismatch's reasoning doesn't fit one row, keep a one-line Description with 
 
 **Contract Mismatch Disposition Loop** — before presenting the gate below, resolve every mismatch table row with an empty Disposition cell, in groups of up to 4 at a time. This gate always runs itself regardless of invocation mode — it fires before the orchestrator ever sees anything, so the Lead runs the per-item loop directly (it is not centralized to the orchestrator like other gates):
 
-Batch rows into groups of up to 4 (`AskUserQuestion`'s per-call max — always available in this Claude-Code-only agent). One question per row, worded `"M{id} ({impact}): {description}"`, with exactly these 4 options:
+If `AskUserQuestion` is available, batch rows into groups of up to 4 (its per-call max). One question per row, worded `"M{id} ({impact}): {description}"`, with exactly these 4 options:
   - **Accept** — this specific divergence is fine as-is, Lead contract wins for this field. No ledger row.
   - **Mitigate now** — apply the row's proposed resolution now, before implementation proceeds. Write a `constraints.md` row, status `🔴 open`, note `MUST — from implementer-lead M{id}`.
   - **Escalate** — needs Architect redesign for this field specifically. Write a `constraints.md` row `🔴 open` tagged `BLOCKING` AND an `open-questions.md` row. Flips the following gate's recommended default to "Stop — flag to Architect for redesign" instead of "Accept divergence".
   - **Defer** — proceed with the divergence documented as a known gap. Write an `open-questions.md` row, status `🔴 open`, note `deferred contract mismatch`.
+
+`AskUserQuestion` is not guaranteed here just because this is Claude Code — you run as a spawned subagent regardless of invocation mode, and that alone can make it unavailable. If it isn't, print the same 4 options per row as a text menu (one row, or up to 4 at once, at a time) and wait for a typed reply before moving to the next row/group.
 - If the human's free-text reply for a row asks for more detail instead of picking one of the 4 options (e.g. "explain", "why", "perché", "spiega") — write 2-4 plain-language sentences on what this specific divergence changes for the code being built and what breaks if left unresolved, grounded in the row's actual fields/file references, not a generic definition of "contract mismatch" — then re-present the same 4 options for that row instead of moving on.
 - Write the chosen disposition back into the Disposition cell for that row.
 - Only after every row has a disposition, present the gate below — if any row was dispositioned **Escalate**, mark "Stop — flag to Architect for redesign" as the recommended default instead of "Accept divergence".
@@ -370,7 +372,7 @@ Files generated:
 All tests are currently FAILING (no implementation yet). This is correct.
 ```
 
-Then call the `AskUserQuestion` tool — do not print a text menu and wait for a typed reply:
+If the `AskUserQuestion` tool is available, call it:
 - `question`: `"RED phase complete — how do you want to proceed?"`
 - `header`: `"Test Plan Gate"`
 - `options`:
@@ -378,6 +380,13 @@ Then call the `AskUserQuestion` tool — do not print a text menu and wait for a
   - **Revise tests** — specify what to add or change; no implementation has been written yet.
   - **Stop pipeline** — halt here.
 Free text via "Other" is treated as revision feedback.
+
+`AskUserQuestion` is not exclusive to "other IDEs" here — a spawned subagent (which is what you are, standalone or not; Claude Code has no way to run this agent as anything else) does not get it either, tools: declaration notwithstanding. If it isn't available, fall back to printing this menu and waiting for a typed reply instead of erroring or stalling:
+```
+✅ Approve test plan — proceed to GREEN phase (spawn backend, frontend, database)
+✏️  Revise tests — specify what to add or change
+⛔ Stop pipeline
+```
 
 **Do NOT spawn backend, frontend, or database until the user approves the test plan.**
 
