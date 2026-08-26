@@ -306,6 +306,10 @@ User confirms coverage is adequate from `05-test-verification.md`. FAIL sends th
 `✅ Approve` · `✏️ Request changes` · `⏭️ Skip next` · `⛔ Stop`
 :::
 
+::: tip Skips re-running tests on a clean first pass
+`implementer-tdd-agent` already executes the test suite twice (RED and GREEN) and reports coverage in `03-implementation.md`. On the first test-verifier invocation for a feature — no prior `05-test-verification.md`, and GREEN shows a clean pass — Test Verifier reuses those results instead of re-running the suite. The static audit (comprehensiveness, assertion strength, determinism, hygiene, mocking, TDD reality check) always runs in full regardless; only the redundant command re-run is skipped. Any loop re-check, Guard regression check, or standalone invocation always re-executes.
+:::
+
 ---
 
 ## Phase 6: Deployment Planning (Release Planner)

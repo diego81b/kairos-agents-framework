@@ -71,7 +71,14 @@ Any other effort value, or Full Mode implementer output (categories beyond happy
 
 ### PHASE 0: Execute Test Suite
 
-Run the project's test+coverage command and capture raw output. Detect framework from project files:
+**Reuse-fresh-execution check** (do this before running anything): skip re-execution and reuse the implementer's own results instead when ALL of these hold:
+- Orchestrator-invoked (pipeline mode — `feature_folder` and the ledger are present; standalone invocations always re-execute, see below).
+- No `.kairos/<feature_folder>/05-test-verification*.md` exists yet (check with `ls`) — its absence means this is the first test-verifier invocation for this feature. Nothing writes to source between the implementer's GREEN run and here on a first pass (`code-reviewer-agent` is read-only). Its presence means test-verifier already ran once before, so this invocation is a loop re-check, a Phase 4 Guard regression check, or a manual re-run — code may have changed since; always re-execute in that case, no exceptions.
+- `03-implementation.md`'s frontmatter has a `coverage_summary` block and its `## Test Execution — GREEN` section shows a clean pass with real numbers (not `unknown`, not missing) — this only exists on the TDD path.
+
+When all three hold: populate your own `execution` and `coverage_summary` frontmatter directly from `03-implementation.md`'s GREEN section and `coverage_summary` field — do not shell out. State in the report body that execution was reused, not re-run, and why: `## Test Execution` → "reused implementer's GREEN-phase run from `03-implementation.md` — first pass, nothing has touched the code since." This changes nothing about PHASE 1's static audit below — it still runs in full; only the redundant re-run of a command the implementer already executed twice (RED and GREEN) is skipped.
+
+Otherwise (any condition fails), run the project's test+coverage command and capture raw output. Detect framework from project files:
 
 | Stack | Command |
 |-------|---------|
