@@ -277,25 +277,7 @@ code ".kairos/$feature_folder/02-architecture.md"
 ```
 
 ### 4. Issue Tracker Comment (optional)
-If the user provides an issue reference, post the design doc after approval — reviewers on the tracker get the same readable `02-architecture.md` the human gate sees.
-
-**Jira** (`jira-cli`):
-```bash
-jira issue comment add PROJ-42 "$(cat .kairos/<feature_folder>/02-architecture.md)"
-```
-
-**GitLab** (`glab`):
-```bash
-glab issue note <issue-id> --body "$(cat .kairos/<feature_folder>/02-architecture.md)"
-```
-
-**Bitbucket** (REST API):
-```bash
-curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issues/<id>/comments" \
-  -u "${BITBUCKET_USER}:${BITBUCKET_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d "{\"content\":{\"raw\":\"## Architecture Design\"}}"
-```
+Follow [`issue-tracker-comment`](../skills/issue-tracker-comment/SKILL.md) — `{output_file}: 02-architecture.md`, `{title}: ## Architecture Design`, plain body. Reviewers on the tracker get the same readable file the human gate sees.
 
 
 ## Optional Enhancements

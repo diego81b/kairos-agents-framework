@@ -224,25 +224,7 @@ code ".kairos/$feature_folder/01-requirements.md"
 ```
 
 ### 4. Issue Tracker Comment (optional)
-If the user provides an issue reference, post the output after approval.
-
-**Jira** (`jira-cli`):
-```bash
-jira issue comment add PROJ-42 "## PM Analysis\n\n$(cat .kairos/<feature_folder>/01-requirements.md)"
-```
-
-**GitLab** (`glab`):
-```bash
-glab issue note <issue-id> --body "## PM Analysis\n\n$(cat .kairos/<feature_folder>/01-requirements.md)"
-```
-
-**Bitbucket** (REST API):
-```bash
-curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issues/<id>/comments" \
-  -u "${BITBUCKET_USER}:${BITBUCKET_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d "{\"content\":{\"raw\":\"## PM Analysis\"}}"
-```
+Follow [`issue-tracker-comment`](../skills/issue-tracker-comment/SKILL.md) — `{output_file}: 01-requirements.md`, `{title}: ## PM Analysis`, title-prefixed body.
 
 ## Optional Enhancements
 

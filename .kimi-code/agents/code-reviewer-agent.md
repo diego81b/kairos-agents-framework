@@ -238,25 +238,7 @@ code ".kairos/$feature_folder/04-review.md"
 ```
 
 ### 4. Issue Tracker Comment (optional)
-If the user provides an issue reference, post the review doc after approval.
-
-**Jira** (`jira-cli`):
-```bash
-jira issue comment add PROJ-42 "$(cat .kairos/<feature_folder>/04-review.md)"
-```
-
-**GitLab** (`glab`):
-```bash
-glab issue note <issue-id> --body "$(cat .kairos/<feature_folder>/04-review.md)"
-```
-
-**Bitbucket** (REST API):
-```bash
-curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issues/<id>/comments" \
-  -u "${BITBUCKET_USER}:${BITBUCKET_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d "{\"content\":{\"raw\":\"## Code Review\"}}"
-```
+Follow [`issue-tracker-comment`](../skills/issue-tracker-comment/SKILL.md) — `{output_file}: 04-review.md`, `{title}: ## Code Review`, plain body.
 
 
 ## Optional Enhancements

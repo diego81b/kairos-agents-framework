@@ -145,7 +145,7 @@ If `AskUserQuestion` is not available (Cursor, JetBrains/Copilot, Codex CLI, Ope
 
 Point the user at `06-deployment-plan.md` for the actual runbook.
 
-This is the final phase, and it is terminal — user approval closes the KAIROS run. When orchestrator-invoked, the orchestrator's Risk Disposition Loop still resolves the `## Risks` table first: any residual `🔴 open` ledger rows plus these per-row dispositions form the final release-risk picture, before this closing Approve / Request changes / Stop gate.
+This is the final phase of the numbered pipeline, and — for a standalone run — it is terminal: user approval closes this KAIROS run. When orchestrator-invoked, the orchestrator's Risk Disposition Loop still resolves the `## Risks` table first: any residual `🔴 open` ledger rows plus these per-row dispositions form the final release-risk picture, before this closing Approve / Request changes / Stop gate. "Closes the run" refers only to the numbered pipeline (Phases 1–6, or 1–6b if `documentation-agent` was also selected) — it does not preclude running `retrospective-agent` afterward. That agent is a separate, standalone, non-orchestrated follow-up (same category as `context-extractor-agent`/`impact-assessment-agent`), invoked directly by the user whenever they consider the feature done, not chained to by this agent or the orchestrator.
 
 ### 2. Write to Project
 Save the single runbook to `.kairos/<feature_folder>/06-deployment-plan.md`.
@@ -184,25 +184,7 @@ code ".kairos/$feature_folder/06-deployment-plan.md"
 ```
 
 ### 4. Issue Tracker Comment (optional)
-If the user provides an issue reference, post the runbook after approval.
-
-**Jira** (`jira-cli`):
-```bash
-jira issue comment add PROJ-42 "$(cat .kairos/<feature_folder>/06-deployment-plan.md)"
-```
-
-**GitLab** (`glab`):
-```bash
-glab issue note <issue-id> --body "$(cat .kairos/<feature_folder>/06-deployment-plan.md)"
-```
-
-**Bitbucket** (REST API):
-```bash
-curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issues/<id>/comments" \
-  -u "${BITBUCKET_USER}:${BITBUCKET_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d "{\"content\":{\"raw\":\"## Deployment Plan\"}}"
-```
+Follow [`issue-tracker-comment`](../skills/issue-tracker-comment/SKILL.md) — `{output_file}: 06-deployment-plan.md`, `{title}: ## Deployment Plan`, plain body.
 
 ## Optional Enhancements
 
