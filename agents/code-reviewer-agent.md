@@ -46,11 +46,19 @@ If the ledger does not exist, proceed without it.
 
 ## Effort Detection & Lean Mode
 
-Check `.kairos/<feature_folder>/00b-impact.md` for its `effort` field. If absent (standalone invocation), infer it from the diff size/scope the same way implementer-tdd-agent would.
+Determine effort, in this priority order:
+1. If the orchestrator's invocation prompt states an explicit `effort` value (e.g. from Step 0e's Quick-Fix Check — see `agents/orchestrator-agent.md`), use it directly — a human already confirmed it.
+2. Else, check `.kairos/<feature_folder>/00b-impact.md` for its `effort` field.
+3. Else, infer it from the diff size/scope the same way implementer-tdd-agent would.
 
-The 7 checks below already scale with what's actually in the diff — a 1-file change naturally clears Architecture/Performance in a line each, so Lean Mode does not skip any check. What it changes is the Ledger Update:
+When effort is `simple_fix`, run in **Lean Mode** for the rest of this run:
+- Correctness, Security, Simplicity/Over-Engineering, and Standards Compliance always run in full — these are exactly the checks that catch real bugs on a small diff, and their cost is already proportional to diff size.
+- Architecture Compliance collapses to a one-line check (`✓ PASS — no new endpoint/schema/integration point in this diff`) unless the diff actually adds or changes an endpoint, a schema, or a cross-module integration point, in which case it runs in full.
+- Performance collapses to a one-line check (`✓ PASS — no loop/query/hot-path change in this diff`) unless the diff touches a loop, a query, or a documented hot path.
+- Under Security (check 4), the dependency-changelog/lockfile sub-check only runs when this diff actually bumps a dependency version; otherwise state `no dependency change in this diff` and move on. The rest of check 4 (secrets grep, input validation, auth checks) still runs in full.
+- 2b Ledger Update becomes additive-only (see that section below).
 
-When effort is `simple_fix`, 2b Ledger Update becomes additive-only (see that section below). Any other effort value runs Full Mode.
+Any other effort value runs the Full process for every check, unchanged.
 
 ## Your Checks
 
@@ -230,25 +238,7 @@ code ".kairos/$feature_folder/04-review.md"
 ```
 
 ### 4. Issue Tracker Comment (optional)
-If the user provides an issue reference, post the review doc after approval.
-
-**Jira** (`jira-cli`):
-```bash
-jira issue comment add PROJ-42 "$(cat .kairos/<feature_folder>/04-review.md)"
-```
-
-**GitLab** (`glab`):
-```bash
-glab issue note <issue-id> --body "$(cat .kairos/<feature_folder>/04-review.md)"
-```
-
-**Bitbucket** (REST API):
-```bash
-curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issues/<id>/comments" \
-  -u "${BITBUCKET_USER}:${BITBUCKET_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d "{\"content\":{\"raw\":\"## Code Review\"}}"
-```
+Follow [`issue-tracker-comment`](../skills/issue-tracker-comment/SKILL.md) — `{output_file}: 04-review.md`, `{title}: ## Code Review`, plain body.
 
 
 ## Optional Enhancements

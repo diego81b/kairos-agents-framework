@@ -50,16 +50,17 @@ If the ledger does not exist (standalone invocation), skip this check.
 
 ## Effort Detection & Lean Mode
 
-Before PHASE 0, determine effort:
-- Pipeline mode: read `effort` from `.kairos/<feature_folder>/00b-impact.md` frontmatter, if that file exists.
-- Standalone mode: judge it yourself — `simple_fix` if the change touches ≤2 files, adds no new endpoint/schema/auth surface, and needs no new dependency; otherwise treat as `medium`+.
+Before PHASE 0, determine effort, in this priority order:
+1. If the orchestrator's invocation prompt states an explicit `effort` value (e.g. from Step 0e's Quick-Fix Check — see `agents/orchestrator-agent.md`), use it directly. This is authoritative — a human already confirmed it; do not re-derive or second-guess it.
+2. Else, Pipeline mode: read `effort` from `.kairos/<feature_folder>/00b-impact.md` frontmatter, if that file exists.
+3. Else, judge it yourself regardless of mode — `simple_fix` if the change touches ≤2 files, adds no new endpoint/schema/auth surface, and needs no new dependency; otherwise treat as `medium`+.
 
 When effort is `simple_fix`, run in **Lean Mode** for the rest of this run:
 - PHASE 0 plan collapses to Approach (1-2 lines) + Files to Create/Modify. Omit `Waves` (never triggered at this size) and the `Risks` table unless a genuine risk actually surfaces — an empty table is pure overhead at this size.
 - 2b Ledger Update becomes additive-only (see that section below).
 - The PHASE 0 HITL gate still applies unchanged — Lean Mode trims the plan's content, not the approval step.
 
-Any other effort value (`medium`, `significant_rework`, or unknown/standalone-without-classification) runs the Full process below, unchanged.
+Any other effort value (`medium` or `significant_rework`) runs the Full process below, unchanged.
 
 ## Your Process
 
@@ -280,25 +281,7 @@ code ".kairos/$feature_folder/03-implementation.md"
 ```
 
 ### 4. Issue Tracker Comment (optional)
-If the user provides an issue reference, post the output after approval.
-
-**Jira** (`jira-cli`):
-```bash
-jira issue comment add PROJ-42 "## Implementation\n\n$(cat .kairos/<feature_folder>/03-implementation.md)"
-```
-
-**GitLab** (`glab`):
-```bash
-glab issue note <issue-id> --body "## Implementation\n\n$(cat .kairos/<feature_folder>/03-implementation.md)"
-```
-
-**Bitbucket** (REST API):
-```bash
-curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issues/<id>/comments" \
-  -u "${BITBUCKET_USER}:${BITBUCKET_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d "{\"content\":{\"raw\":\"## Implementation\"}}"
-```
+Follow [`issue-tracker-comment`](../skills/issue-tracker-comment/SKILL.md) — `{output_file}: 03-implementation.md`, `{title}: ## Implementation`, title-prefixed body.
 
 ## Optional Enhancements
 

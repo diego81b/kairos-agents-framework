@@ -135,6 +135,19 @@ If the fetch fails or the section is missing, proceed to Step 0e with no pre-sel
 
 ### Step 0e: Select Active Agents
 
+**Quick-Fix Check** (runs first, before CASE A/B below — applies whether or not `00b-impact.md` exists). Skip this check entirely if Step 0d already found a `## KAIROS Pipeline` template section in the issue body — an explicit template overrides the heuristic, go straight to CASE A.
+
+Otherwise, ask once. If `AskUserQuestion` is available (Claude Code):
+- `question`: `"Quick fix, or full feature?"`
+- `header`: `"Fix scope"`
+- `options`:
+  - **Quick fix** — small, contained change: preset `active_agents = [implementer-coder-agent, code-reviewer-agent]`, `loop_policy = { phase4: { mode: "auto", max_retries: 1 } }` (phase3 does not apply — no TDD implementer, no test-verifier), and set `quick_fix_mode = true` for this run (widens the Risk Disposition Loop's auto-accept threshold from `low` to `low`+`medium` — see HITL step 2). Also pass `effort: simple_fix` explicitly in the invocation prompt to both `implementer-coder-agent` and `code-reviewer-agent` — each agent's own Effort Detection section already treats an orchestrator-stated `effort` as its highest-priority source, so they enter Lean Mode without needing `00b-impact.md` (never produced here, since this path skips Pre-B) or re-deriving it themselves. Skip CASE A/B and the Loop Policy prompt below entirely; go straight to Step 0f.
+  - **Full feature** — proceed to CASE A/B below exactly as today; `quick_fix_mode` stays `false`.
+
+If `AskUserQuestion` is not available, print the same two options as a menu and wait for a typed reply.
+
+This trades TDD discipline for speed — `implementer-coder-agent` writes no tests and skips `test-verifier-agent` entirely, even in a repo with a test suite. If the human wants tests generated, they should pick **Full feature** (or, from the CASE B menu, hand-pick `implementer-tdd-agent` instead of the quick-fix preset).
+
 **CASE A — KAIROS Pipeline section found in the issue body**
 
 If `00b-impact.md` was loaded in Step 0a, show the advisory block first:
@@ -368,7 +381,8 @@ KAIROS is a HITL pipeline. After EVERY active subagent completes:
 2. **Risk Disposition Loop** — run this BEFORE the verdict summary, whenever the output body contains a table with a `Disposition` column and at least one empty cell (a Risks, Issues, Findings, or Contract Drift table). This is what lets the human resolve a multi-item risk list one row at a time instead of approving or rejecting all of them as a single bundle. This loop requires the artifact file to already be on disk to edit it: every phase agent's "Write to Project" step runs unconditionally (only that agent's own gate-presentation step is skipped when orchestrator-invoked), so the file exists by the time you reach this loop.
    - If no such table exists, or every Disposition cell is already filled, skip straight to step 3.
    - **Auto-dispose `low`-impact rows as Accept**: before prompting for anything, write `Accept` directly into the Disposition cell of every undispositioned row whose Impact is `low` — no prompt, no ledger row (same as a human picking Accept). This is what keeps a 12-nit review from forcing 12 human decisions at the gate; only `medium`/`high`/`critical` rows go through the prompt loop below. A row step 1b just added is never `low` by that step's own rule, so it always reaches the prompt loop.
-   - Then, for each remaining undispositioned row (`medium`/`high`/`critical`), in table order:
+   - **Quick-Fix widening**: if `quick_fix_mode` is `true` for this run (set in Step 0e), also auto-dispose `medium`-impact rows the same way — Accept, no prompt, no ledger row. `high`/`critical` rows always go through the prompt loop regardless of `quick_fix_mode`; this widening never applies to them.
+   - Then, for each remaining undispositioned row (`medium`/`high`/`critical` outside `quick_fix_mode`, or `high`/`critical` inside it), in table order:
      - **If `AskUserQuestion` is available**: batch rows into groups of up to 4 (its per-call maximum). One question per row, worded `"R{id} ({impact}): {description}"` (substitute the table's actual ID/impact/description columns), with exactly these 4 options:
        - **Accept** — acknowledge, no action required. No ledger row written.
        - **Mitigate now** — the row's Mitigation/Fix text becomes a binding requirement for the next phase. Write a `constraints.md` row, status `🔴 open`, note `MUST — from {phase} R{id}`.

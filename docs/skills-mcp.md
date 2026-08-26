@@ -45,6 +45,7 @@ No install required — these ship as part of the KAIROS plugin itself, under `s
 | `code-simplification` | `implementer-tdd-agent`, `implementer-coder-agent` (REFACTOR step) |
 | `artifact-bookkeeping` | `pm-agent`, `architect-agent`, `impact-assessment-agent`, both implementers, `code-reviewer-agent`, `security-reviewer-agent`, `test-verifier-agent`, `release-planner-agent`, `documentation-agent`, `orchestrator-agent` |
 | `coding-discipline` | `implementer-tdd-agent`, `implementer-coder-agent`, `implementer-lead-agent`, `teammate-backend-agent`, `teammate-frontend-agent`, `teammate-database-agent`, `teammate-tests-agent` |
+| `issue-tracker-comment` | `architect-agent`, `code-reviewer-agent`, `context-extractor-agent`, `documentation-agent`, `impact-assessment-agent`, both implementers, `pm-agent`, `release-planner-agent`, `retrospective-agent`, `security-reviewer-agent`, `test-verifier-agent` |
 
 These replace what used to be third-party plugin dependencies (`karpathy-guidelines` and 11 Trail of Bits plugins) — see `CHANGELOG.md` for the removal. Their guidance was folded into each consuming agent's own checklist natively (a concrete check item, an unconditional process step) rather than gated behind "if this external skill is installed."
 
