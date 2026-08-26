@@ -22,6 +22,8 @@ Reduces roundtrips and per-phase overhead for small fixes, without touching the 
 ### Fixed
 
 - **`.opencode/agents/impact-assessment-agent.md`, `.kimi-code/agents/impact-assessment-agent.md`** — both mirrors were missing the `documentation-agent` row from the Recommend Active Agents table (pre-existing drift from an earlier release, caught by this change's mirror-sync diff check, unrelated to the effort-gating change above).
+- **`agents/implementer-coder-agent.md`** (+ both mirrors) — its Effort Detection only read `effort` from `00b-impact.md` in Pipeline mode, and only self-inferred effort in Standalone mode. Since the Quick-Fix Check (above) invokes it in Pipeline mode without ever producing `00b-impact.md` (it skips Pre-B), effort fell through to `unknown` → Full Mode, silently defeating the point of choosing "Quick fix". Fixed by giving the orchestrator's own `effort: simple_fix` (now passed explicitly in the invocation prompt when `quick_fix_mode` is active) top priority, ahead of the file read and the self-inference fallback — which now also applies regardless of mode.
+- **`agents/code-reviewer-agent.md`** (+ both mirrors) — same explicit-`effort`-first priority added for consistency and certainty, though its existing self-inference fallback already worked regardless of mode (no functional bug here, just alignment with `implementer-coder-agent`'s fix above).
 
 ---
 

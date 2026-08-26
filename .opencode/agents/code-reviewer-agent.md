@@ -48,7 +48,10 @@ If the ledger does not exist, proceed without it.
 
 ## Effort Detection & Lean Mode
 
-Check `.kairos/<feature_folder>/00b-impact.md` for its `effort` field. If absent (standalone invocation), infer it from the diff size/scope the same way implementer-tdd-agent would.
+Determine effort, in this priority order:
+1. If the orchestrator's invocation prompt states an explicit `effort` value (e.g. from Step 0e's Quick-Fix Check — see `agents/orchestrator-agent.md`), use it directly — a human already confirmed it.
+2. Else, check `.kairos/<feature_folder>/00b-impact.md` for its `effort` field.
+3. Else, infer it from the diff size/scope the same way implementer-tdd-agent would.
 
 When effort is `simple_fix`, run in **Lean Mode** for the rest of this run:
 - Correctness, Security, Simplicity/Over-Engineering, and Standards Compliance always run in full — these are exactly the checks that catch real bugs on a small diff, and their cost is already proportional to diff size.

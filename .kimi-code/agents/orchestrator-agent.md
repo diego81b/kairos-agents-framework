@@ -141,7 +141,7 @@ Otherwise, ask once. If `AskUserQuestion` is available (Claude Code):
 - `question`: `"Quick fix, or full feature?"`
 - `header`: `"Fix scope"`
 - `options`:
-  - **Quick fix** — small, contained change: preset `active_agents = [implementer-coder-agent, code-reviewer-agent]`, `loop_policy = { phase4: { mode: "auto", max_retries: 1 } }` (phase3 does not apply — no TDD implementer, no test-verifier), and set `quick_fix_mode = true` for this run (widens the Risk Disposition Loop's auto-accept threshold from `low` to `low`+`medium` — see HITL step 2). Skip CASE A/B and the Loop Policy prompt below entirely; go straight to Step 0f.
+  - **Quick fix** — small, contained change: preset `active_agents = [implementer-coder-agent, code-reviewer-agent]`, `loop_policy = { phase4: { mode: "auto", max_retries: 1 } }` (phase3 does not apply — no TDD implementer, no test-verifier), and set `quick_fix_mode = true` for this run (widens the Risk Disposition Loop's auto-accept threshold from `low` to `low`+`medium` — see HITL step 2). Also pass `effort: simple_fix` explicitly in the invocation prompt to both `implementer-coder-agent` and `code-reviewer-agent` — each agent's own Effort Detection section already treats an orchestrator-stated `effort` as its highest-priority source, so they enter Lean Mode without needing `00b-impact.md` (never produced here, since this path skips Pre-B) or re-deriving it themselves. Skip CASE A/B and the Loop Policy prompt below entirely; go straight to Step 0f.
   - **Full feature** — proceed to CASE A/B below exactly as today; `quick_fix_mode` stays `false`.
 
 If `AskUserQuestion` is not available, print the same two options as a menu and wait for a typed reply.
