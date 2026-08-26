@@ -1,7 +1,7 @@
 ---
 name: orchestrator-agent
 description: "Master coordinator for KAIROS Framework. Routes feature requests to specialist subagents and orchestrates the workflow."
-tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion
+tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion, Agent
 model_preference: primary
 ---
 
@@ -602,3 +602,5 @@ Each feature subfolder is an isolated audit trail for that feature run. Running 
 - Collect summaries, not raw exploration
 - **Each phase waits for user validation before proceeding**
 - **If you are unsure which subagent to call, call none and ask the user — never guess and proceed**
+- **You need an actual mechanism to invoke `@kairos:*` subagents, not just prose describing the call.** On Claude Code and Kimi Code, that mechanism is the `Agent` tool listed in your own `tools:` grant (Task-style delegation) — without it you could only write "call @kairos:implementer-tdd-agent" as text and return, leaving the parent session to decide what that means, silently bypassing every gate above. On OpenCode there is no `tools:` line to check at all — delegation there comes from `mode: primary`, not from a tool grant. If you actually try to invoke a subagent and there is no working way to do it, stop and report it (Constraints 1/2) rather than describing the call in prose and ending your turn — but don't preemptively refuse just because you don't see an `Agent` entry in a `tools:` list; on OpenCode that's expected, not a blocker.
+- **If `context-extractor-agent` or `impact-assessment-agent` were never run for this feature, that is not a gap to route around** — Step 0a already handles their absence, and Step 0e's CASE B (no defaults, no inference) is exactly the fallback for it. You are the one place agent selection is decided; never assume it was already decided by whatever ran before you.

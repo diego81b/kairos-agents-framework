@@ -247,6 +247,8 @@ If `AskUserQuestion` is not available (Cursor, JetBrains/Copilot, Codex CLI, Ope
 ⛔ Stop
 ```
 
+These three options are the only ones this gate offers. Never add options of your own (no "launch implementer-tdd-agent" shortcut, no other agent name) — this agent's job ends at Approve/Request changes/Stop. After Approve, the only next step to name is `@kairos:orchestrator-agent`: it owns agent selection (its Step 0e) and shows your `recommended_agents` as advisory there. Say that and stop — do not recommend a specific phase agent directly yourself, even though you're the one who computed `recommended_agents`.
+
 Do NOT save output until the user explicitly approves.
 
 ### 2. Write to Project
@@ -285,3 +287,4 @@ These skills and MCP tools enhance this agent when installed. KAIROS works fully
 - If `00-context.md` exists, consume it — do not re-read files it already covers.
 - `recommended_agents` is advisory only. The orchestrator displays it before the selection menu. The human confirms or ignores it — the orchestrator never auto-selects based on this output.
 - Do NOT invoke this agent from within the orchestrator — it is a standalone agent invoked by the user before starting the main pipeline.
+- You have no `Agent`/`Task` tool and no authority to invoke or suggest any pipeline agent other than yourself. The only agent name you may say out loud after your own gate is `@kairos:orchestrator-agent` — never a specific phase agent, even one your own `recommended_agents` field names.

@@ -4,7 +4,14 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
-## v7.1.0 — August 26, 2026
+## v7.1.1 — August 26, 2026
+
+Fixes a Claude-Code-specific gap that let a live pipeline run silently skip agent-selection and human-in-the-loop gates: the orchestrator itself had no way to invoke other agents.
+
+### Fixed
+
+- **`agents/orchestrator-agent.md`** (+ Kimi Code mirror) — `tools:` was missing the `Agent` tool (Claude Code's Task-style delegation tool), so a spawned orchestrator subagent could describe calling `@kairos:implementer-tdd-agent` etc. in text but had no way to actually do it — it would simply end its turn, leaving the parent session to improvise the next call itself, bypassing every HITL gate the orchestrator's own Workflow defines. OpenCode's mirror already sidesteps this via `mode: primary` and needed no change; `docs/setup/opencode.md` and `docs/setup/kimi-code.md` gained a note explaining the asymmetry so it isn't mistaken for missed mirror sync later.
+- **`agents/context-extractor-agent.md`, `agents/impact-assessment-agent.md`** (+ both mirrors) — both standalone pre-pipeline agents could drift into presenting their own invented "what next" menu (e.g. offering to launch a specific implementer directly) instead of stopping at their documented Approve/Request changes/Stop gate. Both now explicitly name `@kairos:orchestrator-agent` as the only next step after Approve, and state they have no authority to invoke or recommend any other specific agent — closing the gap that let a pipeline run skip straight to an implementer with no agent-selection gate ever shown.
 
 Reduces roundtrips and per-phase overhead for small fixes, without touching the pipeline's behavior on real features. Four changes target four distinct sources of friction: the orchestrator's own gate machinery, `test-verifier-agent` being pulled in regardless of size, `code-reviewer-agent` running full-depth checks on trivial diffs, and per-agent prompt size inflated by boilerplate repeated across every phase file.
 
