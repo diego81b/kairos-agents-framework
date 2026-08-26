@@ -166,25 +166,7 @@ This agent has no `Bash` tool, so it cannot shell out to open either file itself
 ```
 
 ### 4. Issue Tracker Comment (optional)
-If the user provides an issue reference, this agent has no `Bash` tool to run the commands below itself — extract the `## CHANGELOG Entry` section as the comment body and hand it (and the matching command) to the user or orchestrator to run.
-
-**Jira** (`jira-cli`):
-```bash
-jira issue comment add PROJ-42 "$(cat .kairos/<feature_folder>/06b-documentation.md)"
-```
-
-**GitLab** (`glab`):
-```bash
-glab issue note <issue-id> --body "$(cat .kairos/<feature_folder>/06b-documentation.md)"
-```
-
-**Bitbucket** (REST API):
-```bash
-curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issues/<id>/comments" \
-  -u "${BITBUCKET_USER}:${BITBUCKET_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d "{\"content\":{\"raw\":\"## Documentation\"}}"
-```
+Follow [`issue-tracker-comment`](../skills/issue-tracker-comment/SKILL.md) — `{output_file}: 06b-documentation.md`, `{title}: ## Documentation`, plain body, no-Bash (see that skill's No-Bash section). Comment body is the `## CHANGELOG Entry` section, not the whole file.
 
 ## Important Notes
 - No `Bash` in the tool grant — every action this agent takes is a file read or a Markdown/doc write, never a command. `Write`/`Edit` stay for the real README/CHANGELOG/docs edits the Hard Constraint above permits.

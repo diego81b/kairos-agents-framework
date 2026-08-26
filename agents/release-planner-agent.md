@@ -184,25 +184,7 @@ code ".kairos/$feature_folder/06-deployment-plan.md"
 ```
 
 ### 4. Issue Tracker Comment (optional)
-If the user provides an issue reference, post the runbook after approval.
-
-**Jira** (`jira-cli`):
-```bash
-jira issue comment add PROJ-42 "$(cat .kairos/<feature_folder>/06-deployment-plan.md)"
-```
-
-**GitLab** (`glab`):
-```bash
-glab issue note <issue-id> --body "$(cat .kairos/<feature_folder>/06-deployment-plan.md)"
-```
-
-**Bitbucket** (REST API):
-```bash
-curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issues/<id>/comments" \
-  -u "${BITBUCKET_USER}:${BITBUCKET_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d "{\"content\":{\"raw\":\"## Deployment Plan\"}}"
-```
+Follow [`issue-tracker-comment`](../skills/issue-tracker-comment/SKILL.md) — `{output_file}: 06-deployment-plan.md`, `{title}: ## Deployment Plan`, plain body.
 
 ## Optional Enhancements
 

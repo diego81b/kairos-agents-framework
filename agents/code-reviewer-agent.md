@@ -46,7 +46,10 @@ If the ledger does not exist, proceed without it.
 
 ## Effort Detection & Lean Mode
 
-Check `.kairos/<feature_folder>/00b-impact.md` for its `effort` field. If absent (standalone invocation), infer it from the diff size/scope the same way implementer-tdd-agent would.
+Determine effort, in this priority order:
+1. If the orchestrator's invocation prompt states an explicit `effort` value (e.g. from Step 0e's Quick-Fix Check — see `agents/orchestrator-agent.md`), use it directly — a human already confirmed it.
+2. Else, check `.kairos/<feature_folder>/00b-impact.md` for its `effort` field.
+3. Else, infer it from the diff size/scope the same way implementer-tdd-agent would.
 
 When effort is `simple_fix`, run in **Lean Mode** for the rest of this run:
 - Correctness, Security, Simplicity/Over-Engineering, and Standards Compliance always run in full — these are exactly the checks that catch real bugs on a small diff, and their cost is already proportional to diff size.
@@ -235,25 +238,7 @@ code ".kairos/$feature_folder/04-review.md"
 ```
 
 ### 4. Issue Tracker Comment (optional)
-If the user provides an issue reference, post the review doc after approval.
-
-**Jira** (`jira-cli`):
-```bash
-jira issue comment add PROJ-42 "$(cat .kairos/<feature_folder>/04-review.md)"
-```
-
-**GitLab** (`glab`):
-```bash
-glab issue note <issue-id> --body "$(cat .kairos/<feature_folder>/04-review.md)"
-```
-
-**Bitbucket** (REST API):
-```bash
-curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issues/<id>/comments" \
-  -u "${BITBUCKET_USER}:${BITBUCKET_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d "{\"content\":{\"raw\":\"## Code Review\"}}"
-```
+Follow [`issue-tracker-comment`](../skills/issue-tracker-comment/SKILL.md) — `{output_file}: 04-review.md`, `{title}: ## Code Review`, plain body.
 
 
 ## Optional Enhancements

@@ -167,25 +167,7 @@ This agent has no `Bash` tool, so it cannot shell out to open the file itself. P
 ```
 
 ### 4. Issue Tracker Comment (optional)
-If the user provides an issue reference, this agent has no `Bash` tool to run the commands below itself — extract the `## Issue Technical Section` from `00-context.md` as the comment body and hand it (and the matching command) to the user or orchestrator to run.
-
-**Jira** (`jira-cli`):
-```bash
-jira issue comment add PROJ-42 "$(cat .kairos/<feature_folder>/00-context.md)"
-```
-
-**GitLab** (`glab`):
-```bash
-glab issue note <issue-id> --body "$(cat .kairos/<feature_folder>/00-context.md)"
-```
-
-**Bitbucket** (REST API):
-```bash
-curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issues/<id>/comments" \
-  -u "${BITBUCKET_USER}:${BITBUCKET_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d "{\"content\":{\"raw\":\"## Technical Context\"}}"
-```
+Follow [`issue-tracker-comment`](../skills/issue-tracker-comment/SKILL.md) — `{output_file}: 00-context.md`, `{title}: ## Technical Context`, plain body, no-Bash (see that skill's No-Bash section). Comment body is the `## Issue Technical Section` extract, not the whole file.
 
 ## Optional Enhancements
 

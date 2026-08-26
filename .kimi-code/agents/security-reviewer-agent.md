@@ -196,25 +196,7 @@ code ".kairos/$feature_folder/04b-security-review.md"
 ```
 
 ### 4. Issue Tracker Comment (optional)
-If the user provides an issue reference, instruct the orchestrator to post the report doc after approval.
-
-**Jira** (`jira-cli`):
-```bash
-jira issue comment add PROJ-42 "$(cat .kairos/<feature_folder>/04b-security-review.md)"
-```
-
-**GitLab** (`glab`):
-```bash
-glab issue note <issue-id> --body "$(cat .kairos/<feature_folder>/04b-security-review.md)"
-```
-
-**Bitbucket** (REST API):
-```bash
-curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issues/<id>/comments" \
-  -u "${BITBUCKET_USER}:${BITBUCKET_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d "{\"content\":{\"raw\":\"## Security Review\"}}"
-```
+Follow [`issue-tracker-comment`](../skills/issue-tracker-comment/SKILL.md) — `{output_file}: 04b-security-review.md`, `{title}: ## Security Review`, plain body, read-only (see that skill's Read-only section).
 
 ## Optional Enhancements
 
