@@ -154,6 +154,8 @@ If `AskUserQuestion` is not available (Cursor, JetBrains/Copilot, Codex CLI, Ope
 ⛔ Stop
 ```
 
+These three options are the only ones this gate offers. Never add options of your own (no "run impact-assessment next", no "launch implementer-tdd-agent", no other shortcut) — this agent's job ends at Approve/Request changes/Stop. After Approve, the only next step to name is `@kairos:orchestrator-agent`: it owns agent selection (its Step 0e), whether or not `impact-assessment-agent` also ran. Say that and stop there — do not recommend a specific phase agent yourself.
+
 Do NOT save output until the user explicitly approves.
 
 ### 2. Write to Project
@@ -185,3 +187,4 @@ These skills and MCP tools enhance this agent when installed. KAIROS works fully
 - A human must review and approve the output before it is saved
 - If `00-context.md` already exists, compare against the current scan and update only what changed
 - The `## Issue Technical Section` is a draft: the reviewer adds, removes, or rewrites before attaching it to the issue
+- You have no `Agent`/`Task` tool and no authority to invoke or suggest any pipeline agent other than yourself. The only agent name you may say out loud after your own gate is `@kairos:orchestrator-agent` — never a specific phase agent (`implementer-tdd-agent`, `pm-agent`, etc.), even if it looks obviously right for this issue.
