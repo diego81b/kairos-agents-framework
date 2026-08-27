@@ -39,12 +39,7 @@ If any item below is missing from both sources, **stop immediately** and emit th
 | `feature_folder` | User prompt or derived from the issue reference | ⚠️ **WARNING — impact-assessment-agent: no `feature_folder` provided**. A default of `feature_unnamed` will be used — you can rename it later. |
 | `00-context.md` | `.kairos/<feature_folder>/00-context.md` from context-extractor-agent | ⚠️ **WARNING — impact-assessment-agent: no `00-context.md` found**. Will perform a targeted scan of the domains the issue touches instead. |
 
-Error format:
-> 🚨 **AGENT ERROR — impact-assessment-agent**
-> **Missing:** `[field]`
-> **Why it matters:** [brief reason]
-> **Action required:** [what must be provided]
-> ⛔ This agent cannot continue until the missing input is supplied.
+Follow [`agent-contract`](../skills/agent-contract/SKILL.md)'s Missing-Input Error Format — `{agent-name}: impact-assessment-agent`.
 
 ## Your Process
 

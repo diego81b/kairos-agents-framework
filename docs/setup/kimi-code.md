@@ -134,16 +134,16 @@ Implementation ready — how do you want to proceed?
 
 The text-menu fallback in each agent body (for Cursor, Codex CLI, OpenCode, …) is never needed here. One caveat straight from the orchestrator's own Hard Constraints: HITL gates require a live human, so don't run the orchestrator inside backgrounded/detached or scheduled executions — the gate would hang or be silently bypassed. Interactive TUI sessions are the supported mode.
 
-## Step 7 — Copy the `contract-checklist` skill
+## Step 7 — Copy the shared skills
 
-`architect-agent` works through [`contract-checklist`](../skills/contract-checklist/SKILL.md) before defining API contracts. Kimi Code discovers skills from `.kimi-code/skills/` (project) or `~/.kimi-code/skills/` (user) — copy it there:
+Several agent bodies link to a shared skill file relative to their own location — e.g. `architect-agent` works through [`contract-checklist`](../skills/contract-checklist/SKILL.md) before defining API contracts, and most agents' optional Issue Tracker Comment step follows [`issue-tracker-comment`](../skills/issue-tracker-comment/SKILL.md). That path is resolved from wherever the agent file actually lives, not from this repo's root — so from `.kimi-code/agents/architect-agent.md`, `../skills/contract-checklist/SKILL.md` resolves to `.kimi-code/skills/contract-checklist/SKILL.md`, not the top-level `skills/`. Kimi Code discovers skills from `.kimi-code/skills/` (project) or `~/.kimi-code/skills/` (user) — copy the whole shared skills folder there:
 
 ```bash
 mkdir -p .kimi-code/skills
-cp -r path/to/kairos/skills/contract-checklist .kimi-code/skills/
+cp -r path/to/kairos/skills/* .kimi-code/skills/
 ```
 
-This keeps the agent body's relative reference (`../skills/contract-checklist/SKILL.md`, resolved from `.kimi-code/agents/`) working, and registers the checklist as a native Kimi Code skill invocable via the `Skill` tool.
+This keeps every agent body's relative skill references working, and registers each one as a native Kimi Code skill invocable via the `Skill` tool.
 
 ## Step 8 — Parallel review and Team Mode
 
@@ -181,5 +181,5 @@ Kimi Code renders agent bodies as templates, substituting `${var}` placeholders 
 | Wrong agent invoked | Refine the `description` field — the main agent reads it to decide delegation — or bind explicitly with `kimi --agent orchestrator-agent` |
 | All phases run on the same model | Expected unless you enable `KIMI_CODE_EXPERIMENTAL_SECONDARY_MODEL=1` **and** set `[secondary_model]` — see Step 3 |
 | HITL gate shows a printed text menu instead of a dialog | You're seeing the fallback branch — it means `AskUserQuestion` wasn't in the agent's tool view. Check the `tools:` line survived the copy intact |
-| `contract-checklist` reference fails | Copy `skills/contract-checklist/` into `.kimi-code/skills/` — see Step 7 |
+| A skill reference fails (agent reports it can't find `../skills/<name>/SKILL.md`) | Copy `skills/` into `.kimi-code/skills/` — see Step 7 |
 | Unexpected tool-approval prompts | Kimi Code permission rules are separate from agent files — check `[[permission.rules]]` in `config.toml` or your `/permission` mode |

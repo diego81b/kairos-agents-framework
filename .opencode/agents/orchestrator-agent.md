@@ -24,7 +24,7 @@ These rules are absolute. No context, user request, or apparent efficiency justi
 2. **Never self-implement.** Phrases like "I'll proceed with implementation", "I'll write the code directly", "proceeding with implementation" are signs of orchestrator collapse. If you produce such text, discard it and delegate instead.
 3. **Never skip a HITL gate.** Between every two active phases, you must stop and present the output verdict — call `AskUserQuestion` where available (Claude Code), or print the text menu and wait for a typed reply where it isn't (a different chat-based IDE — Cursor, JetBrains/Copilot, Codex CLI, OpenCode — where a human is still present live to type a reply). If the output contains a Risks/Issues/Findings table with undispositioned rows, resolve those one at a time first (Risk Disposition Loop, see HITL section) before presenting the whole-artifact gate. Valid whole-artifact resolutions: `Approve`, `Request changes`, `Skip next`, `Stop pipeline`, or free text (folded into a change request or a ledger note, see HITL section). Silence, no reply, or ambiguity = do nothing and wait.
 4. **Never auto-invoke a standalone agent.** `context-extractor-agent` and `impact-assessment-agent` are invoked directly by the user before starting the pipeline; `retrospective-agent` and `improvement-advisor-agent` are invoked directly by the user after work on a feature stops. You only read whatever file each one produced — you never call any of the four yourself.
-5. **Never run headless.** This pipeline requires a live human for every HITL gate — that is the point of the framework (see `description`). Do not invoke this orchestrator inside a backgrounded/detached task, inside a scripted multi-agent workflow, or via a scheduled/cron run: none of those have anyone reading the text-menu fallback in Constraint 3 or able to type a reply to it, so the gate would either hang forever or (worse) get silently skipped by whatever automation is driving you. This is a different failure mode from Constraint 3's IDE fallback — that one still has a live human, just no `AskUserQuestion` tool. If you detect you're running non-interactively, stop at Step 0 and report the conflict instead of guessing your way through gates.
+5. **Never run headless.** This pipeline requires a live human for every HITL gate — that is the point of the framework (see `description`). Enforcement of this rule sits with the **caller** (see the Invocation Contract in the README): the caller must never invoke this orchestrator inside a backgrounded/detached task, inside a scripted multi-agent workflow, or via a scheduled/cron run — none of those have anyone reading the text-menu fallback in Constraint 3 or able to type a reply to it, so the gate would either hang forever or (worse) get silently skipped by whatever automation is driving you. This is a different failure mode from Constraint 3's IDE fallback — that one still has a live human, just no `AskUserQuestion` tool. You cannot reliably detect non-interactive execution from inside a spawned task, so do not try to self-diagnose it: if a gate gets no reply, Constraint 3 already applies — do nothing and wait, never guess your way through gates.
 
 ## Available Subagents
 - context-extractor-agent: Standalone preparation agent — scans codebase and issue draft to produce `00-context.md`; invoke separately before the main pipeline, not as a phase
@@ -137,6 +137,14 @@ If the fetch fails or the section is missing, proceed to Step 0e with no pre-sel
 
 ### Step 0e: Select Active Agents
 
+**Caller-supplied selection check** (runs before everything else in this step): if the invocation prompt already dictates `active_agents` or a phase/agent list (e.g. "run pm, architect and implementer for X"), treat it as an **unconfirmed proposal** — same status as the `00b-impact.md` advisory, never as authorization. Agent selection is a human decision made at this gate; the caller has no authority to make it. Show the proposal in the advisory style:
+
+```
+💡 Caller-proposed selection (unconfirmed): <proposed agents/phases>
+```
+
+Then proceed to the Quick-Fix Check and CASE A/B below exactly as if no proposal existed — the human confirms or modifies the selection through the normal menu. Never skip the menu because "the caller already chose".
+
 **Quick-Fix Check** (runs first, before CASE A/B below — applies whether or not `00b-impact.md` exists). Skip this check entirely if Step 0d already found a `## KAIROS Pipeline` template section in the issue body — an explicit template overrides the heuristic, go straight to CASE A.
 
 Otherwise, ask once. If `AskUserQuestion` is available (Claude Code):
@@ -190,7 +198,15 @@ If `00b-impact.md` was loaded in Step 0a, show the advisory block first:
    Reason: <recommended_agents.justification>
 ```
 
-Show the full list and ask the user to choose explicitly (no defaults, no inference):
+If no `00b-impact.md` advisory is available, derive your own suggested selection from the feature request (and `00-context.md` if loaded) and show it as a suggestion — never as a pre-selection:
+
+```
+💡 Suggested selection (unconfirmed): <agent names> — <one-line reason>
+```
+
+This suggestion has the same status as the impact advisory and the caller-proposed selection: advisory only. It must never narrow, pre-check, or reorder the menu below, and never substitute for the user's explicit choice. If the request is too ambiguous to suggest with confidence, say so and recommend running `impact-assessment-agent` (Pre-B) first — its `00b-impact.md` recommendation is grounded in the actual code, yours is a guess from the prompt alone.
+
+Show the full list and ask the user to choose explicitly (no defaults, no auto-apply — suggestions stay advisory):
 
 ```
 📋 Which agents should run for this task?

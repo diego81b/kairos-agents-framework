@@ -111,7 +111,8 @@ Every phase writes a single Markdown file: a small YAML frontmatter header (stat
 - Orchestrator loads `00-context.md` and `00b-impact.md` if present
 - **Quick-Fix Check** (skipped only when a `## KAIROS Pipeline` template section was found in the issue body): one question — "Quick fix, or full feature?" Quick fix presets `active_agents` to `implementer-coder-agent` + `code-reviewer-agent`, sets `loop_policy` to `auto 1`, and widens the Risk Disposition Loop's auto-accept threshold to `medium` for this run — skipping the full selection menu and the loop-policy prompt below entirely. Full feature proceeds as before.
 - If `00b-impact.md` found, displays a `💡 Impact Assessment` advisory block before the selection menu (effort, domains, recommended agents) — advisory only, nothing pre-selected
-- Orchestrator reads the `## KAIROS Pipeline` section from the issue body (if present), or shows an interactive numbered list — **no automatic inference**
+- If the invocation prompt already dictates an agent list, the orchestrator treats it as an unconfirmed proposal and still requires explicit confirmation through the selection menu
+- Orchestrator reads the `## KAIROS Pipeline` section from the issue body (if present), or shows an interactive numbered list; when no `00b-impact.md` advisory exists, the orchestrator adds its own `💡 Suggested selection` line derived from the feature request — advisory only, never auto-applied
 - User confirms or adjusts the agent selection; orchestrator announces the active pipeline before Phase 1
 
 _Input: free-text feature request + optional issue reference + optional pre-pipeline JSON files_

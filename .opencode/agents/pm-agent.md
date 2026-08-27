@@ -28,12 +28,7 @@ If any item below is missing from both sources, **stop immediately** and emit th
 | Feature description (non-empty text) | Previous pm invocation, orchestrator context, or manual prompt | 🚨 **AGENT ERROR — pm-agent: missing feature description**. Provide a description of the feature to analyze. |
 | `feature_folder` | Orchestrator context, or specify one manually (e.g. `feature_my-feature`) | ⚠️ **WARNING — pm-agent: no `feature_folder` provided**. A default of `feature_unnamed` will be used — you can rename it later. |
 
-Error format:
-> 🚨 **AGENT ERROR — pm-agent**  
-> **Missing:** `[field]`  
-> **Why it matters:** [brief reason]  
-> **Action required:** [what must be provided]  
-> ⛔ This agent cannot continue until the missing input is supplied.
+Follow [`agent-contract`](../skills/agent-contract/SKILL.md)'s Missing-Input Error Format — `{agent-name}: pm-agent`.
 
 ## Ledger Check
 

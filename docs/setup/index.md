@@ -57,6 +57,14 @@ HITL = Human-in-the-Loop. After each phase, the agent:
 
 This is automatic in Claude Code (defined in `agents/orchestrator-agent.md`). In other tools you enforce it manually by reading the output and deciding when to continue.
 
+## Invocation contract
+
+Regardless of the tool, three rules apply when **you** (the calling session) start a KAIROS run:
+
+1. **Invoke the orchestrator with the bare feature request only.** Never pre-select phases or agents in the invocation prompt — agent selection is a human decision made at the orchestrator's Step 0e gate. A caller-supplied list is treated as an unconfirmed proposal, never as authorization.
+2. **Never launch the orchestrator backgrounded or detached.** Every phase ends at a HITL gate that needs a live human. Where `AskUserQuestion` is unavailable (including Claude Code spawned subagents), gates degrade to the text-menu fallback — and a backgrounded run has nobody reading it, so the pipeline would hang or silently skip gates.
+3. **Run the standalone agents yourself, if you want them.** `context-extractor-agent` and `impact-assessment-agent` run before the pipeline; `retrospective-agent` and `improvement-advisor-agent` run after work stops. The orchestrator never auto-invokes any of the four.
+
 ## Repository layout
 
 ```

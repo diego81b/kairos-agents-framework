@@ -4,6 +4,47 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v7.2.0 — August 27, 2026
+
+CASE B agent selection now always comes with a recommendation, even when the pre-pipeline impact assessment was never run.
+
+### Added
+
+- **`agents/orchestrator-agent.md`** (+ both mirrors) — in CASE B (manual agent selection), when no `00b-impact.md` advisory is available the orchestrator now derives its own suggested selection from the feature request (and `00-context.md` if loaded) and shows it as a `💡 Suggested selection (unconfirmed)` line above the menu. Same advisory status as the impact advisory and the caller-proposed selection: it never narrows, pre-checks, or reorders the menu, and never substitutes for the user's explicit choice. When the request is too ambiguous to suggest with confidence, the orchestrator says so and recommends running `impact-assessment-agent` (Pre-B) first — its recommendation is grounded in the actual code.
+- **`docs/workflow.md`, `docs/overview.md`** — document the suggested-selection behavior alongside the impact advisory and the caller-supplied selection check.
+
+---
+
+## v7.1.3 — August 27, 2026
+
+Closes the caller-side control gaps found during a real v7.1.2 pipeline run (issue #104), where the calling session dictated the agent list, skipped `impact-assessment-agent`, and launched the orchestrator as a background task — all before the orchestrator's own rules could apply. Also clears a batch of stale documentation left over from the v2.0 era.
+
+### Added
+
+- **`agents/orchestrator-agent.md`** (+ both mirrors) — new **Caller-supplied selection check** at the top of Step 0e: if the invocation prompt already dictates `active_agents` or a phase/agent list, the orchestrator now treats it as an unconfirmed proposal (same status as the `00b-impact.md` advisory), shows it, and still requires explicit human confirmation through the normal CASE A/B menu. Callers can no longer short-circuit agent selection.
+- **`README.md`, `docs/setup/index.md`** — new **Invocation Contract** section: invoke the orchestrator with the bare feature request only, never pre-select phases/agents in the prompt, never launch it backgrounded/detached (spawned subagents have no `AskUserQuestion`, so gates degrade to a text menu nobody reads), and invoke the standalone pre-/post-pipeline agents directly.
+
+### Changed
+
+- **`agents/orchestrator-agent.md`** (+ both mirrors) — Constraint 5 (never run headless) no longer asks the orchestrator to "detect you're running non-interactively", a signal a spawned subagent cannot reliably observe. Enforcement is now explicitly caller-side via the Invocation Contract; orchestrator-side, a gate with no reply falls back to Constraint 3's do-nothing-and-wait.
+
+### Fixed
+
+- **`README.md`** — dropped the stale "v2.0" title and "8 core agents" count (now 14), replaced the obsolete `convert.ps1`/`convert.py` website-generation instructions with the real `npm run docs:build` flow, rewrote the deployment section to match reality (Vercel auto-deploy on `main`, Netlify on `v*` tags), and fixed the `teammates/` folder reference (now `team/`).
+- **`docs/.vitepress/config.js`** — `og:` meta tags no longer hardcode "v2.0" / "7-agent" (title now injects the live `package.json` version); removed five `srcExclude` entries pointing at files that no longer exist. The same pass found a real leak: `internal/**` and root `CLAUDE.md` were being built into the public site (including the fix backlog itself) despite `internal/` being documented as unpublished — both are now in `srcExclude`.
+- **`docs/roadmap.md`** — rewritten to match the actual shipped state: 14-agent ecosystem including security-reviewer, documentation, retrospective, and improvement-advisor; dropped the v2.x version scheme disconnected from `package.json`; fixed the "one JSON file per phase" claim (artifacts are Markdown).
+- **`docs/overview.md`** — "all six agents" corrected (the selection menu lists 9 entries).
+- **`docs/distribution-roadmap.md`** — "~12 agents" corrected to 14 core + 5 team.
+- **`docs/setup/opencode.md`** — customization example now uses `anthropic/claude-opus-5`, matching the model ids actually shipped in `.opencode/agents/`.
+- **`.github/workflows/deploy-docs.yml`** — the Netlify deploy-hook call now uses `curl -sf`, so a failed hook fails the workflow run instead of reporting green.
+
+### Removed
+
+- **`docs/SUMMARY.md`** — deleted: a 2-line GitBook leftover pointing at a moved file.
+- **`internal/START-HERE-SIMPLE.txt`** — moved to `internal/archive/`: it described a v2.0 zip with 7 agents and filenames that no longer exist. (`internal/` is git-ignored, so this is a local-only move.)
+
+---
+
 ## v7.1.2 — August 26, 2026
 
 Follow-up to v7.1.1's delegation fix: while evaluating whether Team Mode's `implementer-lead-agent` needed the same `Agent`-tool fix (it didn't — Agent Teams already grants it regardless of `tools:` declaration), live probing against real kairos agents found that `AskUserQuestion` is unavailable to any spawned subagent — a general Claude Code fact, not specific to Agent Teams or to any particular IDE.

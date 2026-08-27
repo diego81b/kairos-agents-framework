@@ -10,19 +10,16 @@ export default withMermaid(defineConfig({
   srcExclude: [
     '**/node_modules/**',
     'docs/.vitepress/**',
+    'internal/**',
     'AGENTS.md',
     'README.md',
+    'CLAUDE.md',
     'DEPLOYMENT.md',
     'LICENSE',
     'netlify.toml',
     'vercel.json',
     'package.json',
-    'START-HERE-SIMPLE.txt',
-    'docs/index.html',
-    'docs/convert.ps1',
-    'docs/convert.py',
-    'docs/SUMMARY.md',
-    'docs/KAIROS-FRAMEWORK-DOCUMENTATION.md',
+    'package-lock.json',
     'docs/changelog.md'
   ],
 
@@ -37,8 +34,8 @@ export default withMermaid(defineConfig({
 
   head: [
     ['meta', { name: 'theme-color', content: '#003D7A' }],
-    ['meta', { property: 'og:title', content: 'KAIROS Framework v2.0' }],
-    ['meta', { property: 'og:description', content: 'The Right Moment for Development - 7-agent AI orchestration' }]
+    ['meta', { property: 'og:title', content: `KAIROS Framework v${version}` }],
+    ['meta', { property: 'og:description', content: 'The Right Moment for Development - multi-agent AI orchestration' }]
   ],
 
   themeConfig: {

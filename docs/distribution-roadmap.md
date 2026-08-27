@@ -47,7 +47,7 @@ Contains contributor discipline (versioning rules, commit convention) — not re
 Plugin ships agents and the checklist skill only.
 
 **Decision 2 — `defaultEnabled: false`.**
-KAIROS ships ~12 agents. Auto-enabling all on install causes "wrong agent fires" collisions in the
+KAIROS ships 14 core agents (+ 5 Team Mode specialists). Auto-enabling all on install causes "wrong agent fires" collisions in the
 user's main context. Plugin is opt-in: install, then `/plugin enable kairos@...` when the pipeline is needed.
 
 **Decision 3 — Agent namespacing is the primary risk, not a side note.**

@@ -1,13 +1,14 @@
 # Roadmap
 
-## v2.0 — Current (April 2026)
+## Current
 
 **Core framework**
 
-- 8-agent ecosystem: Orchestrator + Context Extractor + PM + Architect + Implementer + Code Reviewer + Test Verifier + Release Planner
-- Selective pipeline — explicit agent selection at run start, no automatic inference
+- 14-agent ecosystem: Orchestrator + Context Extractor + Impact Assessment + PM + Architect + Implementer (TDD or code-only) + Code Reviewer + Security Reviewer + Test Verifier + Release Planner + Documentation + Retrospective + Improvement Advisor
+- Selective pipeline — explicit agent selection at run start, no automatic inference; Quick-Fix fast path for small, contained changes
 - 4-option HITL gate at every phase (Approve / Request changes / Skip next / Stop)
 - Pipeline Templates — preset checkboxes for Feature, Bug Fix, Hotfix, Refactor, Docs
+- Shared ledger per feature (`constraints.md`, `decisions.md`, `open-questions.md`) read at phase start and updated at phase end
 
 **Implementer Team Pattern** (Claude Code only, optional)
 
@@ -38,22 +39,22 @@
 
 **Artifact isolation**
 - `.kairos/<feature_folder>/` per feature — named from issue reference (`PROJ-42_add-stripe-payments`)
-- One JSON file per phase, never overwritten across features
+- One Markdown file per phase (small YAML frontmatter + Markdown body), never overwritten across features
 
 **Open source** — AGPL-3.0
 
 ---
 
-## v2.1 — Planned (Q3 2026)
+## Next
 
 - **MCP server integration** — first-class support for `sequential-thinking`, `context7`, and project-specific MCP tools declared per agent  
-- **GitHub Issues support** — complete the tracker trio alongside Jira / GitLab / Bitbucket  
+- **GitHub Issues support** — complete the tracker lineup alongside Jira / GitLab / Bitbucket  
 - **Re-run single phase** — resume a pipeline from any phase without re-running the full sequence  
 - **VS Code HITL improvements** — richer handoff buttons with artifact preview inline
 
 ---
 
-## v2.2 — Planned (Q4 2026)
+## Later
 
 - **Pipeline metrics dashboard** — per-team velocity tracking across runs (phases completed, skip rates, revision counts)
 - **Team template registry** — share and version `## KAIROS Pipeline` presets across a repository or organization
@@ -61,9 +62,9 @@
 
 ---
 
-## v3.0 — Exploration (2027)
+## Exploration
 
-- **Custom agent composition** — define project-specific agents alongside the core 7, registered in the orchestrator
+- **Custom agent composition** — define project-specific agents alongside the core 14, registered in the orchestrator
 - **Cross-repo knowledge** — agents can query a shared codebase index for patterns and conventions without bloating context
 - **Audit log UI** — browsable history of all KAIROS runs with phase diffs, approval decisions, and issue links
 
@@ -83,4 +84,4 @@ Built by Diego Baldeschi
 
 ---
 
-*"The Right Moment for Development" — KAIROS Framework v2.0*
+*"The Right Moment for Development" — KAIROS Framework*

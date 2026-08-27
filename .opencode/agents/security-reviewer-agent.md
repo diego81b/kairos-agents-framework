@@ -34,12 +34,7 @@ If any item below is missing from both sources, **stop immediately** and emit th
 | `feature_folder` | Orchestrator context, or specify one manually | ⚠️ **WARNING — security-reviewer-agent: no `feature_folder` provided**. A default of `feature_unnamed` will be used. |
 | Code review output | `04-review.md` from code-reviewer-agent | ⚠️ **WARNING — security-reviewer-agent: no code review output**. Proceeding without it — security checks will not be de-duplicated against quality findings. |
 
-Error format:
-> 🚨 **AGENT ERROR — security-reviewer-agent**
-> **Missing:** `[field]`
-> **Why it matters:** [brief reason]
-> **Action required:** [what must be provided]
-> ⛔ This agent cannot continue until the missing input is supplied.
+Follow [`agent-contract`](../skills/agent-contract/SKILL.md)'s Missing-Input Error Format — `{agent-name}: security-reviewer-agent`.
 
 ## Ledger Check (required)
 
