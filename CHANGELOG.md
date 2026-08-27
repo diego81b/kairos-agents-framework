@@ -4,6 +4,16 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v7.3.1 — August 27, 2026
+
+`/kairos:view`, shipped in v7.3.0, had no user-facing usage documentation on the published site — only architecture-level mentions in `AGENTS.md`/`CLAUDE.md`/`docs/roadmap.md`, none of which are published (`AGENTS.md`/`CLAUDE.md` are excluded from the VitePress build).
+
+### Added
+
+- **`docs/setup/claude-code.md`** — new "Viewing a phase artifact as HTML" section documenting `/kairos:view`: usage example, what it lists when called with no argument, what the resulting page contains. Published on the site under Setup → Claude Code.
+
+---
+
 ## v7.3.0 — August 27, 2026
 
 New `/kairos:view` command for a synthetic HTML view of a single phase artifact, and a fix for the editor command KAIROS shells out to when opening phase outputs.
