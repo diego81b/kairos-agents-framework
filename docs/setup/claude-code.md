@@ -132,7 +132,7 @@ If you'd rather not read the raw Markdown, the plugin ships a `/kairos:view` com
 /kairos:view 04-review.md
 ```
 
-Or just `/kairos:view` with no argument — it lists the phase files it finds under `.kairos/` and asks which one.
+Or just `/kairos:view` with no argument — since `.kairos/` accumulates one folder per feature ever processed, it asks which feature folder first, then lists that folder's phase files and asks which one.
 
 It reads that file's frontmatter and body, then publishes an Artifact with a status header, stat tiles for whatever tally fields are present (`risk_counts`, `issues_summary`, `findings_summary`), and any Risks/Issues/Findings table rendered as a real HTML table with a Disposition badge per row — condensed, not a copy-paste of the Markdown. One file per invocation; run it again for another phase.
 

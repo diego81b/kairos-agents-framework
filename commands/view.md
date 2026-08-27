@@ -11,7 +11,12 @@ You are turning ONE `.kairos/<feature_folder>/<phase-file>.md` into a compact, r
 
 ## Step 1 — Resolve the target file
 
-If the user's prompt already names a file or a feature+phase (e.g. `04-review.md`, or "the architecture doc for issue-42"), use that. Otherwise, Glob `.kairos/*/[0-9]*.md` from the project root, list what you find (feature folder + phase name), and ask which one via `AskUserQuestion`.
+`.kairos/` accumulates one subfolder per feature ever processed — potentially a long history. Never Glob phase files across every folder at once; narrow to one feature folder first, then to one phase file inside it.
+
+1. **Feature folder** — if the user's prompt already names one (a feature/issue reference, or a folder name), use it. Otherwise Glob `.kairos/*/` for folder names only (no file listing yet), and ask which one via `AskUserQuestion`.
+2. **Phase file** — if the user's prompt already names a phase or file (e.g. `04-review.md`, "the architecture doc"), use it directly within the folder from step 1. Otherwise Glob `.kairos/<feature_folder>/[0-9]*.md` for that folder only, list what you find (phase name + status), and ask which one via `AskUserQuestion`.
+
+If the prompt already fully specifies both feature and phase in one go, skip straight to Step 2 — don't ask twice for something already given.
 
 ## Step 2 — Read it
 
