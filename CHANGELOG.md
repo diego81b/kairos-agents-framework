@@ -4,16 +4,6 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
-## v7.3.1 — August 27, 2026
-
-`/kairos:view`, shipped in v7.3.0, had no user-facing usage documentation on the published site — only architecture-level mentions in `AGENTS.md`/`CLAUDE.md`/`docs/roadmap.md`, none of which are published (`AGENTS.md`/`CLAUDE.md` are excluded from the VitePress build).
-
-### Added
-
-- **`docs/setup/claude-code.md`** — new "Viewing a phase artifact as HTML" section documenting `/kairos:view`: usage example, what it lists when called with no argument, what the resulting page contains. Published on the site under Setup → Claude Code.
-
----
-
 ## v7.3.0 — August 27, 2026
 
 New `/kairos:view` command for a synthetic HTML view of a single phase artifact, and a fix for the editor command KAIROS shells out to when opening phase outputs.
@@ -21,6 +11,7 @@ New `/kairos:view` command for a synthetic HTML view of a single phase artifact,
 ### Added
 
 - **`commands/view.md`** — new `/kairos:view` slash command (Claude Code only): reads one `.kairos/<feature_folder>/` phase artifact and publishes a synthesized, human-readable HTML page via the Artifact tool (stat tiles for the frontmatter tallies, real tables for Risks/Issues/Findings with Disposition badges), instead of requiring a raw Markdown read. Scoped to one file per invocation — never the whole feature folder.
+- **`docs/setup/claude-code.md`** — new "Viewing a phase artifact as HTML" section documenting `/kairos:view` on the published site: usage example, what it lists when called with no argument, what the resulting page contains.
 - **`AGENTS.md`, `CLAUDE.md`** — document the `commands/` directory and both slash commands (`/kairos:setup`, `/kairos:view`); `CLAUDE.md` previously didn't mention `commands/` at all.
 - **`docs/roadmap.md`** — new "Commands" entry for both slash commands, and an Exploration-tier note recording a deferred idea (auto-updating tracker board/status after gates) that was explored twice and shelved for lack of a concrete tracker/workflow example.
 
