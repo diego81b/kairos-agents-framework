@@ -100,7 +100,7 @@ This gives you:
 
 ## Selective Pipeline
 
-Not every task needs all six agents. When you start a KAIROS run, the orchestrator asks you to choose which agents should run — no automatic inference, no hidden defaults.
+Not every task needs the full pipeline. When you start a KAIROS run, the orchestrator asks you to choose which agents should run — with an advisory suggestion from the impact assessment (or from the orchestrator itself when that wasn't run), but never a hidden default: the choice is always yours.
 
 ```
 📋 Which agents should run for this task?

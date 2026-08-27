@@ -107,7 +107,7 @@ OpenCode is a gateway to many providers, and hardcoding one `provider/model-id` 
 The `{env:...}` substitution is OpenCode's own config feature (unset variables become empty strings — in that case set plain `provider/model-id` strings instead). With the variables exported:
 
 ```bash
-export KAIROS_STRONG_MODEL="anthropic/claude-opus-4-5"   # any configured provider works
+export KAIROS_STRONG_MODEL="anthropic/claude-opus-5"     # any configured provider works — matches the ids shipped in `.opencode/agents/`
 export KAIROS_FAST_MODEL="openai/gpt-5-mini"             # e.g. a cheaper tier entirely
 ```
 

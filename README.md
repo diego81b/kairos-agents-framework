@@ -1,4 +1,4 @@
-# KAIROS Framework v2.0
+# KAIROS Framework
 
 **"The Right Moment for Development"**
 
@@ -6,7 +6,7 @@ Intelligent multi-agent SDLC orchestration
 
 ## What's Included
 
-- **agents/** - 8 core agent definitions + 5 optional Team Mode specialists
+- **agents/** - 14 core agent definitions + 5 optional Team Mode specialists
 - **docs/** - Complete documentation site (VitePress)
 - **CHANGELOG.md** - Version history
 
@@ -28,44 +28,35 @@ See [Skills & MCP Enhancements](docs/skills-mcp.md) for the full map and install
 2. Use in Claude Code: "Help me add X feature with KAIROS"
 3. The Orchestrator coordinates the pipeline automatically
 
-## Generating the Website (Windows, Mac, Linux)
+## Invocation Contract
 
-### Windows (PowerShell):
+When starting a KAIROS run, invoke the orchestrator with the **bare feature request only**:
 
-```powershell
-cd docs
-.\convert.ps1
-```
+- **Never pre-select phases or agents in the invocation prompt.** Agent selection is a human decision made at the orchestrator's Step 0e gate — a caller-supplied list is treated as an unconfirmed proposal, never as authorization.
+- **Never launch the orchestrator backgrounded or detached.** Every phase ends at a HITL gate that needs a live human. In Claude Code, spawned subagents have no `AskUserQuestion`, so gates degrade to the text-menu fallback — and a backgrounded run has nobody reading it.
+- **Run the standalone pre-pipeline agents yourself if you want them.** `context-extractor-agent` and `impact-assessment-agent` are invoked directly by you, before the orchestrator — the orchestrator never auto-invokes them.
 
-### Mac/Linux (Python 3):
-
-```bash
-cd docs
-python3 convert.py
-```
-
-This converts `KAIROS-FRAMEWORK-DOCUMENTATION.md` to `index.html`
-
-### Deploy to web:
+## Documentation Website
 
 ```bash
-git add .
-git commit -m "feat: Generate HTML from markdown"
-git push origin main
+npm install          # install VitePress + dependencies
+npm run docs:dev     # local dev server with hot reload
+npm run docs:build   # build static site → docs/.vitepress/dist/
+npm run docs:preview # preview the production build locally
 ```
 
-## Deployment Options
+## Deployment
 
-See `DEPLOYMENT.md` for complete instructions:
+The documentation site deploys automatically:
 
-1. **Vercel** (Recommended) - Fast, professional, any repo type
-2. **GitHub Pages** - Simple, free for public repos
-3. **Netlify** - Flexible, free, any repo type
-4. **Gitbook** - Beautiful interactive docs, auto-sync from GitHub
+1. **Vercel** (primary) — auto-deploys on push to `main`
+2. **Netlify** — triggered via deploy hook on `v*` tags
+
+A release means: bump versions + changelog, commit, tag `vX.Y.Z`, push.
 
 ## Files
 
-- `agents/` - Core agents + `teammates/` folder (Team Mode specialists)
+- `agents/` - Core agents + `team/` folder (Team Mode specialists)
 - `docs/` - VitePress documentation site
 - `CHANGELOG.md` - Version history
 - `internal/` - Internal guides (cost analysis, routing logic, provider specifics)

@@ -10,4 +10,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Netlify deploy hook
-        run: curl -s -X POST "${{ secrets.NETLIFY_DEPLOY_HOOK }}"
+        run: curl -sf -X POST "${{ secrets.NETLIFY_DEPLOY_HOOK }}"
