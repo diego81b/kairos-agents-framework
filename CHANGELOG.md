@@ -4,6 +4,21 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v7.4.0 — August 27, 2026
+
+New auto-generated feature recap at the end of every pipeline run, with an optional cleanup of the intermediate phase files it replaces.
+
+### Added
+
+- **`agents/orchestrator-agent.md`** (+ both mirrors) — new Step 10, "Feature Recap": once the last active phase's gate resolves (not on a mid-run `Stop pipeline`), the orchestrator reads every phase artifact plus the ledger's audit trail and any still-open question back off disk and writes `.kairos/<feature_folder>/_recap.md` — a single condensed summary, no frontmatter contract, no Disposition table. It opens the file for review, then offers a Keep/Delete cleanup choice for the phase files the recap replaces (never the ledger, `_recap.md`, or `07-retrospective.md` itself), recommending Keep whenever `retrospective-agent` hasn't run yet for that feature or an open question remains.
+- **`CLAUDE.md`** — documents `_recap.md` in the Pipeline Overview: auto-invoked by the orchestrator (unlike `retrospective-agent`/`improvement-advisor-agent`), and why its underscore prefix keeps it out of the numbered-phase resume glob.
+
+### Changed
+
+- **`agents/orchestrator-agent.md`** (+ both mirrors) — Step 0b's resume flow now checks for `_recap.md` before falling back to "fresh start at Phase 1": a feature folder with no `0*.md` files but a `_recap.md` present already completed a prior run and had its phase files cleaned up (Step 10c), so resuming it now re-shows the folder-exists menu (steering toward Create new folder or Stop) instead of silently re-running the whole pipeline over already-shipped work.
+
+---
+
 ## v7.3.0 — August 27, 2026
 
 New `/kairos:view` command for a synthetic HTML view of a single phase artifact, and a fix for the editor command KAIROS shells out to when opening phase outputs.

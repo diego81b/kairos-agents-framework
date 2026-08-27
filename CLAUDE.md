@@ -76,6 +76,16 @@ standalone post-pipeline agents:
 write real files outside `.kairos/` in the target project — scoped strictly to
 documentation (README/CHANGELOG/`docs/**`), never source code.
 
+Once the last active phase's gate resolves — not on a mid-run `Stop pipeline` — the
+orchestrator writes one more file itself, no subagent involved: `_recap.md` in the feature
+folder. It condenses every phase artifact plus the ledger's audit trail and any still-open
+question into one read, then offers to delete the phase artifacts it replaces (never the
+ledger, never itself). The underscore prefix keeps it out of both the numbered-phase glob
+`orchestrator-agent.md` uses for its Resume-existing flow and the frontmatter-contract
+discipline described below — recap carries no `status`, no Disposition table. Unlike the
+two agents below, recap is auto-invoked by the orchestrator, not something the user calls
+separately.
+
 Two more agents sit outside the orchestrated sequence entirely: `retrospective-agent.md`
 and `improvement-advisor-agent.md` are standalone, invoked directly by the user (never
 auto-invoked by the orchestrator), same category as Pre-A/Pre-B. `retrospective-agent`
