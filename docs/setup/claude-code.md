@@ -77,13 +77,31 @@ The `description` field is critical: the **orchestrator** reads all descriptions
 
 ## Step 3 — Start a KAIROS session
 
-Open Claude Code in your project directory and type:
+Start Claude Code with the orchestrator as the session's **primary** agent — not by naming it inside an already-open chat:
+
+```bash
+claude --agent orchestrator-agent
+```
+
+::: warning Don't invoke it by name mid-conversation
+Typing `@orchestrator-agent` or "use the orchestrator agent" inside an already-open Claude Code session dispatches it through the `Agent` tool as a **subagent**, not as the session's primary driver. Subagents unconditionally lose access to `AskUserQuestion`, so every HITL gate degrades to the text-menu fallback — and if the parent session ends or resets mid-pipeline, the orchestrator is orphaned and dies with it, mid-phase.
+
+`--agent` is a startup flag only — to switch mid-session, exit (`Ctrl+D` or `/exit`) and relaunch with it. To make this the project default without retyping the flag, add it to `.claude/settings.local.json` (not the shared `settings.json`, or every teammate's plain `claude` session in this repo defaults to the orchestrator too):
+```json
+{
+  "agent": "orchestrator-agent"
+}
+```
+Still overridable per-session with `--agent <other>`.
+:::
+
+Once the session opens with the orchestrator as primary, just type your request:
 
 ```
 Help me add [your feature] using the KAIROS framework
 ```
 
-The orchestrator agent picks this up, reads the task, and begins delegating to the appropriate subagent starting with the PM Agent.
+The orchestrator reads the task and begins delegating to the appropriate subagent starting with the PM Agent.
 
 ## Step 4 — The HITL loop in practice
 
@@ -136,6 +154,8 @@ Or just `/kairos:view` with no argument — since `.kairos/` accumulates one fol
 
 It reads that file's frontmatter and body, then publishes an Artifact with a status header, stat tiles for whatever tally fields are present (`risk_counts`, `issues_summary`, `findings_summary`), and any Risks/Issues/Findings table rendered as a real HTML table with a Disposition badge per row — condensed, not a copy-paste of the Markdown. One file per invocation; run it again for another phase.
 
+You can also point it at `_recap.md` — the orchestrator's own end-of-pipeline summary — by naming it explicitly, e.g. `/kairos:view _recap.md`; it won't show up in the no-argument file list since that only lists numbered phase files. `_recap.md` carries no frontmatter, so the rendered page skips the status badge and stat tiles and shows just the condensed summary and its audit trail.
+
 ## Optional — Issue tracker integration
 
 KAIROS supports **Jira**, **GitLab Issues**, and **Bitbucket Issues**. Add the issue reference at the start of your prompt:
@@ -174,6 +194,8 @@ Requires the respective CLI authenticated: `jira init`, `glab auth login`, or a 
 | Wrong model used | Verify the `model:` field in each agent's frontmatter |
 | Orchestrator not delegating | The `description:` field must clearly describe when to use the agent |
 | `.kairos/` not created | The implementer-tdd-agent or implementer-coder-agent creates it on first write — ensure `write_file` is in its `tools:` list |
+| Gates keep degrading to a text menu / `AskUserQuestion` unavailable | The orchestrator is running as a subagent, not as the session's primary agent — it was invoked by name (`@orchestrator-agent`) inside an existing chat instead of at startup. Exit and relaunch with `claude --agent orchestrator-agent` (see Step 3) |
+| Orchestrator seems to vanish mid-pipeline with no error | Same root cause as above — a subagent-dispatched orchestrator dies if its parent session ends or resets. Restart with `claude --agent orchestrator-agent`; the run resumes from the last completed phase (Step 0b of `orchestrator-agent.md`) |
 
 ## Team Mode — additional setup
 
