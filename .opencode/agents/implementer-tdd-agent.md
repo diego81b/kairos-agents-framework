@@ -359,7 +359,7 @@ After writing, open the summary file in the editor so the user can inspect it di
 Run from the project root, substituting the actual `feature_folder` value received from the orchestrator:
 
 ```bash
-code ".kairos/$feature_folder/03-implementation.md"
+${KAIROS_EDITOR:-code} ".kairos/$feature_folder/03-implementation.md"
 ```
 
 ### 4. Issue Tracker Comment (optional)

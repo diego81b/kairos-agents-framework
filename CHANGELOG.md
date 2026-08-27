@@ -4,6 +4,23 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v7.3.0 — August 27, 2026
+
+New `/kairos:view` command for a synthetic HTML view of a single phase artifact, and a fix for the editor command KAIROS shells out to when opening phase outputs.
+
+### Added
+
+- **`commands/view.md`** — new `/kairos:view` slash command (Claude Code only): reads one `.kairos/<feature_folder>/` phase artifact and publishes a synthesized, human-readable HTML page via the Artifact tool (stat tiles for the frontmatter tallies, real tables for Risks/Issues/Findings with Disposition badges), instead of requiring a raw Markdown read. Scoped to one file per invocation — never the whole feature folder.
+- **`AGENTS.md`, `CLAUDE.md`** — document the `commands/` directory and both slash commands (`/kairos:setup`, `/kairos:view`); `CLAUDE.md` previously didn't mention `commands/` at all.
+- **`docs/roadmap.md`** — new "Commands" entry for both slash commands, and an Exploration-tier note recording a deferred idea (auto-updating tracker board/status after gates) that was explored twice and shelved for lack of a concrete tracker/workflow example.
+
+### Fixed
+
+- **`agents/*.md`** (+ both mirrors, 12 core agent files, 36 files total) — the "open output file" step no longer hardcodes `code "path"`; it now runs `${KAIROS_EDITOR:-code} "path"`, so anyone on VS Code Insiders, Cursor, or another editor can point it at the right binary via the `KAIROS_EDITOR` environment variable instead of always launching plain VS Code.
+- **`docs/setup/index.md`** — documents the new `KAIROS_EDITOR` environment variable.
+
+---
+
 ## v7.2.0 — August 27, 2026
 
 CASE B agent selection now always comes with a recommendation, even when the pre-pipeline impact assessment was never run.

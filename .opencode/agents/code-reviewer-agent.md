@@ -231,7 +231,7 @@ After writing, open the review doc in the editor.
 Run from the project root, substituting the actual `feature_folder` value received from the orchestrator:
 
 ```bash
-code ".kairos/$feature_folder/04-review.md"
+${KAIROS_EDITOR:-code} ".kairos/$feature_folder/04-review.md"
 ```
 
 ### 4. Issue Tracker Comment (optional)

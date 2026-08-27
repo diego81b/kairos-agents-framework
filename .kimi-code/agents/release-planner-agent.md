@@ -175,7 +175,7 @@ After writing, open the output file in the editor.
 Run from the project root, substituting the actual `feature_folder` value received from the orchestrator:
 
 ```bash
-code ".kairos/$feature_folder/06-deployment-plan.md"
+${KAIROS_EDITOR:-code} ".kairos/$feature_folder/06-deployment-plan.md"
 ```
 
 ### 4. Issue Tracker Comment (optional)
