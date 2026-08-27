@@ -25,15 +25,15 @@ See [Skills & MCP Enhancements](docs/skills-mcp.md) for the full map and install
 ## Quick Start
 
 1. Copy `agents/` to your project
-2. Use in Claude Code: "Help me add X feature with KAIROS"
-3. The Orchestrator coordinates the pipeline automatically
+2. Start Claude Code with the orchestrator as the session's **primary** agent — not by naming it inside an already-open chat: `claude --agent orchestrator-agent` (or `claude --agent kairos:orchestrator-agent` if installed as a plugin)
+3. Describe the feature you want — the Orchestrator coordinates the pipeline automatically
 
 ## Invocation Contract
 
 When starting a KAIROS run, invoke the orchestrator with the **bare feature request only**:
 
 - **Never pre-select phases or agents in the invocation prompt.** Agent selection is a human decision made at the orchestrator's Step 0e gate — a caller-supplied list is treated as an unconfirmed proposal, never as authorization.
-- **Never launch the orchestrator backgrounded or detached.** Every phase ends at a HITL gate that needs a live human. In Claude Code, spawned subagents have no `AskUserQuestion`, so gates degrade to the text-menu fallback — and a backgrounded run has nobody reading it.
+- **Never launch the orchestrator backgrounded or detached — and never invoke it by name inside an existing conversation.** Every phase ends at a HITL gate that needs a live human. In Claude Code, a spawned subagent has no `AskUserQuestion`, so gates degrade to the text-menu fallback — and this applies just as much to `@kairos:orchestrator-agent`/"use the orchestrator agent" typed mid-chat as to an explicit background launch, since both dispatch through the same `Agent` tool as a subagent. Start the session with the orchestrator as its **primary** agent instead — `claude --agent kairos:orchestrator-agent` (plugin install) or `claude --agent orchestrator-agent` (copied into `.claude/agents/`) — never as something you call from within another session. `--agent` is a startup flag only; to switch mid-session, exit (`Ctrl+D` / `/exit`) and relaunch with it.
 - **Run the standalone pre-pipeline agents yourself if you want them.** `context-extractor-agent` and `impact-assessment-agent` are invoked directly by you, before the orchestrator — the orchestrator never auto-invokes them.
 
 ## Documentation Website

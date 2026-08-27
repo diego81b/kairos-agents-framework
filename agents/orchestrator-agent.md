@@ -97,7 +97,7 @@ If **Resume existing** is chosen, determine where the previous run actually stop
 ls ".kairos/$feature_folder"/0*.md 2>/dev/null
 ```
 
-Match the highest-numbered phase file present against the phase order (`00-context` → `00b-impact` → `01-requirements` → `02-architecture` → `03-implementation` → `04-review` → `04b-security-review` → `05-test-verification` → `06-deployment-plan` → `06b-documentation`). The phase immediately after the last one present is `next_agent`. Show this for confirmation before invoking anything: `📍 Resume point: last completed phase is <N>-<name> — next up: <next_agent>. Confirm?` A `-iter{N}`/`-recheck` suffix on the highest file still counts as that phase being complete, not a phase of its own. If no `0*.md` files exist yet, resuming is equivalent to a fresh start at Phase 1.
+Match the highest-numbered phase file present against the phase order (`00-context` → `00b-impact` → `01-requirements` → `02-architecture` → `03-implementation` → `04-review` → `04b-security-review` → `05-test-verification` → `06-deployment-plan` → `06b-documentation`). The phase immediately after the last one present is `next_agent`. Show this for confirmation before invoking anything: `📍 Resume point: last completed phase is <N>-<name> — next up: <next_agent>. Confirm?` A `-iter{N}`/`-recheck` suffix on the highest file still counts as that phase being complete, not a phase of its own. If no `0*.md` files exist yet, check for `.kairos/$feature_folder/_recap.md` before concluding this is a fresh start: its presence with no `0*.md` files means this feature already finished a run and its phase files were cleaned up (Step 10c). Report `📍 This feature already completed a prior run (recap at _recap.md, phase files were cleaned up) — nothing to resume.` and re-show the folder-exists menu from above instead of restarting at Phase 1 — Resume existing has nothing left to resume here, so steer the human toward Create new folder or Stop. Only treat the folder as an untouched fresh start when neither `0*.md` files nor `_recap.md` are present.
 
 Notify the user: `📁 Feature folder: .kairos/PROJ-42_add-stripe-payments/`
 
@@ -381,6 +381,45 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
    ```
 8b. **Run Metrics** (this run only — see the `RUN METRICS` block in Output To User below): if any `## Loop State` / `## Loop History` section existed during this run (Phase 3 and/or Phase 4 Loop Actuators), pull the final `convergence_signal` and iteration counts, plus each phase's first-pass status (`READY`/`SECURE` on iteration 1 vs. requiring a loop). This is descriptive of this single run, not a substitute for PROOF's cross-run Velocity/Rework Ratio/Gate Pass Rate — say so explicitly in the block, don't let it read as a real metric trend.
 9. **Present**: Show user everything
+10. **Feature Recap** _(only on normal completion — skip entirely if the run ended via `Stop pipeline`)_: the orchestrator writes and offers to clean up its own summary file. Do this in three separate sub-steps, never collapsed into one turn:
+
+    a. **Compose** — read the actual files back off disk (never from chat memory of this run — same discipline as Step 0b's resume point): every phase artifact present in `.kairos/$feature_folder/` (`00-context.md` through `06b-documentation.md`, whichever ran), `ledger/audit-log.md`, and `ledger/open-questions.md`. Write `.kairos/$feature_folder/_recap.md` — no frontmatter contract, no Disposition table, this is a summary of decisions already made, not a new gate:
+       ```
+       # Recap — <feature_folder>
+
+       <date>
+
+       ## <Phase name>
+       <2-4 lines: what it produced, final verdict, iteration count if a loop ran (from Run Metrics, step 8b)>
+       [repeat per phase that actually ran]
+
+       ## Files Changed
+       <code files from 03-implementation.md's Code Files Generated, doc files from 06b-documentation.md's Docs Touched if it ran>
+
+       ## Audit Trail
+       <ledger/audit-log.md, copied verbatim>
+
+       ## Open Questions
+       <every still-🔴-open row from ledger/open-questions.md, copied verbatim — omit this section if none remain>
+       ```
+
+    b. **Present & open** — show a 3-5 line summary (same format as step 9), then open the file exactly like every other phase's gate: `${KAIROS_EDITOR:-code} ".kairos/$feature_folder/_recap.md"`.
+
+    c. **Cleanup gate** — a separate prompt, only after (b). Before asking, check two things and use them to pick the recommended option:
+       - `ls ".kairos/$feature_folder/07-retrospective.md" 2>/dev/null` — if absent, `retrospective-agent` has not run for this feature yet and still needs these files as its own input.
+       - Whether `ledger/open-questions.md` has any row still `🔴 open` (the same rows just copied into the recap's Open Questions section).
+       - List the exact files a cleanup would remove: every `.md` file directly in `.kairos/$feature_folder/` except `_recap.md` and `07-retrospective.md` — this includes any `-iter{N}` / `-recheck` variant the Loop Actuators wrote, not just the base 00–06b names. `07-retrospective.md` is excluded for the same reason as `ledger/`: nothing folds its content forward, so deleting it on the very run where it's most likely to exist (Delete is only recommended once retrospective already ran) would destroy it outright. Never delete `ledger/` under any option, and never construct the `rm` from a glob — pass the exact listed paths.
+
+       If `AskUserQuestion` is available:
+       - `question`: `"Recap saved. Delete the <N> intermediate phase file(s) it replaces?"`
+       - `header`: `"Cleanup"`
+       - `options`:
+         - **Keep everything** — do nothing. Mark `(Recommended)` whenever `07-retrospective.md` is absent or an open question remains; state which in the option description (e.g. "retrospective-agent hasn't run yet — it needs these files", "2 open question(s) remain").
+         - **Delete phase files, keep recap** — delete exactly the listed files; `_recap.md` and `ledger/` are untouched. Mark `(Recommended)` only when `07-retrospective.md` already exists AND no open question remains.
+
+       If `AskUserQuestion` is not available, print the same two options as a typed menu with the same recommendation logic and wait for a reply.
+
+       If `Bash` is unavailable, or the delete command is denied: report `⚠️ Cleanup skipped — could not delete files.` and stop there — never work around it with another mechanism.
 
 ## Key Rules
 
@@ -443,10 +482,15 @@ KAIROS is a HITL pipeline. After EVERY active subagent completes:
 8. If **Skip next**: mark the next active agent as `[SKIPPED]` and proceed to the one after it.
 
 ### Collapse Detection
-Before writing any response, check: are you about to write code, create files, or produce implementation output yourself? If yes:
-1. Stop generating that content immediately
-2. Write: `⚠️ Orchestrator self-check: this work belongs to [subagent-name]. Delegating now.`
-3. Call the correct subagent
+Before writing any response, check both of these:
+1. Are you about to write code, create files, or produce implementation output yourself? If yes:
+   1. Stop generating that content immediately
+   2. Write: `⚠️ Orchestrator self-check: this work belongs to [subagent-name]. Delegating now.`
+   3. Call the correct subagent
+2. Are you about to run a build, `tsc`/typecheck, or a tree-wide verification sweep yourself — inside HITL step 0 (Artifact Contract Check), step 1b (Constraint & Decision Conflict Scan), or anywhere else in a gate? Both of those steps are a semantic read of the artifact and ledger files already on disk, never new tooling execution — full-repo verification is `code-reviewer-agent`'s Phase 4 job exclusively. If yes:
+   1. Stop before running it
+   2. Write: `⚠️ Orchestrator self-check: build/typecheck/tree-wide verification belongs to code-reviewer-agent (Phase 4), not this gate. Skipping.`
+   3. Continue the gate using only the artifact content and ledger files already readable from disk. Do not invoke `code-reviewer-agent` early just to get the check done now — it runs in its normal pipeline position.
 
 ### Sequencing
 ALWAYS follow the order:
@@ -593,6 +637,7 @@ With issue number (`"Add Stripe payments — issue #42"`):
     ├── 06-deployment-plan.md      ← Release Planner (frontmatter contract + full runbook)
     ├── 06b-documentation.md       ← Documentation Agent (optional, frontmatter contract + doc changes made)
     ├── 07-retrospective.md        ← Retrospective Agent (standalone, optional — see below)
+    ├── _recap.md                  ← Orchestrator itself, after the last active phase's gate (Step 10) — condensed summary + audit trail; underscore keeps it out of the numbered-phase resume glob
     └── ledger/
         ├── constraints.md         ← Accumulated constraints with per-phase status (seeded by PM, updated by all agents)
         ├── decisions.md           ← Architectural and implementation decisions log (seeded by Architect)

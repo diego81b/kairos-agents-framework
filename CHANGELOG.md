@@ -4,6 +4,28 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v7.4.0 — August 27, 2026
+
+New auto-generated feature recap at the end of every pipeline run, with an optional cleanup of the intermediate phase files it replaces.
+
+### Added
+
+- **`agents/orchestrator-agent.md`** (+ both mirrors) — new Step 10, "Feature Recap": once the last active phase's gate resolves (not on a mid-run `Stop pipeline`), the orchestrator reads every phase artifact plus the ledger's audit trail and any still-open question back off disk and writes `.kairos/<feature_folder>/_recap.md` — a single condensed summary, no frontmatter contract, no Disposition table. It opens the file for review, then offers a Keep/Delete cleanup choice for the phase files the recap replaces (never the ledger, `_recap.md`, or `07-retrospective.md` itself), recommending Keep whenever `retrospective-agent` hasn't run yet for that feature or an open question remains.
+- **`CLAUDE.md`** — documents `_recap.md` in the Pipeline Overview: auto-invoked by the orchestrator (unlike `retrospective-agent`/`improvement-advisor-agent`), and why its underscore prefix keeps it out of the numbered-phase resume glob.
+
+### Changed
+
+- **`agents/orchestrator-agent.md`** (+ both mirrors) — Step 0b's resume flow now checks for `_recap.md` before falling back to "fresh start at Phase 1": a feature folder with no `0*.md` files but a `_recap.md` present already completed a prior run and had its phase files cleaned up (Step 10c), so resuming it now re-shows the folder-exists menu (steering toward Create new folder or Stop) instead of silently re-running the whole pipeline over already-shipped work.
+
+### Fixed
+
+- **`commands/view.md`** — `/kairos:view` assumed every phase file has frontmatter with a `status`/`promptable` verdict field. Verified live against a synthetic `_recap.md` (which deliberately has neither): the header step now explicitly drops the verdict badge instead of inventing one when a file — `_recap.md`, `_lessons.md` — carries no frontmatter, and skips the stat-tile row rather than rendering an empty one.
+- **`docs/setup/claude-code.md`** — documents that `_recap.md` is reachable via `/kairos:view _recap.md` (named explicitly — it's excluded from the no-argument phase-file list) and renders without a status header or stat tiles.
+- **`agents/orchestrator-agent.md`** (+ both mirrors) — closes a real scope-creep gap found in a live v7.1.2 run: after a crash-and-resume, the orchestrator ran a full build, `tsc --noEmit`, and a tree-wide sweep itself at the post-implementer gate — work that belongs exclusively to `code-reviewer-agent` (Phase 4). Collapse Detection now has a second trigger alongside "about to write code/create files": about to run a build, typecheck, or tree-wide verification sweep during HITL step 0 (Artifact Contract Check) or step 1b (Constraint & Decision Conflict Scan). Both gate steps are a semantic read of the artifact and ledger already on disk, never new tooling execution — so the orchestrator now stops, flags it, and continues the gate using only what's already readable from disk instead of duplicating Phase 4's job or invoking `code-reviewer-agent` out of turn.
+- **`README.md`, `docs/setup/index.md`, `docs/setup/claude-code.md`, `docs/distribution/02-plugin-install.md`** — closes the actual root cause behind the same live incident's `AskUserQuestion` failures: `docs/distribution/02-plugin-install.md`'s own "Starting a Pipeline Run" section (and README's Quick Start) instructed typing `@kairos:orchestrator-agent` inside an already-open chat, which Claude Code dispatches through the `Agent` tool as a subagent — subagents unconditionally lose `AskUserQuestion`, degrading every HITL gate to the text-menu fallback, and are orphaned if the parent session ends mid-pipeline. All four docs now instruct starting the session with the orchestrator as its **primary** agent instead (`claude --agent kairos:orchestrator-agent` / `claude --agent orchestrator-agent` for copy-installs), note `--agent` is startup-only (exit and relaunch to switch), and show the `.claude/settings.local.json` `"agent"` key as an optional per-project default. `docs/setup/claude-code.md` also gains two new Troubleshooting rows for gates degrading to a text menu and the orchestrator vanishing mid-pipeline, both pointing at the same fix.
+
+---
+
 ## v7.3.0 — August 27, 2026
 
 New `/kairos:view` command for a synthetic HTML view of a single phase artifact, and a fix for the editor command KAIROS shells out to when opening phase outputs.
