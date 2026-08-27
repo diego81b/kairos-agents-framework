@@ -157,7 +157,7 @@ Edit — do not rewrite — `.kairos/_lessons.md`: replace only the `## Recurrin
 
 ### 4. Open in Editor
 ```bash
-code ".kairos/_improvement-advisory.md"
+${KAIROS_EDITOR:-code} ".kairos/_improvement-advisory.md"
 ```
 Do not force-open every new ADR file individually if more than one was written — list their paths in the terminal output instead.
 

@@ -365,7 +365,7 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
    4. **Guard — Regression check** _(only if ≥1 loop iteration actually ran)_: invoke @kairos:test-verifier-agent as a single-pass (loop policy NOT applied). This single-pass run **is** the Phase 5 artifact — save its output as `05-test-verification.md` and do NOT invoke test-verifier-agent again later in this run for the normal Phase 5 step, whether this check passes or fails. If `NEEDS_FIXES` → present HITL gate immediately with warning: `⚠️ Phase 4 loop introduced a test regression. Human review required before advancing.`
    5. Proceed to Phase 4 HITL gate (unchanged)
 
-4b. **Security Review Phase** _(if security-reviewer-agent active)_: Call @kairos:security-reviewer-agent. After it completes, write its Markdown output to `.kairos/$feature_folder/04b-security-review.md`, then open it: `code ".kairos/$feature_folder/04b-security-review.md"` (this agent is read-only — the orchestrator handles persistence).
+4b. **Security Review Phase** _(if security-reviewer-agent active)_: Call @kairos:security-reviewer-agent. After it completes, write its Markdown output to `.kairos/$feature_folder/04b-security-review.md`, then open it: `${KAIROS_EDITOR:-code} ".kairos/$feature_folder/04b-security-review.md"` (this agent is read-only — the orchestrator handles persistence).
 5. **Test Verification Phase** _(if test-verifier-agent active)_: Call @kairos:test-verifier-agent
 
    **Phase 3 Loop Actuator** _(runs after test-verifier returns, before Phase 5 HITL gate — only if `loop_policy.phase3.mode == "auto"` AND `status: NEEDS_FIXES`. Reachable regardless of which Phase-3 implementer variant is active — `implementer-tdd-agent`, `implementer-coder-agent`, and `implementer-lead-agent` all support Iteration Mode, though Team Mode's `max_retries` ceiling is 2, not 5 — see Step 0e)_. Apply the Loop Actuator Procedure above with `{pair}` = "Implementer ↔ Test Verifier" and `{checker}` = @kairos:test-verifier-agent (artifact `05-test-verification.md`). Then:
@@ -416,7 +416,7 @@ KAIROS is a HITL pipeline. After EVERY active subagent completes:
 4. Open the output file in the editor so the user can inspect it in full — one Markdown file per phase (frontmatter + body), not a JSON/Markdown pair.
    Run from the project root using the actual `feature_folder` and the phase file name:
    ```bash
-   code ".kairos/$feature_folder/<output_file>"
+   ${KAIROS_EDITOR:-code} ".kairos/$feature_folder/<output_file>"
    ```
    Output files per phase: `01-requirements.md` → `02-architecture.md` → `03-implementation.md` → `04-review.md` → `04b-security-review.md` → `05-test-verification.md` → `06-deployment-plan.md`
 5. **If the `AskUserQuestion` tool is available** (Claude Code), call it — do not also print a text menu:

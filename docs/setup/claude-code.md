@@ -124,6 +124,18 @@ After each approved phase, a single Markdown file is written — a small YAML fr
 
 These files are the audit trail of the session. You can commit them to git to track what was decided and why.
 
+## Optional — Viewing a phase artifact as HTML
+
+If you'd rather not read the raw Markdown, the plugin ships a `/kairos:view` command that turns one phase artifact into a synthesized, human-readable HTML page:
+
+```
+/kairos:view 04-review.md
+```
+
+Or just `/kairos:view` with no argument — since `.kairos/` accumulates one folder per feature ever processed, it asks which feature folder first, then lists that folder's phase files and asks which one.
+
+It reads that file's frontmatter and body, then publishes an Artifact with a status header, stat tiles for whatever tally fields are present (`risk_counts`, `issues_summary`, `findings_summary`), and any Risks/Issues/Findings table rendered as a real HTML table with a Disposition badge per row — condensed, not a copy-paste of the Markdown. One file per invocation; run it again for another phase.
+
 ## Optional — Issue tracker integration
 
 KAIROS supports **Jira**, **GitLab Issues**, and **Bitbucket Issues**. Add the issue reference at the start of your prompt:

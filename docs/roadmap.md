@@ -37,6 +37,10 @@
 - GitLab Issues (`glab`) — supports `.gitlab/issue_templates/`
 - Bitbucket Issues (REST API)
 
+**Commands (`commands/`)**
+- `/kairos:setup` — guided per-tier model configuration
+- `/kairos:view` — render one `.kairos/` phase artifact as a synthetic, human-readable HTML page (Claude Code only)
+
 **Artifact isolation**
 - `.kairos/<feature_folder>/` per feature — named from issue reference (`PROJ-42_add-stripe-payments`)
 - One Markdown file per phase (small YAML frontmatter + Markdown body), never overwritten across features
@@ -67,6 +71,7 @@
 - **Custom agent composition** — define project-specific agents alongside the core 14, registered in the orchestrator
 - **Cross-repo knowledge** — agents can query a shared codebase index for patterns and conventions without bloating context
 - **Audit log UI** — browsable history of all KAIROS runs with phase diffs, approval decisions, and issue links
+- **Tracker board/status sync** — auto-update issue labels/state after gates or at pipeline end, without assuming a tracker or board schema. Explored twice (a per-phase trigger table, then a simplified 2-key `after_gate`/`pipeline_end` config); neither convinced on usability grounds. Revisit with a concrete tracker/workflow example before designing further.
 
 ---
 

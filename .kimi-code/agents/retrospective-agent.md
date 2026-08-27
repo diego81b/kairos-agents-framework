@@ -153,7 +153,7 @@ Then append the dated Feature Log entry from step 4 of Your Process **after** th
 ### 4. Open in Editor
 After writing, open `07-retrospective.md` in the editor. Do NOT force-open `.kairos/_lessons.md` on every run — it is a shared, growing file; print one line confirming the append instead:
 ```bash
-code ".kairos/$feature_folder/07-retrospective.md"
+${KAIROS_EDITOR:-code} ".kairos/$feature_folder/07-retrospective.md"
 ```
 ```
 📝 Appended retrospective for $feature_folder to .kairos/_lessons.md

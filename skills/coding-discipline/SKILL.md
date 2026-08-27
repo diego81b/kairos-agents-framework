@@ -28,6 +28,10 @@ Before writing code, know how its correctness will be checked: a specific test, 
 
 Validate input only at system boundaries — user input, external API responses, data crossing a trust boundary. Don't add defensive checks, fallbacks, or error handling for states that are internally guaranteed not to occur (a value this same function just constructed, a parameter every caller already validates). Defensive code for an impossible case doesn't add safety — it adds a second, less-tested path.
 
+### 6. Comments: WHY Only, Never Process Narration
+
+A comment earns its place only by explaining a non-obvious technical WHY — a workaround, a hidden constraint, a subtle invariant. Never narrate the KAIROS pipeline itself: no ledger IDs (`C2`, `D7`, `Q3`), no phase names, no "per the architect's decision" or "per requirement R4" — that traceability already lives in `.kairos/<feature_folder>/ledger/` and the phase artifacts. Duplicating it into shipped code rots the moment `.kairos/` is deleted or the ledger moves on, and it reads as internal bookkeeping to anyone who didn't run this pipeline. Applies from PHASE 1 onward, and to test files the same as production code — a test narrating "implements C2, satisfies D7" is exactly this failure mode, not an exception to it.
+
 ## When Applying This Checklist Conflicts With a Written Contract
 
 Contracts win. If `02-architecture.md`'s API/data-model contract, or an approved implementation plan, calls for something that reads as over-engineered by principle 2, follow the contract and flag the tension in the plan's Risks section rather than silently deviating from an already-approved design.

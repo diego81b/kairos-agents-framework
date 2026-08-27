@@ -262,7 +262,7 @@ If the ledger does not exist yet, skip this step.
 Instruct the orchestrator (or the user) to open the output file once written:
 
 ```bash
-code ".kairos/$feature_folder/00b-impact.md"
+${KAIROS_EDITOR:-code} ".kairos/$feature_folder/00b-impact.md"
 ```
 
 ### 4. Issue Tracker Comment (optional)

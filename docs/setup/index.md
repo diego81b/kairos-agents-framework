@@ -57,6 +57,10 @@ HITL = Human-in-the-Loop. After each phase, the agent:
 
 This is automatic in Claude Code (defined in `agents/orchestrator-agent.md`). In other tools you enforce it manually by reading the output and deciding when to continue.
 
+## Configuration
+
+Every agent that opens its own output file for you (either standalone or via the Orchestrator's HITL step) runs `${KAIROS_EDITOR:-code} "path/to/output.md"` — set the `KAIROS_EDITOR` environment variable to override the `code` default, e.g. `code-insiders`, `cursor`, or `subl`, if that's not the editor you want opened.
+
 ## Invocation contract
 
 Regardless of the tool, three rules apply when **you** (the calling session) start a KAIROS run:

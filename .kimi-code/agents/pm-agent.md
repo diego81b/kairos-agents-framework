@@ -215,7 +215,7 @@ After writing, open the output file in the editor so the user can inspect it dir
 Run from the project root, substituting the actual `feature_folder` value received from the orchestrator:
 
 ```bash
-code ".kairos/$feature_folder/01-requirements.md"
+${KAIROS_EDITOR:-code} ".kairos/$feature_folder/01-requirements.md"
 ```
 
 ### 4. Issue Tracker Comment (optional)

@@ -228,11 +228,12 @@ Same rule as PHASE 2: if the command fails to run at all, set `green_phase_verif
 ### PHASE 5: Refactor + Verify
 Work through [`code-simplification`](../skills/code-simplification/SKILL.md) while doing this — it maps concrete patterns (deep nesting, long functions, duplication, unclear names) to their fix.
 
-Improve code while tests still pass:
+Improve code — including the tests written in PHASE 1, not just the implementation from PHASE 3 — while tests still pass:
 - Better variable names
 - Extract functions
 - Remove duplication
 - Optimize performance
+- Strip any comment that narrates the KAIROS pipeline instead of a technical WHY (coding-discipline principle 6) — tests are not exempt
 - Re-run tests after each change
 
 ### PHASE 6: Measure Coverage
@@ -357,7 +358,7 @@ After writing, open the summary file in the editor so the user can inspect it di
 Run from the project root, substituting the actual `feature_folder` value received from the orchestrator:
 
 ```bash
-code ".kairos/$feature_folder/03-implementation.md"
+${KAIROS_EDITOR:-code} ".kairos/$feature_folder/03-implementation.md"
 ```
 
 ### 4. Issue Tracker Comment (optional)

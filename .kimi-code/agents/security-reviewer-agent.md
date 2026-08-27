@@ -187,7 +187,7 @@ In Lean Mode (`effort: simple_fix`, see Effort Detection above), instruct the or
 Instruct the orchestrator to open the output file once written:
 
 ```bash
-code ".kairos/$feature_folder/04b-security-review.md"
+${KAIROS_EDITOR:-code} ".kairos/$feature_folder/04b-security-review.md"
 ```
 
 ### 4. Issue Tracker Comment (optional)
