@@ -27,6 +27,18 @@ cp path/to/kairos/.opencode/agents/*.md .opencode/agents/
 
 Or globally, at `~/.config/opencode/agents/`, if you want KAIROS available in every project.
 
+## Step 1b — Copy skills to `.opencode/skills/`
+
+Several agent bodies link to a shared skill file relative to their own location, e.g. `architect-agent` links to `../skills/contract-checklist/SKILL.md`. That path is resolved from wherever the agent file actually lives, not from this repo's root — so from `.opencode/agents/architect-agent.md` it resolves to `.opencode/skills/contract-checklist/SKILL.md`, not the top-level `skills/`. Copy the shared skills folder alongside the agents so those links resolve:
+
+```bash
+# From your project root
+mkdir -p .opencode/skills
+cp -r path/to/kairos/skills/* .opencode/skills/
+```
+
+This is what every agent body means by "Follow `[skill-name]`" — a plain relative file link the agent reads with its own `Read` tool, not a host-specific feature, so it works the same way regardless of whether OpenCode has its own native skill-discovery mechanism. Skipping this step doesn't break agent invocation itself; it breaks the specific step that links to a skill (e.g. `architect-agent`'s Pre-Contract Resolution, or every agent's optional Issue Tracker Comment step, which links to `issue-tracker-comment`) — the agent will report it can't find the file when it tries to read it.
+
 ::: tip Keep `agents/` as source of truth
 `agents/` (Claude-Code-canonical) remains the source of truth. `.opencode/agents/*.md` is a derived mirror maintained by hand — any edit to an `agents/*.md` file must update its `.opencode/agents/` counterpart in the same change. If you maintain your own copy instead of pulling updates from this repo, re-copy after KAIROS updates.
 :::
@@ -195,3 +207,4 @@ Every KAIROS agent's own "Write to Project" step already instructs it to save it
 | HITL not respected | There's no native `AskUserQuestion` prompt to miss — confirm the agent's text-menu fallback line is intact in the body and you're replying to it as plain text |
 | Unexpected approval prompts, or writes happening silently | Check the agent's `permission:` block — `ask` prompts before the action, `allow` skips the prompt, `deny` blocks it outright |
 | OpenCode not reading `AGENTS.md` | Confirm it's at the project root or an ancestor directory; if using additional instruction files, check the `instructions` array in `opencode.json` |
+| A skill reference fails (agent reports it can't find `../skills/<name>/SKILL.md`) | Copy `skills/` into `.opencode/skills/` — see Step 1b |

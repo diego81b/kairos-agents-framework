@@ -29,12 +29,7 @@ If any item below is missing from both sources, **stop immediately** and emit th
 | Tech stack / project profile | Project files, orchestrator context, or manual prompt (e.g. "Node/Express/PostgreSQL") | 🚨 **AGENT ERROR — architect-agent: missing tech stack**. Specify the technology stack so design choices can be grounded. |
 | `feature_folder` | Orchestrator context, or specify one manually | ⚠️ **WARNING — architect-agent: no `feature_folder` provided**. A default of `feature_unnamed` will be used. |
 
-Error format:
-> 🚨 **AGENT ERROR — architect-agent**  
-> **Missing:** `[field]`  
-> **Why it matters:** [brief reason]  
-> **Action required:** [what must be provided]  
-> ⛔ This agent cannot continue until the missing input is supplied.
+Follow [`agent-contract`](../skills/agent-contract/SKILL.md)'s Missing-Input Error Format — `{agent-name}: architect-agent`.
 
 ## Ledger Check (required)
 

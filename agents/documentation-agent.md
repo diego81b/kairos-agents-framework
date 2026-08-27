@@ -34,12 +34,7 @@ If any item below is missing from both sources, **stop immediately** and emit th
 | `feature_folder` | Orchestrator context, or specify one manually | ⚠️ **WARNING — documentation-agent: no `feature_folder` provided**. A default of `feature_unnamed` will be used. |
 | Existing `README.md` / `CHANGELOG.md` in the target project | Project root | ⚠️ **WARNING — documentation-agent: no existing README/CHANGELOG found**. Proceeding with a sensible default convention (Keep a Changelog style) instead of matching an existing one. |
 
-Error format:
-> 🚨 **AGENT ERROR — documentation-agent**
-> **Missing:** `[field]`
-> **Why it matters:** [brief reason]
-> **Action required:** [what must be provided]
-> ⛔ This agent cannot continue until the missing input is supplied.
+Follow [`agent-contract`](../skills/agent-contract/SKILL.md)'s Missing-Input Error Format — `{agent-name}: documentation-agent`.
 
 ## Ledger Check (read-only)
 

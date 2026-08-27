@@ -27,12 +27,7 @@ If any item below is missing from both sources, **stop immediately** and emit th
 | `feature_folder` | Orchestrator context, or specify one manually | ⚠️ **WARNING — code-reviewer-agent: no `feature_folder` provided**. A default of `feature_unnamed` will be used. |
 | Architecture spec | `02-architecture.md` from architect-agent (has the data model and API contracts), or a manual description | ⚠️ **WARNING — code-reviewer-agent: no architecture spec**. Architecture compliance check will be skipped; all other checks will proceed. |
 
-Error format:
-> 🚨 **AGENT ERROR — code-reviewer-agent**  
-> **Missing:** `[field]`  
-> **Why it matters:** [brief reason]  
-> **Action required:** [what must be provided]  
-> ⛔ This agent cannot continue until the missing input is supplied.
+Follow [`agent-contract`](../skills/agent-contract/SKILL.md)'s Missing-Input Error Format — `{agent-name}: code-reviewer-agent`.
 
 ## Ledger Check (required)
 

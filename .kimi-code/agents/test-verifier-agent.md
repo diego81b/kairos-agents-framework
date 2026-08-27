@@ -34,12 +34,7 @@ If any item below is missing from both sources, **stop immediately** and emit th
 | TDD verification block | TDD Verification section of `03-implementation.md` | ⚠️ **WARNING — test-verifier-agent: no TDD verification block**. RED-phase reality check will be marked UNKNOWN. |
 | Test Cases Intent column | `03-implementation-plan.md`'s Test Cases table | ⚠️ **WARNING — test-verifier-agent: no declared test intent found**. The intent-consistency sub-check (part of Assertion Strength) is skipped, not fabricated; all other checks proceed. |
 
-Error format:
-> 🚨 **AGENT ERROR — test-verifier-agent**
-> **Missing:** `[field]`
-> **Why it matters:** [brief reason]
-> **Action required:** [what must be provided]
-> ⛔ This agent cannot continue until the missing input is supplied.
+Follow [`agent-contract`](../skills/agent-contract/SKILL.md)'s Missing-Input Error Format — `{agent-name}: test-verifier-agent`.
 
 ## Ledger Check (required)
 

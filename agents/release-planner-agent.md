@@ -26,12 +26,7 @@ If any item below is missing from both sources, **stop immediately** and emit th
 | Feature/implementation description | `03-implementation.md` or `04-review.md` from previous steps, or a manual description of what was built | 🚨 **AGENT ERROR — release-planner-agent: no implementation description received**. Describe what was built or run the implementer phase first. |
 | `feature_folder` | Orchestrator context, or specify one manually | ⚠️ **WARNING — release-planner-agent: no `feature_folder` provided**. A default of `feature_unnamed` will be used. |
 
-Error format:
-> 🚨 **AGENT ERROR — release-planner-agent**  
-> **Missing:** `[field]`  
-> **Why it matters:** [brief reason]  
-> **Action required:** [what must be provided]  
-> ⛔ This agent cannot continue until the missing input is supplied.
+Follow [`agent-contract`](../skills/agent-contract/SKILL.md)'s Missing-Input Error Format — `{agent-name}: release-planner-agent`.
 
 ## Ledger Check (required — final accounting pass)
 

@@ -30,12 +30,7 @@ Before doing anything else, check that required inputs are present.
 | `feature_folder` | User prompt, or the folder name itself if invoked from inside it | ⚠️ **WARNING — retrospective-agent: no `feature_folder` provided**. A default of `feature_unnamed` will be used. |
 | At least one phase artifact beyond `00-context.md`/`00b-impact.md` | `.kairos/<feature_folder>/` must contain `01-requirements.md` or later | 🚨 **AGENT ERROR — retrospective-agent: nothing to reflect on**. This feature folder has no phase output yet — run at least one pipeline phase before requesting a retrospective. |
 
-Error format:
-> 🚨 **AGENT ERROR — retrospective-agent**
-> **Missing:** `[field]`
-> **Why it matters:** [brief reason]
-> **Action required:** [what must be provided]
-> ⛔ This agent cannot continue until the missing input is supplied.
+Follow [`agent-contract`](../skills/agent-contract/SKILL.md)'s Missing-Input Error Format — `{agent-name}: retrospective-agent`.
 
 Deliberately does **not** require `06-deployment-plan.md` — hard-requiring it would make this agent de facto gated on Phase 6, contradicting its standalone, optional status.
 
