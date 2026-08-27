@@ -10,7 +10,7 @@ New `/kairos:view` command for a synthetic HTML view of a single phase artifact,
 
 ### Added
 
-- **`commands/view.md`** — new `/kairos:view` slash command (Claude Code only): reads one `.kairos/<feature_folder>/` phase artifact and publishes a synthesized, human-readable HTML page via the Artifact tool (stat tiles for the frontmatter tallies, real tables for Risks/Issues/Findings with Disposition badges), instead of requiring a raw Markdown read. Scoped to one file per invocation — never the whole feature folder.
+- **`commands/view.md`** — new `/kairos:view` slash command (Claude Code only): reads one `.kairos/<feature_folder>/` phase artifact and publishes a synthesized, human-readable HTML page via the Artifact tool (stat tiles for the frontmatter tallies, real tables for Risks/Issues/Findings with Disposition badges), instead of requiring a raw Markdown read. Scoped to one file per invocation — never the whole feature folder. With no argument it resolves in two steps — which feature folder, then which phase file inside it — rather than listing every phase file across every feature `.kairos/` has ever accumulated.
 - **`docs/setup/claude-code.md`** — new "Viewing a phase artifact as HTML" section documenting `/kairos:view` on the published site: usage example, what it lists when called with no argument, what the resulting page contains.
 - **`AGENTS.md`, `CLAUDE.md`** — document the `commands/` directory and both slash commands (`/kairos:setup`, `/kairos:view`); `CLAUDE.md` previously didn't mention `commands/` at all.
 - **`docs/roadmap.md`** — new "Commands" entry for both slash commands, and an Exploration-tier note recording a deferred idea (auto-updating tracker board/status after gates) that was explored twice and shelved for lack of a concrete tracker/workflow example.
@@ -19,6 +19,8 @@ New `/kairos:view` command for a synthetic HTML view of a single phase artifact,
 
 - **`agents/*.md`** (+ both mirrors, 12 core agent files, 36 files total) — the "open output file" step no longer hardcodes `code "path"`; it now runs `${KAIROS_EDITOR:-code} "path"`, so anyone on VS Code Insiders, Cursor, or another editor can point it at the right binary via the `KAIROS_EDITOR` environment variable instead of always launching plain VS Code.
 - **`docs/setup/index.md`** — documents the new `KAIROS_EDITOR` environment variable.
+- **`skills/coding-discipline/SKILL.md`** — new principle 6, "Comments: WHY Only, Never Process Narration": generated code (and tests, from PHASE 1 onward) must never narrate the KAIROS pipeline itself — ledger IDs (`C2`/`D7`/`Q3`), phase names, "per requirement R4" — that traceability already lives in the ledger and phase artifacts. Found in a real implementation: heavy XML-doc comments on test blocks, mostly KAIROS process history instead of technical WHY.
+- **`agents/implementer-tdd-agent.md`** (+ both mirrors) — PHASE 5 (Refactor) now explicitly covers the tests written in PHASE 1, not just PHASE 3's implementation; tests were the one artifact never revisited by the simplification pass, which is why comment bloat concentrated there.
 
 ---
 
