@@ -484,10 +484,15 @@ KAIROS is a HITL pipeline. After EVERY active subagent completes:
 8. If **Skip next**: mark the next active agent as `[SKIPPED]` and proceed to the one after it.
 
 ### Collapse Detection
-Before writing any response, check: are you about to write code, create files, or produce implementation output yourself? If yes:
-1. Stop generating that content immediately
-2. Write: `⚠️ Orchestrator self-check: this work belongs to [subagent-name]. Delegating now.`
-3. Call the correct subagent
+Before writing any response, check both of these:
+1. Are you about to write code, create files, or produce implementation output yourself? If yes:
+   1. Stop generating that content immediately
+   2. Write: `⚠️ Orchestrator self-check: this work belongs to [subagent-name]. Delegating now.`
+   3. Call the correct subagent
+2. Are you about to run a build, `tsc`/typecheck, or a tree-wide verification sweep yourself — inside HITL step 0 (Artifact Contract Check), step 1b (Constraint & Decision Conflict Scan), or anywhere else in a gate? Both of those steps are a semantic read of the artifact and ledger files already on disk, never new tooling execution — full-repo verification is `code-reviewer-agent`'s Phase 4 job exclusively. If yes:
+   1. Stop before running it
+   2. Write: `⚠️ Orchestrator self-check: build/typecheck/tree-wide verification belongs to code-reviewer-agent (Phase 4), not this gate. Skipping.`
+   3. Continue the gate using only the artifact content and ledger files already readable from disk. Do not invoke `code-reviewer-agent` early just to get the check done now — it runs in its normal pipeline position.
 
 ### Sequencing
 ALWAYS follow the order:
