@@ -127,11 +127,23 @@ export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
 
 ## Starting a Pipeline Run
 
-Once installed and enabled, the entry point is always the orchestrator:
+Start the session with the orchestrator as its **primary** agent — not by `@`-mentioning it inside an already-open chat:
 
+```bash
+claude --agent kairos:orchestrator-agent
 ```
-@kairos:orchestrator-agent
+
+::: warning Why not `@kairos:orchestrator-agent` mid-chat
+Naming it inside an existing conversation dispatches it through the `Agent` tool as a **subagent**, not as the session's primary driver. Subagents unconditionally lose `AskUserQuestion`, so every HITL gate degrades to the text-menu fallback. Worse, a subagent's lifetime is tied to its parent session — if the parent session ends or resets mid-pipeline, the orchestrator is orphaned and dies with it, mid-phase, with no crash of its own to explain.
+
+`--agent` is a startup flag only — to switch mid-session, exit (`Ctrl+D` / `/exit`) and relaunch with it. To make this the project default without retyping the flag, add it to `.claude/settings.local.json` (not the shared `settings.json` — that would default every teammate's plain `claude` session in this repo to the orchestrator too):
+```json
+{
+  "agent": "kairos:orchestrator-agent"
+}
 ```
+Still overridable per-session with `--agent <other>`.
+:::
 
 The orchestrator handles all phase routing internally. You do not call other agents directly unless resuming a specific phase.
 
