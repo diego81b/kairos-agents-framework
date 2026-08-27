@@ -17,6 +17,11 @@ New auto-generated feature recap at the end of every pipeline run, with an optio
 
 - **`agents/orchestrator-agent.md`** (+ both mirrors) — Step 0b's resume flow now checks for `_recap.md` before falling back to "fresh start at Phase 1": a feature folder with no `0*.md` files but a `_recap.md` present already completed a prior run and had its phase files cleaned up (Step 10c), so resuming it now re-shows the folder-exists menu (steering toward Create new folder or Stop) instead of silently re-running the whole pipeline over already-shipped work.
 
+### Fixed
+
+- **`commands/view.md`** — `/kairos:view` assumed every phase file has frontmatter with a `status`/`promptable` verdict field. Verified live against a synthetic `_recap.md` (which deliberately has neither): the header step now explicitly drops the verdict badge instead of inventing one when a file — `_recap.md`, `_lessons.md` — carries no frontmatter, and skips the stat-tile row rather than rendering an empty one.
+- **`docs/setup/claude-code.md`** — documents that `_recap.md` is reachable via `/kairos:view _recap.md` (named explicitly — it's excluded from the no-argument phase-file list) and renders without a status header or stat tiles.
+
 ---
 
 ## v7.3.0 — August 27, 2026

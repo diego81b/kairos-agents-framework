@@ -136,6 +136,8 @@ Or just `/kairos:view` with no argument — since `.kairos/` accumulates one fol
 
 It reads that file's frontmatter and body, then publishes an Artifact with a status header, stat tiles for whatever tally fields are present (`risk_counts`, `issues_summary`, `findings_summary`), and any Risks/Issues/Findings table rendered as a real HTML table with a Disposition badge per row — condensed, not a copy-paste of the Markdown. One file per invocation; run it again for another phase.
 
+You can also point it at `_recap.md` — the orchestrator's own end-of-pipeline summary — by naming it explicitly, e.g. `/kairos:view _recap.md`; it won't show up in the no-argument file list since that only lists numbered phase files. `_recap.md` carries no frontmatter, so the rendered page skips the status badge and stat tiles and shows just the condensed summary and its audit trail.
+
 ## Optional — Issue tracker integration
 
 KAIROS supports **Jira**, **GitLab Issues**, and **Bitbucket Issues**. Add the issue reference at the start of your prompt:
