@@ -191,6 +191,10 @@ It reads that file's frontmatter and body, then publishes an Artifact with a sta
 
 You can also point it at `_recap.md` — the orchestrator's own end-of-pipeline summary — by naming it explicitly, e.g. `/kairos:view _recap.md`; it won't show up in the no-argument file list since that only lists numbered phase files. `_recap.md` carries no frontmatter, so the rendered page skips the status badge and stat tiles and shows just the condensed summary and its audit trail.
 
+::: warning Run it from the primary session, not a subagent
+`/kairos:view` publishes an Artifact, which needs the `Artifact` and `Skill` tools. Run it from the session's primary agent. If you `@`-mention `kairos:orchestrator-agent` (or any other core agent) mid-conversation, Claude Code dispatches it as a subagent restricted to that agent's own `tools:` frontmatter — none of the 14 core pipeline agents grant `Artifact` or `Skill`, so the command fails to publish. Same root cause as the `AskUserQuestion` loss described in Step 3 above; exit and relaunch from the primary session if you hit it.
+:::
+
 ## Optional — Issue tracker integration
 
 KAIROS supports **Jira**, **GitLab Issues**, and **Bitbucket Issues**. Add the issue reference at the start of your prompt:
