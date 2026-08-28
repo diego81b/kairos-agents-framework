@@ -2,89 +2,24 @@
 
 KAIROS is a **Human-in-the-Loop (HITL)** pipeline. Every phase produces a concrete artifact that the user validates before the next phase begins. The AI does the work; the human controls the gate.
 
-```mermaid
-flowchart TD
-    A([Feature Request]) --> P0
+::: warning Gates only work if the orchestrator is your primary agent
+Every gate below is an interactive `AskUserQuestion` prompt — **but only when the orchestrator runs as the session's primary agent** (`claude --agent orchestrator-agent`, started at launch). Typing `@orchestrator-agent` or "use the orchestrator" inside an already-open chat dispatches it as a subagent instead, which unconditionally loses `AskUserQuestion` — every gate below silently degrades to a text menu, and the orchestrator dies if the parent session ends mid-pipeline. See [Claude Code setup](/setup/claude-code#step-3-start-a-kairos-session) for the full explanation.
+:::
 
-    subgraph P0["Phase 0 — Prep & Agent Selection"]
-        direction TB
-        PRE["Pre-pipeline (optional):
-context-extractor-agent
-impact-assessment-agent"] --> O
-        O[Orchestrator] --> ADV["💡 Impact advisory (if 00b-impact.md found)"]
-        ADV --> SEL[User selects active agents]
-    end
+**The pipeline, phase by phase:**
 
-    P0 -->|HITL: confirm pipeline| P1
+| Phase | Agent | Produces | Gate |
+|---|---|---|---|
+| 0 | Orchestrator (+ optional Context Extractor / Impact Assessment) | Confirmed agent selection | Confirm pipeline |
+| 1 | PM Agent | `01-requirements.md` | ✅ / ✏️ / ⏭️ / ⛔ |
+| 2 | Architect Agent | `02-architecture.md` | ✅ / ✏️ / ⏭️ / ⛔ |
+| 3 | Implementer (TDD or code-only, or Team Mode) | Code + `03-implementation.md` | Plan gate, then ✅ / ✏️ / ⏭️ / ⛔ |
+| 4 | Code Reviewer | `04-review.md` | ✅ / ✏️ / ⏭️ / ⛔ |
+| 4b | Security Reviewer *(optional)* | `04b-security-review.md` | ✅ / ✏️ / ⏭️ / ⛔ |
+| 5 | Test Verifier | `05-test-verification.md` | ✅ / ✏️ / ⏭️ / ⛔ |
+| 6 | Release Planner | `06-deployment-plan.md` | ✅ / ✏️ / ⛔ |
 
-    subgraph P1["Phase 1 — Requirements"]
-        PM[PM Agent]
-    end
-
-    P1 -->|"HITL ✅ / ✏️ / ⏭️ / ⛔"| P2
-
-    subgraph P2["Phase 2 — System Design"]
-        ARCH[Architect Agent]
-    end
-
-    P2 -->|"HITL ✅ / ✏️ / ⏭️ / ⛔"| P3
-
-    subgraph P3["Phase 3 — Implementation"]
-        direction TB
-        ROUTE{Which implementer?}
-        ROUTE -->|default — works everywhere| SA
-        ROUTE -->|"explicit request + ⚠️ cost warning"| TM
-
-        subgraph SA["Single Agent (default)"]
-            direction TB
-            PLAN["Step 3a: Plan
-files · tests · TDD order"]
-            PLAN -->|"HITL: plan gate"| TDD
-            TDD["Step 3b: TDD Cycle
-RED → GREEN → REFACTOR"]
-        end
-
-        subgraph TM["Team Mode — Claude Code only"]
-            direction TB
-            LEAD["Implementer Lead
-creates binding contracts"]
-            LEAD --> PAR
-            subgraph PAR["Parallel"]
-                direction LR
-                T1[Tests] ~~~ T2[Backend] ~~~ T3[Frontend] ~~~ T4[Database]
-            end
-            PAR --> AGG["Lead: verify compliance
-& aggregate output"]
-        end
-    end
-
-    P3 -->|"HITL ✅ / ✏️ / ⏭️ / ⛔"| P4
-
-    subgraph P4["Phase 4 — Code Review"]
-        REV[Code Reviewer]
-    end
-
-    P4 -->|"HITL ✅ / ✏️ / ⏭️ / ⛔"| P4B
-
-    subgraph P4B["Phase 4b — Security Review (optional)"]
-        SR[Security Reviewer]
-    end
-
-    P4B -->|"HITL ✅ / ✏️ / ⏭️ / ⛔"| P5
-
-    subgraph P5["Phase 5 — Test Verification"]
-        TV[Test Verifier]
-    end
-
-    P5 -->|"HITL ✅ / ✏️ / ⏭️ / ⛔"| P6
-
-    subgraph P6["Phase 6 — Deployment"]
-        RP[Release Planner]
-    end
-
-    P6 -->|"HITL ✅ / ✏️ / ⛔"| OUT(["Production code
-Tests · Review · Deploy plan"])
-```
+Phase 3 routes to one of two paths: the single Implementer Agent (default, works everywhere — plan gate, then RED → GREEN → REFACTOR), or Team Mode (Claude Code only, explicit request required) where an Implementer Lead defines binding contracts and spawns Tests / Backend / Frontend / Database teammates in parallel before aggregating their output.
 
 Each HITL checkpoint is an interactive prompt (Claude Code's `AskUserQuestion` tool), not a text menu to reply to. Before it, if the phase's output has a Risks/Issues/Findings table with any row left undispositioned, the **Risk Disposition Loop** walks through those rows first — one at a time (or up to 4 per prompt), with **Accept / Mitigate now / Escalate / Defer** — instead of forcing an approve-or-reject on the whole table at once. Only once every row has a disposition does the whole-artifact gate below appear; it marks one option as recommended based on the phase's own status (an unresolved Escalate biases it toward Request changes), and always leaves a free-text option for detailed feedback:
 - ✅ **Approve** — continue to the next active agent
@@ -115,7 +50,7 @@ Every phase writes a single Markdown file: a small YAML frontmatter header (stat
 - Orchestrator reads the `## KAIROS Pipeline` section from the issue body (if present), or shows an interactive numbered list; when no `00b-impact.md` advisory exists, the orchestrator adds its own `💡 Suggested selection` line derived from the feature request — advisory only, never auto-applied
 - User confirms or adjusts the agent selection; orchestrator announces the active pipeline before Phase 1
 
-_Input: free-text feature request + optional issue reference + optional pre-pipeline JSON files_
+_Input: free-text feature request + optional issue reference + optional pre-pipeline Markdown files (`00-context.md` / `00b-impact.md`)_
 _Output: confirmed `active_agents` list + `feature_folder` path_
 
 ::: tip Selective pipeline
@@ -135,7 +70,7 @@ Choosing "Quick fix" routes to `implementer-coder-agent` (no TDD cycle, no `test
 - Define acceptance criteria
 
 _Input: feature description + project context_
-_Output: structured JSON — scope, constraints, risks, success criteria_
+_Output: a single Markdown file — frontmatter (status, counts) + body (scope, constraints, risks, success criteria) — see "Artifact Format" above_
 _Saved to: `.kairos/<feature_folder>/01-requirements.md`_
 
 ::: info HITL checkpoint
@@ -152,9 +87,9 @@ User reviews requirements, constraints and risks before any design work begins. 
 - Design database schema and API contracts
 - Define error handling and integration patterns
 
-_Input: PM analysis JSON_
+_Input: `01-requirements.md`_
 _Output: a single Markdown file — frontmatter (selected option, table/error-code counts) + design doc body (full data model, API contracts, tech choices) — see "Artifact Format" above_
-_Saved to: `.kairos/<feature_folder>/02-architecture.md` + `.kairos/<feature_folder>/02-architecture.md`_
+_Saved to: `.kairos/<feature_folder>/02-architecture.md`_
 
 ::: info HITL checkpoint
 User reviews the selected design option and API contracts (in `02-architecture.md`) before any code is written. Presented via `AskUserQuestion`, not a printed menu.
@@ -183,7 +118,7 @@ This phase has **two HITL checkpoints** — a plan gate before any file is writt
 - Implement code to pass tests (GREEN phase)
 - Refactor and verify coverage >80%
 
-_Input: architecture JSON + project profile_
+_Input: `02-architecture.md` + project profile_
 _Output: implementation plan → (approval) → code files + test files + coverage report_
 _Saved to: project paths + `.kairos/<feature_folder>/03-implementation.md`_
 
@@ -214,7 +149,7 @@ The Lead applies the same RED → GREEN → REFACTOR discipline as the single ag
 5. **REFACTOR phase** — Lead coordinates quality improvements across all layers while keeping tests green.
 6. **Lead** monitors contract compliance throughout, flags mismatches, and aggregates the final output.
 
-_Input: architecture JSON + project profile_
+_Input: `02-architecture.md` + project profile_
 _Output: all layer files + contract compliance report + coverage report_
 _Saved to: project paths + `.kairos/<feature_folder>/03-implementation.md`_
 
@@ -248,7 +183,7 @@ Team Mode eliminates frontend/backend contract mismatches through binding contra
 
 _Input: generated code + test files_
 _Output: a single Markdown file — frontmatter (status, pass/fail checks, issue counts) + report body (full issues table with impact, file:line, description, fix, disposition)_
-_Saved to: `.kairos/<feature_folder>/04-review.md` + `.kairos/<feature_folder>/04-review.md`_
+_Saved to: `.kairos/<feature_folder>/04-review.md`_
 
 ::: info HITL checkpoint
 User reviews the quality report (`04-review.md`). NEEDS\_FIXES sends the issues table back to the Implementer. Presented via `AskUserQuestion`, not a printed menu.
@@ -275,9 +210,9 @@ Adversarial pass — the agent asks "how do I break this" rather than checking c
 - **Dependency risks** — known CVEs, deprecated crypto
 - **Contract enforcement** — verifies that ownership constraints from `02-architecture.md` are actually present in code; gaps are flagged regardless of direct exploitability
 
-_Input: implementation code + `02-architecture.md` / `02-architecture.md`_
+_Input: implementation code + `02-architecture.md`_
 _Output: a single Markdown file — frontmatter (status, finding counts) + report body (each finding's attack scenario, evidence, fix, and disposition; contract enforcement table)_
-_Saved to: `.kairos/<feature_folder>/04b-security-review.md` + `.kairos/<feature_folder>/04b-security-review.md`_ (both written by Orchestrator — agent is read-only)
+_Saved to: `.kairos/<feature_folder>/04b-security-review.md`_ (written by the Orchestrator — the agent itself is read-only)
 
 ::: info HITL checkpoint
 User reviews findings in `04b-security-review.md`. "Request fixes" forwards the Findings section to the Implementer. Presented via `AskUserQuestion`, not a printed menu.
@@ -299,7 +234,7 @@ Select `security-reviewer-agent` whenever the feature touches: authentication or
 
 _Input: test code + coverage report_
 _Output: a single Markdown file — frontmatter (status, execution/coverage summary) + report body (uncovered lines, AC mapping, issues table)_
-_Saved to: `.kairos/<feature_folder>/05-test-verification.md` + `.kairos/<feature_folder>/05-test-verification.md`_
+_Saved to: `.kairos/<feature_folder>/05-test-verification.md`_
 
 ::: info HITL checkpoint
 User confirms coverage is adequate from `05-test-verification.md`. FAIL sends the gap/issues table back to the Implementer. Presented via `AskUserQuestion`, not a printed menu.
@@ -321,7 +256,7 @@ User confirms coverage is adequate from `05-test-verification.md`. FAIL sends th
 
 _Input: verified code + architecture + identified risks_
 _Output: a single Markdown file — frontmatter (rollback/monitoring summary) + runbook body (deployment steps, risk mitigation table, rollback checklist, monitoring)_
-_Saved to: `.kairos/<feature_folder>/06-deployment-plan.md` + `.kairos/<feature_folder>/06-deployment-plan.md`_
+_Saved to: `.kairos/<feature_folder>/06-deployment-plan.md`_
 
 ::: info HITL checkpoint
 User approves the deployment runbook (`06-deployment-plan.md`). This is the final checkpoint of the numbered pipeline — approval closes this KAIROS run (Phases 1–6, or 1–6b if `documentation-agent` was also selected). It does not preclude running `retrospective-agent` afterward — a separate, standalone, non-orchestrated follow-up invoked directly by the user whenever they consider the feature done. Presented via `AskUserQuestion`, not a printed menu.

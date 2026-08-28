@@ -1,11 +1,10 @@
 import { defineConfig } from 'vitepress'
-import { withMermaid } from 'vitepress-plugin-mermaid'
 import { createRequire } from 'module'
 
 const require = createRequire(import.meta.url)
 const { version } = require('../../package.json')
 
-export default withMermaid(defineConfig({
+export default defineConfig({
   srcDir: '..',
   srcExclude: [
     '**/node_modules/**',
@@ -64,13 +63,7 @@ export default withMermaid(defineConfig({
         ]
       },
       { text: 'Workflow', link: '/workflow' },
-      {
-        text: `v${version}`,
-        items: [
-          { text: 'Roadmap', link: '/roadmap' },
-          { text: 'Changelog', link: '/changelog' }
-        ]
-      }
+      { text: `v${version}`, link: '/changelog' }
     ],
 
     sidebar: [
@@ -134,13 +127,28 @@ export default withMermaid(defineConfig({
           { text: 'Release Planner', link: '/agents/release-planner-agent' },
           { text: 'Documentation Agent', link: '/agents/documentation-agent' },
           { text: 'Retrospective Agent', link: '/agents/retrospective-agent' },
-          { text: 'Improvement Advisor', link: '/agents/improvement-advisor-agent' },
+          { text: 'Improvement Advisor', link: '/agents/improvement-advisor-agent' }
+        ]
+      },
+      {
+        text: 'Skills & MCP',
+        collapsed: false,
+        items: [
+          { text: 'Overview', link: '/skills-mcp' },
+          { text: 'Agent Contract', link: '/skills/agent-contract/SKILL' },
           { text: 'Contract Checklist', link: '/skills/contract-checklist/SKILL' },
           { text: 'Code Simplification', link: '/skills/code-simplification/SKILL' },
           { text: 'Artifact Bookkeeping', link: '/skills/artifact-bookkeeping/SKILL' },
           { text: 'Coding Discipline', link: '/skills/coding-discipline/SKILL' },
-          { text: 'Issue Tracker Comment', link: '/skills/issue-tracker-comment/SKILL' },
-          { text: 'Skills & MCP Enhancements', link: '/skills-mcp' }
+          { text: 'Issue Tracker Comment', link: '/skills/issue-tracker-comment/SKILL' }
+        ]
+      },
+      {
+        text: 'Commands (Claude Code only)',
+        collapsed: false,
+        items: [
+          { text: '/kairos:setup', link: '/commands/setup' },
+          { text: '/kairos:view', link: '/commands/view' }
         ]
       },
       {
@@ -175,21 +183,11 @@ export default withMermaid(defineConfig({
         ]
       },
       {
-        text: 'Distribution',
-        collapsed: false,
-        items: [
-          { text: 'Roadmap', link: '/distribution-roadmap' },
-          { text: 'Phase 0 — Discovery', link: '/distribution/00-discovery' },
-          { text: 'Phase 1.1 — Plugin Mapping', link: '/distribution/01-plugin-mapping' },
-          { text: 'Phase 1.3 — Install Guide', link: '/distribution/02-plugin-install' }
-        ]
-      },
-      {
         text: 'Project',
         items: [
-          { text: 'Roadmap', link: '/roadmap' },
           { text: 'Changelog', link: '/changelog' },
-          { text: 'FAQ', link: '/faq' }
+          { text: 'FAQ', link: '/faq' },
+          { text: 'License & Support', link: '/license' }
         ]
       }
     ],
@@ -211,10 +209,5 @@ export default withMermaid(defineConfig({
     search: {
       provider: 'local'
     }
-  },
-
-  mermaid: {},
-  mermaidPlugin: {
-    class: 'mermaid my-class'
   }
-}))
+})

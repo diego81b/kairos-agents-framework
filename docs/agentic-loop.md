@@ -1,21 +1,33 @@
 # Agentic Loop
 
-KAIROS v4.0.0 introduces optional intra-phase auto-retry loops that reduce the number of HITL confirmations needed for iterative fix cycles — without removing any phase gate.
+Without the loop, every `NEEDS_FIXES` result stops the pipeline and asks you to approve the retry. The agentic loop lets KAIROS retry automatically a few times before bothering you — nothing else about the gates changes.
 
-## What It Is
+## The Problem It Solves
 
-The agentic loop is an **intra-phase retry mechanism**. When enabled, the orchestrator automatically re-invokes the implementer and the verifying agent (test-verifier or code-reviewer) after a `NEEDS_FIXES` result, without asking for human confirmation on each iteration.
+An implementer writes code, a verifying agent checks it, finds issues, sends it back. Normally you'd approve that retry by hand every time — for small issues, that's a lot of clicking for no real decision. The loop automates just that retry step, within limits you set.
 
-Two independent loops are available:
+## Two Independent Loops
 
-| Loop | Agents | Trigger |
+| Loop | Who talks to whom | Fires on |
 |---|---|---|
-| **Phase 3** | Implementer ↔ Test Verifier | `status: NEEDS_FIXES` from test-verifier |
-| **Phase 4** | Code Reviewer ↔ Implementer | `status: NEEDS_FIXES` with `critical` or `high` issues from code-reviewer |
+| **Phase 3** | Implementer ↔ Test Verifier | Test Verifier returns `NEEDS_FIXES` |
+| **Phase 4** | Code Reviewer ↔ Implementer | Code Reviewer returns `NEEDS_FIXES` with a `critical` or `high` issue |
 
-The default for both is `manual` — identical to the v3.x behavior. Loops are opt-in per pipeline run.
+Both default to `manual` (no auto-retry — every `NEEDS_FIXES` still stops and asks you). You turn on `auto <N>` per loop, per pipeline run, at agent selection time.
 
-Both loops work with any Phase-3 implementer — `implementer-tdd-agent`, `implementer-coder-agent`, or Team Mode's `implementer-lead-agent` — since all three detect Iteration Mode from the ledger. Team Mode has a lower `max_retries` ceiling (2, not 5) and its own cost estimate — see below.
+## Worked Example
+
+Feature: *"Add rate limiting to the `/login` endpoint."* You set `phase3: auto 2` and leave `phase4: manual`.
+
+1. **implementer-tdd-agent** writes the rate-limit middleware and its tests.
+2. **test-verifier-agent** runs the suite: the concurrent-request edge case isn't covered → `NEEDS_FIXES`.
+3. Because Phase 3 is `auto 2`, KAIROS skips asking you and re-invokes the implementer directly with that finding.
+4. **implementer-tdd-agent** adds the missing test case.
+5. **test-verifier-agent** re-checks: coverage is now adequate → `READY`. Loop exits, no human involved in steps 2–5.
+6. Pipeline reaches the normal Phase 3 HITL gate — you review the final result once, not twice.
+7. Later, **code-reviewer-agent** flags a `high`-severity issue (missing input sanitization). Since Phase 4 is `manual`, this stops and asks you before the implementer touches anything.
+
+That's the whole mechanism: loops only skip the *retry-approval* step, never the phase-boundary gate.
 
 ## How to Enable
 
@@ -33,53 +45,30 @@ The orchestrator asks at agent selection time:
      manual     — HITL gate on every NEEDS_FIXES (default)
 ```
 
-Reply with values like `"phase3: auto 3 / phase4: manual"` or press Enter to keep both as `manual`.
+Reply with something like `"phase3: auto 3 / phase4: manual"`, or press Enter to keep both `manual`.
 
-## Termination Guarantees
+Works with any Phase-3 implementer — TDD, code-only, or Team Mode's lead agent. Team Mode caps at `auto 2` instead of `auto 5` since each retry there spawns a full team, not one agent.
 
-Every loop has multiple independent exit conditions — infinite loops are impossible by design.
+## Why It Can't Loop Forever
 
-| Guard | Condition | Action |
+Three independent exits, checked every iteration:
+
+| Guard | Condition | What happens |
 |---|---|---|
-| **Max retries** | `iteration >= max_retries` | Stop loop, escalate to HITL with count of remaining issues |
-| **Monotonic progress** | `issues_critical_high` not decreasing | Stop loop immediately with thrash warning |
-| **READY signal** | Agent returns `status: READY` | Exit loop (success) |
+| **Max retries** | Hit the `N` you set | Stop, show remaining issues at the normal HITL gate |
+| **No progress** | Issue count isn't decreasing | Stop immediately with a thrash warning — retrying isn't helping |
+| **Clean pass** | Agent returns `READY` | Loop exits successfully |
 
-After any exit, the normal HITL gate for that phase runs unchanged.
+Whichever way it exits, the normal phase gate still runs — the loop never replaces it, only what happens *before* you see it.
 
-## HITL Preservation
+## Where the State Lives
 
-The loop operates **intra-phase**. Every existing phase gate is preserved:
+Loop progress (iteration count, cumulative issue list) is written to `ledger/open-questions.md` under `## Loop State` — not passed around in prompts. The orchestrator deletes that section before moving to the next phase, so later agents (security-reviewer, release-planner) never see stale retry data.
 
-- The consent gate (loop policy prompt) runs before any agent is called
-- If the loop exits by max_retries or thrash, the HITL gate shows the remaining issues and waits for human input
-- Phase-to-phase advancement always requires explicit human approval
+## One Extra Safety Check
 
-The only reduction in friction is within a loop: iterations 2–N do not ask for approval. The boundaries (start of loop, end of loop, phase advancement) remain gated.
+If the Phase 4 loop ran at all, the orchestrator runs test-verifier once more before showing the Phase 4 gate — catching any regression the code-review fixes introduced. A `NEEDS_FIXES` here blocks the gate with an explicit warning.
 
-## State Store: The Ledger
+## If You Never Touch This
 
-Loop state is stored in `ledger/open-questions.md` under a `## Loop State` section, not in agent prompts. This means:
-
-- The implementer detects Iteration Mode by reading the ledger (no extra prompt needed)
-- The cumulative issue list grows across iterations — the implementer always sees every unfixed issue from all prior iterations
-- Cleanup is mandatory: the orchestrator removes `## Loop State` from `open-questions.md` before advancing to the next phase, so downstream agents (security-reviewer, release-planner) never see stale loop data
-
-## Guard 3: Post-Phase-4 Regression Check
-
-If the Phase 4 loop (Code Reviewer ↔ Implementer) ran at least one iteration, the orchestrator invokes test-verifier as a single-pass check before presenting the Phase 4 HITL gate. This detects regressions introduced by code-review-driven fixes. If the test-verifier returns `NEEDS_FIXES`, an explicit warning is shown and the HITL gate blocks advancement.
-
-## Cost Estimate
-
-| Config | Extra invocations (worst case) |
-|---|---|
-| Phase 3: `auto 3` only | Up to 3 extra implementer + 3 test-verifier (sonnet) |
-| Phase 4: `auto 3` only | Up to 3 extra code-reviewer + 3 implementer (sonnet) |
-| Both `auto 3` | Up to 12 extra subagent invocations (all sonnet) |
-| Team Mode, both `auto 2` (ceiling) | Up to 4 extra opus Lead + narrowed-team-spawn iterations, each priced closer to the ~$0.242/feature Team Mode figure than to a single sonnet call |
-
-Orchestrator remains active (opus) throughout.
-
-## Backward Compatibility
-
-If `loop_policy` is not configured, or both phases are set to `manual`, the pipeline is identical to v3.4.0. No agent behavior changes unless `## Loop State` is present in the ledger.
+Leave both loops on `manual` (the default) and nothing changes from earlier KAIROS versions — every `NEEDS_FIXES` still stops and asks you, one retry at a time.

@@ -4,7 +4,7 @@ layout: home
 hero:
   name: "KAIROS"
   text: "The Right Moment for Development"
-  tagline: Intelligent multi-agent SDLC orchestration. 40-50% faster development, 80-90% quality output, 70-180x ROI per feature.
+  tagline: Intelligent multi-agent SDLC orchestration. 40-50% faster development, 80-90% quality output.
   actions:
     - theme: brand
       text: Get Started
@@ -20,9 +20,6 @@ features:
   - icon: ⚡
     title: 40-50% Faster Development
     details: "From 8 hours per feature down to 2-3 hours with 5-8 API calls. Real TDD enforced when using the TDD implementer."
-  - icon: 💰
-    title: 70-180x ROI per Feature
-    details: $5-8 in API costs replaces $400+ in developer time per feature. Measurable from day one.
   - icon: 🔧
     title: Any Tool, Any Stack
     details: Works with Claude Code, Cursor IDE, GitHub Copilot, Amazon CodeWhisperer, JetBrains, VS Code, OpenCode, and Kimi Code.

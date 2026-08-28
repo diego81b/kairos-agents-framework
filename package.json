@@ -1,6 +1,6 @@
 {
   "name": "kairos-docs",
-  "version": "7.4.0",
+  "version": "7.4.1",
   "description": "KAIROS Framework - Intelligent multi-agent SDLC orchestration",
   "private": true,
   "type": "module",
@@ -10,8 +10,6 @@
     "docs:preview": "vitepress preview docs"
   },
   "devDependencies": {
-    "mermaid": "^11.14.0",
-    "vitepress": "^1.6.3",
-    "vitepress-plugin-mermaid": "^2.0.17"
+    "vitepress": "^1.6.3"
   }
 }

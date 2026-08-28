@@ -38,8 +38,13 @@ your-project/
 │       ├── code-reviewer-agent.md
 │       ├── security-reviewer-agent.md     ← Adversarial security review (optional, read-only)
 │       ├── test-verifier-agent.md
-│       └── release-planner-agent.md
+│       ├── release-planner-agent.md
+│       ├── documentation-agent.md         ← Feature-facing docs (optional, Phase 6b)
+│       ├── retrospective-agent.md         ← Standalone, post-pipeline: lessons capture
+│       └── improvement-advisor-agent.md   ← Standalone, infrequent: framework change proposals
 ```
+
+`agents/team/` (Team Mode) isn't included — see the warning at the bottom of this page.
 
 ## Step 2 — How subagents are loaded
 
@@ -149,17 +154,24 @@ Cursor spawns both subagents simultaneously and returns both results.
 
 Cursor accepts `inherit` (workspace default), `fast` (Haiku-class), or an explicit model ID. The `model:` field in agent frontmatter overrides whatever is selected in the Cursor UI.
 
+Same reasoning/execution split as the shipped `agents/*.md` frontmatter — see [Customizing models](/setup/claude-code#customizing-models) for the full rationale.
+
 | Agent | Recommended | Notes |
 |-------|------------|-------|
 | `orchestrator-agent` | `opus` | Never use `inherit` or `fast` — coordination requires full reasoning |
-| `implementer-tdd-agent` | `opus` | Never use `inherit` or `fast` — TDD cycle requires the strongest model |
-| `implementer-coder-agent` | `sonnet` | `fast` not recommended; no TDD overhead but still needs solid reasoning |
-| `architect-agent` | `sonnet` | `fast` acceptable only for very small, well-defined codebases |
+| `architect-agent` | `opus` | Never use `inherit` or `fast` — system design requires full reasoning |
+| `context-extractor-agent` | `opus` | `fast` not recommended even for small codebases — full-repo scans benefit from stronger reasoning |
+| `impact-assessment-agent` | `opus` | Never use `inherit` or `fast` — its recommendation drives every downstream agent's scope |
+| `security-reviewer-agent` | `opus` | Never use `inherit` or `fast` — adversarial security analysis requires full reasoning |
+| `improvement-advisor-agent` | `opus` | Rarely invoked; keep on `opus` for cross-feature pattern recognition |
 | `pm-agent` | `sonnet` | `fast` acceptable for quick requirement sketches |
-| `context-extractor-agent` | `sonnet` | `fast` is OK for small codebases (read-only analysis) |
+| `implementer-tdd-agent` | `sonnet` | Upgrade to `opus` for complex TDD cycles spanning many files |
+| `implementer-coder-agent` | `sonnet` | `fast` not recommended; no TDD overhead but still needs solid reasoning |
 | `code-reviewer-agent` | `sonnet` | Upgrade to `opus` for deep security audits |
 | `test-verifier-agent` | `sonnet` | Sufficient for coverage analysis |
 | `release-planner-agent` | `sonnet` | Sufficient for deployment planning |
+| `documentation-agent` | `sonnet` | Sufficient for README/CHANGELOG/API-reference generation |
+| `retrospective-agent` | `sonnet` | Sufficient for lessons synthesis from existing artifacts |
 
 ::: warning Team Mode not supported
 Cursor does not support KAIROS Team Mode agents (`agents/team/`). Those require Claude Code with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`.
