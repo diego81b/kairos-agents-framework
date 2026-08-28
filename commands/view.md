@@ -1,11 +1,13 @@
 ---
 description: Render one KAIROS phase artifact as a synthetic, human-readable HTML page
-allowed-tools: Read, Glob, Artifact
+allowed-tools: Read, Glob, Artifact, Skill, AskUserQuestion
 ---
 
 # KAIROS View — synthetic HTML for one phase artifact
 
 **Claude Code only** — this command publishes an Artifact, a capability this host provides and others (Cursor, JetBrains/Copilot, Codex CLI, OpenCode, Kimi Code) do not. If you are not running in Claude Code, stop and say so instead of attempting the steps below.
+
+**Primary session only** — run this from the session's primary agent, not from a subagent invoked mid-conversation (e.g. `@kairos:orchestrator-agent`). A subagent only has the tools listed in its own frontmatter, and none of the 14 core pipeline agents grant `Artifact` or `Skill` — this command will fail to publish. If you're inside a subagent chat, exit and rerun `/kairos:view` from the primary session.
 
 You are turning ONE `.kairos/<feature_folder>/<phase-file>.md` into a compact, readable HTML page — never the whole feature folder, never more than one file per invocation.
 

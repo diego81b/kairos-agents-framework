@@ -4,6 +4,15 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v7.4.2 — August 28, 2026
+
+### Fixed
+
+- **`commands/view.md`** — `allowed-tools` frontmatter was missing `Skill` and `AskUserQuestion`, both required by the command's own steps (Step 1's folder/file picker, Step 3's mandatory `artifact-design` load); added both, matching the pattern already used by `commands/setup.md`. Also added an explicit warning that `/kairos:view` must run from the session's primary agent — a subagent invoked mid-conversation (e.g. `@kairos:orchestrator-agent`) is restricted to that agent's own `tools:` frontmatter, none of which grant `Artifact` or `Skill`.
+- **`docs/setup/claude-code.md`** — added a warning under "Viewing a phase artifact as HTML" cross-referencing the same primary-session requirement, so the failure mode is documented next to the command's usage instructions and not only inferable from the general subagent/`AskUserQuestion` caveat in Step 3.
+
+---
+
 ## v7.4.1 — August 28, 2026
 
 Documentation accuracy pass: removed unmaintained/marketing content, promoted Skills into their own chapter, and fixed a batch of stale claims found while reviewing every setup guide (wrong install method, wrong model tiers, stale JSON-artifact references, duplicated file paths).
