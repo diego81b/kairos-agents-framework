@@ -36,12 +36,6 @@ A: 80-90% ready. Always review before shipping. The Code Reviewer and Test Verif
 
 ---
 
-**Q: How do I measure ROI?**
-
-A: Track `(hours before - hours after) × hourly rate` per feature. See [Metrics & ROI](./metrics) for detailed numbers.
-
----
-
 **Q: Can teams collaborate?**
 
 A: Yes. Use Claude Teams or Cursor for multi-developer workflows. Agents and their configurations live in the repo and are shared automatically.

@@ -8,15 +8,44 @@ Claude Code is the **recommended tool** for KAIROS. It is the only tool with nat
 - A project you want to develop with KAIROS
 - Git (optional, for issue tracker integration — Jira, GitLab, Bitbucket)
 
-## Step 1 — Copy agents to `.claude/agents/`
+## Step 1 — Install the agents
 
-Claude Code discovers subagents from the `.claude/agents/` directory inside your project.
+Two ways to get KAIROS into Claude Code. **Plugin install is recommended** — it's one command, it pulls in `agents/`, `skills/`, and `commands/` together, and it updates with `claude plugin update`. Manual copy is the alternative when you want to fork/customize the agent files per-project.
+
+### Option A — Plugin install (recommended)
+
+```bash
+claude plugin marketplace add diego81b/kairos-agents-framework
+claude plugin install kairos@kairos-agents-framework
+```
+
+If Claude Code doesn't report it as active right after install, enable it explicitly:
+
+```bash
+claude plugin enable kairos
+```
+
+Confirm with `claude plugin list`.
+
+This gets you the 14 core agents, the internal skills (`contract-checklist`, `coding-discipline`, etc.), and the `/kairos:setup` / `/kairos:view` slash commands in one shot. Agents are invoked with the `kairos:` scope — `@kairos:orchestrator-agent`, `@kairos:pm-agent` — and Team Mode agents with `@kairos:team:implementer-lead-agent`.
+
+### Option B — Manual copy
+
+Claude Code also discovers subagents from a `.claude/agents/` directory inside your project — useful if you want to edit the shipped agent files for your team's own conventions instead of tracking the plugin as-is.
 
 ```bash
 # From your project root
 mkdir -p .claude/agents/team
 cp path/to/kairos/agents/*.md .claude/agents/
 cp path/to/kairos/agents/team/*.md .claude/agents/team/
+```
+
+This copies **agents only**. If you also want the internal skills or the `/kairos:setup` / `/kairos:view` commands, copy those directories too:
+
+```bash
+cp -r path/to/kairos/skills .claude/skills
+mkdir -p .claude/commands/kairos
+cp path/to/kairos/commands/*.md .claude/commands/kairos/
 ```
 
 Your project structure should look like:
@@ -46,8 +75,10 @@ your-project/
 └── ...
 ```
 
+With a manual copy, agents are invoked by their **bare** name (`@orchestrator-agent`, not `@kairos:orchestrator-agent`).
+
 ::: tip Keep agents in sync
-If you maintain KAIROS as a submodule or copy, remember to re-copy after updates. The source of truth is always `agents/` in the KAIROS repository.
+A manual copy is a local fork: after a KAIROS update, re-copy the files and re-apply any local edits. The source of truth is always `agents/` in the KAIROS repository. The plugin install path (Option A) avoids this — `claude plugin update kairos` handles it.
 :::
 
 ::: info Choosing an implementer
@@ -80,19 +111,23 @@ The `description` field is critical: the **orchestrator** reads all descriptions
 Start Claude Code with the orchestrator as the session's **primary** agent — not by naming it inside an already-open chat:
 
 ```bash
+# Plugin install (Option A)
+claude --agent kairos:orchestrator-agent
+
+# Manual copy (Option B)
 claude --agent orchestrator-agent
 ```
 
 ::: warning Don't invoke it by name mid-conversation
-Typing `@orchestrator-agent` or "use the orchestrator agent" inside an already-open Claude Code session dispatches it through the `Agent` tool as a **subagent**, not as the session's primary driver. Subagents unconditionally lose access to `AskUserQuestion`, so every HITL gate degrades to the text-menu fallback — and if the parent session ends or resets mid-pipeline, the orchestrator is orphaned and dies with it, mid-phase.
+Typing `@orchestrator-agent` (or `@kairos:orchestrator-agent`) or "use the orchestrator agent" inside an already-open Claude Code session dispatches it through the `Agent` tool as a **subagent**, not as the session's primary driver. Subagents unconditionally lose access to `AskUserQuestion`, so every HITL gate degrades to the text-menu fallback — and if the parent session ends or resets mid-pipeline, the orchestrator is orphaned and dies with it, mid-phase.
 
 `--agent` is a startup flag only — to switch mid-session, exit (`Ctrl+D` or `/exit`) and relaunch with it. To make this the project default without retyping the flag, add it to `.claude/settings.local.json` (not the shared `settings.json`, or every teammate's plain `claude` session in this repo defaults to the orchestrator too):
 ```json
 {
-  "agent": "orchestrator-agent"
+  "agent": "kairos:orchestrator-agent"
 }
 ```
-Still overridable per-session with `--agent <other>`.
+(use the bare `orchestrator-agent` instead if you're on a manual copy). Still overridable per-session with `--agent <other>`.
 :::
 
 Once the session opens with the orchestrator as primary, just type your request:
@@ -194,8 +229,9 @@ Requires the respective CLI authenticated: `jira init`, `glab auth login`, or a 
 | Wrong model used | Verify the `model:` field in each agent's frontmatter |
 | Orchestrator not delegating | The `description:` field must clearly describe when to use the agent |
 | `.kairos/` not created | The implementer-tdd-agent or implementer-coder-agent creates it on first write — ensure `write_file` is in its `tools:` list |
-| Gates keep degrading to a text menu / `AskUserQuestion` unavailable | The orchestrator is running as a subagent, not as the session's primary agent — it was invoked by name (`@orchestrator-agent`) inside an existing chat instead of at startup. Exit and relaunch with `claude --agent orchestrator-agent` (see Step 3) |
-| Orchestrator seems to vanish mid-pipeline with no error | Same root cause as above — a subagent-dispatched orchestrator dies if its parent session ends or resets. Restart with `claude --agent orchestrator-agent`; the run resumes from the last completed phase (Step 0b of `orchestrator-agent.md`) |
+| Gates keep degrading to a text menu / `AskUserQuestion` unavailable | The orchestrator is running as a subagent, not as the session's primary agent — it was invoked by name (`@orchestrator-agent` / `@kairos:orchestrator-agent`) inside an existing chat instead of at startup. Exit and relaunch with `claude --agent kairos:orchestrator-agent` (plugin) or `claude --agent orchestrator-agent` (manual copy) — see Step 3 |
+| Orchestrator seems to vanish mid-pipeline with no error | Same root cause as above — a subagent-dispatched orchestrator dies if its parent session ends or resets. Restart the same way as above; the run resumes from the last completed phase (Step 0b of `orchestrator-agent.md`) |
+| `claude plugin install` succeeds but agents don't show up | The plugin may need explicit activation — run `claude plugin enable kairos` and confirm with `claude plugin list` |
 
 ## Team Mode — additional setup
 
@@ -361,23 +397,30 @@ Claude Code accepts short aliases that always resolve to the latest model in eac
 
 | Alias | Resolves to | Use for |
 |-------|------------|--------|
-| `sonnet` | Latest Sonnet | Most agents — good balance of quality and speed |
-| `opus` | Latest Opus | Orchestrator, TDD Implementer — highest reasoning capability |
+| `sonnet` | Latest Sonnet | The 8 execution agents — good balance of quality and speed |
+| `opus` | Latest Opus | Orchestrator and the 5 other reasoning-heavy agents (architect, context extractor, impact assessment, security reviewer, improvement advisor) |
 | `haiku` | Latest Haiku | Team Mode teammates — fast and cost-efficient |
 
 ### Per-agent defaults
 
+These are the tiers `agents/*.md` actually ships with — same split as "Customizing models" above.
+
 | Agent | Default | Upgrade trigger |
 |-------|---------|----------------|
 | `orchestrator-agent` | `opus` | Never downgrade — coordination requires full reasoning |
-| `implementer-tdd-agent` | `opus` | Never downgrade — TDD cycle is the most resource-intensive phase |
-| `implementer-coder-agent` | `sonnet` | Upgrade to `opus` for complex codebases; no TDD overhead |
-| `architect-agent` | `sonnet` | Upgrade to `opus` for distributed systems, complex multi-db, or non-trivial scaling |
+| `architect-agent` | `opus` | Never downgrade — system design requires full reasoning |
+| `context-extractor-agent` | `opus` | Rarely needs downgrading — full-repo scans benefit from stronger reasoning |
+| `impact-assessment-agent` | `opus` | Never downgrade — its recommendation drives every downstream agent's scope |
+| `security-reviewer-agent` | `opus` | Never downgrade — adversarial security analysis requires full reasoning |
+| `improvement-advisor-agent` | `opus` | Rarely invoked; keep on `opus` for cross-feature pattern recognition |
 | `pm-agent` | `sonnet` | Upgrade to `opus` for enterprise features with competing constraints (compliance, multi-region, strict SLAs) |
-| `context-extractor-agent` | `sonnet` | Rarely needs upgrading |
+| `implementer-tdd-agent` | `sonnet` | Upgrade to `opus` for complex TDD cycles spanning many files |
+| `implementer-coder-agent` | `sonnet` | Upgrade to `opus` for complex codebases; no TDD overhead |
 | `code-reviewer-agent` | `sonnet` | Upgrade to `opus` for deep security audits |
 | `test-verifier-agent` | `sonnet` | Sufficient for coverage analysis |
 | `release-planner-agent` | `sonnet` | Sufficient for deployment planning |
+| `documentation-agent` | `sonnet` | Sufficient for README/CHANGELOG/API-reference generation |
+| `retrospective-agent` | `sonnet` | Sufficient for lessons synthesis from existing artifacts |
 
 ### Team Mode agents
 

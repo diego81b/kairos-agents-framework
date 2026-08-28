@@ -39,8 +39,13 @@ your-project/
 │       ├── implementer-tdd-agent.agent.md    <- TDD implementer (default)
 │       ├── implementer-coder-agent.agent.md  <- Code-only implementer (no test suite)
 │       ├── code-reviewer-agent.agent.md
+│       ├── security-reviewer-agent.agent.md  <- Adversarial security review (optional, read-only)
 │       ├── test-verifier-agent.agent.md
-│       └── release-planner-agent.agent.md
+│       ├── release-planner-agent.agent.md
+│       ├── documentation-agent.agent.md      <- Feature-facing docs (optional, Phase 6b)
+│       ├── retrospective-agent.agent.md      <- Standalone, post-pipeline: lessons capture
+│       ├── improvement-advisor-agent.agent.md <- Standalone, infrequent: framework change proposals
+│       └── impact-assessment-agent.agent.md  <- Pre-pipeline: issue grounding + recommendations (standalone)
 ```
 
 ## Step 2 — Agent file format
@@ -110,7 +115,7 @@ VS Code agents with `edit` in their `tools` list can write files. Add to each ag
 After the user approves, save the output to `.kairos/<feature_folder>/01-requirements.md`.
 ```
 
-Or save manually by copying the JSON from the chat after each approved phase.
+Or save manually by copying the Markdown output from the chat after each approved phase.
 
 ## Feature comparison vs Claude Code
 
@@ -136,17 +141,24 @@ Or save manually by copying the JSON from the chat after each approved phase.
 
 VS Code uses model IDs from the Copilot model picker. The `model:` field in agent frontmatter sets the model for that specific agent regardless of what is active in the chat panel.
 
+Same reasoning/execution split as the shipped `agents/*.md` frontmatter — see [Customizing models](/setup/claude-code#customizing-models) for the full rationale.
+
 | Agent | Recommended | Non-Claude equivalent |
 |-------|------------|----------------------|
 | `orchestrator-agent` | `opus` | o1, o3, Gemini Ultra |
-| `implementer-tdd-agent` | `opus` | o1, o3, Gemini Ultra — TDD cycle needs strongest model |
-| `implementer-coder-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro — no TDD overhead |
-| `architect-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
+| `architect-agent` | `opus` | o1, o3, Gemini Ultra — system design needs strongest model |
+| `context-extractor-agent` | `opus` | o1, o3, Gemini Ultra |
+| `impact-assessment-agent` | `opus` | o1, o3, Gemini Ultra — drives every downstream agent's scope |
+| `security-reviewer-agent` | `opus` | o1, o3, Gemini Ultra — adversarial analysis needs strongest model |
+| `improvement-advisor-agent` | `opus` | o1, o3, Gemini Ultra |
 | `pm-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
-| `context-extractor-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
+| `implementer-tdd-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
+| `implementer-coder-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro — no TDD overhead |
 | `code-reviewer-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
 | `test-verifier-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
 | `release-planner-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
+| `documentation-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
+| `retrospective-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
 
 ::: warning Team Mode not supported
 VS Code does not support KAIROS Team Mode agents (`agents/team/`). Those require Claude Code with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`.

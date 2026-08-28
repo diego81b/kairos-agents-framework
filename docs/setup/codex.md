@@ -47,7 +47,7 @@ Mapping from KAIROS Markdown frontmatter to TOML:
 | body (Markdown content) | `developer_instructions` |
 | `model:` | `model` |
 
-Repeat for all 7 agent files. Use underscores in `name` (e.g. `pm_agent`, `architect_agent`).
+Repeat for the 14 core agent files in `agents/` (skip `agents/team/` — Team Mode requires Claude Code's Agent Teams feature and has no Codex equivalent). Use underscores in `name` (e.g. `pm_agent`, `architect_agent`).
 
 ::: tip Keep `.md` files as source of truth
 The `agents/` folder remains the canonical source. The `.codex/agents/*.toml` files are derived — regenerate them when you update the originals.
@@ -68,7 +68,7 @@ Always follow the KAIROS workflow sequence:
 pm_agent → architect_agent → implementer_agent (TDD) OR coder_agent (no TDD) → code_reviewer → test_verifier → release_planner
 
 After each phase, present the output and wait for explicit approval (✅ / ✏️ / ⛔) before proceeding.
-Save each approved output to `.kairos/0X-*.json`.
+Save each approved output to `.kairos/<feature_folder>/0X-*.md` — a Markdown file (YAML frontmatter + report body), never JSON.
 ```
 
 ## Step 4 — Start a KAIROS session
@@ -92,7 +92,7 @@ Codex reads `AGENTS.md`, knows the KAIROS workflow, and can spawn the specialist
 
 Codex spawns subagents **only when explicitly asked** — it does not auto-delegate. The HITL gate is enforced by `AGENTS.md` instructions and the individual agent `developer_instructions`.
 
-After each phase you will see the agent's JSON output. Reply with:
+After each phase you will see the agent's Markdown output (frontmatter + report body). Reply with:
 - `✅` — approve and continue to the next phase
 - `✏️ [feedback]` — request changes
 - `⛔` — stop here

@@ -69,10 +69,12 @@ Regardless of the tool, three rules apply when **you** (the calling session) sta
 2. **Never launch the orchestrator backgrounded or detached — and never invoke it by name inside an existing conversation.** Every phase ends at a HITL gate that needs a live human. Where `AskUserQuestion` is unavailable (including Claude Code spawned subagents), gates degrade to the text-menu fallback — and a backgrounded run has nobody reading it, so the pipeline would hang or silently skip gates. In Claude Code specifically, `@agent-name`/"use the X agent" typed mid-chat degrades gates the same way an explicit background launch does — both dispatch through the `Agent` tool as a subagent, which unconditionally loses `AskUserQuestion`. Start the session with the orchestrator as its **primary** agent instead; see the [Claude Code setup guide](/setup/claude-code#step-3-start-a-kairos-session) for the exact command.
 3. **Run the standalone agents yourself, if you want them.** `context-extractor-agent` and `impact-assessment-agent` run before the pipeline; `retrospective-agent` and `improvement-advisor-agent` run after work stops. The orchestrator never auto-invokes any of the four.
 
-## Repository layout
+## Where the files come from
+
+This is the **KAIROS repository's own layout** — where you install FROM, not what ends up in your project (that varies per tool, see below):
 
 ```
-your-project/
+kairos-agents-framework/
 ├── agents/              ← KAIROS agent definitions (source of truth)
 │   ├── orchestrator-agent.md
 │   ├── context-extractor-agent.md  ← Pre-pipeline: full-repo context (standalone)
@@ -89,10 +91,20 @@ your-project/
 │   ├── retrospective-agent.md      ← Lessons capture (standalone, post-pipeline)
 │   ├── improvement-advisor-agent.md ← Framework change proposals (standalone, infrequent)
 │   └── team/             ← Team Mode specialists (Claude Code only)
+├── skills/               ← Shared checklists/formats reused across agents (see Skills & MCP)
+├── commands/             ← Claude Code slash commands (/kairos:setup, /kairos:view)
 ├── .opencode/agents/     ← OpenCode mirror of the 14 core agents above (see Setup > OpenCode)
-├── .kimi-code/agents/    ← Kimi Code mirror of the 14 core agents above (see Setup > Kimi Code)
-└── .kairos/              ← Created at runtime, holds phase outputs (Markdown with frontmatter)
-    └── issue-42_add-stripe/   ← one subfolder per feature
+└── .kimi-code/agents/    ← Kimi Code mirror of the 14 core agents above (see Setup > Kimi Code)
+```
+
+`.opencode/agents/` and `.kimi-code/agents/` only exist here, inside the KAIROS repo, as hand-maintained mirrors for those two tools. Your own project never has all of these at once — it gets **one** agent directory matching your tool (`.claude/agents/`, `.cursor/agents/`, `.github/agents/`, `.codex/agents/`, `.opencode/agents/`, or `.kimi-code/agents/`), populated from whichever of the above your tool needs. Claude Code is the one exception: a plugin install needs no copying at all — see its [setup page](/setup/claude-code) for both paths.
+
+At runtime, every tool creates the same `.kairos/` structure in your project — one subfolder per feature, holding that feature's phase outputs:
+
+```
+your-project/
+└── .kairos/
+    └── issue-42_add-stripe/
         ├── 01-requirements.md
         ├── 02-architecture.md
         ├── 03-implementation.md
@@ -100,5 +112,3 @@ your-project/
         ├── 05-test-verification.md
         └── 06-deployment-plan.md
 ```
-
-The `agents/` folder lives at the **project root**. Each tool reads from it differently — see the individual setup pages for exact paths and steps.

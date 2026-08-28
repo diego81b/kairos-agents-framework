@@ -26,8 +26,8 @@ WITHOUT SUBAGENTS:
                  38 KB+ bloating every token call
 
 WITH SUBAGENTS:
-  PM analysis  → pm-agent context      → only JSON summary returned
-  Arch design  → architect context     → only JSON summary returned
+  PM analysis  → pm-agent context      → only the Markdown artifact returned
+  Arch design  → architect context     → only the Markdown artifact returned
   Code draft   → implementer context   → only files + coverage returned
                  ─────────────────────────────
                  Main context stays small and cheap
@@ -49,7 +49,7 @@ Each subagent:
 | 0 | **Orchestrator** | Coordinates the pipeline, manages HITL | Routes & aggregates |
 | 1 | **PM Agent** | Requirements, constraints, acceptance criteria | `01-requirements.md` |
 | 2 | **Architect Agent** | 3 design options → recommended choice, API contracts, DB schema | `02-architecture.md` |
-| 3 | **Implementer Agent** | Implementation plan → TDD cycle (tests first, then code) — **default for all features** | Code + `03-implementation.md` |
+| 3 | **Implementer Agent** | Implementation plan → TDD cycle (tests first, then code) — **default when the project has a test suite**; a code-only variant (no TDD) is available for projects without one | Code + `03-implementation.md` |
 | 4 | **Code Reviewer** | Standards, security, performance, contract compliance | `04-review.md` |
 | 4b | **Security Reviewer** _(optional)_ | Adversarial security pass — IDOR, auth, injection, secrets, data exposure | `04b-security-review.md` |
 | 5 | **Test Verifier** | Coverage adequacy (>80%), edge cases, assertion quality | `05-test-verification.md` |
@@ -137,13 +137,6 @@ A typical KAIROS feature run produces:
 
 > When using `implementer-coder-agent` (no-TDD path), test files and coverage reports are not produced.
 
-**Typical time savings per feature:**
-
-| Metric | Value |
-|--------|-------|
-| Developer time saved | 75–80% |
-| Feature delivery speed | 40–50% faster |
-
 ---
 
 ## How Files Are Organized
@@ -164,17 +157,25 @@ agents/
 ├── documentation-agent.md       ← Feature-facing docs (optional, Phase 6b)
 ├── retrospective-agent.md       ← Standalone, post-pipeline: lessons capture
 ├── improvement-advisor-agent.md ← Standalone, infrequent: framework change proposals (ADRs)
-├── shared/
-│   └── contract-checklist.md    ← Shared reference: 9 questions to resolve before any contract
 └── team/                        ← Team Mode specialists
     ├── implementer-lead-agent.md
     ├── teammate-tests-agent.md
     ├── teammate-backend-agent.md
     ├── teammate-frontend-agent.md
     └── teammate-database-agent.md
+
+skills/                          ← Shared checklists/formats reused across agents — see Skills & MCP
+├── agent-contract/SKILL.md
+├── contract-checklist/SKILL.md
+├── code-simplification/SKILL.md
+├── artifact-bookkeeping/SKILL.md
+├── coding-discipline/SKILL.md
+└── issue-tracker-comment/SKILL.md
+
+commands/                        ← Claude Code slash commands (/kairos:setup, /kairos:view)
 ```
 
-Each file is a self-contained subagent definition — YAML frontmatter for tool and model configuration, markdown body for the agent prompt. Copy the `agents/` folder into the right directory for your tool and you're ready.
+Each agent file is self-contained — YAML frontmatter for tool and model configuration, markdown body for the agent prompt. How you get these three directories into your tool depends on the tool: Claude Code installs all three together via `claude plugin install` (recommended) or a manual copy; other tools copy `agents/` (and `skills/`/`commands/` where supported) into their own subagent directory. See [Setup](./setup/) for the exact steps per tool.
 
 ---
 

@@ -4,6 +4,37 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v7.4.1 — August 28, 2026
+
+Documentation accuracy pass: removed unmaintained/marketing content, promoted Skills into their own chapter, and fixed a batch of stale claims found while reviewing every setup guide (wrong install method, wrong model tiers, stale JSON-artifact references, duplicated file paths).
+
+### Added
+
+- **`docs/license.md`** — new dedicated License & Support page (previously buried inside the now-removed `docs/roadmap.md`), linked from the sidebar's Project section.
+- **`docs/.vitepress/config.js`** — new "Skills & MCP" top-level sidebar chapter, promoted out from under "Core Agents"; adds the `agent-contract` skill page, which was built by VitePress but had no navigation link anywhere. New "Commands (Claude Code only)" chapter links `/kairos:setup` and `/kairos:view`, both previously unreachable orphan pages.
+- **`docs/skills-mcp.md`** — new "How a Skill Actually Works" section explaining the actual mechanism (on-demand `SKILL.md` load via the `Skill` tool vs. a live MCP connection) and why KAIROS authors its own internal skills instead of duplicating checklists across agent files. Both skill tables gained a "what it does/enforces" column instead of just naming agents; added the missing `agent-contract` row to the internal-skills table.
+
+### Changed
+
+- **`docs/index.md`, `docs/faq.md`, `docs/metrics.md`, `docs/overview.md`** — removed the "70-180x ROI per Feature" / "$5-8 in API costs replaces $400+ in developer time" marketing framing, the ROI FAQ entry, and the "Typical time savings per feature" table; `docs/metrics.md` trimmed to quality-only stats (code quality, coverage, bug rate) — cost/time-saved/headcount framing dropped throughout. Team Mode's functional $0.068-vs-$0.242 cost warning is untouched — that's a real runtime disclosure gate, not marketing.
+- **`docs/workflow.md`** — replaced the illegible mermaid pipeline flowchart with a plain phase/agent/gate table; added a callout on the primary-agent requirement for `AskUserQuestion` gates to actually fire (previously only documented in the Claude Code setup guide, never cross-referenced here where every gate is promised); fixed 5 "Saved to:" lines that listed the same output file path twice; fixed stale JSON-artifact references (KAIROS phase outputs have been Markdown-with-frontmatter since the v5.x format split, never JSON).
+- **`docs/agentic-loop.md`** — rewritten for readability: plain-language problem statement plus a concrete worked example (a `/login` rate-limiting feature walking through an actual Phase 3 auto-retry and a Phase 4 manual gate).
+- **`docs/overview.md`** — fixed the "How Files Are Organized" tree, which still showed `agents/shared/contract-checklist.md` (a path that hasn't existed since the skills refactor) instead of the real `skills/` and `commands/` directories; fixed the closing "just copy `agents/` and you're ready" line, which contradicted the Claude Code plugin-install fix below; clarified the Implementer pipeline row (TDD default vs. code-only variant, previously implied as the only option); fixed stale "JSON summary" wording in the subagent-isolation diagram.
+- **`docs/setup/index.md`** — the "Repository layout" diagram was labeled `your-project/` but actually showed the KAIROS source repo's own layout (`agents/` + `.opencode/agents/` mirror + `.kimi-code/agents/` mirror together — a combination that only exists inside this repo). Retitled to "Where the files come from," clarified it's the source layout, added the missing `skills/`/`commands/` directories, and split out a second diagram showing the actual `.kairos/` runtime output that lands in any consumer project.
+- **`docs/setup/claude-code.md`** — Step 1 rewrote to present `claude plugin marketplace add` + `claude plugin install` as the recommended path (previously the guide only documented manual copy to `.claude/agents/`, with plugin install mentioned nowhere until a parenthetical deep in the "Customizing models" section); Step 3 and Troubleshooting updated to branch the `--agent` invocation and settings example by install method. Fixed the "Suggested Models" per-agent table, which contradicted the correct tier list stated earlier on the same page (`implementer-tdd-agent` and `context-extractor-agent` marked as the wrong tier, `architect-agent` marked as the wrong tier, 5 of 14 agents missing entirely).
+- **`docs/setup/cursor.md`, `docs/setup/vscode.md`** — same stale "Suggested Models" tier bug as above, fixed against the actual shipped `agents/*.md` frontmatter; filled in the incomplete agent-file trees (both were missing 3-5 of the 14 core agents).
+- **`docs/setup/codex.md`** — fixed "Repeat for all 7 agent files" (stale count from before the pre/post-pipeline agents were added — it's 14) and two stale claims that phase output is JSON (`.kairos/0X-*.json`, "the agent's JSON output") — both corrected to Markdown.
+- **`README.md`** — Quick Start now leads with plugin install (with the verified CLI commands) alongside manual copy, matching the Claude Code guide fix; `--agent` invocation example branches by install method.
+- **`AGENTS.md`** — removed the `docs/distribution/` layout line (directory removed, see below).
+
+### Removed
+
+- **`docs/roadmap.md`** — public product roadmap page removed, along with both of its nav links; it wasn't being kept up to date.
+- **`docs/distribution-roadmap.md`, `docs/distribution/00-discovery.md`, `docs/distribution/01-plugin-mapping.md`, `docs/distribution/02-plugin-install.md`** — internal distribution-planning docs and their "Distribution" sidebar section removed; this was planning material for KAIROS's own rollout, not user-facing framework documentation.
+- **`vitepress-plugin-mermaid`, `mermaid`** — removed from `package.json` and the `withMermaid` config wrapper in `docs/.vitepress/config.js`; the only diagram using them (in `docs/workflow.md`) was replaced with a table, leaving the dependency unused.
+
+---
+
 ## v7.4.0 — August 27, 2026
 
 New auto-generated feature recap at the end of every pipeline run, with an optional cleanup of the intermediate phase files it replaces.

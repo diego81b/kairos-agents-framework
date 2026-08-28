@@ -70,7 +70,6 @@ any change to `docs/`, `agents/`, or `skills/` (agent files are embedded in the 
 - `.kimi-code/agents/` — Kimi Code mirror of the 14 core agents (derived, kept in sync by hand).
 - `docs/` — VitePress site. Config: `docs/.vitepress/config.js` (nav, sidebar, `srcDir: '..'`).
 - `docs/setup/` — per-tool setup guides (Claude Code, Cursor, VS Code, JetBrains, Codex, OpenCode, Kimi Code, templates).
-- `docs/distribution/` — distribution roadmap docs (discovery, plugin mapping, install).
 - `skills/contract-checklist/SKILL.md` — shared reference skill invoked by `architect-agent`
   and `implementer-lead-agent`; published with the plugin.
 - `.claude-plugin/` — Claude Code plugin metadata (`plugin.json`, `marketplace.json`).

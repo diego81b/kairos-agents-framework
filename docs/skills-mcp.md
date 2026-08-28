@@ -6,6 +6,14 @@ KAIROS does not recommend or depend on any third-party Skill marketplace. Every 
 
 ---
 
+## How a Skill Actually Works
+
+A Skill is one Markdown file (`SKILL.md`) with a YAML `description` header and an instruction body — a checklist, a format, a process. It is **not** injected into every prompt: Claude Code's `Skill` tool loads it on demand, only when the current task matches that `description`, and only into the agent that invoked it. This is different from an MCP server, which is a live external tool an agent calls repeatedly (a browser, a database, a deploy target) — a Skill is read-once instructions, an MCP is a running connection.
+
+KAIROS ships its own internal skills, under `skills/` in this repo, for one reason: several agents needed the *identical* checklist (how to tally a Risks table, what error format to show on missing input) and duplicating that prose across 9+ agent files meant it would drift out of sync the first time one file got edited and the others didn't. Each internal skill lives once; every consuming agent's body just says "apply the `<name>` skill" and the shared text loads at that point instead of being copy-pasted per agent.
+
+---
+
 ## MCP Tools
 
 | MCP | Stars | Install | Agents that benefit |
@@ -27,25 +35,26 @@ Installing the MCP server is not enough. `test-verifier-agent`, `teammate-tests-
 
 No install required — these ship with Claude Code.
 
-| Skill | Agents that benefit |
-|-------|---------------------|
-| `code-review` | `code-reviewer-agent` |
-| `security-review` | `security-reviewer-agent`, `teammate-backend-agent` |
-| `verify` / `run` | `implementer-tdd-agent`, `implementer-coder-agent`, `test-verifier-agent`, `teammate-tests-agent`, `teammate-frontend-agent`, `release-planner-agent` |
-| `deep-research` | `context-extractor-agent`, `impact-assessment-agent`, `pm-agent`, `architect-agent`, `retrospective-agent` |
-| `outcome-issue-generator` | `pm-agent` |
+| Skill | What it does | Agents that benefit |
+|-------|---------------|---------------------|
+| `code-review` | Structured multi-angle review pass (correctness, security, style, standards) | `code-reviewer-agent` |
+| `security-review` | Adversarial security audit checklist — asks "how do I break this," not just "does this pass a compliance box" | `security-reviewer-agent`, `teammate-backend-agent` |
+| `verify` / `run` | Actually executes the project (build, test, run) to confirm a change works, instead of trusting a static read of the code | `implementer-tdd-agent`, `implementer-coder-agent`, `test-verifier-agent`, `teammate-tests-agent`, `teammate-frontend-agent`, `release-planner-agent` |
+| `deep-research` | Multi-source investigation pattern for open-ended questions, before committing to an answer | `context-extractor-agent`, `impact-assessment-agent`, `pm-agent`, `architect-agent`, `retrospective-agent` |
+| `outcome-issue-generator` | Drafts outcome-driven issue/ticket text from a requirement | `pm-agent` |
 
 ### Internal (KAIROS-authored) skills
 
-No install required — these ship as part of the KAIROS plugin itself, under `skills/` in this repo, and are auto-installed together with the agent files by `claude plugin install kairos`.
+No install required — these ship as part of the KAIROS plugin itself, under `skills/` in this repo, and are auto-installed together with the agent files by `claude plugin install kairos`. Each row links to the actual `SKILL.md` — open it to see the full checklist, not just the summary below.
 
-| Skill | Agents that benefit |
-|-------|---------------------|
-| `contract-checklist` | `architect-agent`, `implementer-lead-agent` |
-| `code-simplification` | `implementer-tdd-agent`, `implementer-coder-agent` (REFACTOR step) |
-| `artifact-bookkeeping` | `pm-agent`, `architect-agent`, `impact-assessment-agent`, both implementers, `code-reviewer-agent`, `security-reviewer-agent`, `test-verifier-agent`, `release-planner-agent`, `documentation-agent`, `orchestrator-agent` |
-| `coding-discipline` | `implementer-tdd-agent`, `implementer-coder-agent`, `implementer-lead-agent`, `teammate-backend-agent`, `teammate-frontend-agent`, `teammate-database-agent`, `teammate-tests-agent` |
-| `issue-tracker-comment` | `architect-agent`, `code-reviewer-agent`, `context-extractor-agent`, `documentation-agent`, `impact-assessment-agent`, both implementers, `pm-agent`, `release-planner-agent`, `retrospective-agent`, `security-reviewer-agent`, `test-verifier-agent` |
+| Skill | What it enforces | Agents that use it |
+|-------|-------------------|---------------------|
+| [`agent-contract`](/skills/agent-contract/SKILL) | One shared `🚨 AGENT ERROR` format for a missing required input, instead of nine agents each inventing their own wording | `pm-agent`, `architect-agent`, `impact-assessment-agent`, `code-reviewer-agent`, `security-reviewer-agent`, `test-verifier-agent`, `release-planner-agent`, `documentation-agent`, `retrospective-agent` |
+| [`contract-checklist`](/skills/contract-checklist/SKILL) | 9 questions to resolve before finalizing any API/DB contract — entity lifecycle, IDOR risk, idempotency, delete behavior, pagination, error shape | `architect-agent`, `implementer-lead-agent` |
+| [`code-simplification`](/skills/code-simplification/SKILL) | REFACTOR-step checklist: what to simplify, how to confirm behavior didn't change, when to stop | `implementer-tdd-agent`, `implementer-coder-agent` (REFACTOR step) |
+| [`artifact-bookkeeping`](/skills/artifact-bookkeeping/SKILL) | Pure-arithmetic rules for tallying a Risk/Issue/Finding table by impact and deriving each phase's pass/fail status from a fixed threshold — no agent "eyeballs" a count | `pm-agent`, `architect-agent`, `impact-assessment-agent`, both implementers, `code-reviewer-agent`, `security-reviewer-agent`, `test-verifier-agent`, `release-planner-agent`, `documentation-agent`, `orchestrator-agent` |
+| [`coding-discipline`](/skills/coding-discipline/SKILL) | Pre-implementation checklist: scope discipline, no speculative abstraction, surface assumptions, trust boundaries, WHY-only comments | `implementer-tdd-agent`, `implementer-coder-agent`, `implementer-lead-agent`, all 4 teammate agents |
+| [`issue-tracker-comment`](/skills/issue-tracker-comment/SKILL) | Shared jira/glab/bitbucket commands for posting a phase's output as a comment on the originating issue | every phase agent's own optional tracker-comment step |
 
 These replace what used to be third-party plugin dependencies (`karpathy-guidelines` and 11 Trail of Bits plugins) — see `CHANGELOG.md` for the removal. Their guidance was folded into each consuming agent's own checklist natively (a concrete check item, an unconditional process step) rather than gated behind "if this external skill is installed."
 
@@ -75,7 +84,7 @@ These replace what used to be third-party plugin dependencies (`karpathy-guideli
 | `teammate-frontend-agent` | Team | `verify`/`run` | Chrome DevTools MCP, Playwright MCP |
 | `teammate-tests-agent` | Team | `verify`/`run` | Chrome DevTools MCP, Playwright MCP |
 
-Every agent above also applies whichever internal (KAIROS-authored) skill from the table above fits its role — omitted here since this table tracks *optional* enhancements, and the internal skills are a native part of each agent's own process, not a bolt-on.
+Every agent above also applies whichever internal (KAIROS-authored) skill from the table above fits its role — omitted here since this table tracks *optional* enhancements, and the internal skills are a native part of each agent's own process, not a bolt-on. `agent-contract` specifically is omitted from every row above for the same reason and because it applies almost universally (see the internal-skills table above for its full agent list), not per-phase.
 
 ---
 

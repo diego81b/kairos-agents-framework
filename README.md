@@ -24,8 +24,13 @@ See [Skills & MCP Enhancements](docs/skills-mcp.md) for the full map and install
 
 ## Quick Start
 
-1. Copy `agents/` to your project
-2. Start Claude Code with the orchestrator as the session's **primary** agent — not by naming it inside an already-open chat: `claude --agent orchestrator-agent` (or `claude --agent kairos:orchestrator-agent` if installed as a plugin)
+1. Install KAIROS — plugin install is recommended (one command, pulls in agents + skills + commands together):
+   ```bash
+   claude plugin marketplace add diego81b/kairos-agents-framework
+   claude plugin install kairos@kairos-agents-framework
+   ```
+   Or copy `agents/` into `.claude/agents/` manually — see [Claude Code setup](docs/setup/claude-code.md) for both paths and other tools.
+2. Start Claude Code with the orchestrator as the session's **primary** agent — not by naming it inside an already-open chat: `claude --agent kairos:orchestrator-agent` (plugin install) or `claude --agent orchestrator-agent` (manual copy)
 3. Describe the feature you want — the Orchestrator coordinates the pipeline automatically
 
 ## Invocation Contract
