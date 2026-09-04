@@ -394,7 +394,7 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
 9. **Present**: Show user everything
 10. **Feature Recap** _(only on normal completion — skip entirely if the run ended via `Stop pipeline`)_: the orchestrator writes and offers to clean up its own summary file. Do this in three separate sub-steps, never collapsed into one turn:
 
-    a. **Compose** — read the actual files back off disk (never from chat memory of this run — same discipline as Step 0b's resume point): every phase artifact present in `.kairos/$feature_folder/` (`00-context.md` through `06b-documentation.md`, whichever ran), `ledger/audit-log.md`, and `ledger/open-questions.md`. Write `.kairos/$feature_folder/_recap.md` — no frontmatter contract, no Disposition table, this is a summary of decisions already made, not a new gate:
+    a. **Compose** — read the actual files back off disk (never from chat memory of this run — same discipline as Step 0b's resume point): every phase artifact present in `.kairos/$feature_folder/` (`00-context.md` through `06b-documentation.md`, whichever ran), `ledger/audit-log.md`, and `ledger/open-questions.md`. Write `.kairos/$feature_folder/_recap.md` — no frontmatter contract, no Disposition table, this is a summary of decisions already made, not a new gate. The recap is a condensed digest, never a container for raw content: do not paste full artifact bodies, code diffs, or long free-text feedback into it anywhere in the template below — every section is a summary of what's already durably on disk in the phase files and the ledger, not a second copy of it. This holds on every write, including a re-run of this step for the same feature (e.g. after a later hotfix reopens a "completed" folder) — regenerate the file fresh from what's on disk at that moment; never open the existing `_recap.md` and append to it:
        ```
        # Recap — <feature_folder>
 
@@ -405,10 +405,10 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
        [repeat per phase that actually ran]
 
        ## Files Changed
-       <code files from 03-implementation.md's Code Files Generated, doc files from 06b-documentation.md's Docs Touched if it ran; note any file in 03-implementation-plan.md's Files to Create/Modify that was planned but never actually written>
+       <code files from 03-implementation.md's Code Files Generated, doc files from 06b-documentation.md's Docs Touched if it ran; note any file in 03-implementation-plan.md's Files to Create/Modify that was planned but never actually written — file paths only, never diffs or file content>
 
        ## Audit Trail
-       <ledger/audit-log.md, copied verbatim>
+       <condensed, not a verbatim copy of ledger/audit-log.md: total gate resolutions, and a per-phase count of Request-changes re-runs (already surfaced per phase above, so here just the total). List individually only the small minority of rows that matter on their own — Escalate/Stop pipeline entries, or any row whose human choice deviated from the recommended option — each as one line (phase, verdict, timestamp), not the row's full free-text feedback. If audit-log.md has grown past roughly 30 lines, this section must shrink it by at least an order of magnitude, not track it 1:1>
 
        ## Open Questions
        <every still-🔴-open row from ledger/open-questions.md, copied verbatim — omit this section if none remain>
