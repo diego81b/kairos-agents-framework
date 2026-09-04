@@ -76,6 +76,8 @@ Apply the inline OWASP Top 10 checklist below. Work adversarially through each c
 
 ### 4. Secret Handling
 
+Report any finding in this category by type and `file:line` only — e.g. "hardcoded AWS access key" — never the matched value itself, not even truncated or partially masked. `04b-security-review.md` is a Markdown file the project may commit like any other artifact; a fixed/rotated secret whose old value is still quoted in this file's git history is not actually remediated.
+
 - Any hardcoded credentials, API keys, tokens, or secrets in source code?
 - Are secrets logged at any level (debug, info, error)? Does error handling serialize full request objects that may contain tokens?
 - Are secrets included in API responses, even conditionally?
