@@ -451,6 +451,17 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
 
        If `Bash` is unavailable, or the delete command is denied: report `⚠️ Cleanup skipped — could not delete files.` and stop there — never work around it with another mechanism.
 
+    d. **Project Summary (optional)** — `.kairos/` may now be gitignored (Step 0c), so `_recap.md` may not survive in the project's own git history. Ask whether to also persist a sanitized copy inside the project itself, outside `.kairos/`:
+       - `question`: `"Also save a sanitized summary inside the project (outside .kairos/), so there's a durable record even if .kairos/ is gitignored?"`
+       - `header`: `"Project Summary"`
+       - `options`:
+         - **Yes, save it** (Recommended) — proceed below.
+         - **No, .kairos-only** — do nothing further.
+
+       If `AskUserQuestion` isn't available, print the same two options as a menu and wait for a reply.
+
+       On **Yes**: compose the content yourself from `_recap.md` — same structure, but redact further before handing it off: collapse any Findings/Issues row whose Description carries exploit-scenario detail (from `04b-security-review.md`'s attack scenarios) down to category plus a one-line non-exploitable takeaway (e.g. "1 high-severity auth gap found and fixed", never the attack path itself), and re-confirm no secret value slipped through — the phase agents' own redaction rules should already have caught this, but this is the last point before anything leaves `.kairos/`. Target path: `docs/kairos-summaries/$feature_folder.md`. Invoke @kairos:documentation-agent in **Verbatim passthrough** mode (see its Input Modes section) with that exact content and path — it runs its own Approve/Request changes/Stop gate on that content before writing, a second explicit confirmation beyond this one.
+
 ## Key Rules
 
 ### HITL — Human-in-the-Loop

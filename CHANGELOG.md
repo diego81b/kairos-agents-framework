@@ -4,13 +4,25 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v7.5.1 — September 4, 2026
+
+### Added
+
+- **`agents/orchestrator-agent.md`**, **`CLAUDE.md`** — Step 0c gains a one-time-per-project Gitignore check: if `.kairos/` isn't already covered by the target project's `.gitignore`, ask once whether to add it (its artifacts — security-review findings, ledger notes — aren't meant to sit in the project's own git history indefinitely, even redacted). A `.kairos/.gitignore-prompted` marker keeps this from asking on every subsequent feature run. Documented as the orchestrator's one narrow exception to never writing outside `.kairos/`.
+- **`agents/orchestrator-agent.md`**, **`agents/documentation-agent.md`** — Feature Recap gains a new Step 10d, Project Summary: since `.kairos/` may now be gitignored, `_recap.md` might never reach the project's own git history. On request, the orchestrator composes a further-redacted digest (security findings collapsed to category + non-exploitable takeaway, no attack-scenario detail) and hands it to `documentation-agent`'s new **Verbatim passthrough** input mode, which writes that exact content to `docs/kairos-summaries/$feature_folder.md` after its own Approve/Request changes/Stop gate — a second explicit confirmation beyond the orchestrator's own.
+
+### Fixed
+
+- **`agents/code-reviewer-agent.md`**, **`agents/security-reviewer-agent.md`**, **`agents/orchestrator-agent.md`** — a hardcoded-secret finding had no instruction against quoting the matched value in the report itself, so a discovered API key/token could end up copied verbatim into `04-review.md` or `04b-security-review.md` — Markdown files the target project may commit like any other artifact, permanently, even after the secret is later rotated. Both agents now report type and `file:line` only, never the value; the orchestrator's on-demand row-explain branch got the same rule, since it can pull the same value into a ledger note.
+
+---
+
 ## v7.5.0 — September 4, 2026
 
 ### Added
 
 - **`agents/orchestrator-agent.md`** — Phase 3 now runs as two invocations of the same implementer with a human gate in between: step 3a produces the implementation plan and writes no code, step 3b executes the approved plan. The plan gets the full gate treatment every other phase already had — Artifact Contract Check, Constraint & Decision Conflict Scan, row-by-row Risk Disposition Loop, editor open, 4-option menu.
 - **`agents/team/implementer-lead-agent.md`** — new Step 2c writes `03-implementation-plan.md` (layer scoping, per-layer file ownership, the Test Contract's full test-case list, risks) after the contracts and stops. Team Mode splits at the same 3a/3b boundary as the solo implementers, so no Agent Team is ever spawned against an unapproved plan.
-- **`agents/orchestrator-agent.md`**, **`CLAUDE.md`** — Step 0c gains a one-time-per-project Gitignore check: if `.kairos/` isn't already covered by the target project's `.gitignore`, ask once whether to add it (its artifacts — security-review findings, ledger notes — aren't meant to sit in the project's own git history indefinitely, even redacted). A `.kairos/.gitignore-prompted` marker keeps this from asking on every subsequent feature run. Documented as the orchestrator's one narrow exception to never writing outside `.kairos/`.
 
 ### Fixed
 
@@ -22,7 +34,6 @@ All notable changes to KAIROS Framework are documented in this file.
 - **`agents/orchestrator-agent.md`** — the Feature Recap's Audit Trail section copied `ledger/audit-log.md` verbatim, so a long or heavily-iterated feature grew `_recap.md` unbounded (observed at 72KB). The recap now stays a condensed digest on every write, including a regen on a reopened folder — no full artifact bodies, diffs, or verbatim log copy; the audit trail collapses to counts plus only Escalate/Stop/deviation rows.
 - **`agents/orchestrator-agent.md`** — the Loop Actuator's `cumulative_issues` was appended every iteration and handed to the implementer as its full work backlog, so by iteration 3+ the fix mandate still listed issues the checker's own re-scan no longer flagged as present. This wasted iteration budget re-touching already-fixed code and diluted the real signal, driving both loop thrash and drift off the original ask. `cumulative_issues` is now replaced with the checker's fresh critical/high `issues[]` each iteration instead of appended.
 - **`skills/artifact-bookkeeping/SKILL.md`**, **`agents/test-verifier-agent.md`**, **`agents/orchestrator-agent.md`** — `test-verifier-agent`'s `READY`/`NEEDS_FIXES` status ignored Acceptance Criteria gaps entirely, so the Implementer ↔ Test Verifier loop could converge (and the Phase 5 gate could recommend Approve) while a `01-requirements.md` Success Criterion was still unmapped to any test. Status now also fails on a non-empty Acceptance Criteria gap list; the Loop Actuator's tracked count and work list fold these gaps in for the Phase 3 loop (Phase 4's code-reviewer loop has no AC concept and is unaffected).
-- **`agents/code-reviewer-agent.md`**, **`agents/security-reviewer-agent.md`**, **`agents/orchestrator-agent.md`** — a hardcoded-secret finding had no instruction against quoting the matched value in the report itself, so a discovered API key/token could end up copied verbatim into `04-review.md` or `04b-security-review.md` — Markdown files the target project may commit like any other artifact, permanently, even after the secret is later rotated. Both agents now report type and `file:line` only, never the value; the orchestrator's on-demand row-explain branch got the same rule, since it can pull the same value into a ledger note.
 
 ### Changed
 
