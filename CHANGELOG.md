@@ -10,6 +10,7 @@ All notable changes to KAIROS Framework are documented in this file.
 
 - **`agents/orchestrator-agent.md`** — Phase 3 now runs as two invocations of the same implementer with a human gate in between: step 3a produces the implementation plan and writes no code, step 3b executes the approved plan. The plan gets the full gate treatment every other phase already had — Artifact Contract Check, Constraint & Decision Conflict Scan, row-by-row Risk Disposition Loop, editor open, 4-option menu.
 - **`agents/team/implementer-lead-agent.md`** — new Step 2c writes `03-implementation-plan.md` (layer scoping, per-layer file ownership, the Test Contract's full test-case list, risks) after the contracts and stops. Team Mode splits at the same 3a/3b boundary as the solo implementers, so no Agent Team is ever spawned against an unapproved plan.
+- **`agents/orchestrator-agent.md`**, **`CLAUDE.md`** — Step 0c gains a one-time-per-project Gitignore check: if `.kairos/` isn't already covered by the target project's `.gitignore`, ask once whether to add it (its artifacts — security-review findings, ledger notes — aren't meant to sit in the project's own git history indefinitely, even redacted). A `.kairos/.gitignore-prompted` marker keeps this from asking on every subsequent feature run. Documented as the orchestrator's one narrow exception to never writing outside `.kairos/`.
 
 ### Fixed
 

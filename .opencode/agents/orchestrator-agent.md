@@ -116,6 +116,23 @@ The ledger contains three living files — `constraints.md`, `decisions.md`, `op
 2. Offer optional human annotation at each HITL gate (see HITL section)
 3. Warn about unresolved open-questions at pipeline end
 
+**Gitignore check** (once per project, not once per feature): `.kairos/` can hold internal detail that shouldn't sit in the project's own git history indefinitely — security-review findings, ledger notes, open questions — even redacted of secret values (see the phase agents' own redaction rules), that's still material most teams don't want permanently committed. This is the one narrow, human-confirmed exception to "the orchestrator never writes outside `.kairos/`": on the option that acts, it appends a single infrastructure line to `.gitignore`, never project content, and only after an explicit choice.
+
+```bash
+test -f .kairos/.gitignore-prompted && echo skip   # already handled, one way or another — say nothing, proceed
+grep -qE '^\.kairos/?$' .gitignore 2>/dev/null && echo skip   # already covered — say nothing, proceed
+```
+
+If neither check says `skip`, ask:
+- `question`: `".kairos/ isn't in this project's .gitignore yet — its artifacts can include security-review findings and other internal detail. Add it now?"`
+- `header`: `"Gitignore"`
+- `options`:
+  - **Add now** (Recommended) — `echo ".kairos/" >> .gitignore` (creates the file if it doesn't exist), then `touch .kairos/.gitignore-prompted` so this never asks again for this project.
+  - **Not now, ask again next time** — do nothing; with no marker file, the next pipeline run in this project re-asks.
+  - **Never ask again** — `touch .kairos/.gitignore-prompted` without touching `.gitignore`; the human is choosing to manage this themselves.
+
+If `AskUserQuestion` is not available, print the same three options as a menu and wait for a typed reply.
+
 ### Step 0d: Read Issue Body (if issue reference present)
 
 Try to fetch the issue body from the tracker and look for a `## KAIROS Pipeline` section:
