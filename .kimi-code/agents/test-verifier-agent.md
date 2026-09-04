@@ -190,7 +190,7 @@ checks:
   tdd_reality: PASS         # PASS|FAIL|UNKNOWN
 issues_summary: { critical: 0, high: 1, medium: 1, low: 1, total: 3 }
 open_dispositions: 3   # count of Issues table rows with empty Disposition cell
-convergence_signal: { issues_critical_high: 1, issues_total: 3, coverage_delta: "+4%", iteration: 1 }
+convergence_signal: { issues_critical_high: 1, issues_total: 3, ac_gaps: 1, coverage_delta: "+4%", iteration: 1 }
 next_agent: release-planner-agent
 ---
 
@@ -222,8 +222,8 @@ Follow [`artifact-bookkeeping`](../skills/artifact-bookkeeping/SKILL.md) for the
 Before adding a finding to the Issues table, verify it isn't a false positive: re-check the actual test and SUT code, not just the pattern that triggered the flag.
 
 `status` rules:
-- `READY` — zero `critical` and zero `high` issues, and coverage check is `PASS`.
-- `NEEDS_FIXES` — any `critical` or `high` issue, or coverage `FAIL`.
+- `READY` — zero `critical` and zero `high` issues, coverage check is `PASS`, and zero Acceptance Criteria gaps (when the Success Criteria list was available — see Input Validation above).
+- `NEEDS_FIXES` — any `critical` or `high` issue, coverage `FAIL`, or any Acceptance Criteria gap.
 
 ## After Generating Output
 
@@ -281,6 +281,7 @@ In **Full Mode**, update all three ledger files under `.kairos/<feature_folder>/
 convergence_signal:
   issues_critical_high: <count of critical + high rows in the 05-test-verification.md Issues table>
   issues_total: <total issues count>
+  ac_gaps: <count of gapIds from the Acceptance Criteria Mapping table — 0 if the Success Criteria list was unavailable>
   coverage_delta: "<line coverage delta vs previous iteration, e.g. '+4%', or 'N/A' on first loop iteration>"
   iteration: <iteration number from Loop State>
 ```

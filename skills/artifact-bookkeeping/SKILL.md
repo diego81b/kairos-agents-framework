@@ -26,7 +26,7 @@ Each phase's `status` (or equivalent verdict field) is a fixed threshold rule ov
 |-------|------|
 | `code-reviewer-agent` | `NEEDS_FIXES` iff `byImpact.critical + byImpact.high > 0`; else `READY` |
 | `security-reviewer-agent` | `VULNERABILITIES_FOUND` iff `byImpact.critical + byImpact.high > 0` OR any Contract Enforcement gap; else `SECURE` |
-| `test-verifier-agent` | `NEEDS_FIXES` iff `byImpact.critical + byImpact.high > 0` OR `coverage_summary.status != PASS`; else `READY` |
+| `test-verifier-agent` | `NEEDS_FIXES` iff `byImpact.critical + byImpact.high > 0` OR `coverage_summary.status != PASS` OR `gapIds` (§3) non-empty; else `READY`. The `gapIds` term only applies when the Success Criteria list was available (see the agent's own Input Validation) — otherwise it's vacuously empty, same as today |
 | `release-planner-agent` | `blocked` iff any `constraints.md` row still `🔴 open` at the final pass, OR `byImpact.critical > 0`, OR any unresolved `## Scope Gaps` row; else `ready` |
 | `documentation-agent` | `needs_input` iff any Documentation Gap above `low` impact; else `ready` |
 | `architect-agent` | `promptable` is `yes`/`no` per its own Promptable Signal rule (a judgment call, not a count) — `status` itself stays `ready` regardless |
@@ -38,9 +38,9 @@ Each phase's `status` (or equivalent verdict field) is a fixed threshold rule ov
 Given the numbered `AC-1, AC-2, ...` list from `01-requirements.md`'s Success Criteria and the Acceptance Criteria Mapping table's rows:
 
 - `mapped` — count of AC numbers with at least one non-empty entry in the Tests column.
-- `gapIds` — AC numbers with an empty Tests column (a `—` in the Gap column).
+- `gapIds` — AC numbers with an empty Tests column (a `—` in the Tests column, with the gap explained in the Gap column instead).
 
-Same recount discipline as §1, applied to a different table.
+Same recount discipline as §1, applied to a different table. `gapIds` feeds directly into §2's `test-verifier-agent` status rule above — a non-empty `gapIds` blocks `READY` the same way a critical/high issue does.
 
 ## 4. Required frontmatter fields per phase
 
