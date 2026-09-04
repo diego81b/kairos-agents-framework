@@ -99,7 +99,7 @@ If **Resume existing** is chosen, determine where the previous run actually stop
 ls ".kairos/$feature_folder"/0*.md 2>/dev/null
 ```
 
-Match the highest-numbered phase file present against the phase order (`00-context` → `00b-impact` → `01-requirements` → `02-architecture` → `03-implementation` → `04-review` → `04b-security-review` → `05-test-verification` → `06-deployment-plan` → `06b-documentation`). The phase immediately after the last one present is `next_agent`. Show this for confirmation before invoking anything: `📍 Resume point: last completed phase is <N>-<name> — next up: <next_agent>. Confirm?` A `-iter{N}`/`-recheck` suffix on the highest file still counts as that phase being complete, not a phase of its own. If no `0*.md` files exist yet, check for `.kairos/$feature_folder/_recap.md` before concluding this is a fresh start: its presence with no `0*.md` files means this feature already finished a run and its phase files were cleaned up (Step 10c). Report `📍 This feature already completed a prior run (recap at _recap.md, phase files were cleaned up) — nothing to resume.` and re-show the folder-exists menu from above instead of restarting at Phase 1 — Resume existing has nothing left to resume here, so steer the human toward Create new folder or Stop. Only treat the folder as an untouched fresh start when neither `0*.md` files nor `_recap.md` are present.
+Match the highest-numbered phase file present against the phase order (`00-context` → `00b-impact` → `01-requirements` → `02-architecture` → `03-implementation-plan` → `03-implementation` → `04-review` → `04b-security-review` → `05-test-verification` → `06-deployment-plan` → `06b-documentation`). The phase immediately after the last one present is `next_agent`. Show this for confirmation before invoking anything: `📍 Resume point: last completed phase is <N>-<name> — next up: <next_agent>. Confirm?` A `-iter{N}`/`-recheck` suffix on the highest file still counts as that phase being complete, not a phase of its own. Two more files match the `0*.md` glob without being phases of their own: `03-implementation-plan.md` is Phase 3a's artifact — if it is the highest match and `03-implementation.md` is absent, the resume point is **Phase 3b** (re-invoke the same implementer with the approved plan), never code-reviewer and never a fresh 3a. `03-contracts.md` is Team Mode's contract file, not a phase artifact at all — ignore it entirely when picking the resume point. If no `0*.md` files exist yet, check for `.kairos/$feature_folder/_recap.md` before concluding this is a fresh start: its presence with no `0*.md` files means this feature already finished a run and its phase files were cleaned up (Step 10c). Report `📍 This feature already completed a prior run (recap at _recap.md, phase files were cleaned up) — nothing to resume.` and re-show the folder-exists menu from above instead of restarting at Phase 1 — Resume existing has nothing left to resume here, so steer the human toward Create new folder or Stop. Only treat the folder as an untouched fresh start when neither `0*.md` files nor `_recap.md` are present.
 
 Notify the user: `📁 Feature folder: .kairos/PROJ-42_add-stripe-payments/`
 
@@ -151,7 +151,7 @@ Otherwise, ask once. If `AskUserQuestion` is available (Claude Code):
 - `question`: `"Quick fix, or full feature?"`
 - `header`: `"Fix scope"`
 - `options`:
-  - **Quick fix** — small, contained change: preset `active_agents = [implementer-coder-agent, code-reviewer-agent]`, `loop_policy = { phase4: { mode: "auto", max_retries: 1 } }` (phase3 does not apply — no TDD implementer, no test-verifier), and set `quick_fix_mode = true` for this run (widens the Risk Disposition Loop's auto-accept threshold from `low` to `low`+`medium` — see HITL step 2). Also pass `effort: simple_fix` explicitly in the invocation prompt to both `implementer-coder-agent` and `code-reviewer-agent` — each agent's own Effort Detection section already treats an orchestrator-stated `effort` as its highest-priority source, so they enter Lean Mode without needing `00b-impact.md` (never produced here, since this path skips Pre-B) or re-deriving it themselves. Skip CASE A/B and the Loop Policy prompt below entirely; go straight to Step 0f.
+  - **Quick fix** — small, contained change: preset `active_agents = [implementer-coder-agent, code-reviewer-agent]`, `loop_policy = { phase4: { mode: "auto", max_retries: 1 } }` (phase3 does not apply — no TDD implementer, no test-verifier), and set `quick_fix_mode = true` for this run (widens the Risk Disposition Loop's auto-accept threshold from `low` to `low`+`medium` — see HITL step 2). This path is also **exempt from the Phase 3a/3b split**: invoke the implementer once with `step: 3ab` (combined). It still writes `03-implementation-plan.md` first — that write is unconditional everywhere — but does not stop for a plan gate, then continues straight into implementation. A change the human already classified as small, with a Lean Mode plan collapsing to two lines, does not earn a second gate; the Phase 3 gate on `03-implementation.md` still applies. Also pass `effort: simple_fix` explicitly in the invocation prompt to both `implementer-coder-agent` and `code-reviewer-agent` — each agent's own Effort Detection section already treats an orchestrator-stated `effort` as its highest-priority source, so they enter Lean Mode without needing `00b-impact.md` (never produced here, since this path skips Pre-B) or re-deriving it themselves. Skip CASE A/B and the Loop Policy prompt below entirely; go straight to Step 0f.
   - **Full feature** — proceed to CASE A/B below exactly as today; `quick_fix_mode` stays `false`.
 
 If `AskUserQuestion` is not available, print the same two options as a menu and wait for a typed reply.
@@ -285,7 +285,8 @@ Before calling any subagent, show the confirmed pipeline:
 🚀 Active pipeline for PROJ-42_add-stripe-payments:
   ✅ Phase 1 — pm-agent
   ⏭️ Phase 2 — architect-agent  [SKIPPED]
-  ✅ Phase 3 — implementer-tdd-agent
+  ✅ Phase 3a — <selected implementer> (plan)
+  ✅ Phase 3b — <selected implementer> (implementation)
   ✅ Phase 4 — code-reviewer
   ⏭️ Phase 4b — security-reviewer [SKIPPED]
   ⏭️ Phase 5 — test-verifier    [SKIPPED]
@@ -325,6 +326,16 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
    ```
 
    If confirmed → call @kairos:team:implementer-lead-agent. If switched → call @kairos:implementer-tdd-agent instead. If cancelled → stop. Do NOT call any implementer without this confirmation.
+
+   **Two-step execution — the implementer is invoked twice, with a gate in between.** Phase 3 is the only phase split this way. Whichever agent the routing decision above selected is the agent for both steps; never switch variants between 3a and 3b.
+
+   **Step 3a — Plan.** Invoke the selected implementer with `step: 3a` stated explicitly in the prompt: produce the PHASE 0 plan, write `.kairos/$feature_folder/03-implementation-plan.md`, touch no source file, return `status: pending_approval`. For `implementer-lead-agent`, 3a means Steps 1-2b plus its Step 2c: write `03-contracts.md` and the plan, spawn no teammate, create no Agent Team.
+
+   **Then run the full HITL gate on `03-implementation-plan.md`** — Artifact Contract Check, Constraint & Decision Conflict Scan, Risk Disposition Loop over its `## Risks` table, verdict summary, open the file in the editor, then the 4-option gate. Same procedure as every other phase; the plan is a first-class artifact, not a status message. `status: pending_approval` is the expected value here and is not itself a blocking signal for the recommended-option choice (see HITL step 1) — recommend **Approve** unless the plan carries a `critical`/`high` risk or the disposition loop produced an **Escalate**.
+
+   **Step 3b — Execute.** Only after the gate resolves to Approve (or Skip next): re-invoke the **same** agent with `step: 3b` stated explicitly, plus the path to the approved plan. It skips PHASE 0 entirely and runs the implementation, returning `03-implementation.md`. Then present the normal Phase 3 gate on that file.
+
+   On **Request changes** at the plan gate, re-invoke 3a with the feedback — never advance to 3b with an unapproved plan. On **Stop pipeline**, halt: no source file has been written yet, which is the entire point of gating here.
 4. **Review Phase** _(if code-reviewer-agent active)_: Call @kairos:code-reviewer-agent
 
    **Loop Actuator Procedure** _(shared shape for both loops below — steps 0-3 are identical; only the pair name `{pair}`, the checker agent `{checker}`, and the checker's own artifact filename differ)_:
@@ -349,7 +360,7 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
       cumulative_issues: <all critical/high issues[] from {checker}'s output>
       ```
    2. **Loop** — repeat until exit condition:
-      a. Re-invoke the active Phase-3 implementer — `implementer-tdd-agent`, `implementer-coder-agent`, or `implementer-lead-agent`, whichever was selected in Step 3's routing decision (all three detect Iteration Mode from the ledger automatically)
+      a. Re-invoke the active Phase-3 implementer **as step 3b** — `implementer-tdd-agent`, `implementer-coder-agent`, or `implementer-lead-agent`, whichever was selected in Step 3's routing decision (all three detect Iteration Mode from the ledger automatically). Never re-invoke step 3a from inside a loop: the plan is already approved, a fresh plan would return `pending_approval`, and a non-advancing status inside a loop is an infinite loop.
       b. Re-invoke `{checker}` (writes `convergence_signal` to `## Loop State`)
       c. Read `convergence_signal.issues_critical_high` from `## Loop State` as `new_count`
       d. **Monotonic-progress check**: if `new_count >= issues_critical_high_curr` → exit with: `⚠️ Loop thrash after N iterations — critical/high count not decreasing. Human review required.` — append this outcome to `## Loop History — {pair}` (create it if absent) before exiting.
@@ -396,7 +407,7 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
        [repeat per phase that actually ran]
 
        ## Files Changed
-       <code files from 03-implementation.md's Code Files Generated, doc files from 06b-documentation.md's Docs Touched if it ran>
+       <code files from 03-implementation.md's Code Files Generated, doc files from 06b-documentation.md's Docs Touched if it ran; note any file in 03-implementation-plan.md's Files to Create/Modify that was planned but never actually written>
 
        ## Audit Trail
        <ledger/audit-log.md, copied verbatim>
@@ -427,8 +438,13 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
 
 ### HITL — Human-in-the-Loop
 KAIROS is a HITL pipeline. After EVERY active subagent completes:
-0. **Artifact Contract Check** — before reading anything else, confirm the artifact this subagent just wrote actually has a parseable frontmatter block and, inside it, the phase-appropriate verdict field (`status:` for most phases, `promptable:` for architect-agent) with a non-empty value drawn from that phase's documented set, AND every other field [`artifact-bookkeeping` §4](../skills/artifact-bookkeeping/SKILL.md) requires for this phase is present with a non-null value. If the frontmatter is missing, malformed, a required field is absent, or a value isn't one of the documented options, do not treat this as "no blocking status found" — that reading only applies once this check has passed. Instead report `⚠️ Malformed artifact from <agent> — missing/invalid <field>. Re-running this phase.` and re-invoke the same subagent once with that specific error before falling back to the retry-tracking in `## Error Handling` below.
+0. **Artifact Contract Check** — before reading anything else, confirm the artifact this subagent just wrote actually has a parseable frontmatter block and, inside it, the phase-appropriate verdict field (`status:` for most phases, `promptable:` for architect-agent) with a non-empty value drawn from that phase's documented set, AND every other field [`artifact-bookkeeping` §4](../skills/artifact-bookkeeping/SKILL.md) requires for this phase is present with a non-null value. Key that lookup on the artifact's own `phase:` value, not on which agent you invoked — one agent can emit two different artifacts. A Phase 3a plan carries `phase: implementer-plan` and is checked against that row (`status`, `risk_counts`, `open_dispositions`, `total_waves`), not against the invoking implementer's much longer row, which lists fields like `coverage_summary` that do not exist at plan time. If the frontmatter is missing, malformed, a required field is absent, or a value isn't one of the documented options, do not treat this as "no blocking status found" — that reading only applies once this check has passed. Instead report `⚠️ Malformed artifact from <agent> — missing/invalid <field>. Re-running this phase.` and re-invoke the same subagent once with that specific error before falling back to the retry-tracking in `## Error Handling` below.
 1. Read the subagent's own status/verdict field, if it has one (`status:` in the frontmatter — e.g. `NEEDS_FIXES`, `VULNERABILITIES_FOUND`, `blocked`, or nonzero `critical`/`high` in the frontmatter's counts field). For `architect-agent` specifically, also read `promptable:` — `no` is a blocking signal the same way `NEEDS_FIXES` is elsewhere, even though this agent's own `status` field stays `ready` (it has no pass/fail state otherwise). This determines which option to mark recommended in step 5.
+1a. **Non-advancing statuses.** Two `status:` values never mean "advance to the next phase" — they mean re-invoke the same agent:
+   - `pending_approval` — a Phase 3a plan awaiting its gate. Approve here advances to **step 3b** (same agent, approved plan), not to Phase 4. Never re-invoke 3a on an Approve — that would loop the plan forever.
+     On a plan artifact, `risk_counts` does **not** feed the blocking-status read this step otherwise applies to a nonzero `critical`/`high` tally. A plan naming one high risk is a good plan, not a broken one, and the human's answer to that risk is **Mitigate now** in the Risk Disposition Loop (step 2), which binds it as a requirement for 3b — not Request changes, which throws the whole plan away and regenerates it. Recommend **Approve** unless step 2 produced an **Escalate**.
+   - `partial` — a multi-wave implementer finished one wave and stopped by design. Do NOT advance to Phase 4. Present the gate stating plainly which wave completed and how many remain, and let the human choose: continue (re-invoke the same agent as step 3b for the next wave) or stop. Per-wave artifact bookkeeping is not automated — wave 2 overwrites `03-implementation.md` unless the human is told, so tell them.
+   A Loop Actuator iteration must never produce either status: loop re-invocations always target **step 3b** with Iteration Mode active, never 3a.
 1b. **Constraint & Decision Conflict Scan** — run this after the subagent's own Ledger Update, before the Risk Disposition Loop (step 2). Read `ledger/constraints.md`, `ledger/decisions.md`, and the phase's own artifact body you just received.
    - **Constraints half**: for every row already marked `✓ resolved` or `♻ modified` by an *earlier* phase, judge — this is a semantic read of the actual output, not a symbol diff — whether this phase's design/code/findings actually contradict it. A constraint's Status cell only records what the acting agent *claims* happened; the acting agent does not cross-check its own output against constraints from phases before the previous one, so this is the only place such drift gets caught. Skip this half if `ledger/constraints.md` doesn't exist yet.
    - **Decisions half**: for every row recorded by an *earlier* phase, judge whether this phase's output actually contradicts it. `decisions.md` has no Status column — a decision is terminal the moment it's written, there's no "already resolved" to filter on — so the predicate here is simply "recorded before this phase ran." Skip this half if `ledger/decisions.md` doesn't exist yet.
@@ -457,7 +473,7 @@ KAIROS is a HITL pipeline. After EVERY active subagent completes:
    ```bash
    ${KAIROS_EDITOR:-code} ".kairos/$feature_folder/<output_file>"
    ```
-   Output files per phase: `01-requirements.md` → `02-architecture.md` → `03-implementation.md` → `04-review.md` → `04b-security-review.md` → `05-test-verification.md` → `06-deployment-plan.md`
+   Output files per phase: `01-requirements.md` → `02-architecture.md` → `03-implementation-plan.md` → `03-implementation.md` → `04-review.md` → `04b-security-review.md` → `05-test-verification.md` → `06-deployment-plan.md`
 5. **If the `AskUserQuestion` tool is available** (Claude Code), call it — do not also print a text menu:
    - `question`: one line naming the phase and its verdict, e.g. `"PM analysis ready — how do you want to proceed?"`
    - `header`: short phase label, e.g. `"PM Gate"`, `"Architect Gate"`, `"Release Gate"` (≤12 chars)
@@ -546,6 +562,12 @@ ARCHITECTURE (from Architect Agent):
 - Database Changes
 - API Contracts
 
+PLAN (from the Phase 3a implementer, gated before any code was written):
+- Files to Create / Modify
+- Test Cases with declared intent (TDD implementer only)
+- Waves (if the plan was split)
+- Risks and how each was dispositioned
+
 IMPLEMENTATION (from implementer-tdd-agent — TDD):
 - Code Files Generated
 - Test Files Generated
@@ -632,7 +654,9 @@ With issue number (`"Add Stripe payments — issue #42"`):
     ├── 00b-impact.md              ← Impact Assessment (pre-built, optional)
     ├── 01-requirements.md         ← PM Agent
     ├── 02-architecture.md         ← Architect Agent (frontmatter contract + design doc)
-    ├── 03-implementation.md       ← Implementer Agent
+    ├── 03-implementation-plan.md  ← Implementer Agent (Phase 3a — gated before any code is written)
+    ├── 03-contracts.md            ← Implementer Lead (Team Mode only — the four binding contracts)
+    ├── 03-implementation.md       ← Implementer Agent (Phase 3b)
     ├── 04-review.md               ← Code Reviewer (frontmatter contract + full issues report)
     ├── 04b-security-review.md     ← Security Reviewer (optional, frontmatter contract + full findings report)
     ├── 05-test-verification.md    ← Test Verifier (frontmatter contract + full report)

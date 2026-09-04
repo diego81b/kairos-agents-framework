@@ -69,6 +69,8 @@ Note: `trailmark/diagramming-code` skipped — plugin installs 10 skills, only 1
 
 Implements code using **real TDD** (tests written before code). Runs tests iteratively until they pass, applies team coding patterns, and handles error cases explicitly. This is the **default implementer for all features** — works with Claude Code, API, and local models.
 
+It runs as two Orchestrator invocations. Step 3a produces the implementation plan — `03-implementation-plan.md`, listing files to create and modify, every test case with its declared intent, TDD order and risks — and writes no source file. Step 3b re-invokes the same agent with the approved plan and runs the TDD cycle. The plan is written to disk unconditionally and opened in the editor, so it is reviewable on its own instead of scrolling past RED/GREEN output.
+
 ::: tip Optional enhancements
 **Skills:** `coding-discipline` (internal), `verify` / `run` (built-in)
 :::
@@ -77,7 +79,7 @@ Implements code using **real TDD** (tests written before code). Runs tests itera
 
 ## [Implementer Agent — Code Only](/agents/implementer-coder-agent)
 
-Generates production-ready code **without a TDD cycle**. Use this agent when the project has no test suite or when writing tests is explicitly out of scope for the task. Follows the same two-gate workflow as the TDD Implementer (plan approval + implementation approval) but skips all TDD phases, coverage measurement, and test-file generation. Compatible with all platforms.
+Generates production-ready code **without a TDD cycle**. Use this agent when the project has no test suite or when writing tests is explicitly out of scope for the task. Follows the same two-gate, two-invocation workflow as the TDD Implementer (step 3a plan approval, step 3b implementation approval) but skips all TDD phases, coverage measurement, and test-file generation. Compatible with all platforms.
 
 > **Note:** If your project has a test suite, prefer `implementer-tdd-agent` — TDD catches design issues that pure code generation does not.
 

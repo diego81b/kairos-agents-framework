@@ -31,7 +31,7 @@ Each phase's `status` (or equivalent verdict field) is a fixed threshold rule ov
 | `documentation-agent` | `needs_input` iff any Documentation Gap above `low` impact; else `ready` |
 | `architect-agent` | `promptable` is `yes`/`no` per its own Promptable Signal rule (a judgment call, not a count) — `status` itself stays `ready` regardless |
 | `pm-agent`, `impact-assessment-agent` | no pass/fail state — `status` (or equivalent) is always `ready`; only the recount tallies apply |
-| `implementer-tdd-agent`, `implementer-coder-agent` (Phase 0 plan) | no status derivation here — the plan's `risk_counts` / `open_dispositions` still follow the recount above |
+| `implementer-tdd-agent`, `implementer-coder-agent`, `implementer-lead-agent` (Phase 3a plan) | no status derivation here — `status` is always `pending_approval` on a plan artifact, and only ever on a plan artifact. The plan's `risk_counts` / `open_dispositions` still follow the recount above |
 
 ## 3. Acceptance-criteria coverage (test-verifier-agent only)
 
@@ -52,6 +52,7 @@ The orchestrator's Artifact Contract Check (`orchestrator-agent.md` HITL step 0)
 | `architect-agent` | `status`, `promptable`, `risk_counts`, `open_dispositions`, `next_agent`, `database_changes_summary`, `error_codes_count`, `selected_option` |
 | `impact-assessment-agent` | `risk_counts`, `open_dispositions`, `effort`, `recommended_agents` |
 | `context-extractor-agent` | `status` |
+| `implementer-plan` (Phase 3a — any implementer variant) | `status`, `risk_counts`, `open_dispositions`, `total_waves` |
 | `implementer-tdd-agent` | `status`, `risk_counts`, `open_dispositions`, `iteration_mode`, `wave`, `total_waves`, `next_wave`, `tdd_verification`, `coverage_summary` |
 | `implementer-coder-agent` | `status`, `risk_counts`, `open_dispositions`, `iteration_mode`, `wave`, `total_waves`, `next_wave` |
 | `code-reviewer-agent` | `status`, `checks`, `issues_summary`, `open_dispositions`, `convergence_signal`, `next_agent` |
@@ -60,4 +61,4 @@ The orchestrator's Artifact Contract Check (`orchestrator-agent.md` HITL step 0)
 | `release-planner-agent` | `status`, `risk_counts`, `open_dispositions`, `monitoring_summary`, `rollback_summary` |
 | `documentation-agent` | `status`, `findings_summary`, `open_dispositions`, `docs_touched` |
 
-`risk_counts` / `issues_summary` / `findings_summary` are the by-Impact tally from §1 (`{ critical, high, medium, low, total }`) regardless of which name a given phase uses for it. This table is a presence checklist derived from each agent's own Output Format block — if an agent file's frontmatter template changes, update its row here in the same edit.
+`risk_counts` / `issues_summary` / `findings_summary` are the by-Impact tally from §1 (`{ critical, high, medium, low, total }`) regardless of which name a given phase uses for it. This table is a presence checklist derived from each agent's own Output Format block — if an agent file's frontmatter template changes, update its row here in the same edit. Look the row up by the artifact's own `phase:` value, not by which agent produced it: one agent can emit two artifacts with different contracts. The Phase 3a plan (`phase: implementer-plan`) is the case that forces this — it comes from an implementer but carries none of that implementer's execution fields, so checking it against the implementer's row would fail every run on fields that cannot exist before any code is written.

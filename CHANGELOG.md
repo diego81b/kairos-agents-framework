@@ -4,6 +4,28 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v7.5.0 — September 4, 2026
+
+### Added
+
+- **`agents/orchestrator-agent.md`** — Phase 3 now runs as two invocations of the same implementer with a human gate in between: step 3a produces the implementation plan and writes no code, step 3b executes the approved plan. The plan gets the full gate treatment every other phase already had — Artifact Contract Check, Constraint & Decision Conflict Scan, row-by-row Risk Disposition Loop, editor open, 4-option menu.
+- **`agents/team/implementer-lead-agent.md`** — new Step 2c writes `03-implementation-plan.md` (layer scoping, per-layer file ownership, the Test Contract's full test-case list, risks) after the contracts and stops. Team Mode splits at the same 3a/3b boundary as the solo implementers, so no Agent Team is ever spawned against an unapproved plan.
+
+### Fixed
+
+- **`agents/implementer-tdd-agent.md`**, **`agents/implementer-coder-agent.md`** — the Phase 0 plan was saved to `03-implementation-plan.md` only *after* approval. Under the orchestrator that approval never arrived (a spawned subagent has no channel to the human), so the file was never written and the plan stayed buried in the run's transcript under RED/GREEN output. The plan is now written unconditionally, before any gate, and opened in the editor — a reviewable artifact like every other phase output.
+- **`agents/orchestrator-agent.md`** — `pending_approval` and `partial` are now documented as non-advancing statuses. A plan artifact used to pass the gate with Approve recommended and advance straight to the code reviewer; a completed wave used to advance instead of continuing. Loop Actuator iterations are pinned to step 3b so a fix round can never re-enter the plan step.
+- **`agents/orchestrator-agent.md`** — the Resume-existing matcher now maps `03-implementation-plan.md` to step 3b and ignores `03-contracts.md`, which has matched the `0*.md` glob with no phase slot since Team Mode started writing it.
+- **`agents/team/implementer-lead-agent.md`** — the mid-run Test Plan Gate pointed at the orchestrator for gate presentation, but no such gate existed there, so it silently vanished on every orchestrated run. It is now explicitly dropped under the orchestrator (covered earlier by the 3a plan gate, which carries the same test-case list) and kept for standalone runs.
+- **`skills/artifact-bookkeeping/SKILL.md`** — §4's required-field lookup is keyed on the artifact's `phase:` value instead of the invoking agent, with a new `implementer-plan` row. Without this, every plan artifact failed the presence check on execution-only fields like `coverage_summary` and triggered a pointless re-run.
+
+### Changed
+
+- **`agents/orchestrator-agent.md`** — the Quick-Fix path is exempt from the 3a/3b split: the implementer runs once (`step: 3ab`), still writing the plan file but without stopping for a second gate. A change the human already classified as small does not earn one.
+- **`docs/workflow.md`**, **`docs/agents.md`**, **`CLAUDE.md`** — Phase 3 documented as two invocations with the plan artifact named, for both the solo implementers and Team Mode.
+
+---
+
 ## v7.4.2 — August 28, 2026
 
 ### Fixed
