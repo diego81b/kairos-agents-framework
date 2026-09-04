@@ -65,12 +65,23 @@ standalone post-pipeline agents:
 | Pre-B | `impact-assessment-agent.md` | `00b-impact.md` |
 | 1 | `pm-agent.md` | `01-requirements.md` |
 | 2 | `architect-agent.md` | `02-architecture.md` |
-| 3 | `implementer-tdd-agent.md` or `implementer-coder-agent.md` | code + `03-implementation.md` |
+| 3a | `implementer-tdd-agent.md` or `implementer-coder-agent.md` (PHASE 0 only) | `03-implementation-plan.md` |
+| 3b | same agent, re-invoked with the approved plan | code + `03-implementation.md` |
 | 4 | `code-reviewer-agent.md` | `04-review.md` |
 | 4.5 | `security-reviewer-agent.md` *(optional)* | `04b-security-review.md` |
 | 5 | `test-verifier-agent.md` | `05-test-verification.md` |
 | 6 | `release-planner-agent.md` | `06-deployment-plan.md` |
 | 6b | `documentation-agent.md` *(optional)* | `06b-documentation.md` |
+
+Phase 3 is the only phase split across two invocations of the same agent. 3a runs the
+implementer's PHASE 0 and stops: it writes `03-implementation-plan.md` (frontmatter `phase:
+implementer-plan`, `status: pending_approval`) and touches no source file. The orchestrator
+owns that gate, exactly like every other phase gate. 3b re-invokes the same agent with the
+approved plan and executes. The plan file is written **unconditionally**, before the gate —
+same discipline as every other agent's "Write to Project" step, and the reason it stopped
+being buried inside the implementer's own transcript. `implementer-lead-agent` (Team Mode)
+splits at the same boundary: 3a runs its Steps 1-2b and writes `03-contracts.md` plus the
+plan; 3b reads the contracts back and resumes at Step 3.
 
 `documentation-agent` is the second agent, after the Phase 3 implementer, permitted to
 write real files outside `.kairos/` in the target project — scoped strictly to

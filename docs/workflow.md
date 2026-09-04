@@ -107,25 +107,29 @@ At the start of this phase, the Orchestrator routes to one of two modes based on
 
 Works everywhere (Claude Code, API, local models). Recommended for all features.
 
-This phase has **two HITL checkpoints** — a plan gate before any file is written, and a code gate after TDD is complete.
+This phase has **two HITL checkpoints** — a plan gate before any file is written, and a code gate after TDD is complete. Each checkpoint ends one Orchestrator invocation of the implementer and starts the next: the plan gate is not a pause inside a single run, it is the boundary between step 3a and step 3b.
 
 **Step 3a — Implementation Plan (no files written yet)**
 - Analyse existing codebase patterns via `grep`
 - Output structured plan: files to create/modify, full test case list, TDD order, dependencies, risks
+- Write the plan to `.kairos/<feature_folder>/03-implementation-plan.md` and stop — no source file is touched
 
 **Step 3b — TDD Cycle (after plan approval)**
+- Same implementer, re-invoked with the approved plan; PHASE 0 is skipped, not repeated
 - Write tests FIRST (RED phase)
 - Implement code to pass tests (GREEN phase)
 - Refactor and verify coverage >80%
 
 _Input: `02-architecture.md` + project profile_
 _Output: implementation plan → (approval) → code files + test files + coverage report_
-_Saved to: project paths + `.kairos/<feature_folder>/03-implementation.md`_
+_Saved to: `.kairos/<feature_folder>/03-implementation-plan.md`, then project paths + `.kairos/<feature_folder>/03-implementation.md`_
 
 ::: info HITL checkpoint — Plan gate
-User reviews the implementation plan (files, test cases, approach) **before any code is written**. Reject at zero cost. Presented via `AskUserQuestion`, not a printed menu.
+User reviews the implementation plan (files, test cases, approach) **before any code is written**. Reject at zero cost.
 
-`✅ Approve plan` · `✏️ Revise plan` · `⛔ Stop`
+The plan is a first-class artifact like every other phase output: written to disk unconditionally, opened in the editor, and gated by the Orchestrator — never buried in the implementer's own transcript. Its `Risks` table goes through the same row-by-row Risk Disposition Loop as any other phase. Presented via `AskUserQuestion`, not a printed menu.
+
+`✅ Approve plan` · `✏️ Revise plan` · `⏭️ Skip next` · `⛔ Stop`
 :::
 
 ::: info HITL checkpoint — Code gate
@@ -140,18 +144,20 @@ Activated only when explicitly requested. The Orchestrator shows a cost warning 
 
 **How it works — TDD across a team:**
 
-The Lead applies the same RED → GREEN → REFACTOR discipline as the single agent, but distributes the work across specialists with an additional HITL gate between RED and GREEN:
+The Lead applies the same RED → GREEN → REFACTOR discipline as the single agent, and splits across the same two Orchestrator invocations (3a plan, 3b execution), but distributes the work across specialists:
 
-1. **Lead** analyzes Architect output and defines four binding contracts (API, database, test, pattern) before any teammate starts
-2. **RED phase** — Lead spawns `teammate-tests-agent` first. Tests are written against the contracts before any implementation exists. All tests fail — this is correct and expected.
-3. **HITL — Test Plan Gate** — User reviews the test suite before any implementation is spawned. Reject or revise at zero cost.
+1. **Step 3a — Lead** analyzes Architect output, scopes the layers in play, and defines four binding contracts (API, database, test, pattern) before any teammate starts. It writes `03-contracts.md` and `03-implementation-plan.md`, then stops. No teammate is spawned yet.
+2. **HITL — Plan gate** — Orchestrator-owned, same gate as the single agent. The plan carries the layer scoping and the Test Contract's full test-case list, so approving it approves the test plan too.
+3. **Step 3b — RED phase** — Lead is re-invoked, reads the approved contracts back from `03-contracts.md`, and spawns `teammate-tests-agent` first. Tests are written against the contracts before any implementation exists. All tests fail — this is correct and expected.
 4. **GREEN phase** — Lead spawns `teammate-backend-agent`, `teammate-frontend-agent`, `teammate-database-agent` in parallel. Their goal is to make the pre-existing tests pass.
 5. **REFACTOR phase** — Lead coordinates quality improvements across all layers while keeping tests green.
 6. **Lead** monitors contract compliance throughout, flags mismatches, and aggregates the final output.
 
+The Lead's own mid-run Test Plan Gate (between RED and GREEN) still exists, but only on a standalone run. Under the Orchestrator it is skipped: a spawned subagent cannot reach the human, so that gate could never actually be answered, and the 3a plan gate covers the same ground before any cost is incurred. Test quality itself is re-checked in Phase 5.
+
 _Input: `02-architecture.md` + project profile_
-_Output: all layer files + contract compliance report + coverage report_
-_Saved to: project paths + `.kairos/<feature_folder>/03-implementation.md`_
+_Output: contracts + implementation plan → (approval) → all layer files + contract compliance report + coverage report_
+_Saved to: `.kairos/<feature_folder>/03-contracts.md` + `03-implementation-plan.md`, then project paths + `.kairos/<feature_folder>/03-implementation.md`_
 
 ::: warning Team Mode — Claude Code only (experimental)
 Team Mode requires **Claude Code's experimental Agent Teams feature**. Enable it by setting `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in `.claude/settings.json`. Requires Claude Code v2.1.32+.

@@ -20,6 +20,15 @@ You can be invoked in either of two ways. Detect mode from the inputs available:
 - Optional `00-context.md` with project profile
 - Optional `03-implementation-plan.md` (the approved Phase 0 plan) if resuming a multi-wave run
 
+Pipeline mode arrives as one of two steps, named explicitly by the orchestrator in its prompt:
+
+- **Step 3a — plan.** Run PHASE 0 only. Write `.kairos/<feature_folder>/03-implementation-plan.md`, return `status: pending_approval`, and stop. Do not create or modify a single source file.
+- **Step 3b — execute.** The plan at `.kairos/<feature_folder>/03-implementation-plan.md` is approved. Read it, skip PHASE 0 and its checkpoint entirely, and run PHASES 1-2 against it. Never emit `status: pending_approval` on a 3b run — the orchestrator treats that status as non-advancing and would send you back for another plan indefinitely.
+
+- **Combined run (`step: 3ab`) — quick fix only.** Write the plan file exactly as in 3a, then skip the checkpoint and continue straight into implementation in the same run. Only the orchestrator's Quick-Fix path (its Step 0e) uses this, and only because a human already classified the change as small. Never assume it: if the step is unnamed, it is 3a.
+
+If the orchestrator names neither step, treat it as 3a. Writing source files against an unapproved plan is the failure this split exists to prevent.
+
 **Standalone mode** — invoked directly by the user. Inputs:
 - Free-form feature description in the prompt
 - No `.kairos/` folder, no prior phase files
@@ -27,7 +36,7 @@ You can be invoked in either of two ways. Detect mode from the inputs available:
 If standalone, derive `feature_folder` using the same algorithm the orchestrator defines in its Step 0b (`agents/orchestrator-agent.md` is the canonical definition — this restates it, it doesn't duplicate it): Jira key → `PROJ-N_{slug}`; numeric `#N` → `issue-N_{slug}`; otherwise `feature_{slug}`. Create `.kairos/<feature_folder>/` before writing any output.
 
 **Iteration Mode** — detected automatically from the ledger (see Ledger Check below). You are in Iteration Mode when `open-questions.md` contains `## Loop State` with `status: in_progress`. In this mode:
-- Skip Phase 0 HITL plan gate — the plan was already approved in the previous iteration
+- Skip PHASE 0 entirely — both the plan and its checkpoint. The plan was already approved in a previous invocation and must not be overwritten
 - Focus ONLY on `loop_state.cumulative_issues` — do not touch files not referenced in that list
 - Emit `changes_this_iteration[]` in your output describing which issues you addressed and how
 - Do NOT trigger sub-loops or re-invoke test-verifier/code-reviewer yourself
@@ -56,7 +65,7 @@ Before PHASE 0, determine effort, in this priority order:
 When effort is `simple_fix`, run in **Lean Mode** for the rest of this run:
 - PHASE 0 plan collapses to Approach (1-2 lines) + Files to Create/Modify. Omit `Waves` (never triggered at this size) and the `Risks` table unless a genuine risk actually surfaces — an empty table is pure overhead at this size.
 - 2b Ledger Update becomes additive-only (see that section below).
-- The PHASE 0 HITL gate still applies unchanged — Lean Mode trims the plan's content, not the approval step.
+- The PHASE 0 plan file and its gate still apply unchanged — Lean Mode trims the plan's content, never the write to `03-implementation-plan.md` or the approval step.
 
 Any other effort value (`medium` or `significant_rework`) runs the Full process below, unchanged.
 
@@ -66,7 +75,7 @@ Any other effort value (`medium` or `significant_rework`) runs the Full process 
 
 Work through [`coding-discipline`](../skills/coding-discipline/SKILL.md) before starting implementation.
 
-Before writing any file, output a structured plan and wait for user approval.
+Before writing any source file, produce a structured plan, write it to `03-implementation-plan.md`, and wait for approval (see Phase 0 Checkpoint below — under the orchestrator, approval happens in a separate invocation).
 
 Analyze:
 - Architecture spec received from orchestrator
@@ -144,9 +153,19 @@ Infer a reasonable impact level (`critical`/`high`/`medium`/`low`) per risk from
 | 1 | src/payments/stripe.service.js, src/app.js |
 ```
 
-#### Phase 0 HITL Checkpoint
+#### Phase 0 Checkpoint
 
-Present the plan and ask:
+**Write the plan first, unconditionally.** Save it to `.kairos/<feature_folder>/03-implementation-plan.md` before presenting anything and regardless of how this run ends — the same discipline every other KAIROS agent applies to its "Write to Project" step. A plan that exists only inside this run's transcript is a plan nobody reads: it gets buried under the generation output and the human never gets a reviewable artifact. It is a separate file from the final output (`03-implementation.md`, written at the end of PHASE 2), and keeping the two distinct is also what makes the Input Modes' "Optional `03-implementation-plan.md` if resuming a multi-wave run" actually work — a wave-2+ resume must read the original plan, not wave 1's final summary.
+
+Then open it:
+
+```bash
+${KAIROS_EDITOR:-code} ".kairos/$feature_folder/03-implementation-plan.md"
+```
+
+**If invoked by the orchestrator (step 3a), stop here.** Do not present a gate, do not proceed to PHASE 1, do not touch a source file. Return `status: pending_approval`. The orchestrator owns this gate: it resolves the `## Risks` table row by row through its Risk Disposition Loop, presents the whole-artifact gate, then re-invokes you as step 3b with the approved plan. A gate presented from here could never be answered — a spawned subagent has no channel to the human.
+
+**If running standalone**, present the plan and ask:
 
 ```
 ✅ Approve plan — proceed to implementation (PHASE 1–2)
@@ -154,11 +173,11 @@ Present the plan and ask:
 ⛔ Stop pipeline
 ```
 
-When orchestrator-invoked, the orchestrator's Risk Disposition Loop resolves the `## Risks` table first (one row at a time); standalone runs approve/reject the whole table as one bundle here as before.
+Standalone runs approve or reject the whole `## Risks` table as one bundle here.
 
 **Do NOT proceed to PHASE 1 until the user explicitly approves the plan.**
 
-Once approved, save the plan to `.kairos/<feature_folder>/03-implementation-plan.md` — a separate file from the final output (`03-implementation.md`, written at the end of PHASE 2). Keeping them distinct is what makes the Input Modes' "Optional `03-implementation-plan.md` if resuming a multi-wave run" actually work: a wave-2+ resume must read the original plan, not wave 1's final summary.
+**Step 3b and Iteration Mode runs skip this checkpoint entirely** — the plan is already approved, and re-writing it would overwrite the approved version with an unapproved one.
 
 ---
 
@@ -222,6 +241,8 @@ A  src/payments/stripe.service.js
 Never return `complete` if files were not actually written. Run `git status --short` and paste the raw output into the `## Git Status` block before emitting the document. If `git status` shows no changes, the run failed: set `status: blocked` and report it honestly.
 
 ## After Generating Output
+
+> A step 3a (plan) run never reaches this section — it ends at the Phase 0 Checkpoint, having written only `03-implementation-plan.md`. Everything below applies to a step 3b or standalone execution run.
 
 ### 1. Present for Validation
 If invoked by the orchestrator, skip this step — the orchestrator owns gate presentation (see its HITL section). Use this only when running standalone.
