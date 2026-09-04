@@ -357,7 +357,7 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
       iteration: 1 of <max_retries>
       issues_critical_high_prev: null
       issues_critical_high_curr: <count of critical/high from {checker}'s output>
-      cumulative_issues: <all critical/high issues[] from {checker}'s output>
+      cumulative_issues: <critical/high issues[] from {checker}'s output — this iteration's list only, replaced in full each iteration below, never accumulated across iterations despite the field name>
       ```
    2. **Loop** — repeat until exit condition:
       a. Re-invoke the active Phase-3 implementer **as step 3b** — `implementer-tdd-agent`, `implementer-coder-agent`, or `implementer-lead-agent`, whichever was selected in Step 3's routing decision (all three detect Iteration Mode from the ledger automatically). Never re-invoke step 3a from inside a loop: the plan is already approved, a fresh plan would return `pending_approval`, and a non-advancing status inside a loop is an infinite loop.
@@ -366,7 +366,7 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
       d. **Monotonic-progress check**: if `new_count >= issues_critical_high_curr` → exit with: `⚠️ Loop thrash after N iterations — critical/high count not decreasing. Human review required.` — append this outcome to `## Loop History — {pair}` (create it if absent) before exiting.
       e. If `status == READY` → exit loop (success) — no `## Loop History` entry needed; a converged loop carries no cautionary memory forward.
       f. If `iteration >= max_retries` → exit with: `⚠️ Loop exhausted after <N> iterations. <X> critical/high issues remain.` — append this outcome to `## Loop History — {pair}` (create it if absent) before exiting.
-      g. Otherwise: increment `iteration`, set `issues_critical_high_prev = issues_critical_high_curr`, `issues_critical_high_curr = new_count`, append issues to `cumulative_issues`, save versioned artifacts (`{checker's artifact}-iter{N}.md`, `03-implementation-iter{N}.md`), continue
+      g. Otherwise: increment `iteration`, set `issues_critical_high_prev = issues_critical_high_curr`, `issues_critical_high_curr = new_count`, set `cumulative_issues` to `{checker}`'s fresh critical/high `issues[]` from this pass — replace, do not append. An issue absent from the checker's own re-scan is already fixed; carrying it forward wastes the implementer's next iteration re-fixing resolved code and dilutes the real backlog, the same failure `_recap.md`'s audit trail had one layer up. Save versioned artifacts (`{checker's artifact}-iter{N}.md`, `03-implementation-iter{N}.md`), continue
    3. **Cleanup**: remove `## Loop State — {pair}` from `open-questions.md`. `## Loop History` (if written in step 2d/2f) is a separate, persistent section — do not remove it here; it is what step 0 checks on any later re-arm this run.
 
    Both loops below apply this procedure with their own `{pair}`/`{checker}`, then run their own Guard step.
