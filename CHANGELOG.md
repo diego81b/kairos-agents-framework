@@ -4,6 +4,19 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v7.5.1 — September 4, 2026
+
+### Added
+
+- **`agents/orchestrator-agent.md`**, **`CLAUDE.md`** — Step 0c gains a one-time-per-project Gitignore check: if `.kairos/` isn't already covered by the target project's `.gitignore`, ask once whether to add it (its artifacts — security-review findings, ledger notes — aren't meant to sit in the project's own git history indefinitely, even redacted). A `.kairos/.gitignore-prompted` marker keeps this from asking on every subsequent feature run. Documented as the orchestrator's one narrow exception to never writing outside `.kairos/`.
+- **`agents/orchestrator-agent.md`**, **`agents/documentation-agent.md`** — Feature Recap gains a new Step 10d, Project Summary: since `.kairos/` may now be gitignored, `_recap.md` might never reach the project's own git history. On request, the orchestrator composes a further-redacted digest (security findings collapsed to category + non-exploitable takeaway, no attack-scenario detail) and hands it to `documentation-agent`'s new **Verbatim passthrough** input mode, which writes that exact content to `docs/kairos-summaries/$feature_folder.md` after its own Approve/Request changes/Stop gate — a second explicit confirmation beyond the orchestrator's own.
+
+### Fixed
+
+- **`agents/code-reviewer-agent.md`**, **`agents/security-reviewer-agent.md`**, **`agents/orchestrator-agent.md`** — a hardcoded-secret finding had no instruction against quoting the matched value in the report itself, so a discovered API key/token could end up copied verbatim into `04-review.md` or `04b-security-review.md` — Markdown files the target project may commit like any other artifact, permanently, even after the secret is later rotated. Both agents now report type and `file:line` only, never the value; the orchestrator's on-demand row-explain branch got the same rule, since it can pull the same value into a ledger note.
+
+---
+
 ## v7.5.0 — September 4, 2026
 
 ### Added

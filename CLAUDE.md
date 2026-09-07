@@ -87,6 +87,11 @@ plan; 3b reads the contracts back and resumes at Step 3.
 write real files outside `.kairos/` in the target project — scoped strictly to
 documentation (README/CHANGELOG/`docs/**`), never source code.
 
+The orchestrator itself has one narrow exception to writing only inside `.kairos/`:
+Step 0c's Gitignore check, which — once per project, only after an explicit human
+choice — appends a single `.kairos/` line to the target project's `.gitignore`. It
+never touches any other file outside `.kairos/`.
+
 Once the last active phase's gate resolves — not on a mid-run `Stop pipeline` — the
 orchestrator writes one more file itself, no subagent involved: `_recap.md` in the feature
 folder. It condenses every phase artifact plus the ledger's audit trail and any still-open

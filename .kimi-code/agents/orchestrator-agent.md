@@ -114,6 +114,23 @@ The ledger contains three living files — `constraints.md`, `decisions.md`, `op
 2. Offer optional human annotation at each HITL gate (see HITL section)
 3. Warn about unresolved open-questions at pipeline end
 
+**Gitignore check** (once per project, not once per feature): `.kairos/` can hold internal detail that shouldn't sit in the project's own git history indefinitely — security-review findings, ledger notes, open questions — even redacted of secret values (see the phase agents' own redaction rules), that's still material most teams don't want permanently committed. This is the one narrow, human-confirmed exception to "the orchestrator never writes outside `.kairos/`": on the option that acts, it appends a single infrastructure line to `.gitignore`, never project content, and only after an explicit choice.
+
+```bash
+test -f .kairos/.gitignore-prompted && echo skip   # already handled, one way or another — say nothing, proceed
+grep -qE '^\.kairos/?$' .gitignore 2>/dev/null && echo skip   # already covered — say nothing, proceed
+```
+
+If neither check says `skip`, ask:
+- `question`: `".kairos/ isn't in this project's .gitignore yet — its artifacts can include security-review findings and other internal detail. Add it now?"`
+- `header`: `"Gitignore"`
+- `options`:
+  - **Add now** (Recommended) — `echo ".kairos/" >> .gitignore` (creates the file if it doesn't exist), then `touch .kairos/.gitignore-prompted` so this never asks again for this project.
+  - **Not now, ask again next time** — do nothing; with no marker file, the next pipeline run in this project re-asks.
+  - **Never ask again** — `touch .kairos/.gitignore-prompted` without touching `.gitignore`; the human is choosing to manage this themselves.
+
+If `AskUserQuestion` is not available, print the same three options as a menu and wait for a typed reply.
+
 ### Step 0d: Read Issue Body (if issue reference present)
 
 Try to fetch the issue body from the tracker and look for a `## KAIROS Pipeline` section:
@@ -432,6 +449,17 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
 
        If `Bash` is unavailable, or the delete command is denied: report `⚠️ Cleanup skipped — could not delete files.` and stop there — never work around it with another mechanism.
 
+    d. **Project Summary (optional)** — `.kairos/` may now be gitignored (Step 0c), so `_recap.md` may not survive in the project's own git history. Ask whether to also persist a sanitized copy inside the project itself, outside `.kairos/`:
+       - `question`: `"Also save a sanitized summary inside the project (outside .kairos/), so there's a durable record even if .kairos/ is gitignored?"`
+       - `header`: `"Project Summary"`
+       - `options`:
+         - **Yes, save it** (Recommended) — proceed below.
+         - **No, .kairos-only** — do nothing further.
+
+       If `AskUserQuestion` isn't available, print the same two options as a menu and wait for a reply.
+
+       On **Yes**: compose the content yourself from `_recap.md` — same structure, but redact further before handing it off: collapse any Findings/Issues row whose Description carries exploit-scenario detail (from `04b-security-review.md`'s attack scenarios) down to category plus a one-line non-exploitable takeaway (e.g. "1 high-severity auth gap found and fixed", never the attack path itself), and re-confirm no secret value slipped through — the phase agents' own redaction rules should already have caught this, but this is the last point before anything leaves `.kairos/`. Target path: `docs/kairos-summaries/$feature_folder.md`. Invoke @kairos:documentation-agent in **Verbatim passthrough** mode (see its Input Modes section) with that exact content and path — it runs its own Approve/Request changes/Stop gate on that content before writing, a second explicit confirmation beyond this one.
+
 ## Key Rules
 
 ### HITL — Human-in-the-Loop
@@ -459,7 +487,7 @@ KAIROS is a HITL pipeline. After EVERY active subagent completes:
        - **Mitigate now** — the row's Mitigation/Fix text becomes a binding requirement for the next phase. Write a `constraints.md` row, status `🔴 open`, note `MUST — from {phase} R{id}`.
        - **Escalate** — needs an explicit decision before the pipeline continues. Write a `constraints.md` row `🔴 open` tagged `BLOCKING`, AND an `open-questions.md` row. Does not block Approve at step 4, but flips its recommended default to Request changes (alongside the existing status-based bias).
        - **Defer** — out of scope now, accepted as residual risk. Write an `open-questions.md` row, status `🔴 open`, note `deferred risk`.
-     - **On-demand explain**: if the human's free-text reply for a row asks for more detail instead of picking one of the 4 options (e.g. "explain", "why", "perché", "spiega", "non capisco") — do not treat it as fix feedback or a standalone note. Read the row's actual referenced file/line/code (or, for a pre-code phase, the relevant requirement/design section) and write 2-4 plain-language sentences: what could concretely go wrong or what this decision actually changes, why it matters in practice, and what a junior dev with no prior context on this row would need to know to choose confidently — not a restatement of the row's own Description or a generic definition of the category. Then re-ask the same row with the same 4 options; do not advance to the next row until it gets an actual disposition. This keeps every row terse by default — the elaboration only gets written when a human asks for it, not for every row up front.
+     - **On-demand explain**: if the human's free-text reply for a row asks for more detail instead of picking one of the 4 options (e.g. "explain", "why", "perché", "spiega", "non capisco") — do not treat it as fix feedback or a standalone note. Read the row's actual referenced file/line/code (or, for a pre-code phase, the relevant requirement/design section) and write 2-4 plain-language sentences: what could concretely go wrong or what this decision actually changes, why it matters in practice, and what a junior dev with no prior context on this row would need to know to choose confidently — not a restatement of the row's own Description or a generic definition of the category. If the row is a secret/credential finding, describe its type, location, and impact only — never quote the actual value, even here: this explanation can end up copied into a standalone ledger note (see the free-text handling above), which persists in `.kairos/` like any other artifact. Then re-ask the same row with the same 4 options; do not advance to the next row until it gets an actual disposition. This keeps every row terse by default — the elaboration only gets written when a human asks for it, not for every row up front.
      - **If `AskUserQuestion` is not available**: print the same 4-option menu per row, one row at a time, and wait for a typed reply before showing the next row. The explain trigger above applies the same way to a typed reply.
      - Write the chosen disposition back into the artifact's Disposition cell (small edit to the file just produced) — including for **Accept**, so no cell is left empty — in addition to the ledger row above for the other three options.
    - Once every row in the table has a disposition, update the frontmatter `open_dispositions` field in the same file to `0` in the same edit pass (it started equal to the row count; nothing else recomputes it, so this loop is the only place it changes). Leave `risk_counts`/`issues_summary`/`findings_summary` (the by-Impact tally) untouched — Impact doesn't change with disposition, so that count stays accurate as generated.

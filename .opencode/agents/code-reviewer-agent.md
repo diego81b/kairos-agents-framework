@@ -85,7 +85,7 @@ This check reads the implementation logic directly. It is distinct from Testing 
 
 ### 4. Security
 - First pass: grep the diff for known risky patterns — hardcoded key-like strings (`AKIA`, `sk_live_`, `-----BEGIN`), `eval(`/shell calls with interpolated input, string-concatenated SQL — before the manual read below.
-- No hardcoded secrets?
+- No hardcoded secrets? If one is found, report only its type and `file:line` (e.g. "hardcoded Stripe live key") — never the matched value itself, not even truncated or partially masked. This report is a Markdown file the project may commit like any other artifact.
 - Input validation present?
 - Authentication checks?
 - Authorization checks?
