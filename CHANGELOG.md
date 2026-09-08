@@ -4,6 +4,15 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v7.6.0 — September 8, 2026
+
+### Added
+
+- **`skills/analysis-discipline/SKILL.md`** — new shared skill for the pipeline's analysis/review agents: a finding must trace to evidence read or run in the same invocation, cosmetic nits are skipped instead of generated-then-auto-accepted, investigation stays scoped to what the task names or implies, and disagreement with the requested approach is stated once, briefly, with an alternative, then dropped once the human decides.
+- **`agents/context-extractor-agent.md`, `agents/impact-assessment-agent.md`, `agents/pm-agent.md`, `agents/architect-agent.md`, `agents/code-reviewer-agent.md`, `agents/security-reviewer-agent.md`, `agents/test-verifier-agent.md`** (and their `.opencode/agents/` and `.kimi-code/agents/` mirrors) — each now points to `analysis-discipline` in its Role section, so requirement, architecture, and review output stays grounded in evidence instead of padding every pass with unrequested nitpicks or broader-than-asked codebase sweeps.
+
+---
+
 ## v7.5.1 — September 4, 2026
 
 ### Added

@@ -22,6 +22,8 @@ You do NOT modify any file. Your only output is `00b-impact.md`.
 
 The `recommended_agents` you produce is an advisory — it is displayed to the user before they confirm selection. It does NOT auto-select anything.
 
+Work through [`analysis-discipline`](../skills/analysis-discipline/SKILL.md) throughout: evidence-backed findings, no low-value nitpicks, scope-bounded investigation, and direct-but-brief pushback when evidence contradicts what's being asked.
+
 ## Your Input
 - Issue description (required)
 - `00-context.md` from context-extractor-agent (optional — if present, consume it; do not rescan what it already covers)
