@@ -4,6 +4,27 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v7.7.0 — September 9, 2026
+
+### Added
+
+- **`agents/retrospective-agent.md`** (and its `.opencode/agents/` and `.kimi-code/agents/` mirrors) — new conditional Step 3b, Durable Lessons Copy: when the target project gitignores `.kairos/` (the orchestrator's Step 0c recommends it), the accumulated `_lessons.md` would never reach the project's own git history. After the retrospective is approved, the agent now offers to also append the same condensed Feature Log entry to a durable in-project file, discovered from the project's own docs (`README.md`/`CLAUDE.md`/docs folder) or chosen by the user. `.kairos/_lessons.md` stays the canonical store that the orchestrator and `improvement-advisor-agent` read; the durable copy is append-only and mirrors the Step 10d escape hatch already available for `_recap.md`. When `.kairos/` is tracked, the step stays silent.
+- **`docs/agents.md`** — the Retrospective Agent section now documents the Durable Lessons Copy step.
+
+---
+
+## v7.8.0 — September 9, 2026
+
+### Added
+
+- **`skills/analysis-discipline/SKILL.md`** — new principle 5, Premise Falsification Outranks Scope: evidence contradicting the input issue's stated reachability or severity must be reported as a premise refutation (`Premise refutation:` prefix in the finding's Description), never filed as a scope question or folded into a lesser category. Applies to all seven analysis/review agents that reference the skill.
+- **`agents/architect-agent.md`** (and its `.opencode/agents/` and `.kimi-code/agents/` mirrors) — new step 2b, Premise Check: for bug-type inputs that state a reachability or severity claim, the claim is verified against the actual code before designing — including in Lean Mode / `simple_fix`, where pm-agent may be absent. A refuted claim becomes a `Premise refutation:` risk row (`Impact: high`, never omitted even in a Lean Mode design with no other risks) plus a premise-tagged ledger row; the standalone gate recommends Stop when one is present. The architect never silently rescopes the issue itself.
+- **`agents/orchestrator-agent.md`** (and mirrors) — the Risk Disposition Loop gains a fifth disposition for premise rows: **Refute premise** (Recommended) / Accept / Escalate. Premise rows are never auto-disposed (exempt from the `low`/`medium` auto-accept and `quick_fix_mode` widening) and are deliberately not offered **Defer** — deferring a premise refutation is the failure mode this closes; a human can still defer via free text. A Refute premise disposition writes BLOCKING ledger rows and flips the whole-artifact gate's recommendation to **Stop pipeline** with guidance to rescope or close the issue. Nothing auto-aborts.
+- **`.kairos/decisions/ADR-001-premise-refutation-disposition.md`** — ADR recording this decision (Status: Accepted), including why the alternatives (a fourteenth agent, a skill-only rule, an orchestrator-side input scan, reusing Escalate) were rejected. Filed directly by the human because `improvement-advisor-agent`'s Bootstrap Check requires 3+ Feature Log entries and the log has 1.
+- **`docs/agents.md`** — the Architect Agent section now documents the Premise Check and the Refute-premise disposition.
+
+---
+
 ## v7.6.0 — September 8, 2026
 
 ### Added

@@ -58,6 +58,8 @@ Designs system architecture, plans database schema, designs API contracts, consi
 
 Writes a single `02-architecture.md`: a YAML frontmatter header (selected option, table/error-code counts) followed by the design doc body — the full data model and API contracts as Markdown tables.
 
+For bug-type inputs that state a reachability or severity claim, it also runs a **Premise Check** before designing: the claim is verified against the actual code, and a refutation surfaces as a `Premise refutation:` risk row — never as a deferrable scope question. The Orchestrator's Risk Disposition Loop gives such rows a dedicated disposition (**Refute premise**) and flips the gate's recommendation to **Stop pipeline**, so a pipeline cannot silently ship a fix for a scenario that cannot occur.
+
 ::: tip Optional enhancements
 **Skills:** `deep-research` (built-in)  
 Note: `trailmark/diagramming-code` skipped — plugin installs 10 skills, only 1 needed. Inline call graph analysis via Read + Grep is used instead.
@@ -208,6 +210,8 @@ Output is `06b-documentation.md`: a Docs Touched table plus the drafted content,
 ## [Retrospective Agent](/agents/retrospective-agent)
 
 Standalone, post-pipeline. Run any time after work on a feature stops — not necessarily after Release Planning; a `simple_fix` that skipped Phase 6 still has lessons worth capturing. Reads everything already on disk for that one feature (its phase artifacts and ledger) and distills 3–8 lessons, split Diataxis-style into **Why This Happened** (root cause) and **What To Do Differently** (actionable). Appends one dated entry to the project-root `.kairos/_lessons.md` — the only write in the framework that targets a path outside the current feature folder.
+
+If the project gitignores `.kairos/` (the Orchestrator's Step 0c recommends it), `_lessons.md` would never reach git history — so after approval the agent offers to also append the same condensed entry to a durable in-project copy, discovered from the project's own docs (`README.md`/`CLAUDE.md`/`docs/`) or chosen by you. `.kairos/_lessons.md` remains the canonical store that agents read; the durable copy is append-only project documentation, mirroring the Orchestrator's Step 10d escape hatch for `_recap.md`.
 
 ::: tip Optional enhancements
 **Skills:** `deep-research` (built-in)

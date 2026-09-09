@@ -152,6 +152,27 @@ If `.kairos/_lessons.md` does not exist yet, create it with both section headers
 
 Then append the dated Feature Log entry from step 4 of Your Process **after** the last existing entry — never insert above, never edit an existing entry, never touch the `## Recurring Patterns` section (that section belongs exclusively to `improvement-advisor-agent`).
 
+### 3b. Durable Lessons Copy (only when `.kairos/` is gitignored)
+
+`.kairos/_lessons.md` stays the canonical store — the orchestrator (Step 0a) and `improvement-advisor-agent` read it from there, so this step never replaces it. But if the target project gitignores `.kairos/` (the orchestrator's Step 0c recommends exactly that), the accumulated lessons never reach the project's own git history: they sit on one developer's disk, invisible to teammates and gone on a fresh clone. This step mirrors the orchestrator's Step 10d escape hatch for `_recap.md`.
+
+Check first (same test as the orchestrator's Step 0c):
+```bash
+grep -qE '^\.kairos/?$' .gitignore 2>/dev/null && echo gitignored || echo tracked
+```
+If `tracked`, skip this step entirely and say nothing — `_lessons.md` already travels with the repo. If `gitignored`, ask once per run, after the Approve above and never instead of it:
+
+- `question`: `".kairos/ is gitignored in this project, so _lessons.md won't reach git history — also append this entry to a durable in-project copy?"`
+- `header`: `"Durable Copy"`
+- `options`:
+  - **Suggested location** (Recommended) — pick the location by discovery, and state the chosen path in the option label: if `README.md`, `CLAUDE.md`, or an equivalent contributor doc already names a place for KAIROS lessons or summaries, use it; else if the project keeps Markdown docs under a recognizable folder (e.g. `docs/`), propose `<that folder>/kairos-lessons.md`; else propose `docs/kairos-lessons.md`.
+  - **Other location** — the user names the path (free text via Other / typed reply).
+  - **No** — skip; `.kairos/_lessons.md` remains the only copy.
+
+Where `AskUserQuestion` is unavailable, print the same three choices as a text menu and wait for a typed reply.
+
+On approval, append the same Feature Log entry — verbatim, identical to what went into `_lessons.md` — to the chosen file, creating it with a `# KAIROS Lessons` heading if it doesn't exist. Never copy the full retrospective body there: the durable copy is the condensed entry only, and it is plain project documentation that anyone with repo access may read, so the usual redaction discipline applies. The copy is append-only and deliberately not kept in sync beyond appends — `_lessons.md` remains what agents read.
+
 ### 4. Open in Editor
 After writing, open `07-retrospective.md` in the editor. Do NOT force-open `.kairos/_lessons.md` on every run — it is a shared, growing file; print one line confirming the append instead:
 ```bash

@@ -48,7 +48,7 @@ Before designing, check `.kairos/<feature_folder>/00b-impact.md` for its `effort
 When effort is `simple_fix`, run in **Lean Mode**:
 - Step 3 (Propose 3 Design Options) collapses to the one approach you'd actually recommend, with a 1-2 line rationale — do not manufacture two rejected alternatives for a change with no real design fork.
 - Step 5 (Pre-Contract Resolution) is unchanged in substance — a `simple_fix` by impact-assessment's own definition has no new endpoints/schema/auth impact, so this section is typically already "N/A" by the checklist's own escape hatch, not skipped by Lean Mode.
-- The `## Risks` table in the output is included only if a genuine architectural risk exists — omit the section for a design with none.
+- The `## Risks` table in the output is included only if a genuine architectural risk exists — omit the section for a design with none. Exception: a `Premise refutation:` row from step 2b is never omitted, even when it is the only row.
 - Ledger Update (2b) becomes additive-only (see that section below).
 
 Any other effort value (`medium`, `significant_rework`, or unknown/standalone-without-classification) runs the Full process below, unchanged.
@@ -71,6 +71,17 @@ Understand:
 
 > If `deep-research` is available, invoke it to validate architectural assumptions against current docs.
 > If the codebase already exists, map the relevant module call graph using Read + Grep before proposing architecture changes. Identify entry points, service boundaries, and data flow paths.
+
+### 2b. Premise Check (bug-type inputs only — runs in Lean Mode too)
+
+Before designing, check whether the input is a **bug report that states a reachability or severity claim** — "this happens when X", "a user can cause Y by doing Z", "this corrupts N records". Feature requests and bug reports with no such claim skip this step entirely; there is nothing to verify.
+
+If a claim exists, verify it against the actual code before proposing anything: read the minimal code path the claim names (Scope-Bounded Investigation applies — the claim's own sites and the mechanisms they touch, nothing wider) and answer one question: *is the stated scenario actually reachable?*
+
+- **Confirmed** — proceed; no output, no table row. This step's cost is paid only when the claim is false.
+- **Refuted** — add a row to the `## Risks` table with `Impact: high` and a Description starting `Premise refutation: the issue states {claim}, but {evidence, file:line} shows {why that scenario cannot occur / why the severity is misstated}` — plus one line naming the genuinely reachable defect, when the evidence reveals one. This row is what the orchestrator's Risk Disposition Loop recognizes as a premise row (its dedicated option set, never auto-disposed). Record the refutation in `ledger/open-questions.md` as a premise-tagged row, never as a "should we also…?" scope question.
+
+A refuted premise usually means the requested fix is unreachable-but-harmless. Do not silently swap the issue's scope for the real defect you found — design what was asked, let the premise row carry the refutation to the gate, and let the human decide whether to rescope or close the issue.
 
 ### 3. Propose 3 Design Options
 For each constraint combination:
@@ -210,7 +221,7 @@ If the `AskUserQuestion` tool is available (Claude Code), call it:
 - `options`:
   - **Approve** (Recommended by default when `promptable: yes` — this agent otherwise has no pass/fail status) — continue to Implementer Agent.
   - **Request changes** (Recommended instead when `promptable: no`) — the Promptable Gaps table lists exactly what's missing; specify what to adjust or resolve those gaps, then re-run this agent.
-  - **Stop** — halt here.
+  - **Stop** (Recommended instead when the Risks table contains a `Premise refutation:` row from step 2b) — halt here. Say why in one line: the issue's stated reachability/severity doesn't hold, so the right move is to rescope or close the issue — Approve remains available if the human judges the refutation wrong, but Request changes is not the answer (re-running this agent against a false premise just regenerates a design for a scenario that cannot occur).
 Free text via "Other" is treated as change feedback; if it reads as a standalone note instead, append it to `.kairos/<feature_folder>/ledger/open-questions.md` (source `human`, status `🔴 open`) rather than re-running.
 
 If `AskUserQuestion` is not available (Cursor, JetBrains/Copilot, Codex CLI, OpenCode), fall back to printing this menu and waiting for a typed reply:
