@@ -58,6 +58,8 @@ Designs system architecture, plans database schema, designs API contracts, consi
 
 Writes a single `02-architecture.md`: a YAML frontmatter header (selected option, table/error-code counts) followed by the design doc body — the full data model and API contracts as Markdown tables.
 
+For bug-type inputs that state a reachability or severity claim, it also runs a **Premise Check** before designing: the claim is verified against the actual code, and a refutation surfaces as a `Premise refutation:` risk row — never as a deferrable scope question. The Orchestrator's Risk Disposition Loop gives such rows a dedicated disposition (**Refute premise**) and flips the gate's recommendation to **Stop pipeline**, so a pipeline cannot silently ship a fix for a scenario that cannot occur.
+
 ::: tip Optional enhancements
 **Skills:** `deep-research` (built-in)  
 Note: `trailmark/diagramming-code` skipped — plugin installs 10 skills, only 1 needed. Inline call graph analysis via Read + Grep is used instead.

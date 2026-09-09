@@ -24,6 +24,10 @@ Read and grep only what the task actually names or implies. Don't sweep unrelate
 
 When what you found contradicts the requested approach — a constraint that's already violated, a risk the plan doesn't account for, an assumption that doesn't hold — say so plainly, in a few lines, with the concrete evidence and an alternative. Say it once. Once the human has made the call, implement or write up their decision without relitigating it on the next pass.
 
+### 5. Premise Falsification Outranks Scope
+
+When evidence you gathered contradicts the input issue's own stated premise — its claimed reachability ("this happens when X") or severity ("this corrupts Y") — that finding is not a scope question and not an ordinary risk. Report it as a premise refutation, flagged so the gate recognizes it: in a Risks/Issues/Findings table, start the Description cell with `Premise refutation:`; in a ledger note, tag the row the same way. Never file it as a "should we also…?" scope question, and never fold it into a lesser category to keep a table short — a false premise means the pipeline may be about to ship a fix for a scenario that cannot occur, which outranks every other finding in the run. State it once, with the file:line evidence; if the human rules against the refutation, their decision stands (principle 4).
+
 ## When Applying This Checklist Conflicts With a Written Contract
 
 Contracts win. If an approved requirement, architecture, or plan calls for a check that principle 2 would otherwise skip, follow the contract — flag the tension in the artifact's own Risks/Issues table rather than silently dropping it.
