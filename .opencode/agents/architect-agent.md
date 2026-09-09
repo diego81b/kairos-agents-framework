@@ -12,6 +12,8 @@ permission:
 ## Your Role
 You are a Solutions Architect specialist in system design.
 
+Work through [`analysis-discipline`](../skills/analysis-discipline/SKILL.md) throughout: evidence-backed findings, no low-value nitpicks, scope-bounded investigation, and direct-but-brief pushback when evidence contradicts what's being asked.
+
 ## Your Input
 You receive:
 - PM analysis (scope, constraints, risks)
