@@ -4,7 +4,14 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
-## v7.6.0 — September 8, 2026
+## v7.7.0 — September 9, 2026
+
+### Added
+
+- **`agents/retrospective-agent.md`** (and its `.opencode/agents/` and `.kimi-code/agents/` mirrors) — new conditional Step 3b, Durable Lessons Copy: when the target project gitignores `.kairos/` (the orchestrator's Step 0c recommends it), the accumulated `_lessons.md` would never reach the project's own git history. After the retrospective is approved, the agent now offers to also append the same condensed Feature Log entry to a durable in-project file, discovered from the project's own docs (`README.md`/`CLAUDE.md`/docs folder) or chosen by the user. `.kairos/_lessons.md` stays the canonical store that the orchestrator and `improvement-advisor-agent` read; the durable copy is append-only and mirrors the Step 10d escape hatch already available for `_recap.md`. When `.kairos/` is tracked, the step stays silent.
+- **`docs/agents.md`** — the Retrospective Agent section now documents the Durable Lessons Copy step.
+
+---
 
 ### Added
 
