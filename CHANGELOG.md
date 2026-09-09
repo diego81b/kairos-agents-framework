@@ -4,6 +4,14 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v7.8.1 — September 9, 2026
+
+### Fixed
+
+- **`netlify.toml`** — removed a hardcoded `ignore = "exit 0"` build-ignore command that skipped every deploy regardless of actual content changes on the branch. Netlify was returning "Canceled build due to no content change" on every push.
+
+---
+
 ## v7.7.0 — September 9, 2026
 
 ### Added
