@@ -47,6 +47,7 @@ Before analysis, check for `.kairos/<feature_folder>/00b-impact.md` (produced by
 
 When effort is `simple_fix`, run in **Lean Mode**:
 - Skip categories in Constraint Elicitation (step 3) and Clarifying Questions (step 2) that plainly don't apply — do not ask about PCI-DSS or 10K req/sec scale for a copy-text change. Only elicit what's genuinely relevant.
+- Use Cases (step 4b) is skipped entirely — a narrow, well-understood change has no flow worth separating from its Scope description.
 - Risk Analysis (step 5) produces a `## Risks` table only if a real risk exists. An empty table for a trivial change is overhead, not rigor — omit the section entirely rather than padding it.
 - Ledger Update (2b) becomes additive-only (see that section below).
 
@@ -82,6 +83,19 @@ What's INCLUDED in feature?
 What's EXPLICITLY EXCLUDED?
 Dependencies on other systems?
 
+### 4b. Use Cases
+
+For each primary way a user (or calling system) accomplishes the goal from step 4's Scope, capture a short functional flow — independent of how it will be implemented:
+- **Actor** — who initiates it
+- **Goal** — what they're trying to accomplish
+- **Main Flow** — the steps, in order, as the actor experiences them
+
+Keep it to the primary paths — 2-5 use cases covers most features. A flow that's really a variant of another (same actor, same goal, one branching step) is an alternate flow under that same UC, not a new one.
+
+This is the functional anchor every downstream phase reads before touching a technical detail. It's what you'd tell a stakeholder who asks "what does this actually do for the user" — the thing that's easy to lose sight of once architecture, contracts, and file lists take over. On a large or multi-wave implementation, this is what keeps later waves aimed at the actual goal instead of just the contract that was last read.
+
+Skipped entirely in Lean Mode (`simple_fix` — see Effort Detection above).
+
 ### 5. Risk Analysis
 What could go wrong?
 How to mitigate each risk?
@@ -93,6 +107,8 @@ Metrics to measure?
 Acceptance criteria?
 
 Phrase each criterion in **EARS form** where the requirement genuinely has a trigger and a system response — `When <trigger>, the <system> shall <response>` (e.g. "When a charge request includes an expired card, the payment service shall return a `card_expired` error without contacting Stripe"). This is what makes a criterion machine-testable rather than a vague goal, and it's what `test-verifier-agent` maps tests against downstream (`AC-1`, `AC-2`, ...). Don't force the template onto a criterion that isn't actually a trigger/response pair (e.g. a pure data-shape requirement) — write it as plain prose instead rather than contorting it. In **Lean Mode** (`simple_fix`), only phrase a criterion this way if it was already going to be a criterion worth stating — do not manufacture EARS-shaped criteria for a trivial change that has none.
+
+When step 4b produced Use Cases, tag each criterion that belongs to one with a trailing `(UC-1)` — so the chain from functional flow to testable criterion (`test-verifier-agent` numbers these `AC-1`, `AC-2`, ... by list order downstream) stays traceable. A criterion with no matching UC (e.g. a pure data-shape or non-functional requirement) carries no tag.
 
 ### 7. Integration Points
 Where does this connect?
@@ -117,6 +133,17 @@ next_agent: architect-agent
 ## Scope
 <feature description — what's included, what's explicitly excluded, dependencies on other systems>
 
+## Use Cases
+*(Omit entirely in Lean Mode — see step 4b)*
+
+### UC-1: <short functional title>
+**Actor:** <who initiates it>
+**Goal:** <what they're trying to accomplish>
+**Main Flow:**
+1. <step>
+2. <step>
+3. <step>
+
 ## Constraints
 | Category | Constraint |
 |----------|-----------|
@@ -132,8 +159,8 @@ next_agent: architect-agent
 | R1 | what could go wrong | critical/high/medium/low | how to mitigate | *(filled by gate)* |
 
 ## Success Criteria
-- When <trigger>, the <system> shall <response> (EARS form — use where the criterion has a real trigger/response; see step 6)
-- criterion 2 (plain prose is fine when there's no trigger/response to name)
+- When <trigger>, the <system> shall <response> (UC-1) (EARS form — use where the criterion has a real trigger/response; see step 6)
+- criterion 2 (plain prose is fine when there's no trigger/response to name; omit the `(UC-N)` tag when no Use Case applies)
 
 ## Integration Points
 - system 1 to connect to

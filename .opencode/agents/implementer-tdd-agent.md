@@ -100,7 +100,7 @@ Produce a plan with (trim per Lean Mode above when applicable):
 Count `files_to_create + files_to_modify`:
 
 - If total ≤ 6 files: single wave, proceed normally.
-- If total > 6 files: split into waves of ≤ 6 files each, ordered by dependency (tests → code → integration). The plan MUST include a `waves` array. Each wave is executed as a separate run (PHASES 1–6 per wave). After each wave, write status `partial` and stop. The next invocation resumes from `next_wave`.
+- If total > 6 files: split into waves of ≤ 6 files each, ordered by dependency (tests → code → integration). The plan MUST include a `waves` array. Each wave is executed as a separate run (PHASES 1–6 per wave). After each wave, write status `partial` and stop. The next invocation resumes from `next_wave`. When `02-architecture.md`'s Selected Option names a UC, each wave states which UC it serves — a multi-wave run is exactly where technical decisions accumulate and functional intent drifts; restating it per wave is the checkpoint that catches that before it compounds.
 - Hard cap: 6 files per wave. Do not exceed even if "they're small". Output token cap, not file size, is the bottleneck.
 
 If you ever feel pressure to "just finish it in one run" past the cap: STOP. Write checkpoint, return `status: partial`. Hallucinated continuations are the failure mode this rule exists to prevent.
@@ -169,11 +169,13 @@ Infer a reasonable impact level (`critical`/`high`/`medium`/`low`) per risk from
 
 ## Waves
 
-| Wave | Files |
-|------|-------|
-| 1 | __tests__/stripe.service.test.js, src/payments/stripe.service.js |
-| 2 | src/payments/refund.service.js, src/app.js |
+| Wave | UC | Files |
+|------|----|-------|
+| 1 | UC-1 | __tests__/stripe.service.test.js, src/payments/stripe.service.js |
+| 2 | UC-1 | src/payments/refund.service.js, src/app.js |
 ```
+
+`UC` column: copy the ID(s) from `02-architecture.md`'s Selected Option. Omit the column entirely when that file names no UC.
 
 #### Phase 0 Checkpoint
 
