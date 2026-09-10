@@ -4,6 +4,14 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v7.8.2 — September 10, 2026
+
+### Added
+
+- **`skills/coding-discipline/SKILL.md`** — Scope Discipline (principle 1) now calls out bug-type work explicitly: default to the most surgical fix that leaves working code alone, and if the minimal fix isn't enough, surface the wider scope as a Phase 0 Risk (or ask directly when standalone) instead of expanding it unilaterally. Applies to every agent that references the shared skill — both implementers, `implementer-lead-agent`, and all four teammate agents.
+
+---
+
 ## v7.8.1 — September 9, 2026
 
 ### Added
