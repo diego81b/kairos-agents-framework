@@ -4,6 +4,20 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v7.8.1 — September 9, 2026
+
+### Added
+
+- **`agents/pm-agent.md`** (and its `.opencode/agents/` and `.kimi-code/agents/` mirrors) — new step 4b, Use Cases: 2-5 short functional flows (Actor/Goal/Main Flow) captured from the client-facing requirement, before any technical design happens. Success Criteria (step 6) now tag each acceptance criterion with the UC it belongs to (`AC-N (UC-N)`), giving the pipeline a functional anchor that survives into architecture and implementation instead of getting lost once technical contracts take over. Skipped in Lean Mode (`simple_fix`).
+- **`agents/architect-agent.md`** (and mirrors) — "Recommend Best Option" now names which UC(s) the selected design serves, referencing PM's Use Cases rather than re-deriving them, so the technical design stays traceable to the functional goal it's meant to satisfy.
+- **`agents/implementer-tdd-agent.md`** (and mirrors) — the Wave Splitting table gains a `UC` column: each wave of a multi-wave (>6 files) implementation restates which use case it serves, re-anchoring the work on the functional objective at the exact point — complex, multi-wave builds — where technical decisions accumulate fastest and drift is easiest to miss.
+
+### Fixed
+
+- **`netlify.toml`** — removed a hardcoded `ignore = "exit 0"` build-ignore command that skipped every deploy regardless of actual content changes on the branch. Netlify was returning "Canceled build due to no content change" on every push.
+
+---
+
 ## v7.7.0 — September 9, 2026
 
 ### Added

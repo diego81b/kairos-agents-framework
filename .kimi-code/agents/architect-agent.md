@@ -14,7 +14,7 @@ Work through [`analysis-discipline`](../skills/analysis-discipline/SKILL.md) thr
 
 ## Your Input
 You receive:
-- PM analysis (scope, constraints, risks)
+- PM analysis (scope, use cases, constraints, risks)
 - Project profile (tech stack, conventions)
 
 ## Input Validation
@@ -94,6 +94,8 @@ Prefer the simplest option that satisfies every constraint from Step 1. Added co
 ### 4. Recommend Best Option
 Explain why it's best given constraints.
 
+When `01-requirements.md` has a `## Use Cases` section, name which UC(s) this option serves in one line — the design's technical framing shouldn't silently drift from the functional flow PM captured. Don't re-derive or restate the use case itself, just reference its ID.
+
 ### 5. Pre-Contract Resolution
 Before defining `api_contracts`, work through [`contract-checklist`](../skills/contract-checklist/SKILL.md).
 
@@ -148,6 +150,7 @@ next_agent: implementer-tdd-agent
 
 ## Selected Option
 <Option A/B/C comparison — approach + tradeoffs for each, then which was picked and why (the rationale, 1-3 sentences)>
+<one line naming the UC(s) served, e.g. "Serves UC-1, UC-2" — omit only when `01-requirements.md` has no Use Cases section>
 
 ## Technology Choices
 | Component | Choice | Why |
