@@ -4,6 +4,18 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v7.9.0 — September 11, 2026
+
+### Changed
+
+- **`agents/orchestrator-agent.md`** — Agent selection is now a checkbox prompt instead of a typed list of numbers. Where `AskUserQuestion` is available (Claude Code), Step 0e asks four grouped questions — Analysis (multi-select), Implementer (single-select, TDD marked recommended), Review (multi-select), Release (multi-select) — and assembles `active_agents` from the answers. The numbered menu and the `1 3 4 5` / agent-name / template-block input formats stay as the fallback for IDEs without the tool.
+- **`agents/orchestrator-agent.md`** — Loop Policy no longer asks you to type `"phase3: auto 3 / phase4: manual"`. It prints the cost estimate, then asks one question per loop with four fixed buttons: Manual (recommended), Auto 1, Auto 2, Auto 3. Under Team Mode the Auto 3 option is not offered at all, since the retry ceiling there is 2.
+- **`agents/orchestrator-agent.md`** — The Team Mode cost confirmation and the Loop Actuator's prior-exhaustion prompt are now button choices too, each with an explicit recommended option (Switch to Single Agent, Skip auto-loop), instead of printed numbered menus.
+- **`docs/overview.md`**, **`docs/agentic-loop.md`**, **`docs/setup/claude-code.md`** — Updated to show the new checkbox prompts and to state that typed numbers remain the fallback outside Claude Code.
+- **`.opencode/agents/orchestrator-agent.md`**, **`.kimi-code/agents/orchestrator-agent.md`** — Mirrors resynced with the canonical body.
+
+---
+
 ## v7.8.2 — September 10, 2026
 
 ### Added

@@ -301,11 +301,9 @@ Single Agent:  ~$0.068/feature  ✅ Recommended
 Team Mode:     ~$0.242/feature  (3.5× more — experimental, Claude Code only)
 
 Requires: CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 in .claude/settings.json
-
-✅ Confirm Team Mode
-↩️  Switch to Single Agent
-⛔ Cancel
 ```
+
+then a three-option prompt: **Switch to Single Agent** (recommended), **Confirm Team Mode**, **Cancel pipeline**.
 
 ### What the Lead spawns and when
 

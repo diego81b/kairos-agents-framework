@@ -13,7 +13,7 @@ An implementer writes code, a verifying agent checks it, finds issues, sends it 
 | **Phase 3** | Implementer ↔ Test Verifier | Test Verifier returns `NEEDS_FIXES` |
 | **Phase 4** | Code Reviewer ↔ Implementer | Code Reviewer returns `NEEDS_FIXES` with a `critical` or `high` issue |
 
-Both default to `manual` (no auto-retry — every `NEEDS_FIXES` still stops and asks you). You turn on `auto <N>` per loop, per pipeline run, at agent selection time.
+Both default to `manual` (no auto-retry — every `NEEDS_FIXES` still stops and asks you). You turn auto-retry on per loop, per pipeline run, at agent selection time.
 
 ## Worked Example
 
@@ -31,23 +31,16 @@ That's the whole mechanism: loops only skip the *retry-approval* step, never the
 
 ## How to Enable
 
-The orchestrator asks at agent selection time:
+The orchestrator asks at agent selection time, right after you pick the agents. It prints the cost estimate, then asks one question per loop with four fixed choices:
 
-```
-🔁 Loop Policy — optional, default: manual
+| Question | Choices |
+|---|---|
+| **Phase 3 loop** — Implementer ↔ Test Verifier, auto-retry on `NEEDS_FIXES` | `Manual` *(recommended)* · `Auto — 1 retry` · `Auto — 2 retries` · `Auto — 3 retries` |
+| **Phase 4 loop** — Code Reviewer ↔ Implementer, auto-retry on critical/high issues | same four |
 
-   Phase 3: Implementer ↔ Test Verifier loop
-     auto <N>   — auto-retry up to N times on NEEDS_FIXES
-     manual     — HITL gate on every NEEDS_FIXES (default)
+No number to type: pick a button per loop. In IDEs without the checkbox prompt the orchestrator prints the same options as a typed menu and you reply `"phase3: auto 3 / phase4: manual"` (empty reply keeps both `manual`).
 
-   Phase 4: Code Reviewer ↔ Implementer loop
-     auto <N>   — auto-retry up to N times on critical/high issues only
-     manual     — HITL gate on every NEEDS_FIXES (default)
-```
-
-Reply with something like `"phase3: auto 3 / phase4: manual"`, or press Enter to keep both `manual`.
-
-Works with any Phase-3 implementer — TDD, code-only, or Team Mode's lead agent. Team Mode caps at `auto 2` instead of `auto 5` since each retry there spawns a full team, not one agent.
+Works with any Phase-3 implementer — TDD, code-only, or Team Mode's lead agent. Under Team Mode the `Auto — 3 retries` option disappears: each retry there spawns a full team, so the ceiling is 2.
 
 ## Why It Can't Loop Forever
 

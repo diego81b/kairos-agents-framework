@@ -102,20 +102,16 @@ This gives you:
 
 Not every task needs the full pipeline. When you start a KAIROS run, the orchestrator asks you to choose which agents should run — with an advisory suggestion from the impact assessment (or from the orchestrator itself when that wasn't run), but never a hidden default: the choice is always yours.
 
-```
-📋 Which agents should run for this task?
-Reply with numbers (e.g. "1 3 4") or paste a KAIROS template block:
+In Claude Code the selection is four checkbox questions, not typed numbers — you tick what you want and nothing is pre-selected:
 
-1. pm-agent                  — Requirements analysis
-2. architect-agent           — System design
-3. implementer-tdd-agent     — TDD code generation (default — use when project has a test suite)
-   3b. implementer-coder-agent — Code-only, no TDD (use when project has NO test suite)
-4. code-reviewer             — Quality assurance
-   4b. security-reviewer-agent — Adversarial security review (optional — recommended for auth, payments, write endpoints)
-5. test-verifier             — Test quality & coverage
-6. release-planner           — Deployment planning
-   6b. documentation-agent   — Feature-facing docs (optional — recommended when API contracts or user-facing behavior changed)
-```
+| Question | Choices |
+|---|---|
+| **Analysis** (multi) | `pm-agent` — Requirements analysis · `architect-agent` — System design |
+| **Implementer** (single) | `implementer-tdd-agent` *(recommended — TDD, works everywhere)* · `implementer-coder-agent` — code-only, no TDD (project has no test suite) · `implementer-lead-agent` — Team Mode, Lead + 4 teammates (~3.5× cost) · **No implementer** |
+| **Review** (multi) | `code-reviewer-agent` — Quality assurance · `security-reviewer-agent` — Adversarial security review (recommended for auth, payments, write endpoints) · `test-verifier-agent` — Test quality & coverage |
+| **Release** (multi) | `release-planner-agent` — Deployment planning · `documentation-agent` — Feature-facing docs (recommended when API contracts or user-facing behavior changed) |
+
+Leaving a question empty means those phases don't run. In IDEs without the checkbox prompt (Cursor, JetBrains/Copilot, Codex CLI, OpenCode) the orchestrator prints the same list as a numbered menu and you reply with numbers (`1 3 4`), agent names, or a pasted KAIROS template block.
 
 If the issue already contains a `## KAIROS Pipeline` checklist block (placed there by you or a team template), the orchestrator reads it automatically and just asks you to confirm.
 
