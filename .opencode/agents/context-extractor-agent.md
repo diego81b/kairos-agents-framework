@@ -62,6 +62,14 @@ phase: context-extractor
 status: ready
 ---
 
+# Context — <feature title>
+
+## Summary
+**What:** <what was scanned and what the issue touches, one line>
+**Decision:** none — analysis only
+**Needs your attention:** <no-touch zones or missing patterns the next phase must respect; `none` if nothing stands out>
+**Next:** <impact-assessment-agent, or pm-agent when Pre-B is skipped>
+
 ## Context
 
 ### Stack
@@ -105,6 +113,8 @@ You are implementing: {issue_title}
 #### Files to create or modify
 ...
 ```
+
+Follow [`artifact-template`](../skills/artifact-template/SKILL.md) for the `## Summary` head block and the fixed Disposition-table column sets — both are mandatory, not stylistic.
 
 Section descriptions:
 - `## Context`: stack, reusable components with paths, patterns with example file paths, naming conventions, no-touch zones

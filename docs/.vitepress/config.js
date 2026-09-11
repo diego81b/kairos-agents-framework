@@ -139,6 +139,7 @@ export default defineConfig({
           { text: 'Contract Checklist', link: '/skills/contract-checklist/SKILL' },
           { text: 'Code Simplification', link: '/skills/code-simplification/SKILL' },
           { text: 'Artifact Bookkeeping', link: '/skills/artifact-bookkeeping/SKILL' },
+          { text: 'Artifact Template', link: '/skills/artifact-template/SKILL' },
           { text: 'Coding Discipline', link: '/skills/coding-discipline/SKILL' },
           { text: 'Issue Tracker Comment', link: '/skills/issue-tracker-comment/SKILL' }
         ]

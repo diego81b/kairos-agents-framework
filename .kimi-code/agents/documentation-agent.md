@@ -84,6 +84,12 @@ open_dispositions: 1
 
 # Documentation — <feature title>
 
+## Summary
+**What:** <which user-facing surfaces were documented, one line>
+**Decision:** <what was written and where — matches `docs_touched` in frontmatter>
+**Needs your attention:** <IDs of `critical`/`high` Documentation Gaps rows, e.g. `G1 — see Documentation Gaps`; `nothing above medium` if none>
+**Next:** end of pipeline
+
 ## Docs Touched
 
 | File | Change Type | Section |
@@ -109,10 +115,12 @@ open_dispositions: 1
 
 ## Documentation Gaps
 
-| ID | Description | Impact | Fix | Disposition |
-|----|-------------|--------|-----|-------------|
+| ID | Description | Impact | Mitigation/Fix | Disposition |
+|----|-------------|--------|-----------------|-------------|
 | G1 | No example error response documented for the 402 case | medium | Ask implementer for a real captured error payload | *(filled by gate)* |
 ````
+
+Follow [`artifact-template`](../skills/artifact-template/SKILL.md) for the `## Summary` head block and the fixed Disposition-table column sets — both are mandatory, not stylistic.
 
 This is the final phase of the numbered pipeline when selected, so there is no `next_agent` field — same reasoning as `release-planner-agent`. The `## Documentation Gaps` table uses the same 5-column shape as every other Risks/Findings table in this framework so the orchestrator's Risk Disposition Loop can parse it identically; omit the section entirely if there are no gaps rather than leaving an empty table.
 

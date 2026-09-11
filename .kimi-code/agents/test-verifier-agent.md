@@ -198,6 +198,12 @@ next_agent: release-planner-agent
 
 # Test Verification — <feature title>
 
+## Summary
+**What:** <what test suite was run and what it covers, one line>
+**Decision:** <the verdict — matches `status` in frontmatter, e.g. `NEEDS_FIXES — 1 high issue, 1 AC gap`>
+**Needs your attention:** <IDs of `critical`/`high` Issues rows plus any Acceptance Criteria gap, e.g. `I1, AC-3 — see below`; `nothing above medium` if none>
+**Next:** release-planner-agent
+
 ## Uncovered
 | File | Lines | Reason |
 |------|-------|--------|
@@ -214,6 +220,8 @@ next_agent: release-planner-agent
 |----|----------|-----------|-------------|--------|-----------------|-------------|
 | I1 | assertion_strength | `__tests__/stripe.service.test.js:88` | Test 'createCharge handles expired card' has no assertion — only awaits the call. | high | Add `expect(result).toEqual({ status: 'declined', code: 'card_expired' })` after the await. | *(filled by gate)* |
 ```
+
+Follow [`artifact-template`](../skills/artifact-template/SKILL.md) for the `## Summary` head block and the fixed Disposition-table column sets — both are mandatory, not stylistic.
 
 Issues table columns: `Impact` carries the severity value (`critical | high | medium | low` — same scale, formerly `Severity`). `Mitigation/Fix` carries the concrete remediation (formerly `Fix`). `Category` and `File:Line` stay as leading columns before `Description` so no information is lost. Leave `Disposition` empty in your own output — it is filled at the gate.
 

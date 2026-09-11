@@ -122,6 +122,12 @@ next_agent: test-verifier-agent
 
 # Security Review — <feature title>
 
+## Summary
+**What:** <what was reviewed and against which attack surface, one line>
+**Decision:** <the verdict — matches `status` in frontmatter, e.g. `VULNERABILITIES_FOUND — 1 high`>
+**Needs your attention:** <IDs of `critical`/`high` Findings rows, e.g. `F1 — see Findings`; `nothing above medium` if none. Never restate a secret's value here.>
+**Next:** test-verifier-agent
+
 ## Contract Enforcement
 | Ownership constraint (from Architect) | Enforced in code | Gap |
 |----------------------------------------|-------------------|-----|
@@ -134,6 +140,8 @@ Ordered by severity: `critical` first, then `high`, then `medium`, then `low`.
 |----|-------------|--------|-----------------|-------------|
 | F1 | `[authorization]` at `path/to/file:42` — how an attacker sets up the request and what they gain | high | concrete, specific remediation — what to add, change, or remove | *(filled by gate)* |
 ```
+
+Follow [`artifact-template`](../skills/artifact-template/SKILL.md) for the `## Summary` head block and the fixed Disposition-table column sets — both are mandatory, not stylistic.
 
 Table columns:
 - **ID** — `F1`, `F2`, … stable per finding.

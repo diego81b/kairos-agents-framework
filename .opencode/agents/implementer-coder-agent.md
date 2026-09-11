@@ -115,6 +115,12 @@ open_dispositions: 2
 total_waves: 1
 ---
 
+## Summary
+**What:** <what this plan builds, one line>
+**Decision:** <the implementation approach chosen, one clause — including the wave split when `total_waves` > 1>
+**Needs your attention:** <IDs of `critical`/`high` Risks rows, e.g. `R1 — see Risks`; `nothing above medium` if none>
+**Next:** awaiting plan approval — then step 3b (same agent, approved plan)
+
 ## Approach
 
 Brief description of the implementation strategy.
@@ -216,6 +222,12 @@ next_wave: null
 iteration_mode: { active: false, iteration: null }
 ---
 
+## Summary
+**What:** <what was built this wave, one line>
+**Decision:** <what was implemented and how, one clause>
+**Needs your attention:** <anything the reviewer must look at first — an untested path, a deviation from the plan; `none` if nothing>
+**Next:** code-reviewer-agent
+
 ## Files Written
 
 | Path | Kind | Lines |
@@ -233,6 +245,8 @@ A  src/payments/stripe.service.js
 
 *(Iteration Mode only — one line per cumulative issue addressed and how. Omit when not in Iteration Mode.)*
 ````
+
+Follow [`artifact-template`](../skills/artifact-template/SKILL.md) for the `## Summary` head block and the fixed Disposition-table column sets — both are mandatory, not stylistic.
 
 `status` values:
 - `complete` — all waves done, pipeline can advance to code-reviewer
