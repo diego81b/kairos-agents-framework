@@ -132,6 +132,12 @@ next_agent: architect-agent
 
 # PM Analysis — <feature_folder>
 
+## Summary
+**What:** <what this analysis covers, one line>
+**Decision:** <the scope boundary set — what's in and what's explicitly out — or `none — analysis only`>
+**Needs your attention:** <IDs of `critical`/`high` Risks rows, e.g. `R2 — see Risks`; `nothing above medium` if none>
+**Next:** architect-agent
+
 ## Scope
 <feature description — what's included, what's explicitly excluded, dependencies on other systems>
 
@@ -156,8 +162,8 @@ next_agent: architect-agent
 | Timeline | deadline if any |
 
 ## Risks
-| ID | Description | Impact | Mitigation | Disposition |
-|----|-------------|--------|------------|-------------|
+| ID | Description | Impact | Mitigation/Fix | Disposition |
+|----|-------------|--------|-----------------|-------------|
 | R1 | what could go wrong | critical/high/medium/low | how to mitigate | *(filled by gate)* |
 
 ## Success Criteria
@@ -168,6 +174,8 @@ next_agent: architect-agent
 - system 1 to connect to
 - system 2 to connect to
 ```
+
+Follow [`artifact-template`](../skills/artifact-template/SKILL.md) for the `## Summary` head block and the fixed Disposition-table column sets — both are mandatory, not stylistic.
 
 Follow [`artifact-bookkeeping`](../skills/artifact-bookkeeping/SKILL.md) for the exact recount rule — recompute after every edit, never hand-increment a single field.
 

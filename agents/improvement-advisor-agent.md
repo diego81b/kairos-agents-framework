@@ -88,6 +88,8 @@ Proposed
 <what changes if this is accepted — which agent files, which downstream behavior, any migration concern for feature folders already in progress>
 ```
 
+Follow [`artifact-template`](../skills/artifact-template/SKILL.md) for the `## Summary` head block and the fixed Disposition-table column sets — both are mandatory, not stylistic.
+
 Never delete or rewrite an existing ADR's body. A decision that changes course gets a **new** ADR whose Context names the one it supersedes; the human updates the old one's `Status` to `Superseded by ADR-<NNN>` by hand.
 
 ### `.kairos/_improvement-advisory.md` (project root)
@@ -102,7 +104,10 @@ proposals_count: N
 ---
 
 ## Summary
-<one paragraph: how many Feature Log entries were analyzed, how many confirmed patterns exist now (carried + new), how many new ADRs were drafted this run>
+**What:** <how many Feature Log entries were analyzed and over which features, one line>
+**Decision:** <how many confirmed patterns exist now (carried + new) and how many new ADRs were drafted this run>
+**Needs your attention:** <IDs of the ADRs awaiting a human decision, e.g. `ADR-001, ADR-002`; `none` when no proposal was drafted>
+**Next:** end of pipeline — a human applies any accepted ADR by hand
 
 ## Recurring Patterns
 <the exact refreshed table also being written into _lessons.md — shown here for review before it's applied>

@@ -12,6 +12,8 @@ Shared reference for `implementer-tdd-agent`, `implementer-coder-agent`, `implem
 
 Write the smallest change that satisfies the requirement. Don't rename unrelated identifiers, reformat untouched code, or "improve" a neighboring function while passing through it. A bug fix doesn't need surrounding cleanup; a one-shot operation doesn't need a helper extracted for reuse that doesn't exist yet.
 
+For bug-type work specifically, tread carefully: default to the most surgical fix that resolves the defect without touching code paths the bug doesn't reach — working code already in production stays as it is, not "improved" in passing. If the minimal fix turns out not to be enough — the defect can't be resolved without touching adjacent code, an existing pattern has to change, or the fix ripples into files that aren't obviously part of it — don't decide that expansion alone. Surface it as a Risk in the Phase 0 plan (or ask directly when running standalone) so a human signs off on the wider scope at the existing approval gate, before it lands in the diff rather than after.
+
 ### 2. No Speculative Abstraction
 
 Don't design for a hypothetical future requirement. A config flag, a generic plugin interface, or a strategy pattern needs at least two real call sites today to justify existing — one call site plus a guess about a second one later is not justification. Three similar lines of code are better than a premature abstraction built to avoid them.

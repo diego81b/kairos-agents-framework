@@ -131,6 +131,12 @@ open_dispositions: 2
 recommended_agents: [architect-agent, implementer-tdd-agent, security-reviewer-agent, code-reviewer-agent, test-verifier-agent]
 ---
 
+## Summary
+**What:** <what this issue touches, one line>
+**Decision:** <the effort classification — matches `effort` in frontmatter>
+**Needs your attention:** <IDs of `critical`/`high` Risks rows plus any Open Questions that block scoping, e.g. `R1, Q1 — see below`; `nothing above medium` if none>
+**Next:** <first agent in `recommended_agents`>
+
 ## Effort
 
 `medium` — specific files and changes that drove the classification, written as prose.
@@ -188,6 +194,8 @@ recommended_agents: [architect-agent, implementer-tdd-agent, security-reviewer-a
 | pm-agent | issue has complete acceptance criteria |
 | release-planner-agent | no new infrastructure or deployment steps |
 ```
+
+Follow [`artifact-template`](../skills/artifact-template/SKILL.md) for the `## Summary` head block and the fixed Disposition-table column sets — both are mandatory, not stylistic.
 
 Follow [`artifact-bookkeeping`](../skills/artifact-bookkeeping/SKILL.md) for the exact recount rule — recompute after every edit, never hand-increment a single field.
 

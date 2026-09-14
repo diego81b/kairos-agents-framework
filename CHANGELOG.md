@@ -4,6 +4,38 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v7.9.0 — September 11, 2026
+
+### Added
+
+- **`skills/artifact-template/SKILL.md`** — New shared reference fixing the body shape of every phase artifact. It defines the mandatory four-line `## Summary` head block (**What / Decision / Needs your attention / Next**) that each artifact now opens with, and the exact column sets of every table the Risk Disposition Loop parses. A gate is now readable in seconds without scrolling the whole file; the detail stays underneath, unchanged, for the next agent that needs it.
+- **every agent that writes a `.kairos/` artifact** — Each output template now opens with the `## Summary` block described above, filled by the agent that did the work. `Needs your attention` names row IDs (`R1, R3 — see Risks`) rather than restating descriptions, so it cannot drift once the Disposition Loop edits those rows.
+
+### Changed
+
+- **`agents/orchestrator-agent.md`** — HITL step 3 now prints the artifact's own `## Summary` block verbatim instead of synthesizing its own verdict summary, plus one appended line with the number of rows dispositioned in step 2. Artifacts without a Summary heading fall back to the previous behavior; a missing Summary is a presentation fallback, never a malformed artifact.
+- **`agents/implementer-tdd-agent.md`**, **`agents/implementer-coder-agent.md`**, **`agents/team/implementer-lead-agent.md`** — Both templates each agent emits (the Phase 3a plan and the Phase 3b implementation report) carry the Summary block.
+- **`docs/workflow.md`**, **`docs/skills-mcp.md`** — Document the Summary block and the new skill.
+- **`agents/orchestrator-agent.md`** — Agent selection is now a checkbox prompt instead of a typed list of numbers. Where `AskUserQuestion` is available (Claude Code), Step 0e asks four grouped questions — Analysis (multi-select), Implementer (single-select, TDD marked recommended), Review (multi-select), Release (multi-select) — and assembles `active_agents` from the answers. The numbered menu and the `1 3 4 5` / agent-name / template-block input formats stay as the fallback for IDEs without the tool.
+- **`agents/orchestrator-agent.md`** — Loop Policy no longer asks you to type `"phase3: auto 3 / phase4: manual"`. It prints the cost estimate, then asks one question per loop with four fixed buttons: Manual (recommended), Auto 1, Auto 2, Auto 3. Under Team Mode the Auto 3 option is not offered at all, since the retry ceiling there is 2.
+- **`agents/orchestrator-agent.md`** — The Team Mode cost confirmation and the Loop Actuator's prior-exhaustion prompt are now button choices too, each with an explicit recommended option (Switch to Single Agent, Skip auto-loop), instead of printed numbered menus.
+- **`docs/overview.md`**, **`docs/agentic-loop.md`**, **`docs/setup/claude-code.md`** — Updated to show the new checkbox prompts and to state that typed numbers remain the fallback outside Claude Code.
+- **`.opencode/agents/*.md`**, **`.kimi-code/agents/*.md`** — All 14 mirrors on both sides resynced with the canonical bodies.
+
+### Fixed
+
+- **`agents/pm-agent.md`**, **`agents/documentation-agent.md`** — Their Disposition tables spelled the remediation column `Mitigation` and `Fix` respectively, while every other phase and the Orchestrator's own Constraint & Decision Conflict Scan use `Mitigation/Fix`. A conflict row appended by that scan therefore landed in a table whose header did not match it. Both now use `Mitigation/Fix`.
+
+---
+
+## v7.8.2 — September 10, 2026
+
+### Added
+
+- **`skills/coding-discipline/SKILL.md`** — Scope Discipline (principle 1) now calls out bug-type work explicitly: default to the most surgical fix that leaves working code alone, and if the minimal fix isn't enough, surface the wider scope as a Phase 0 Risk (or ask directly when standalone) instead of expanding it unilaterally. Applies to every agent that references the shared skill — both implementers, `implementer-lead-agent`, and all four teammate agents.
+
+---
+
 ## v7.8.1 — September 9, 2026
 
 ### Added

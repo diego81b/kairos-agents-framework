@@ -148,6 +148,12 @@ next_agent: implementer-tdd-agent
 
 # Architecture — <feature title>
 
+## Summary
+**What:** <what this design covers, one line>
+**Decision:** <the selected option, one clause — matches `selected_option` in frontmatter>
+**Needs your attention:** <IDs of `critical`/`high` Risks rows, e.g. `R1, R3 — see Risks`; `nothing above medium` if none; name the Promptable Gaps table here too when `promptable: no`>
+**Next:** implementer-tdd-agent
+
 ## Selected Option
 <Option A/B/C comparison — approach + tradeoffs for each, then which was picked and why (the rationale, 1-3 sentences)>
 <one line naming the UC(s) served, e.g. "Serves UC-1, UC-2" — omit only when `01-requirements.md` has no Use Cases section>
@@ -206,6 +212,8 @@ One table per entity — every column, type, constraint, and FK goes here. List 
 |----|-------------|--------|-----------------|-------------|
 | R1 | architectural risk or trade-off (e.g. "single Redis instance = single point of failure") | critical/high/medium/low | concrete mitigation | *(filled by gate)* |
 ````
+
+Follow [`artifact-template`](../skills/artifact-template/SKILL.md) for the `## Summary` head block and the fixed Disposition-table column sets — both are mandatory, not stylistic.
 
 `promptable` is `yes` or `no` per the Promptable Signal rule in step 5 — not a tally, a direct judgment call you make once. Follow [`artifact-bookkeeping`](../skills/artifact-bookkeeping/SKILL.md) for the exact recount rule.
 

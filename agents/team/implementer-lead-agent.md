@@ -332,6 +332,12 @@ open_dispositions: 2
 total_waves: 1
 ---
 
+## Summary
+**What:** <what this plan builds, one line>
+**Decision:** <the implementation approach chosen, one clause — including the wave split when `total_waves` > 1>
+**Needs your attention:** <IDs of `critical`/`high` Risks rows, e.g. `R1 — see Risks`; `nothing above medium` if none>
+**Next:** awaiting plan approval — then step 3b (same agent, approved plan)
+
 ## Approach
 
 <1-3 lines: what gets built and how the work splits across layers>
@@ -369,6 +375,8 @@ Full text in `03-contracts.md` — summarize here in one line per contract (API,
 |----|-------------|--------|-----------------|-------------|
 | R1 | ... | high | ... | |
 ````
+
+Follow [`artifact-template`](../../skills/artifact-template/SKILL.md) for the `## Summary` head block and the fixed Disposition-table column sets — both are mandatory, not stylistic.
 
 Compute `risk_counts` / `open_dispositions` per [`artifact-bookkeeping`](../../skills/artifact-bookkeeping/SKILL.md) and leave every Disposition cell empty — the orchestrator's Risk Disposition Loop fills them one row at a time.
 
@@ -668,6 +676,12 @@ changes_this_iteration:            # Iteration Mode only — omit this field ent
 ---
 
 # Phase 3 — Team Implementation
+
+## Summary
+**What:** <what the team built, one line>
+**Decision:** <TDD verdict in one clause, e.g. `RED and GREEN both verified across 3 layers, REFACTOR complete`>
+**Needs your attention:** <any contract divergence accepted, teammate that did not complete, or untested path; `none` if nothing>
+**Next:** code-reviewer-agent
 
 ## Files Generated
 

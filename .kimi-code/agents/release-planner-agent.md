@@ -83,6 +83,12 @@ open_dispositions: 2   # count of Risk table rows with empty Disposition cell
 
 # Deployment Plan — <feature title>
 
+## Summary
+**What:** <what is being deployed, one line>
+**Decision:** <the rollout strategy chosen in one clause, e.g. `canary at 10% then full rollout`>
+**Needs your attention:** <IDs of `critical`/`high` Risks rows, e.g. `R1 — see Risks`; `nothing above medium` if none>
+**Next:** end of pipeline
+
 ## Deployment Steps
 1. **Pre-deployment** — task1, task2
 2. **Staging deployment** — ...
@@ -106,6 +112,8 @@ open_dispositions: 2   # count of Risk table rows with empty Disposition cell
 |--------|------------------|
 | ... | ... |
 ```
+
+Follow [`artifact-template`](../skills/artifact-template/SKILL.md) for the `## Summary` head block and the fixed Disposition-table column sets — both are mandatory, not stylistic.
 
 This is the final phase, so there is no `next_agent` field. `Description` folds the old Risk text together with its Detection method (`… — detected via: …`); `Mitigation/Fix` carries the old Response column content; `Impact` is new — infer a reasonable `critical`/`high`/`medium`/`low` rating per deployment risk from context (rollback-related risks are often high/critical; monitoring-gap risks often medium). Leave every `Disposition` cell empty in your own output — the orchestrator's Risk Disposition Loop fills them at the gate. `open_dispositions` counts the rows with an empty Disposition cell.
 

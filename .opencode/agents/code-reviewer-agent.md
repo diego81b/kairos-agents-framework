@@ -142,6 +142,12 @@ next_agent: test-verifier-agent
 
 # Code Review — <feature title>
 
+## Summary
+**What:** <what was reviewed, one line>
+**Decision:** <the verdict — matches `status` in frontmatter, e.g. `NEEDS_FIXES — 2 high issues`>
+**Needs your attention:** <IDs of `critical`/`high` Issues rows, e.g. `I1, I4 — see Issues`; `nothing above medium` if none>
+**Next:** test-verifier-agent
+
 ## Checks
 | Check | Result |
 |-------|--------|
@@ -164,6 +170,8 @@ Ordered by severity: critical first, then high, then medium, then low.
 - **Impact** — the severity scale (critical / high / medium / low). Same values as before; only the column name changed to match the universal shape.
 - **Mitigation/Fix** — a concrete fix suggestion for the issue. You already reason about what's wrong, so propose the remedy.
 - **Disposition** — leave empty (`*(filled by gate)*`). The orchestrator's Risk Disposition Loop fills it from the human's per-row choice; `open_dispositions` counts how many are still empty.
+
+Follow [`artifact-template`](../skills/artifact-template/SKILL.md) for the `## Summary` head block and the fixed Disposition-table column sets — both are mandatory, not stylistic.
 
 Follow [`artifact-bookkeeping`](../skills/artifact-bookkeeping/SKILL.md) for the exact recount and `status` derivation rule.
 

@@ -198,9 +198,16 @@ Then show the extracted selection and ask for confirmation:
 - [ ] release-planner   — Deployment planning
 - [ ] documentation     — Feature-facing docs (README/API reference/CHANGELOG)
 
-✅ Confirm this selection
-✏️ Modify — tell me which agents to add or remove
 ```
+
+Then ask. If `AskUserQuestion` is available (Claude Code), call it — do not also print a typed menu:
+- `question`: `"Use this pipeline selection from <issue key>?"`
+- `header`: `"Pipeline"`
+- `options`:
+  - **Confirm** — run exactly the checked agents above.
+  - **Modify** — re-ask the whole selection through the CASE B question set below. The tool cannot pre-check boxes, so nothing carries over from the extracted list: say that in one line before making the call, so the human knows to re-pick everything they still want.
+
+If `AskUserQuestion` is not available, print the same two options as a menu and wait for a typed reply; on Modify, accept numbers, agent names, or a pasted template block.
 
 **CASE B — No issue, or KAIROS Pipeline section missing**
 
@@ -221,7 +228,31 @@ If no `00b-impact.md` advisory is available, derive your own suggested selection
 
 This suggestion has the same status as the impact advisory and the caller-proposed selection: advisory only. It must never narrow, pre-check, or reorder the menu below, and never substitute for the user's explicit choice. If the request is too ambiguous to suggest with confidence, say so and recommend running `impact-assessment-agent` (Pre-B) first — its `00b-impact.md` recommendation is grounded in the actual code, yours is a guess from the prompt alone.
 
-Show the full list and ask the user to choose explicitly (no defaults, no auto-apply — suggestions stay advisory):
+Ask the user to choose explicitly (no defaults, no auto-apply — suggestions stay advisory).
+
+**If `AskUserQuestion` is available** (Claude Code), ask the whole selection as a single call of 4 questions — checkbox choices, never typed numbers. Do not also print the numbered menu below:
+
+- **Q1** — `question`: `"Which analysis phases should run?"`, `header`: `"Analysis"`, `multiSelect: true`
+  - **pm-agent** — Requirements analysis
+  - **architect-agent** — System design
+- **Q2** — `question`: `"Which implementer should run?"`, `header`: `"Implementer"`, `multiSelect: false`
+  - **implementer-tdd-agent** `(Recommended)` — TDD code generation; works everywhere
+  - **implementer-coder-agent** — code generation without TDD (no test suite, or tests out of scope)
+  - **implementer-lead-agent** — Team Mode: Lead + 4 parallel teammates (Claude Code only, ~3.5× cost)
+  - **No implementer** — this run produces no code
+- **Q3** — `question`: `"Which review phases should run?"`, `header`: `"Review"`, `multiSelect: true`
+  - **code-reviewer-agent** — Quality assurance
+  - **security-reviewer-agent** — Adversarial security review (optional — recommended for auth, payments, any write endpoint)
+  - **test-verifier-agent** — Test quality & coverage
+- **Q4** — `question`: `"Which post-implementation phases should run?"`, `header`: `"Release"`, `multiSelect: true`
+  - **release-planner-agent** — Deployment planning
+  - **documentation-agent** — Feature-facing docs (README/API reference/CHANGELOG) — optional, recommended when API contracts or user-facing behavior changed
+
+`(Recommended)` appears on exactly one option in the whole call — `implementer-tdd-agent` — and nowhere else. Never mark, pre-select, reorder, or drop an option because of `00b-impact.md`, a caller-proposed selection, or your own suggestion: all three are advisory text printed *above* the call, and the option set stays the full one on every run. A question answered with nothing selected is a valid answer — those phases simply don't run. If all four come back empty, no agent would be active: say so and re-ask once rather than inventing a selection.
+
+Assemble `active_agents` from the four answers in pipeline order (pm → architect → implementer → code-reviewer → security-reviewer → test-verifier → release-planner → documentation), whatever order the answers arrive in.
+
+**If `AskUserQuestion` is not available** (Cursor, JetBrains/Copilot, Codex CLI, OpenCode), print this menu and wait for a typed reply:
 
 ```
 📋 Which agents should run for this task?
@@ -240,7 +271,7 @@ Reply with numbers (e.g. "1 3 4 5"), agent names, or paste a KAIROS template blo
    6b. documentation-agent — Feature-facing docs (README/API reference/CHANGELOG) — optional, recommended when API contracts or user-facing behavior changed
 ```
 
-Accepted input formats:
+Accepted input formats for that typed reply (and for a free-text "Other" answer to the checkbox call above):
 - Numbers: `1 3 4 5`
 - Names: `pm-agent, implementer-tdd-agent, code-reviewer`
 - Pasted template block (markdown checkboxes from a KAIROS template)
@@ -254,13 +285,8 @@ Once `active_agents` is confirmed and at least one implementer agent is selected
 ```
 🔁 Loop Policy — optional, default: manual
 
-   Phase 3: Implementer ↔ Test Verifier loop
-     auto <N>   — auto-retry up to N times on NEEDS_FIXES (recommended max: 3)
-     manual     — HITL gate on every NEEDS_FIXES (current default)
-
-   Phase 4: Code Reviewer ↔ Implementer loop
-     auto <N>   — auto-retry up to N times on critical/high issues only
-     manual     — HITL gate on every NEEDS_FIXES (current default)
+   Phase 3: Implementer ↔ Test Verifier loop — auto-retry on NEEDS_FIXES
+   Phase 4: Code Reviewer ↔ Implementer loop — auto-retry on critical/high issues only
 
    ⚠️  Cost estimate (worst case, both set to auto 3):
        Up to 6 extra implementer + 3 test-verifier + 3 code-reviewer calls (all sonnet).
@@ -279,8 +305,22 @@ If `implementer-lead-agent` (Team Mode) is the active Phase-3 implementer, appen
        single sonnet call. max_retries is clamped to 2 for Team Mode (not 5).
 ```
 
-Reply with values per phase, or press Enter to keep both as manual.
-Example: "phase3: auto 3 / phase4: manual"
+Then ask. **If `AskUserQuestion` is available** (Claude Code), ask both loops as a single call of 2 questions — fixed retry counts, never a typed `auto <N>`. Do not also print a typed menu:
+
+- **Q1** — `question`: `"Phase 3 loop (Implementer ↔ Test Verifier) — auto-retry on NEEDS_FIXES?"`, `header`: `"Phase 3 loop"`, `multiSelect: false`
+  - **Manual** `(Recommended)` — HITL gate on every NEEDS_FIXES
+  - **Auto — 1 retry**
+  - **Auto — 2 retries**
+  - **Auto — 3 retries**
+- **Q2** — `question`: `"Phase 4 loop (Code Reviewer ↔ Implementer) — auto-retry on critical/high issues?"`, `header`: `"Phase 4 loop"`, `multiSelect: false`
+  - **Manual** `(Recommended)` — HITL gate on every NEEDS_FIXES
+  - **Auto — 1 retry**
+  - **Auto — 2 retries**
+  - **Auto — 3 retries**
+
+**If `implementer-lead-agent` (Team Mode) is the active Phase-3 implementer, drop the "Auto — 3 retries" option from both questions** — the ceiling there is 2, so never offer a value that would only get clamped away.
+
+**If `AskUserQuestion` is not available**, print the same option lists as a typed menu and wait for a reply: `manual` or `auto <N>` per phase, e.g. `"phase3: auto 3 / phase4: manual"`, or an empty reply to keep both as manual.
 
 Save the response as `loop_policy`:
 ```
@@ -288,7 +328,7 @@ loop_policy.phase3 = { mode: "manual"|"auto", max_retries: N }
 loop_policy.phase4 = { mode: "manual"|"auto", max_retries: N }
 ```
 
-**Clamp `N` to a hard ceiling of 5** regardless of what the user typed — "recommended max: 3" above is a hint, not an enforced limit, and an unclamped `N` (e.g. a user or automated caller passing `auto 500`) defeats the point of the two Loop Actuators' iteration cap. If the user's reply exceeds 5, use 5 and tell them: `ℹ️  max_retries clamped to 5 (requested <N>).` **If `implementer-lead-agent` (Team Mode) is the active Phase-3 implementer, the ceiling is 2 instead of 5** — each iteration is a full opus Lead + team spawn, not a single sonnet call. If the user's reply exceeds 2, use 2 and tell them: `ℹ️  max_retries clamped to 2 for Team Mode (requested <N>).`
+**Clamp `N` to a hard ceiling of 5** regardless of what the user typed — the checkbox options above can't exceed it, but a free-text "Other" answer or the typed fallback still can — "recommended max: 3" above is a hint, not an enforced limit, and an unclamped `N` (e.g. a user or automated caller passing `auto 500`) defeats the point of the two Loop Actuators' iteration cap. If the user's reply exceeds 5, use 5 and tell them: `ℹ️  max_retries clamped to 5 (requested <N>).` **If `implementer-lead-agent` (Team Mode) is the active Phase-3 implementer, the ceiling is 2 instead of 5** — each iteration is a full opus Lead + team spawn, not a single sonnet call. If the user's reply exceeds 2, use 2 and tell them: `ℹ️  max_retries clamped to 2 for Team Mode (requested <N>).`
 
 If no implementer agent is active, skip this branch entirely and set both to `manual`.
 
@@ -335,10 +375,17 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
    Requires: CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 in .claude/settings.json
    Worth it for: critical systems requiring perfect layer alignment.
 
-   ✅ Confirm Team Mode — proceed with implementer-lead-agent
-   ↩️  Switch to Single Agent — use implementer-tdd-agent instead
-   ⛔ Cancel pipeline
    ```
+
+   Then ask. If `AskUserQuestion` is available (Claude Code), call it — do not also print a typed menu:
+   - `question`: `"Team Mode costs ~3.5× a single implementer — proceed?"`
+   - `header`: `"Team Mode"`
+   - `options`:
+     - **Switch to Single Agent** `(Recommended)` — use `implementer-tdd-agent` instead
+     - **Confirm Team Mode** — proceed with `implementer-lead-agent`
+     - **Cancel pipeline** — halt here
+
+   If `AskUserQuestion` is not available, print the same three options as a menu and wait for a typed reply.
 
    If confirmed → call @kairos:team:implementer-lead-agent. If switched → call @kairos:implementer-tdd-agent instead. If cancelled → stop. Do NOT call any implementer without this confirmation.
 
@@ -359,13 +406,18 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
       ```
       ⚠️  This loop already ran this pipeline run and did not converge:
           <prior Loop History entry — outcome, iterations, issues remaining>
-
-      Options:
-      1) Loop again anyway — fresh budget of <max_retries> iterations
-      2) Skip auto-loop this time — go straight to the manual HITL gate (recommended)
-      3) Stop pipeline
       ```
-      Wait for the human's choice before proceeding. Only continue to step 1 on option 1; option 2 skips straight to the phase's Guard step below; option 3 halts.
+      Then ask. If `AskUserQuestion` is available (Claude Code), call it — do not also print a typed menu:
+      - `question`: `"{pair} loop already exhausted this run — re-arm it?"`
+      - `header`: `"Loop retry"` (≤12 chars)
+      - `options`:
+        - **Skip auto-loop** `(Recommended)` — go straight to the manual HITL gate
+        - **Loop again** — fresh budget of `<max_retries>` iterations
+        - **Stop pipeline** — halt here
+
+      If `AskUserQuestion` is not available, print the same three options as a menu and wait for a typed reply.
+
+      Wait for the human's choice before proceeding. Only continue to step 1 on **Loop again**; **Skip auto-loop** skips straight to the phase's Guard step below; **Stop pipeline** halts.
    1. Create `## Loop State — {pair}` in `ledger/open-questions.md`:
       ```
       status: in_progress
@@ -499,7 +551,9 @@ KAIROS is a HITL pipeline. After EVERY active subagent completes:
    - Once every row in the table has a disposition, update the frontmatter `open_dispositions` field in the same file to `0` in the same edit pass (it started equal to the row count; nothing else recomputes it, so this loop is the only place it changes). Leave `risk_counts`/`issues_summary`/`findings_summary` (the by-Impact tally) untouched — Impact doesn't change with disposition, so that count stays accurate as generated.
    - The subagent's own "Ledger Update" step does NOT write these freshly-surfaced rows when you ran this loop — you already wrote them, sourced from the human's choice instead of the agent's. Pre-existing constraint-row status updates (the agent's own `✓/⚠/♻/❌/🔴` pass over rows from prior phases) are untouched by this loop.
    - If the whole-artifact gate below resolves to **Request changes**, the re-run regenerates the artifact from scratch — its new Risks/Issues table starts with empty Disposition cells again, even for rows that looked identical to ones already resolved. This is expected, not data loss: the disposition decisions already made are durably recorded in the ledger rows this loop wrote, independent of what the regenerated file's cells say.
-3. Present a short verdict summary to the user — max ~5 lines: what was produced, the key findings/risks/gaps, and how many items were just resolved in step 2. Do not dump the raw file content; the user can open it for that (next step).
+3. Present the artifact's own `## Summary` block to the user, **verbatim** — every phase artifact opens with one, four fixed lines, per [`artifact-template`](../skills/artifact-template/SKILL.md) §1. Do not rewrite, re-order, or expand it: the agent that did the work wrote it, and re-synthesizing it here is how a gate summary drifts from the artifact it claims to describe. Append exactly one line of your own underneath — `N rows dispositioned in step 2` — because that count is yours, not the agent's: step 2 runs after the file was written.
+   If the body has no `## Summary` heading (an older artifact, or an agent that predates this contract), fall back to synthesizing a short verdict summary yourself — max ~5 lines: what was produced, the key findings/risks/gaps, and how many items were just resolved in step 2. This is a presentation fallback only; do not treat a missing Summary as a malformed artifact and do not re-run the phase for it (step 0's contract check covers frontmatter, not the body).
+   Either way, do not dump the raw file content; the user can open it for that (next step).
 4. Open the output file in the editor so the user can inspect it in full — one Markdown file per phase (frontmatter + body), not a JSON/Markdown pair.
    Run from the project root using the actual `feature_folder` and the phase file name:
    ```bash

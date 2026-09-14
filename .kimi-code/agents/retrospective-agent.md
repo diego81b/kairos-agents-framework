@@ -78,6 +78,14 @@ lessons_count: N
 log_entry_appended: true
 ---
 
+# Retrospective — <feature title>
+
+## Summary
+**What:** <which feature run this retrospective covers, one line>
+**Decision:** none — analysis only
+**Needs your attention:** <the single lesson most worth acting on, by ID, e.g. `L1 — see What To Do Differently`; `none` if nothing stands out>
+**Next:** end of pipeline
+
 ## What Went Well
 - ...
 
@@ -101,6 +109,8 @@ log_entry_appended: true
 - **What To Do Differently**: ...
 ```
 ````
+
+Follow [`artifact-template`](../skills/artifact-template/SKILL.md) for the `## Summary` head block and the fixed Disposition-table column sets — both are mandatory, not stylistic.
 
 The Friction Points table has no Disposition column — nothing downstream reads it; it exists purely as the evidence trail for the lessons below it. The final fenced block under `## Appended to _lessons.md` must be a verbatim copy of what was actually written to `.kairos/_lessons.md`'s Feature Log, for traceability.
 

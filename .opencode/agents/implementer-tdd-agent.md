@@ -118,6 +118,12 @@ open_dispositions: 2
 total_waves: 2
 ---
 
+## Summary
+**What:** <what this plan builds, one line>
+**Decision:** <the implementation approach chosen, one clause — including the wave split when `total_waves` > 1>
+**Needs your attention:** <IDs of `critical`/`high` Risks rows, e.g. `R1 — see Risks`; `nothing above medium` if none>
+**Next:** awaiting plan approval — then step 3b (same agent, approved plan)
+
 ## Approach
 
 Brief description of the implementation strategy.
@@ -283,6 +289,12 @@ tdd_verification: { tests_generated: 12, red_phase_verified: true, green_phase_v
 iteration_mode: { active: false, iteration: null }
 ---
 
+## Summary
+**What:** <what was built this wave, one line>
+**Decision:** <TDD verdict in one clause, e.g. `RED and GREEN both verified, REFACTOR complete`>
+**Needs your attention:** <anything the reviewer must look at first — a skipped test, an `unknown` verification, a deviation from the plan; `none` if nothing>
+**Next:** code-reviewer-agent
+
 ## Files Written
 
 | Path | Kind | Lines |
@@ -310,6 +322,8 @@ A  __tests__/stripe.service.test.js
 
 *(Iteration Mode only — one line per cumulative issue addressed and how. Omit when not in Iteration Mode.)*
 ````
+
+Follow [`artifact-template`](../skills/artifact-template/SKILL.md) for the `## Summary` head block and the fixed Disposition-table column sets — both are mandatory, not stylistic.
 
 `red_phase_verified` / `green_phase_verified` are `true`, `false`, or `unknown` — `true` only when the pasted raw output actually shows the expected result (all failing for RED, all passing for GREEN); `unknown` when the test command itself could not run (missing deps, config error, no runner found); never `false` for a check that never actually executed.
 
