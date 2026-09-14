@@ -41,6 +41,7 @@ your-project/
 │       ├── code-reviewer-agent.agent.md
 │       ├── security-reviewer-agent.agent.md  <- Adversarial security review (optional, read-only)
 │       ├── test-verifier-agent.agent.md
+│       ├── qa-plan-agent.agent.md
 │       ├── release-planner-agent.agent.md
 │       ├── documentation-agent.agent.md      <- Feature-facing docs (optional, Phase 6b)
 │       ├── retrospective-agent.agent.md      <- Standalone, post-pipeline: lessons capture
@@ -159,6 +160,7 @@ Same reasoning/execution split as the shipped `agents/*.md` frontmatter — see 
 | `implementer-coder-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro — no TDD overhead |
 | `code-reviewer-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
 | `test-verifier-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
+| `qa-plan-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
 | `release-planner-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
 | `documentation-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
 | `retrospective-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |

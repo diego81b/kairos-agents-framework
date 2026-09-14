@@ -87,6 +87,7 @@ kairos-agents-framework/
 │   ├── code-reviewer-agent.md
 │   ├── security-reviewer-agent.md  ← Adversarial security review (optional)
 │   ├── test-verifier-agent.md
+│   ├── qa-plan-agent.md
 │   ├── release-planner-agent.md
 │   ├── documentation-agent.md      ← Feature-facing docs (optional, Phase 6b)
 │   ├── retrospective-agent.md      ← Lessons capture (standalone, post-pipeline)
@@ -95,8 +96,8 @@ kairos-agents-framework/
 │   └── team/             ← Team Mode specialists (Claude Code only)
 ├── skills/               ← Shared checklists/formats reused across agents (see Skills & MCP)
 ├── commands/             ← Claude Code slash commands (/kairos:setup, /kairos:view)
-├── .opencode/agents/     ← OpenCode mirror of the 16 core agents above (see Setup > OpenCode)
-└── .kimi-code/agents/    ← Kimi Code mirror of the 16 core agents above (see Setup > Kimi Code)
+├── .opencode/agents/     ← OpenCode mirror of the 17 core agents above (see Setup > OpenCode)
+└── .kimi-code/agents/    ← Kimi Code mirror of the 17 core agents above (see Setup > Kimi Code)
 ```
 
 `.opencode/agents/` and `.kimi-code/agents/` only exist here, inside the KAIROS repo, as hand-maintained mirrors for those two tools. Your own project never has all of these at once — it gets **one** agent directory matching your tool (`.claude/agents/`, `.cursor/agents/`, `.github/agents/`, `.codex/agents/`, `.opencode/agents/`, or `.kimi-code/agents/`), populated from whichever of the above your tool needs. Claude Code is the one exception: a plugin install needs no copying at all — see its [setup page](/setup/claude-code) for both paths.

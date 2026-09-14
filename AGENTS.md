@@ -12,9 +12,9 @@ runtime beyond the documentation site build. The deliverables are:
   (Markdown + YAML frontmatter) plus 5 optional Team Mode agents in `agents/team/`.
 - **`docs/`** — a VitePress site that documents the framework and exposes the agent
   files to users (published at https://kairos-docs.vercel.app).
-- **`.opencode/agents/`** — a hand-maintained mirror of the 16 core agent files,
+- **`.opencode/agents/`** — a hand-maintained mirror of the 17 core agent files,
   translated to OpenCode's frontmatter schema (see "OpenCode Mirror Sync" below).
-- **`.kimi-code/agents/`** — a hand-maintained mirror of the 16 core agent files,
+- **`.kimi-code/agents/`** — a hand-maintained mirror of the 17 core agent files,
   translated to Kimi Code's frontmatter schema (see "Kimi Code Mirror Sync" below).
 
 KAIROS defines a 6-phase, human-gated (HITL) pipeline, plus an optional Phase 6b and two
@@ -32,6 +32,7 @@ repo):
 | 4 | `code-reviewer-agent.md` | `04-review.md` |
 | 4.5 | `security-reviewer-agent.md` *(optional)* | `04b-security-review.md` |
 | 5 | `test-verifier-agent.md` | `05-test-verification.md` |
+| 5b | `qa-plan-agent.md` *(optional)* | `05b-qa-plan.md` |
 | 6 | `release-planner-agent.md` | `06-deployment-plan.md` |
 | 6b | `documentation-agent.md` *(optional)* | `06b-documentation.md` |
 
@@ -74,8 +75,8 @@ any change to `docs/`, `agents/`, or `skills/` (agent files are embedded in the 
 ## Repository Layout
 
 - `agents/` — 16 core pipeline agents (canonical source) + `team/` (5 Team Mode agents, Claude Code only).
-- `.opencode/agents/` — OpenCode mirror of the 16 core agents (derived, kept in sync by hand).
-- `.kimi-code/agents/` — Kimi Code mirror of the 16 core agents (derived, kept in sync by hand).
+- `.opencode/agents/` — OpenCode mirror of the 17 core agents (derived, kept in sync by hand).
+- `.kimi-code/agents/` — Kimi Code mirror of the 17 core agents (derived, kept in sync by hand).
 - `docs/` — VitePress site. Config: `docs/.vitepress/config.js` (nav, sidebar, `srcDir: '..'`).
 - `docs/setup/` — per-tool setup guides (Claude Code, Cursor, VS Code, JetBrains, Codex, OpenCode, Kimi Code, templates).
 - `skills/` — shared reference skills published with the plugin: `agent-contract`,

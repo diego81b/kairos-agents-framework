@@ -23,11 +23,12 @@ Copy this block into any issue description or paste it directly in the chat:
 - [ ] code-reviewer-agent
 - [ ] security-reviewer-agent
 - [ ] test-verifier-agent
+- [ ] qa-plan-agent
 - [ ] release-planner-agent
 - [ ] documentation-agent
 ```
 
-Check (`[x]`) only the agents you want to activate. For the implementation step, pick **one** of `implementer-tdd-agent` (TDD, default) or `implementer-coder-agent` (no TDD). Add `security-reviewer-agent` when the feature touches auth, payments, or any write endpoint.
+Check (`[x]`) only the agents you want to activate. For the implementation step, pick **one** of `implementer-tdd-agent` (TDD, default) or `implementer-coder-agent` (no TDD). Add `security-reviewer-agent` when the feature touches auth, payments, or any write endpoint. Add `qa-plan-agent` when a person will verify this feature by hand — it plans the manual and exploratory cases, the regression retest list, and the UAT sign-off, and posts them to the issue.
 
 ---
 
@@ -44,6 +45,7 @@ Full pipeline — new functionality going to production.
 - [x] code-reviewer-agent
 - [x] security-reviewer-agent
 - [x] test-verifier-agent
+- [ ] qa-plan-agent
 - [x] release-planner-agent
 - [ ] documentation-agent
 ```
@@ -63,6 +65,7 @@ Skip design and deployment planning; focus on fix + verification.
 - [x] code-reviewer-agent
 - [ ] security-reviewer-agent
 - [x] test-verifier-agent
+- [ ] qa-plan-agent
 - [ ] release-planner-agent
 - [ ] documentation-agent
 ```
@@ -82,6 +85,7 @@ Minimal pipeline — urgent production fix, skip analysis and planning.
 - [x] code-reviewer-agent
 - [ ] security-reviewer-agent
 - [ ] test-verifier-agent
+- [ ] qa-plan-agent
 - [ ] release-planner-agent
 - [ ] documentation-agent
 ```
@@ -101,6 +105,7 @@ All phases except deployment — improving existing code without a new release.
 - [x] code-reviewer-agent
 - [ ] security-reviewer-agent
 - [x] test-verifier-agent
+- [ ] qa-plan-agent
 - [ ] release-planner-agent
 - [ ] documentation-agent
 ```
@@ -120,6 +125,7 @@ Analysis and writing only — no code, no deployment.
 - [ ] code-reviewer-agent
 - [ ] security-reviewer-agent
 - [ ] test-verifier-agent
+- [ ] qa-plan-agent
 - [ ] release-planner-agent
 - [ ] documentation-agent
 ```
@@ -165,5 +171,6 @@ When the orchestrator shows the Case B selection prompt, paste the entire templa
 | 4 | `code-reviewer-agent` | Standards, security, performance review |
 | 4b | `security-reviewer-agent` | Adversarial security review — IDOR, auth, injection, secrets, data exposure (optional) |
 | 5 | `test-verifier-agent` | Test coverage and assertion quality |
+| 5b | `qa-plan-agent` | Manual and exploratory QA plan, regression retest list, UAT sign-off |
 | 6 | `release-planner-agent` | Deployment steps, rollback, monitoring |
 | 6b | `documentation-agent` | Feature-facing docs — README, API reference, CHANGELOG (optional) |

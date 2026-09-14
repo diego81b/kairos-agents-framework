@@ -27,6 +27,7 @@ Each phase's `status` (or equivalent verdict field) is a fixed threshold rule ov
 | `code-reviewer-agent` | `NEEDS_FIXES` iff `byImpact.critical + byImpact.high > 0`; else `READY` |
 | `security-reviewer-agent` | `VULNERABILITIES_FOUND` iff `byImpact.critical + byImpact.high > 0` OR any Contract Enforcement gap; else `SECURE` |
 | `test-verifier-agent` | `NEEDS_FIXES` iff `byImpact.critical + byImpact.high > 0` OR `coverage_summary.status != PASS` OR `gapIds` (§3) non-empty; else `READY`. The `gapIds` term only applies when the Success Criteria list was available (see the agent's own Input Validation) — otherwise it's vacuously empty, same as today |
+| `qa-plan-agent` | `NEEDS_ATTENTION` iff `byImpact.critical + byImpact.high > 0`; else `READY`. An acceptance criterion marked **not verifiable as written** is written as a `high` row in the same `## Risks` table, so this one count covers it rather than a separate term. The status never triggers a loop — no implementer re-runs from Phase 5b |
 | `release-planner-agent` | `blocked` iff any `constraints.md` row still `🔴 open` at the final pass, OR `byImpact.critical > 0`, OR any unresolved `## Scope Gaps` row; else `ready` |
 | `documentation-agent` | `needs_input` iff any Documentation Gap above `low` impact; else `ready` |
 | `architect-agent` | `promptable` is `yes`/`no` per its own Promptable Signal rule (a judgment call, not a count) — `status` itself stays `ready` regardless |
@@ -62,6 +63,7 @@ The orchestrator's Artifact Contract Check (`orchestrator-agent.md` HITL step 0)
 | `code-reviewer-agent` | `status`, `checks`, `issues_summary`, `open_dispositions`, `convergence_signal`, `next_agent` |
 | `security-reviewer-agent` | `status`, `findings_summary`, `open_dispositions`, `contract_enforcement_summary`, `next_agent` |
 | `test-verifier-agent` | `status`, `execution`, `coverage_summary`, `checks`, `issues_summary`, `open_dispositions`, `convergence_signal`, `next_agent` |
+| `qa-plan-agent` | `status`, `coverage_basis`, `manual_cases`, `uat_summary`, `risk_counts`, `open_dispositions`, `next_agent` |
 | `release-planner-agent` | `status`, `risk_counts`, `open_dispositions`, `monitoring_summary`, `rollback_summary` |
 | `documentation-agent` | `status`, `findings_summary`, `open_dispositions`, `docs_touched` |
 

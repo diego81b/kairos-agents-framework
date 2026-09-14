@@ -62,6 +62,8 @@ Loop progress (iteration count, cumulative issue list) is written to `ledger/ope
 
 If the Phase 4 loop ran at all, the orchestrator runs test-verifier once more before showing the Phase 4 gate — catching any regression the code-review fixes introduced. A `NEEDS_FIXES` here blocks the gate with an explicit warning.
 
+`qa-plan-agent` (Phase 5b) sits deliberately **outside** both loops: it runs only once the Phase 3 loop has exited and its Guard has resolved. Its own `NEEDS_ATTENTION` never re-invokes an implementer — by that point the code is settled, and the status means a human has a regression risk or an unverifiable acceptance criterion to decide on.
+
 ## If You Never Touch This
 
 Leave both loops on `manual` (the default) and nothing changes from earlier KAIROS versions — every `NEEDS_FIXES` still stops and asks you, one retry at a time.

@@ -27,7 +27,7 @@ claude plugin enable kairos
 
 Confirm with `claude plugin list`.
 
-This gets you the 16 core agents, the internal skills (`contract-checklist`, `coding-discipline`, etc.), and the `/kairos:setup` / `/kairos:view` slash commands in one shot. Agents are invoked with the `kairos:` scope — `@kairos:orchestrator-agent`, `@kairos:pm-agent` — and Team Mode agents with `@kairos:team:implementer-lead-agent`.
+This gets you the 17 core agents, the internal skills (`contract-checklist`, `coding-discipline`, etc.), and the `/kairos:setup` / `/kairos:view` slash commands in one shot. Agents are invoked with the `kairos:` scope — `@kairos:orchestrator-agent`, `@kairos:pm-agent` — and Team Mode agents with `@kairos:team:implementer-lead-agent`.
 
 ### Option B — Manual copy
 
@@ -65,6 +65,7 @@ your-project/
 │       ├── code-reviewer-agent.md
 │       ├── security-reviewer-agent.md     ← Adversarial security review (optional, read-only)
 │       ├── test-verifier-agent.md
+│       ├── qa-plan-agent.md
 │       ├── release-planner-agent.md
 │       ├── documentation-agent.md          ← Feature-facing docs (optional, Phase 6b)
 │       ├── retrospective-agent.md         ← Standalone, post-pipeline: lessons capture
@@ -392,7 +393,7 @@ KAIROS's shipped frontmatter splits agents into two tiers — `opus` for the 6 r
    }
    ```
    Coarse but zero-maintenance: **all** subagents — including architect and security review — run on that one model, so it's a blunt cost cut, not a per-tier tuning.
-3. **Shadow copy (manual variant of option 0)** — a same-named agent file in your project's `.claude/agents/` outranks the plugin's copy for the **bare** name (project scope > plugin scope). Caveat: the plugin's orchestrator routes via scoped calls (`@kairos:pm-agent`, …), which keep resolving to the plugin's agents with shipped models — so a lone shadow copy only affects direct bare-name invocations. For pipeline-wide effect, copy all 16 core agents and rewrite the scoped `@kairos:` calls to bare names (this is exactly what `/kairos:setup` automates).
+3. **Shadow copy (manual variant of option 0)** — a same-named agent file in your project's `.claude/agents/` outranks the plugin's copy for the **bare** name (project scope > plugin scope). Caveat: the plugin's orchestrator routes via scoped calls (`@kairos:pm-agent`, …), which keep resolving to the plugin's agents with shipped models — so a lone shadow copy only affects direct bare-name invocations. For pipeline-wide effect, copy all 17 core agents and rewrite the scoped `@kairos:` calls to bare names (this is exactly what `/kairos:setup` automates).
 
 There is intentionally no KAIROS-side config file for this: Claude Code offers no hook the plugin could use to rewrite frontmatter at install time.
 

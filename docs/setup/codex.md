@@ -47,7 +47,7 @@ Mapping from KAIROS Markdown frontmatter to TOML:
 | body (Markdown content) | `developer_instructions` |
 | `model:` | `model` |
 
-Repeat for the 16 core agent files in `agents/` (skip `agents/team/` — Team Mode requires Claude Code's Agent Teams feature and has no Codex equivalent). Use underscores in `name` (e.g. `pm_agent`, `architect_agent`).
+Repeat for the 17 core agent files in `agents/` (skip `agents/team/` — Team Mode requires Claude Code's Agent Teams feature and has no Codex equivalent). Use underscores in `name` (e.g. `pm_agent`, `architect_agent`).
 
 ::: tip Keep `.md` files as source of truth
 The `agents/` folder remains the canonical source. The `.codex/agents/*.toml` files are derived — regenerate them when you update the originals.

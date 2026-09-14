@@ -34,6 +34,7 @@ No exceptions. A pull request that modifies an agent without a matching changelo
 | [Code Reviewer](#code-reviewer) | `agents/code-reviewer-agent.md` |
 | [Security Reviewer](#security-reviewer) | `agents/security-reviewer-agent.md` |
 | [Test Verifier](#test-verifier) | `agents/test-verifier-agent.md` |
+| [QA Plan Agent](#qa-plan-agent) | `agents/qa-plan-agent.md` |
 | [Release Planner](#release-planner) | `agents/release-planner-agent.md` |
 | [Documentation Agent](#documentation-agent) | `agents/documentation-agent.md` |
 | [Retrospective Agent](#retrospective-agent) | `agents/retrospective-agent.md` |
@@ -144,6 +145,14 @@ Adversarial security review — IDOR, auth, injection, secrets, data exposure, i
 Test quality verification — coverage, assertion quality, edge-case coverage.
 
 <<< @/agents/test-verifier-agent.md{md}
+
+---
+
+## QA Plan Agent
+
+Manual and exploratory verification planning — what the automated suite cannot cover, regression retest selection, test data and environment, UAT sign-off.
+
+<<< @/agents/qa-plan-agent.md{md}
 
 ---
 

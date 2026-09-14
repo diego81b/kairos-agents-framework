@@ -120,10 +120,13 @@ Based on what you found, recommend which pipeline agents this issue needs. Use t
 | Any of: auth domain, write endpoints, payments, user-owned data | `security-reviewer-agent` |
 | `medium` or `significant_rework` effort | `code-reviewer-agent` |
 | TDD implementer selected, and effort is `medium` or `significant_rework` | `test-verifier-agent` |
+| No TDD implementer selected (coder path, or no implementer at all), or the feature has behavior a person must judge by eye — layout, wording, focus order, a flow across screens | `qa-plan-agent` |
 | Schema migrations or new deployment steps present | `release-planner-agent` |
 | API contract changed, or any user-facing behavior (CLI, config, UI) changed | `documentation-agent` |
 
 A `simple_fix` on the TDD path does NOT get `test-verifier-agent` — `code-reviewer-agent`'s own Testing check (coverage, happy/error path presence) already covers this at lighter weight, and a dedicated verification phase plus its own gate is disproportionate to the size of the change. Recommend `test-verifier-agent` explicitly once effort escalates past `simple_fix`, or if the human asks for it regardless of effort.
+
+`qa-plan-agent` is the mirror case: it earns its place precisely where automated verification is thin or absent. On the coder path there is no suite at all, so every acceptance criterion needs a human to check it; and even on the TDD path, behavior no assertion can see still does. Do not recommend it for a `simple_fix` whose whole surface is already covered by tests — the regression retest list would be its only real content, and `code-reviewer-agent` already flags a shared-helper change.
 
 State the justification for each recommended agent. Also state which agents you are NOT recommending and why, if the reason is non-obvious.
 

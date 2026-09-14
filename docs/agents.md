@@ -202,6 +202,12 @@ Note: `coverage-analysis` skipped — `testing-handbook-skills` installs 15 skil
 
 ---
 
+## [QA Plan Agent](/agents/qa-plan-agent)
+
+Optional Phase 5b. Plans the verification the automated suite cannot give: manual and exploratory test cases, regression retest selection, test data and environment needs, and UAT sign-off criteria. Every row traces to an acceptance criterion, an uncovered line from Test Verifier, or a `file:line` caller found in the code — it never invents scenarios from the feature request. Posts the plan to the issue tracker when one is configured, so the human who executes it does not have to go looking in `.kairos/`.
+
+---
+
 ## [Release Planner](/agents/release-planner-agent)
 
 Plans deployment steps, creates rollback procedures, identifies deployment risks, and generates a deployment checklist ready for production use.

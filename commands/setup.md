@@ -12,7 +12,7 @@ You are configuring which models the 16 KAIROS core pipeline agents will use in 
 | Tier | Agents | Shipped `model:` |
 |------|--------|------------------|
 | Reasoning | `orchestrator-agent`, `architect-agent`, `context-extractor-agent`, `impact-assessment-agent`, `security-reviewer-agent`, `improvement-advisor-agent`, `bug-triage-agent` | `opus` |
-| Execution | `pm-agent`, `implementer-tdd-agent`, `implementer-coder-agent`, `code-reviewer-agent`, `test-verifier-agent`, `release-planner-agent`, `documentation-agent`, `retrospective-agent`, `dependency-audit-agent` | `sonnet` |
+| Execution | `pm-agent`, `implementer-tdd-agent`, `implementer-coder-agent`, `code-reviewer-agent`, `test-verifier-agent`, `qa-plan-agent`, `release-planner-agent`, `documentation-agent`, `retrospective-agent`, `dependency-audit-agent` | `sonnet` |
 
 Team Mode files (`agents/team/`) are out of scope — leave them untouched.
 
@@ -32,13 +32,13 @@ Briefly explain to the user, then ask via `AskUserQuestion`:
 
 Options:
 
-1. **Materialize project copies (Recommended)** — copy the 16 core agents into this project's `.claude/agents/`, then set per-tier models there. Full two-tier control.
+1. **Materialize project copies (Recommended)** — copy the 17 core agents into this project's `.claude/agents/`, then set per-tier models there. Full two-tier control.
 2. **One global subagent model** — write `CLAUDE_CODE_SUBAGENT_MODEL` to `settings.json`. Coarse: every subagent (architect and security review included) runs on that single model.
 3. **Cancel** — stop here.
 
 **If option 2:** ask which model (`opus`, `sonnet`, `haiku`, `inherit`, or a full model ID) and which scope (project `.claude/settings.json` — committed, shared with the team; or global `~/.claude/settings.json` — this machine only). Read the chosen file if it exists, merge `"env": { "CLAUDE_CODE_SUBAGENT_MODEL": "<model>" }` preserving every existing key, write it back, confirm to the user, and STOP here (skip Steps 3–5).
 
-**If option 1:** locate the newest plugin cache agents directory, e.g. with Bash `ls -d ~/.claude/plugins/cache/kairos/kairos/*/agents | sort -V | tail -1`. Copy the 16 core agent files (NOT `team/`) into `.claude/agents/`. Then, in every copied file, rewrite each `@kairos:<name>` call to `@<name>` for the 16 core agent names only — leave any `@kairos:team:*` reference untouched (Team Mode still resolves through the plugin). Continue to Step 3.
+**If option 1:** locate the newest plugin cache agents directory, e.g. with Bash `ls -d ~/.claude/plugins/cache/kairos/kairos/*/agents | sort -V | tail -1`. Copy the 17 core agent files (NOT `team/`) into `.claude/agents/`. Then, in every copied file, rewrite each `@kairos:<name>` call to `@<name>` for the 17 core agent names only — leave any `@kairos:team:*` reference untouched (Team Mode still resolves through the plugin). Continue to Step 3.
 
 ## Step 3 — Choose the model strategy
 

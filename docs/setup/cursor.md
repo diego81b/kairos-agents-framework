@@ -39,6 +39,7 @@ your-project/
 │       ├── code-reviewer-agent.md
 │       ├── security-reviewer-agent.md     ← Adversarial security review (optional, read-only)
 │       ├── test-verifier-agent.md
+│       ├── qa-plan-agent.md
 │       ├── release-planner-agent.md
 │       ├── documentation-agent.md         ← Feature-facing docs (optional, Phase 6b)
 │       ├── retrospective-agent.md         ← Standalone, post-pipeline: lessons capture
