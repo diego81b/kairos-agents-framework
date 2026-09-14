@@ -31,6 +31,7 @@ your-project/
 │       ├── orchestrator-agent.md
 │       ├── context-extractor-agent.md     ← Pre-pipeline: full-repo context (standalone)
 │       ├── impact-assessment-agent.md     ← Pre-pipeline: issue grounding + recommendations (standalone)
+│       ├── bug-triage-agent.md            ← Bug reproduction + root cause (standalone)
 │       ├── pm-agent.md
 │       ├── architect-agent.md
 │       ├── implementer-tdd-agent.md       ← TDD implementer (default)
@@ -41,7 +42,8 @@ your-project/
 │       ├── release-planner-agent.md
 │       ├── documentation-agent.md         ← Feature-facing docs (optional, Phase 6b)
 │       ├── retrospective-agent.md         ← Standalone, post-pipeline: lessons capture
-│       └── improvement-advisor-agent.md   ← Standalone, infrequent: framework change proposals
+│       ├── improvement-advisor-agent.md   ← Standalone, infrequent: framework change proposals
+│       └── dependency-audit-agent.md       ← Standalone, periodic: dependency + tech-debt backlog
 ```
 
 `agents/team/` (Team Mode) isn't included — see the warning at the bottom of this page.
@@ -164,6 +166,7 @@ Same reasoning/execution split as the shipped `agents/*.md` frontmatter — see 
 | `impact-assessment-agent` | `opus` | Never use `inherit` or `fast` — its recommendation drives every downstream agent's scope |
 | `security-reviewer-agent` | `opus` | Never use `inherit` or `fast` — adversarial security analysis requires full reasoning |
 | `improvement-advisor-agent` | `opus` | Rarely invoked; keep on `opus` for cross-feature pattern recognition |
+| `bug-triage-agent` | `opus` | Never downgrade — root-cause reasoning from partial evidence |
 | `pm-agent` | `sonnet` | `fast` acceptable for quick requirement sketches |
 | `implementer-tdd-agent` | `sonnet` | Upgrade to `opus` for complex TDD cycles spanning many files |
 | `implementer-coder-agent` | `sonnet` | `fast` not recommended; no TDD overhead but still needs solid reasoning |
@@ -172,6 +175,7 @@ Same reasoning/execution split as the shipped `agents/*.md` frontmatter — see 
 | `release-planner-agent` | `sonnet` | Sufficient for deployment planning |
 | `documentation-agent` | `sonnet` | Sufficient for README/CHANGELOG/API-reference generation |
 | `retrospective-agent` | `sonnet` | Sufficient for lessons synthesis from existing artifacts |
+| `dependency-audit-agent` | `sonnet` | Scanning and tabulation; upgrade only for large monorepos with tangled transitive trees |
 
 ::: warning Team Mode not supported
 Cursor does not support KAIROS Team Mode agents (`agents/team/`). Those require Claude Code with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`.

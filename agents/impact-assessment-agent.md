@@ -77,6 +77,17 @@ All criteria in a row must hold for that row to apply. A change matching the fil
 
 Reasoning must be specific — list the files and changes that drove the classification, not just a label.
 
+### 3b. Work Breakdown
+Decompose the issue into the sequence of tasks it actually takes, so the aggregate estimate above rests on something inspectable rather than on judgment alone.
+
+- One row per task, ordered so that a task never precedes the one it depends on.
+- Name dependencies explicitly by task ID (`T2 depends on T1`), not by implication of ordering.
+- Estimate each task on the same scale you used for the aggregate (`simple_fix` / `medium` / `significant_rework` applied to that task alone). A breakdown whose tasks don't add up to the aggregate is a signal the aggregate is wrong — revisit step 3 rather than reconciling the numbers by hand.
+- Tag each task with the domain it lands in, from the list in step 2. Tasks spread across three or more domains, or several independent tasks in different domains, are the signal to recommend Team Mode in step 7.
+- In **Lean Mode** (`simple_fix`), a breakdown of one or two lines is the correct output — do not manufacture tasks to fill a table.
+
+**This is a work list, not a set of tickets.** No issue titles, no acceptance criteria, no labels, no posting anywhere — the `issues-generator` skill exists for that and this must not duplicate it. What belongs here is only what the human at the gate and the orchestrator's agent-selection step need in order to judge the shape of the work.
+
 ### 4. Map Existing Reusable Assets
 List what already exists that the implementer can use directly, with real file paths:
 - Existing services, utilities, or helpers the issue can call
@@ -140,6 +151,13 @@ recommended_agents: [architect-agent, implementer-tdd-agent, security-reviewer-a
 ## Effort
 
 `medium` — specific files and changes that drove the classification, written as prose.
+
+## Work Breakdown
+
+| ID | Task | Domain | Depends on | Estimate |
+|----|------|--------|------------|----------|
+| T1 | what has to be done, concretely | db | — | simple_fix |
+| T2 | ... | backend | T1 | medium |
 
 ## Domains
 
@@ -225,6 +243,7 @@ Because this agent runs standalone and never reaches the orchestrator (which cen
 >   - **Mitigate now** — the Mitigation/Fix text becomes binding: instruct a `constraints.md` row be written, status `🔴 open`, note `MUST — from impact-assessment R{id}`.
 >   - **Escalate** — needs an explicit decision before proceeding: instruct a `constraints.md` row `🔴 open` tagged `BLOCKING` be written, AND an `open-questions.md` row. This flips the following gate's recommended default to Request changes, but does not block Approve.
 >   - **Defer** — out of scope now: instruct an `open-questions.md` row be written, status `🔴 open`, note `deferred risk`.
+> - **Category on every constraint row this loop instructs** (Mitigate now, Escalate): pick the value from [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)'s closed vocabulary that best matches the row's own Description, and `OTHER` when none fits. Never pick `ACCESSIBILITY`, `PRIVACY`, or `COMPLIANCE` unless the row itself is about an obligation the human already declared — those three arm conditional review sections downstream. Instruct the skill's Writer Rule be applied first if `constraints.md` is still in the legacy 6-column form.
 > - **On-demand explain**: if the human's free-text reply for a row asks for more detail instead of picking one of the 4 options (e.g. "explain", "why", "perché", "spiega") — don't record it as a disposition. Write 2-4 plain-language sentences grounded in this row's actual content: what could concretely go wrong, why it matters in practice, what a junior dev with no context would need to know — then re-ask the same row. Don't advance until it gets an actual disposition.
 > - If `AskUserQuestion` is unavailable: print the same 4-option menu per row, one at a time, and wait for a typed reply before the next row. The explain trigger above applies the same way.
 > - Include the chosen disposition for every row in what you hand back — including **Accept**, so no cell is left empty — so the orchestrator/user can write it into `00b-impact.md`'s Disposition cell for that row, in addition to the ledger row for the other three options — you present the resolved table, you don't edit the file yourself.
@@ -262,7 +281,7 @@ The `constraints.md` / `open-questions.md` rows derived from the **Risks** and *
 
 This section only handles ledger updates that are not tied to a Risks/Open-Questions table row:
 
-- **`ledger/constraints.md`**: Update Status for every existing row that this issue affects.
+- **`ledger/constraints.md`**: Update Status for every existing row that this issue affects. Never rewrite an existing row's `Category` cell — it is set once by whoever created the row and is what downstream conditional checks key on. Only `Status`, `Updated by`, and `Note` change here.
 
 If the ledger does not exist yet, skip this step.
 

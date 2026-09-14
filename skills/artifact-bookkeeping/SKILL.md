@@ -4,7 +4,7 @@ description: Deterministic bookkeeping rules for phase artifacts — tallying Ri
 
 # Artifact Bookkeeping
 
-Shared reference for `pm-agent`, `architect-agent`, `impact-assessment-agent`, `implementer-tdd-agent`, `implementer-coder-agent` (Phase 0 plan), `code-reviewer-agent`, `security-reviewer-agent`, `test-verifier-agent`, `release-planner-agent`, and `documentation-agent`.
+Shared reference for `pm-agent`, `architect-agent`, `impact-assessment-agent`, `bug-triage-agent`, `implementer-tdd-agent`, `implementer-coder-agent` (Phase 0 plan), `code-reviewer-agent`, `security-reviewer-agent`, `test-verifier-agent`, `release-planner-agent`, `documentation-agent`, and `dependency-audit-agent`.
 
 Every one of these agents ends its output with two things that are pure arithmetic over a table already in the same document, not judgment: a per-Impact tally, and a derived pass/fail status. Compute them exactly as below — don't eyeball a count from re-reading the table, and don't hand-increment a single field when the table changes.
 
@@ -31,6 +31,8 @@ Each phase's `status` (or equivalent verdict field) is a fixed threshold rule ov
 | `documentation-agent` | `needs_input` iff any Documentation Gap above `low` impact; else `ready` |
 | `architect-agent` | `promptable` is `yes`/`no` per its own Promptable Signal rule (a judgment call, not a count) — `status` itself stays `ready` regardless |
 | `pm-agent`, `impact-assessment-agent` | no pass/fail state — `status` (or equivalent) is always `ready`; only the recount tallies apply |
+| `bug-triage-agent` | no pass/fail state — `status` is always `ready`. `reproduced`, `root_cause_found`, and `severity` are observations, not a verdict on the artifact; `root_cause_found` is never `yes` when `reproduced` is not `yes`. No Disposition tables, so no recount applies |
+| `dependency-audit-agent` | no pass/fail state — `status` is always `ready`. `vulnerabilities` is a by-severity tally of Vulnerabilities rows following §1; `backlog_count` is the row count of the Backlog table. No Disposition column anywhere in this artifact, so `open_dispositions` does not apply |
 | `implementer-tdd-agent`, `implementer-coder-agent`, `implementer-lead-agent` (Phase 3a plan) | no status derivation here — `status` is always `pending_approval` on a plan artifact, and only ever on a plan artifact. The plan's `risk_counts` / `open_dispositions` still follow the recount above |
 
 ## 3. Acceptance-criteria coverage (test-verifier-agent only)
@@ -52,6 +54,8 @@ The orchestrator's Artifact Contract Check (`orchestrator-agent.md` HITL step 0)
 | `architect-agent` | `status`, `promptable`, `risk_counts`, `open_dispositions`, `next_agent`, `database_changes_summary`, `error_codes_count`, `selected_option` |
 | `impact-assessment-agent` | `risk_counts`, `open_dispositions`, `effort`, `recommended_agents` |
 | `context-extractor-agent` | `status` |
+| `bug-triage-agent` | `status`, `reproduced`, `severity`, `root_cause_found`, `recommended_entry` |
+| `dependency-audit-agent` | `status`, `audited_on`, `vulnerabilities`, `backlog_count` |
 | `implementer-plan` (Phase 3a — any implementer variant) | `status`, `risk_counts`, `open_dispositions`, `total_waves` |
 | `implementer-tdd-agent` | `status`, `risk_counts`, `open_dispositions`, `iteration_mode`, `wave`, `total_waves`, `next_wave`, `tdd_verification`, `coverage_summary` |
 | `implementer-coder-agent` | `status`, `risk_counts`, `open_dispositions`, `iteration_mode`, `wave`, `total_waves`, `next_wave` |

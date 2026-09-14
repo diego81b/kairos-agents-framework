@@ -55,7 +55,7 @@ When effort is `simple_fix`, run in **Lean Mode** for the rest of this run:
 - Under Security (check 4), the dependency-changelog/lockfile sub-check only runs when this diff actually bumps a dependency version; otherwise state `no dependency change in this diff` and move on. The rest of check 4 (secrets grep, input validation, auth checks) still runs in full.
 - 2b Ledger Update becomes additive-only (see that section below).
 
-Any other effort value runs the Full process for every check, unchanged.
+Any other effort value runs the Full process for every check, unchanged — except Accessibility (check 6), which is gated on a declared obligation rather than on effort; see its own N/A rule.
 
 ## Your Checks
 
@@ -98,7 +98,19 @@ This check reads the implementation logic directly. It is distinct from Testing 
 - No memory leaks?
 - Latency targets met?
 
-### 6. Testing
+### 6. Accessibility
+
+First check whether accessibility is even in scope: read `.kairos/<feature_folder>/ledger/constraints.md`. If it has a row whose `Category` cell is `ACCESSIBILITY` and whose `Status` is not `❌ dropped`, an accessibility obligation was declared upstream — run the checks below against it. If there is no such row (or the file is missing, or its header has no `Category` column — see [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)), accessibility is out of scope for this implementation: mark this check `N/A — no accessibility obligation declared` in the output, do not evaluate the sub-items below, and do not let it contribute to `status: NEEDS_FIXES`. This is a scope decision made upstream (this product carries no accessibility obligation), not a defect to flag here. **Do not infer an obligation from the diff touching UI code** — most projects with a user interface have never declared one, and a check that fires on every UI diff is a check the human learns to skip.
+
+Lean Mode does not change this rule in either direction: if an `ACCESSIBILITY` row is declared, this check runs in full even at `effort: simple_fix`; if none is declared, it is `N/A` even at `effort: significant_rework`. The gate here is the obligation, not the diff size.
+
+- Every interactive element reachable and operable by keyboard, in a focus order that matches the visual one?
+- Every control, image, and form field carries an accessible name (label, `aria-label`, `alt`) — not only a visual one?
+- State conveyed by more than colour alone (error, selected, required, disabled)?
+- Dynamic content (validation errors, async results, toasts) announced to assistive technology rather than only rendered?
+- Does the diff meet the specific standard named in the constraint row, at the level it names — not "accessibility in general"?
+
+### 7. Testing
 
 First check whether tests are even in scope: read `03-implementation.md`'s frontmatter. If it has `tdd_verification`/`coverage_summary` fields, `implementer-tdd-agent` produced this code and tests exist — run the checks below. If those fields are absent (`implementer-coder-agent` ran, by design with "no test files, no coverage report" — see that agent's Important Notes), tests are out of scope for this implementation: mark this check `N/A — no-TDD path (implementer-coder-agent)` in the output, do not evaluate the sub-items below, and do not let it contribute to `status: NEEDS_FIXES`. This is a scope decision made upstream (project has no test suite, or tests explicitly out of scope), not a defect to flag here.
 
@@ -108,7 +120,7 @@ First check whether tests are even in scope: read `03-implementation.md`'s front
 - Edge cases tested?
 - Performance tested?
 
-### 7. Simplicity / Over-Engineering
+### 8. Simplicity / Over-Engineering
 Apply [`coding-discipline`](../skills/coding-discipline/SKILL.md) — this check is where its scope-discipline and anti-speculative-abstraction principles get graded against the actual diff.
 - Complexity proportional to what the requirement actually needs?
 - New abstraction justified by ≥2 real use cases, not a speculative "might need it later"?
@@ -130,6 +142,7 @@ checks:
   architecture: "✓ PASS"
   security: "✓ PASS"
   performance: "✓ PASS"
+  accessibility: "✓ PASS"  # or "✗ FAIL", or "N/A — no accessibility obligation declared" (never counts as FAIL)
   testing: "✓ PASS"        # or "✗ FAIL", or "N/A — no-TDD path" (implementer-coder-agent ran; never counts as FAIL)
   simplicity: "✓ PASS"     # or "✗ FAIL"
 issues_summary: { critical: 0, high: 2, medium: 1, low: 3, total: 6 }
@@ -216,6 +229,8 @@ In **Full Mode**, update all three ledger files under `.kairos/<feature_folder>/
 - Constraint the implementer marked resolved but code does NOT satisfy → re-open to `🔴 open` with the file/line evidence
 - Constraint not applicable to review → leave as-is
 - Add any new quality constraints found (e.g. "error responses must always include a `request_id` field")
+
+Never rewrite an existing row's `Category` cell — it is set once by whoever created the row and is what downstream conditional checks key on. Only `Status`, `Updated by`, and `Note` change here. Any new row you add carries a `Category` from [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)'s closed vocabulary; apply its Writer Rule first if the table is still in the legacy 6-column form.
 
 Freshly-surfaced Issues table rows are written by the orchestrator's Risk Disposition Loop when orchestrator-invoked (sourced from the human's per-row choice) — do not also write them here in that case. When running standalone, write them yourself as before. The constraint-row re-open/status-pass logic above and the Loop State `convergence_signal` write below are separate, existing mechanisms — leave them unchanged.
 

@@ -297,6 +297,8 @@ In **Full Mode**, update all three ledger files under `.kairos/<feature_folder>/
 - Constraint re-opened by implementation difficulty → mark `🔴 open` with explanation
 - Add any new technical constraints surfaced during coding
 
+Never rewrite an existing row's `Category` cell — it is set once by whoever created the row and is what downstream conditional checks key on. Only `Status`, `Updated by`, and `Note` change here. Any new row you add carries a `Category` from [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)'s closed vocabulary; apply its Writer Rule first if the table is still in the legacy 6-column form.
+
 **`decisions.md`** — Add implementation decisions (patterns chosen, dependencies added, deviations from architecture spec with justification).
 
 **`open-questions.md`** — Answer any questions you can from implementation findings. Add new questions raised during coding.

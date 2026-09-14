@@ -120,11 +120,21 @@ Do NOT proceed to step 6 until every applicable item is resolved.
 
 This is a design-time signal only — it does not block you from finishing this phase's output. It flips the standalone gate's default recommendation (see "After Generating Output" below) and gives the orchestrator's HITL step a blocking-status signal to read, the same way `NEEDS_FIXES` does for code-reviewer.
 
+### 5b. Threat Model
+
+Run this when the selected design touches authentication, authorization, data writes, or input that reaches the system from outside it — or when `ledger/constraints.md` carries a `SECURITY` or `PRIVACY` row. Otherwise state `✓ N/A — no new trust boundary, write path, or external input in this design` in the output and move on.
+
+Work through [`threat-model`](../skills/threat-model/SKILL.md) against the option you selected in step 4. Every positive finding becomes a row in the `## Risks` table you already emit — same five columns, same Disposition cell left for the gate — so it flows through the orchestrator's Risk Disposition Loop like any other risk. Do not add a second table for it.
+
+This is design-time reasoning: trust boundaries, reachable surface, who holds authority, what an attacker controls, what crossing a boundary costs. `security-reviewer-agent` looks for exploitable vulnerabilities in the code that gets written from this design — it cannot undo a boundary drawn in the wrong place, which is exactly what this step exists to catch.
+
+In **Lean Mode** (`simple_fix`) this step collapses: state `✓ N/A — lean mode` and move on. A change already classified as small does not earn a threat model.
+
 ### 6. Detailed Design
 For selected option:
 - Technology choices (and why)
 - Integration points (how to connect)
-- Database changes (new tables/fields)
+- Database changes (new tables/fields) — when this design adds, drops, or reshapes a table, column, or index, or requires a backfill, work through [`migration-safety`](../skills/migration-safety/SKILL.md) and record each resolution under `## Data Model`. `release-planner-agent` reads those resolutions back when it writes the rollback strategy, so a gap here becomes a gap in the runbook.
 - API contracts (request/response format — informed by Pre-Contract Resolution above)
 - Error codes (how to fail)
 - Error handling (pattern to use)
@@ -178,6 +188,8 @@ One table per entity — every column, type, constraint, and FK goes here. List 
 |--------|------|-------------|-----|
 | id | uuid | PK | — |
 | ... | ... | ... | ... |
+
+**Migration safety** — required whenever this section adds, drops, or reshapes anything, or requires a backfill; omit the block entirely when the schema is unchanged. One line per applicable [`migration-safety`](../skills/migration-safety/SKILL.md) section, `N/A — [reason]` included: shape of the change, expand/contract step, lock duration at production row counts, backfill restartability, reversibility, what a code rollback does to new-shaped data, and ordering against the code deploy.
 
 ## API Contracts
 ### `POST /api/feature`
@@ -265,6 +277,8 @@ In **Full Mode**, update all three ledger files under `.kairos/<feature_folder>/
 - Constraint your design changes → mark `♻ modified` with new version
 - Constraint irrelevant to this feature → mark `❌ dropped` with justification
 - Constraint not yet addressed → leave `🔴 open`
+
+Never rewrite an existing row's `Category` cell — it is set once by whoever created the row and is what downstream conditional checks key on. Only `Status`, `Updated by`, and `Note` change here. Any new row you add carries a `Category` from [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)'s closed vocabulary; apply its Writer Rule first if the table is still in the legacy 6-column form.
 
 Then add any new architectural constraints (e.g. "Redis required in infrastructure", "JWT must use RS256").
 

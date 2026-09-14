@@ -17,7 +17,7 @@ curl -fsSL https://opencode.ai/install | bash
 
 ## Step 1 — Copy agents to `.opencode/agents/`
 
-KAIROS ships a ready-made OpenCode agent pack at [`.opencode/agents/`](https://github.com/diego81b/kairos-agents-framework/tree/main/.opencode/agents) in this repository — the 14 core pipeline agents, already converted (note the **plural** "agents"). Copy the whole folder into your project:
+KAIROS ships a ready-made OpenCode agent pack at [`.opencode/agents/`](https://github.com/diego81b/kairos-agents-framework/tree/main/.opencode/agents) in this repository — the 16 core pipeline agents, already converted (note the **plural** "agents"). Copy the whole folder into your project:
 
 ```bash
 # From your project root

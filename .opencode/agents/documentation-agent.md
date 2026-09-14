@@ -163,7 +163,7 @@ Save `.kairos/<feature_folder>/06b-documentation.md` first. Then, only after app
 ### Ledger Update
 
 - **`open-questions.md`**: mark answered any open question this documentation work resolves.
-- **`constraints.md`**: add any documentation-format constraint newly detected in step 1 (e.g. "CHANGELOG must follow Keep a Changelog format") if it isn't already tracked.
+- **`constraints.md`**: add any documentation-format constraint newly detected in step 1 (e.g. "CHANGELOG must follow Keep a Changelog format") if it isn't already tracked, with `Category` `OTHER` per [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md) — apply its Writer Rule first if the table is still in the legacy 6-column form. Never rewrite an existing row's `Category` cell.
 - **`decisions.md`**: no write from this agent — you consume decisions for context, you don't add new ones.
 
 If the ledger does not exist, skip this step.

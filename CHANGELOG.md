@@ -4,6 +4,41 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v8.0.0 — September 14, 2026
+
+Closes the SDLC coverage gaps that are reachable from a terminal session: design-time threat modelling, bug intake, dependency and tech-debt auditing, migration safety, and a reusable mechanism for quality obligations that apply to some projects and not others. Deployment execution and operations stay deliberately out of scope, now documented as such.
+
+**BREAKING CHANGE:** the core agent count goes from 14 to 16, and `/kairos:setup` materializes and rewrites `@kairos:` calls for all of them — a project set up under 7.x has 14 agent copies in `.claude/agents/` and will not pick up the two new ones until `/kairos:setup` is re-run. The ledger's `constraints.md` also gains a `Category` column; existing `.kairos/` folders keep working (a legacy 6-column table reads as "no obligation declared") and are migrated in place the first time an agent appends a row.
+
+### Added
+
+- **`agents/bug-triage-agent.md`** — new standalone agent, the entry point for a bug report rather than a feature request. Reproduces the defect, isolates it, states the root cause with an evidence trail, rates severity on observed impact, and recommends where the fix re-enters the pipeline in `00c-bug-triage.md`. Its `recommended_entry` feeds the orchestrator's Quick fix path. Never edits a source file.
+- **`agents/dependency-audit-agent.md`** — new standalone periodic agent. Audits the whole project's dependencies and accumulated debt — known CVEs with a reachability judgment, version currency, license conflicts, unused and duplicated packages, debt hotspots — into a prioritized backlog at the project-root `.kairos/_tech-debt.md`. Never applies an upgrade.
+- **`skills/constraint-taxonomy/SKILL.md`** — new shared skill defining the closed `Category` vocabulary of `ledger/constraints.md` plus the reader, writer, and gating rules that let a review section run only when its obligation was declared upstream. An obligation is never inferred from the code.
+- **`skills/threat-model/SKILL.md`** — new shared skill for design-time threat modelling, invoked by `architect-agent`'s new Step 5b: trust boundaries, attack surface, authority, what the attacker controls, blast radius. Findings land in that phase's existing Risks table, so they flow through the Risk Disposition Loop unchanged.
+- **`skills/migration-safety/SKILL.md`** — new shared skill for schema and data migrations, invoked by `architect-agent` when the data model changes and by `release-planner-agent` when it writes the rollback strategy: expand/contract sequencing, lock duration at production row counts, restartable backfill, reversibility, and what a code rollback does to data already written in the new shape.
+- **`agents/code-reviewer-agent.md`** — new conditional Accessibility check (check 6). Runs only when an `ACCESSIBILITY` constraint was declared in the ledger, and reports `N/A` otherwise, so a project with no accessibility obligation never sees a section it would waive every time.
+- **`agents/security-reviewer-agent.md`** — new conditional Compliance & Privacy check (check 8), gated the same way on a declared `PRIVACY` or `COMPLIANCE` constraint. Findings become normal Findings rows, inheriting severity and Disposition.
+- **`agents/pm-agent.md`** — new outcome criterion, written alongside the acceptance criteria but deliberately separate from them: one statement checkable some time *after* release, with metric, direction, magnitude, and when someone looks. Acceptance criteria are all true the moment the tests pass and cannot say whether the feature was worth building. Carries no `AC-n` ID and no test maps to it — it exists for the human at the gate. Step 1 also gains a one-line problem check that asks what goes wrong today when the request arrives as a solution with no stated problem, and records an open question rather than inventing one.
+- **`agents/impact-assessment-agent.md`** — new Work Breakdown section: ordered tasks with explicit dependencies and a per-task estimate, so the aggregate effort rests on something inspectable. A breakdown spread across domains is the signal to recommend Team Mode. Produces a work list, never tickets.
+
+### Changed
+
+- **`agents/pm-agent.md`** — acceptance criteria now carry explicit, stable `AC-n` IDs assigned at the source and never renumbered. Previously `test-verifier-agent` numbered them positionally downstream, so inserting or removing a criterion silently changed what `AC-3` referred to, invalidating every reference already written in other phases. Constraint elicitation now uses the closed category vocabulary and splits `SECURITY`, `PRIVACY`, and `COMPLIANCE`, with an accessibility question asked only where it can plausibly apply.
+- **`agents/context-extractor-agent.md`** — the codebase scan now reports accessibility-investment signals (a11y linter, test tooling, CI job, consistent `aria-` usage) so `pm-agent` can default its accessibility question instead of asking cold. Reports evidence, never a constraint row.
+- **`agents/release-planner-agent.md`** — the rollback strategy now reads the architecture artifact's migration-safety resolutions rather than restating them generically, and must state explicitly when a migration is not reversible without data loss.
+- **`agents/orchestrator-agent.md`** — new Bug-Input Check at Step 0e: when the input reads as a bug report and no triage artifact exists, the orchestrator points at `bug-triage-agent` before the Quick-fix-or-full-feature choice, so that choice is made from evidence rather than from the report's own wording. Advisory only — printed above the menu, never an option, never pre-selected, never blocking, in the same shape as the existing `00b-impact.md` advisory. Hard Constraint 4 covers seven standalone agents instead of four; the Quick fix path reads `00c-bug-triage.md` when present and hands its root cause to the implementer instead of re-deriving it; the `.kairos/` tree and the project-root write rule now cover `_tech-debt.md` as a third exception with a third owner.
+- **`ledger/constraints.md` schema** — gains a `Category` column between `Constraint` and `Source`, written once at row creation and never rewritten. Every agent that creates or updates a constraint row now supplies or preserves it.
+- **`docs/`** — `agents.md`, `agent-files.md`, `overview.md`, `skills-mcp.md`, every setup guide, and the VitePress sidebar cover the three new agents and three new skills. New "Deliberately Out of Scope" section in `CLAUDE.md` records why deployment execution, post-deploy verification, observability, incident response, load testing, and cost analysis are not part of the framework.
+
+### Fixed
+
+- **`skills/analysis-discipline/SKILL.md`** — was shipped but registered nowhere. Now listed in `docs/skills-mcp.md`, the VitePress sidebar, `CLAUDE.md`, `docs/agent-files.md`, and `AGENTS.md`.
+- **`CLAUDE.md`** — line 13 claimed `.opencode/agents/` mirrors `agents/team/` as well, contradicting the OpenCode Mirror section and the actual filesystem. Team Mode is excluded from both mirrors.
+- **`docs/setup/claude-code.md`** — the repository tree listed 11 of the core agents, silently omitting Documentation, Retrospective, and Improvement Advisor.
+- **`docs/setup/templates.md`** — `documentation-agent` was missing from all six issue-template checkbox blocks and from the phase table, though the orchestrator offers it at agent selection.
+
+
 ## v7.9.0 — September 11, 2026
 
 ### Added

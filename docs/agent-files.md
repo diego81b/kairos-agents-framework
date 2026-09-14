@@ -25,6 +25,7 @@ No exceptions. A pull request that modifies an agent without a matching changelo
 |---|---|
 | [Context Extractor](#context-extractor) | `agents/context-extractor-agent.md` |
 | [Impact Assessment](#impact-assessment) | `agents/impact-assessment-agent.md` |
+| [Bug Triage](#bug-triage) | `agents/bug-triage-agent.md` |
 | [Orchestrator](#orchestrator) | `agents/orchestrator-agent.md` |
 | [PM Agent](#pm-agent) | `agents/pm-agent.md` |
 | [Architect Agent](#architect-agent) | `agents/architect-agent.md` |
@@ -41,6 +42,14 @@ No exceptions. A pull request that modifies an agent without a matching changelo
 > Team Mode agent files are on a [separate page](/agent-files-team).
 >
 > The shared [Contract Checklist](skills/contract-checklist/SKILL.md) used by Architect Agent and Implementer Lead is in `skills/contract-checklist/SKILL.md`.
+>
+> The shared [Threat Model](skills/threat-model/SKILL.md) checklist — design-time trust boundaries, attack surface, authority, and blast radius, used by Architect Agent's Step 5b and emitting into that phase's own Risks table — is in `skills/threat-model/SKILL.md`.
+>
+> The shared [Migration Safety](skills/migration-safety/SKILL.md) checklist — expand/contract sequencing, lock duration, backfill restartability, reversibility, and what a code rollback does to new-shaped data, used by Architect Agent when the data model changes and by Release Planner when it writes the rollback strategy — is in `skills/migration-safety/SKILL.md`.
+>
+> The shared [Constraint Taxonomy](skills/constraint-taxonomy/SKILL.md) reference — the closed `Category` vocabulary of the ledger's `constraints.md`, plus the reader, writer, and gating rules that let Code Reviewer's Accessibility check and Security Reviewer's Compliance & Privacy check run only when that obligation was declared upstream — is in `skills/constraint-taxonomy/SKILL.md`.
+>
+> The shared [Analysis Discipline](skills/analysis-discipline/SKILL.md) checklist — evidence-backed findings, restraint on low-value nitpicks, and scope-bounded investigation, applied by every agent that reads, judges, or reports on someone else's requirement, design, or code — is in `skills/analysis-discipline/SKILL.md`.
 >
 > The shared [Code Simplification](skills/code-simplification/SKILL.md) checklist used by the Implementer Agent (TDD and Code Only) REFACTOR step is in `skills/code-simplification/SKILL.md`.
 >
@@ -63,6 +72,14 @@ Standalone pre-pipeline agent. Run this before the Orchestrator to produce `00-c
 Standalone pre-pipeline agent. Run after Context Extractor (optional) to produce `00b-impact.md` — effort estimate, domains, and an advisory `recommended_agents` list shown by the Orchestrator before agent selection.
 
 <<< @/agents/impact-assessment-agent.md{md}
+
+---
+
+## Bug Triage
+
+Standalone entry point for a bug report rather than a feature request. Reproduces the defect, isolates it, finds the root cause with evidence, rates severity, and recommends where the fix re-enters the pipeline — its `recommended_entry` feeds the Orchestrator's Quick fix path. Never fixes anything itself. Produces `00c-bug-triage.md`.
+
+<<< @/agents/bug-triage-agent.md{md}
 
 ---
 
@@ -159,3 +176,11 @@ Standalone post-pipeline agent. Run any time after work on a feature stops to sy
 Standalone, infrequent agent. Run every few features to read the accumulated `.kairos/_lessons.md` and propose framework changes as `.kairos/decisions/ADR-*.md` records. Never edits `agents/*.md` itself — proposals only.
 
 <<< @/agents/improvement-advisor-agent.md{md}
+
+---
+
+## Dependency Audit
+
+Standalone, periodic agent. Run every few months, outside any feature, to audit the whole project's dependencies and accumulated debt — known CVEs, stale versions, license conflicts, unused and duplicated packages, debt hotspots — into a prioritized backlog at the project-root `.kairos/_tech-debt.md`. Never applies an upgrade itself; a human takes backlog rows through the pipeline like any other work.
+
+<<< @/agents/dependency-audit-agent.md{md}

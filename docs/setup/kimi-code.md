@@ -14,7 +14,7 @@ Two differences matter for KAIROS:
 
 ## Step 1 — Copy agents to `.kimi-code/agents/`
 
-KAIROS ships a ready-made Kimi Code agent pack at [`.kimi-code/agents/`](https://github.com/diego81b/kairos-agents-framework/tree/main/.kimi-code/agents) in this repository — the 14 core pipeline agents, already converted. Copy the whole folder into your project:
+KAIROS ships a ready-made Kimi Code agent pack at [`.kimi-code/agents/`](https://github.com/diego81b/kairos-agents-framework/tree/main/.kimi-code/agents) in this repository — the 16 core pipeline agents, already converted. Copy the whole folder into your project:
 
 ```bash
 # From your project root
@@ -117,7 +117,7 @@ Run Kimi Code with the orchestrator as the main agent:
 kimi --agent orchestrator-agent
 ```
 
-Or start a default session and let it delegate: the main agent discovers the 14 custom agents automatically and routes to them based on each agent's `description`, the same way Claude Code's auto-delegation works. You can also name an agent explicitly in conversation ("use pm-agent to analyze this feature request"), or bind one file for a single launch with `kimi --agent-file path/to/agent.md`.
+Or start a default session and let it delegate: the main agent discovers the 16 custom agents automatically and routes to them based on each agent's `description`, the same way Claude Code's auto-delegation works. You can also name an agent explicitly in conversation ("use pm-agent to analyze this feature request"), or bind one file for a single launch with `kimi --agent-file path/to/agent.md`.
 
 The orchestrator is bound at session creation and restored on resume (`kimi --continue` / `--session`) — no flag needed on resume, and none is allowed.
 

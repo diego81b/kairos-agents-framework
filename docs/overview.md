@@ -142,6 +142,7 @@ agents/
 ├── orchestrator-agent.md        ← Coordinator
 ├── context-extractor-agent.md   ← Pre-pipeline: full-repo context
 ├── impact-assessment-agent.md   ← Pre-pipeline: issue-scoped grounding + agent recommendations
+├── bug-triage-agent.md          ← Standalone: bug reproduction + root cause
 ├── pm-agent.md                  ← Requirements
 ├── architect-agent.md           ← System design
 ├── implementer-tdd-agent.md     ← TDD code generation (default)
@@ -153,6 +154,7 @@ agents/
 ├── documentation-agent.md       ← Feature-facing docs (optional, Phase 6b)
 ├── retrospective-agent.md       ← Standalone, post-pipeline: lessons capture
 ├── improvement-advisor-agent.md ← Standalone, infrequent: framework change proposals (ADRs)
+├── dependency-audit-agent.md    ← Standalone, periodic: dependency + tech-debt backlog
 └── team/                        ← Team Mode specialists
     ├── implementer-lead-agent.md
     ├── teammate-tests-agent.md

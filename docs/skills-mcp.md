@@ -50,7 +50,11 @@ No install required — these ship as part of the KAIROS plugin itself, under `s
 | Skill | What it enforces | Agents that use it |
 |-------|-------------------|---------------------|
 | [`agent-contract`](/skills/agent-contract/SKILL) | One shared `🚨 AGENT ERROR` format for a missing required input, instead of nine agents each inventing their own wording | `pm-agent`, `architect-agent`, `impact-assessment-agent`, `code-reviewer-agent`, `security-reviewer-agent`, `test-verifier-agent`, `release-planner-agent`, `documentation-agent`, `retrospective-agent` |
+| [`analysis-discipline`](/skills/analysis-discipline/SKILL) | Review-side counterpart of `coding-discipline`: evidence-backed findings, restraint on low-value nitpicks, scope-bounded investigation, and brief direct pushback when the evidence contradicts the requested approach | `context-extractor-agent`, `impact-assessment-agent`, `bug-triage-agent`, `pm-agent`, `architect-agent`, `code-reviewer-agent`, `security-reviewer-agent`, `test-verifier-agent`, `dependency-audit-agent` |
+| [`constraint-taxonomy`](/skills/constraint-taxonomy/SKILL) | The closed `Category` vocabulary of `ledger/constraints.md`, written once at row creation and never rewritten, plus the reader/writer/gating rules that let a review section run only when its obligation was declared upstream — an obligation is never inferred from the code | every agent that creates or updates a constraint row, plus `code-reviewer-agent` (Accessibility) and `security-reviewer-agent` (Compliance & Privacy), which are gated on it |
 | [`contract-checklist`](/skills/contract-checklist/SKILL) | 9 questions to resolve before finalizing any API/DB contract — entity lifecycle, IDOR risk, idempotency, delete behavior, pagination, error shape | `architect-agent`, `implementer-lead-agent` |
+| [`threat-model`](/skills/threat-model/SKILL) | Design-time STRIDE-lite: trust boundaries, attack surface added, who holds authority, what the attacker controls, data crossing the boundary, failure and abuse, blast radius — findings land in the architecture artifact's own Risks table | `architect-agent` (Step 5b) |
+| [`migration-safety`](/skills/migration-safety/SKILL) | Expand/contract sequencing, lock duration at production row counts, idempotent and restartable backfill, reversibility, what a code rollback does to data already written in the new shape, ordering against the code deploy | `architect-agent` (when the data model changes), `release-planner-agent` (rollback strategy) |
 | [`code-simplification`](/skills/code-simplification/SKILL) | REFACTOR-step checklist: what to simplify, how to confirm behavior didn't change, when to stop | `implementer-tdd-agent`, `implementer-coder-agent` (REFACTOR step) |
 | [`artifact-bookkeeping`](/skills/artifact-bookkeeping/SKILL) | Pure-arithmetic rules for tallying a Risk/Issue/Finding table by impact and deriving each phase's pass/fail status from a fixed threshold — no agent "eyeballs" a count | `pm-agent`, `architect-agent`, `impact-assessment-agent`, both implementers, `code-reviewer-agent`, `security-reviewer-agent`, `test-verifier-agent`, `release-planner-agent`, `documentation-agent`, `orchestrator-agent` |
 | [`artifact-template`](/skills/artifact-template/SKILL) | The mandatory 4-line `## Summary` head block every phase artifact opens with, and the fixed column sets for any table the Risk Disposition Loop parses — so a gate is readable in seconds and no two phases spell `Mitigation/Fix` differently | every agent that writes a `.kairos/` phase artifact, plus `orchestrator-agent` (reads the Summary at each gate) |
@@ -68,6 +72,7 @@ These replace what used to be third-party plugin dependencies (`karpathy-guideli
 | `orchestrator-agent` | Coordinator | — | — |
 | `context-extractor-agent` | Pre | `deep-research` | — |
 | `impact-assessment-agent` | Pre | `deep-research` | — |
+| `bug-triage-agent` | Pre (bugs) | `deep-research` | — |
 | `pm-agent` | 1 | `deep-research`, `outcome-issue-generator` | — |
 | `architect-agent` | 2 | `deep-research` | — |
 | `implementer-tdd-agent` | 3a | `verify`/`run` | — |
@@ -79,6 +84,7 @@ These replace what used to be third-party plugin dependencies (`karpathy-guideli
 | `documentation-agent` | 6b | — | — |
 | `retrospective-agent` | Post | `deep-research` | — |
 | `improvement-advisor-agent` | Post | — | — |
+| `dependency-audit-agent` | Standalone | `deep-research` | — |
 | `implementer-lead-agent` | Team | — | — |
 | `teammate-backend-agent` | Team | `security-review` | — |
 | `teammate-database-agent` | Team | — | — |

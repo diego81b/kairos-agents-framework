@@ -100,6 +100,7 @@ export default defineConfig({
             items: [
               { text: 'Context Extractor', link: '/agent-files#context-extractor' },
               { text: 'Impact Assessment', link: '/agent-files#impact-assessment' },
+              { text: 'Bug Triage', link: '/agent-files#bug-triage' },
               { text: 'Orchestrator', link: '/agent-files#orchestrator' },
               { text: 'PM Agent', link: '/agent-files#pm-agent' },
               { text: 'Architect Agent', link: '/agent-files#architect-agent' },
@@ -111,11 +112,13 @@ export default defineConfig({
               { text: 'Release Planner', link: '/agent-files#release-planner' },
               { text: 'Documentation Agent', link: '/agent-files#documentation-agent' },
               { text: 'Retrospective Agent', link: '/agent-files#retrospective-agent' },
-              { text: 'Improvement Advisor', link: '/agent-files#improvement-advisor' }
+              { text: 'Improvement Advisor', link: '/agent-files#improvement-advisor' },
+              { text: 'Dependency Audit', link: '/agent-files#dependency-audit' }
             ]
           },
           { text: 'Context Extractor', link: '/agents/context-extractor-agent' },
           { text: 'Impact Assessment', link: '/agents/impact-assessment-agent' },
+          { text: 'Bug Triage', link: '/agents/bug-triage-agent' },
           { text: 'Orchestrator', link: '/agents/orchestrator-agent' },
           { text: 'PM Agent', link: '/agents/pm-agent' },
           { text: 'Architect Agent', link: '/agents/architect-agent' },
@@ -127,7 +130,8 @@ export default defineConfig({
           { text: 'Release Planner', link: '/agents/release-planner-agent' },
           { text: 'Documentation Agent', link: '/agents/documentation-agent' },
           { text: 'Retrospective Agent', link: '/agents/retrospective-agent' },
-          { text: 'Improvement Advisor', link: '/agents/improvement-advisor-agent' }
+          { text: 'Improvement Advisor', link: '/agents/improvement-advisor-agent' },
+          { text: 'Dependency Audit', link: '/agents/dependency-audit-agent' }
         ]
       },
       {
@@ -136,7 +140,11 @@ export default defineConfig({
         items: [
           { text: 'Overview', link: '/skills-mcp' },
           { text: 'Agent Contract', link: '/skills/agent-contract/SKILL' },
+          { text: 'Analysis Discipline', link: '/skills/analysis-discipline/SKILL' },
+          { text: 'Constraint Taxonomy', link: '/skills/constraint-taxonomy/SKILL' },
           { text: 'Contract Checklist', link: '/skills/contract-checklist/SKILL' },
+          { text: 'Threat Model', link: '/skills/threat-model/SKILL' },
+          { text: 'Migration Safety', link: '/skills/migration-safety/SKILL' },
           { text: 'Code Simplification', link: '/skills/code-simplification/SKILL' },
           { text: 'Artifact Bookkeeping', link: '/skills/artifact-bookkeeping/SKILL' },
           { text: 'Artifact Template', link: '/skills/artifact-template/SKILL' },

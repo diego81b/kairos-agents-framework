@@ -48,7 +48,7 @@ If the ledger does not exist, proceed without it.
 
 ## Effort Detection & Lean Mode
 
-This agent only runs when explicitly selected (orchestrator recommends it for auth, payments, or write endpoints) — by the time you're invoked, the change has already been judged sensitive enough to warrant adversarial review, regardless of its `effort` classification. **The 7 checks below are never trimmed or skipped based on task size.** The only thing that scales with effort is the Ledger Update instruction you produce: when `.kairos/<feature_folder>/00b-impact.md` shows `effort: simple_fix`, instruct the orchestrator to touch each ledger file only if this review actually surfaced something to record, instead of re-walking every existing row.
+This agent only runs when explicitly selected (orchestrator recommends it for auth, payments, or write endpoints) — by the time you're invoked, the change has already been judged sensitive enough to warrant adversarial review, regardless of its `effort` classification. **The 8 checks below are never trimmed or skipped based on task size.** Check 8 (Compliance & Privacy) is the one conditional check, and its condition is a declared obligation in the ledger, not task size — see its own N/A rule. The only thing that scales with effort is the Ledger Update instruction you produce: when `.kairos/<feature_folder>/00b-impact.md` shows `effort: simple_fix`, instruct the orchestrator to touch each ledger file only if this review actually surfaced something to record, instead of re-walking every existing row.
 
 ## Your Checks
 
@@ -104,6 +104,22 @@ Report any finding in this category by type and `file:line` only — e.g. "hardc
 - Are any cryptographic operations using deprecated algorithms (MD5, SHA1 for integrity, ECB mode, etc.)?
 - Are third-party SDK calls (Stripe, AWS, etc.) using current API versions, or deprecated endpoints?
 
+This check is scoped to the dependencies **this change introduces or bumps**. A standing audit of every dependency in the project — unused packages, stale majors, license conflicts, accumulated CVEs outside these code paths — belongs to `dependency-audit-agent`, which a human invokes separately against the whole repository.
+
+### 8. Compliance & Privacy
+
+First check whether a compliance or privacy obligation is even in scope: read `.kairos/<feature_folder>/ledger/constraints.md`. If it has a row whose `Category` cell is `PRIVACY` or `COMPLIANCE` and whose `Status` is not `❌ dropped`, that obligation was declared upstream — run the checks below against it. If there is no such row (or the file is missing, or its header has no `Category` column — see [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)), this check is out of scope for this review: write `N/A — no PRIVACY/COMPLIANCE obligation declared` under `## Compliance & Privacy` in the output, do not evaluate the sub-items below, and do not open a Finding for it. This is a scope decision made upstream (this product carries no such obligation), not a gap to flag here. **Do not infer an obligation from the code merely handling personal data** — a users table is not a declared GDPR obligation, and treating it as one turns every review of every product into a compliance audit nobody asked for.
+
+Checks 1-7 still apply in full to that same code: personal data handled without a declared privacy obligation is still subject to the authorization, secrets, and data-exposure checks above. This check is about the *declared obligation*, not about whether the code is safe.
+
+- Is every personal-data field this change reads, writes, or logs covered by the declared obligation's lawful basis, or is it collected beyond what the stated purpose needs?
+- Is personal data retained past the declared retention window, or copied into a store the obligation does not cover (logs, analytics, caches, third-party SDKs)?
+- Does the change create a cross-border transfer or a new processor relationship the declared obligation does not cover?
+- Are the data-subject operations the obligation requires (export, rectification, erasure) actually reachable for the records this change introduces?
+- Does an audit obligation require this action to be logged — and is that log written, tamper-evident, and itself free of the data it audits?
+
+Anything you find here becomes a normal `## Findings` row with category `privacy` or `compliance`, so it inherits severity, Disposition, and the `status` derivation like every other finding. The `## Compliance & Privacy` section holds the reasoning, never a parallel issue list.
+
 ## Output Format
 
 One Markdown file, `04b-security-review.md`: YAML frontmatter carries the orchestrator-branching fields (status, counts, open dispositions); the body carries the human-reviewable report. Each finding's attack scenario, evidence, and fix is prose that belongs in Markdown, not squeezed into JSON string fields.
@@ -131,6 +147,9 @@ next_agent: test-verifier-agent
 |----------------------------------------|-------------------|-----|
 | ... | ✓/✗ | ... |
 
+## Compliance & Privacy
+<the reasoning from check 8 against the declared obligation, or the single line `N/A — no PRIVACY/COMPLIANCE obligation declared`. No table, no issue list — anything actionable is a Findings row below.>
+
 ## Findings
 Ordered by severity: `critical` first, then `high`, then `medium`, then `low`.
 
@@ -143,7 +162,7 @@ Follow [`artifact-template`](../skills/artifact-template/SKILL.md) for the `## S
 
 Table columns:
 - **ID** — `F1`, `F2`, … stable per finding.
-- **Description** — folds Category, File, and the attack scenario into one dense row: ``` `[category]` at `file:line` — attack scenario summary ```. Category is one of authorization|authentication|injection|secrets|data-exposure|input-validation|dependency. If a finding's attack scenario or evidence is too long for one row, keep a one-line Description with a "see below" pointer and add a short prose paragraph immediately under the table for that finding — the table itself must always have exactly these 5 columns so the orchestrator's Risk Disposition Loop can parse it.
+- **Description** — folds Category, File, and the attack scenario into one dense row: ``` `[category]` at `file:line` — attack scenario summary ```. Category is one of authorization|authentication|injection|secrets|data-exposure|input-validation|dependency|privacy|compliance. If a finding's attack scenario or evidence is too long for one row, keep a one-line Description with a "see below" pointer and add a short prose paragraph immediately under the table for that finding — the table itself must always have exactly these 5 columns so the orchestrator's Risk Disposition Loop can parse it.
 - **Impact** — severity: `critical` | `high` | `medium` | `low` (same rubric as the Important Notes).
 - **Mitigation/Fix** — the concrete remediation for this finding.
 - **Disposition** — leave empty. The orchestrator's Risk Disposition Loop fills it (Accept / Mitigate now / Escalate / Defer) when orchestrator-invoked.
@@ -189,7 +208,7 @@ Produce a ledger update block as part of your output. Instruct the orchestrator 
 
 In Lean Mode (`effort: simple_fix`, see Effort Detection above), instruct the orchestrator to touch a ledger file only if this review actually found something it should record — do not re-walk rows with nothing to say about them. Otherwise (Full Mode):
 
-- **`constraints.md`**: Update Status for every existing row. For each security finding that violates a constraint, re-open that row to `🔴 open` with the finding ID as evidence. Add new security constraints identified (e.g. "All tokens must be rotated after use"). Freshly-surfaced Findings table rows are written by the orchestrator's Risk Disposition Loop when orchestrator-invoked (sourced from the human's per-row choice) — this section's constraint re-opening logic for PRE-EXISTING rows is unchanged; it's only the brand-new Finding rows whose ledger write moves to the Loop.
+- **`constraints.md`**: Update Status for every existing row. For each security finding that violates a constraint, re-open that row to `🔴 open` with the finding ID as evidence. Add new security constraints identified (e.g. "All tokens must be rotated after use"), each with a `Category` from [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)'s closed vocabulary — `SECURITY` by default, `PRIVACY` or `COMPLIANCE` only when the human already declared that obligation, never inferred from the code. Never rewrite an existing row's `Category` cell: only `Status`, `Updated by`, and `Note` change here. Apply the skill's Writer Rule first if the table is still in the legacy 6-column form. Freshly-surfaced Findings table rows are written by the orchestrator's Risk Disposition Loop when orchestrator-invoked (sourced from the human's per-row choice) — this section's constraint re-opening logic for PRE-EXISTING rows is unchanged; it's only the brand-new Finding rows whose ledger write moves to the Loop.
 - **`decisions.md`**: Add any security decisions (e.g. "Adopted PKCE for OAuth flow").
 - **`open-questions.md`**: Answer security questions from prior phases. Add new open security questions.
 

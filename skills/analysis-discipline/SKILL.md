@@ -4,7 +4,7 @@ description: Engineering-discipline checklist for analysis and review work — e
 
 # Analysis Discipline
 
-Shared reference for `context-extractor-agent`, `impact-assessment-agent`, `pm-agent`, `architect-agent`, `code-reviewer-agent`, `security-reviewer-agent`, and `test-verifier-agent`. Complements [`coding-discipline`](../coding-discipline/SKILL.md), which applies on the implementation side — this one applies whenever an agent is reading, judging, or reporting on someone else's requirement, design, or code instead of writing it.
+Shared reference for `context-extractor-agent`, `impact-assessment-agent`, `bug-triage-agent`, `pm-agent`, `architect-agent`, `code-reviewer-agent`, `security-reviewer-agent`, `test-verifier-agent`, and `dependency-audit-agent`. Complements [`coding-discipline`](../coding-discipline/SKILL.md), which applies on the implementation side — this one applies whenever an agent is reading, judging, or reporting on someone else's requirement, design, or code instead of writing it.
 
 ## Principles
 

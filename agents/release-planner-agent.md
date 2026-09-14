@@ -57,6 +57,10 @@ How to rollback if needed:
 - Estimated time
 - Data implications
 
+When this release carries a schema change or a data migration, read `02-architecture.md`'s `## Data Model` migration-safety block and carry its resolutions into the rollback steps rather than restating them generically. If that block is missing (architect-agent didn't run, or the migration appeared later), work through [`migration-safety`](../skills/migration-safety/SKILL.md) yourself now — §5 Reversibility, §6 what a code rollback does to new-shaped data, and §7 ordering against the code deploy are the three that decide whether the rollback you're writing actually works.
+
+A migration that is not reversible without data loss must say so explicitly here. If the correct recovery is roll-forward-with-a-fix rather than rollback, write that as the strategy instead of listing a rollback procedure that must never be used.
+
 ### 4. Monitoring
 What to monitor:
 - Key metrics
@@ -163,6 +167,8 @@ Update all three ledger files under `.kairos/<feature_folder>/ledger/`:
 - Deployment constraints met → mark `✓ resolved`
 - Constraints deferred to post-release monitoring → mark `⚠ deferred` with monitoring plan reference
 - Any constraint still `🔴 open` → this is a release blocker; list it in your deployment plan risks section and set this artifact's frontmatter `status` to `blocked`
+
+Never rewrite an existing row's `Category` cell — it is set once by whoever created the row and is what downstream conditional checks key on. Only `Status`, `Updated by`, and `Note` change here. This agent adds no new constraint rows.
 
 **`decisions.md`** — Add deployment decisions (rollback strategy, canary percentage, feature flag choices).
 

@@ -1,6 +1,6 @@
 # The KAIROS Agents
 
-KAIROS orchestrates a core pipeline of 14 specialized AI agents, plus an optional team of 5 specialists for Team Mode. Two agents run standalone before the main pipeline (Context Extractor and Impact Assessment); the numbered core agents run in sequence coordinated by the Orchestrator, including an optional Phase 6b (Documentation Agent). Two more agents — Retrospective Agent and Improvement Advisor — are standalone and run after work on a feature stops, never invoked by the Orchestrator. Team Mode agents are Claude Code only and activated on explicit request.
+KAIROS orchestrates a core pipeline of 16 specialized AI agents, plus an optional team of 5 specialists for Team Mode. Two agents run standalone before the main pipeline (Context Extractor and Impact Assessment), plus Bug Triage as the entry point when what you have is a defect rather than a feature; the numbered core agents run in sequence coordinated by the Orchestrator, including an optional Phase 6b (Documentation Agent). Three more agents — Retrospective, Improvement Advisor, and Dependency Audit — are standalone and run after work stops or outside any feature entirely, never invoked by the Orchestrator. Team Mode agents are Claude Code only and activated on explicit request.
 
 ::: tip Copy agents directly from the documentation
 Need the raw agent definition to paste into your tool? Go to **[Agent Files](/agent-files)** — every agent is embedded as a ready-to-copy code block, auto-synced from the source files.
@@ -29,6 +29,20 @@ Issue-scoped grounding agent. Run this before the Orchestrator (optionally, afte
 Unlike the Context Extractor, which scans the full repository, this agent reads only the code the issue directly touches. It consumes `00-context.md` if already present rather than rescanning. Output is `00b-impact.md` with effort estimate (`simple_fix / medium / significant_rework`), domains touched (backend / frontend / db / auth / integrations), reusable assets with real file paths, gaps, risks, and a `recommended_agents` list with per-agent justification.
 
 The recommendation is advisory only. When the Orchestrator detects `00b-impact.md`, it displays the recommendation as a `💡 Impact Assessment` block above the agent selection menu — the human confirms or ignores it. Nothing is pre-selected.
+
+::: tip Optional enhancements
+**Skills:** `deep-research` (built-in)
+:::
+
+---
+
+## [Bug Triage](/agents/bug-triage-agent)
+
+Standalone entry point from the other direction: a bug report rather than a feature request. Reproduces the defect first — a root cause for a symptom nobody observed is a guess with a citation — then isolates it, states the root cause at `file:line` with an evidence trail, separates it from the contributing factors that let it reach production, and rates severity on observed impact rather than on how hard the fix looks.
+
+Finishes by recommending where the fix re-enters the pipeline: `quick-fix` (local cause, contained fix) feeds the Orchestrator's Quick fix path directly, `full-pipeline` says the cause is structural and names the phase to start from, `not-a-defect` says the code behaves as designed and the expectation was wrong. Output is `00c-bug-triage.md`.
+
+Never fixes anything. It has `Bash` to reproduce — run a test, read a log, `git blame` — and writes only its own artifact under `.kairos/`.
 
 ::: tip Optional enhancements
 **Skills:** `deep-research` (built-in)
@@ -224,6 +238,20 @@ If the project gitignores `.kairos/` (the Orchestrator's Step 0c recommends it),
 Standalone and infrequent — run every few features, not every run. Reads the accumulated `.kairos/_lessons.md` across all past features and looks for friction confirmed in 3 or more of them. For each confirmed pattern, drafts a new `.kairos/decisions/ADR-*.md` (`Status: Proposed`) proposing a concrete framework change, and refreshes `_lessons.md`'s curated `Recurring Patterns` table (capped at 10 rows — the only section the Orchestrator injects into every subagent prompt).
 
 Never edits `agents/*.md`, `.opencode/`, `.kimi-code/`, or `docs/` itself — every ADR is a proposal a human applies by hand, the same "never self-implement" principle the Orchestrator follows for source code, applied here to the framework's own definition files.
+
+---
+
+## [Dependency Audit](/agents/dependency-audit-agent)
+
+Standalone and periodic — run it every few months, outside any feature. Surveys the whole project's dependency surface and accumulated debt: known CVEs (with a judgment on whether the vulnerable path is actually reachable from this project, which the tooling cannot tell you), how far behind each direct dependency is and what kind of gap it is, license conflicts, packages declared but never imported, the same library resolved at several versions, and the small number of code areas where debt has genuinely accumulated.
+
+Output is a prioritized backlog at the project-root `.kairos/_tech-debt.md`, overwritten on each run as a current-state snapshot. Each row is a candidate for one pipeline run, which a human starts.
+
+Applies nothing — no upgrade, no lockfile regeneration, no package removal. Its boundary with the Security Reviewer runs both ways: that agent's Dependency Risks check covers what a single change introduces or bumps, inside a feature's review; this one covers the whole project, on demand.
+
+::: tip Optional enhancements
+**Skills:** `deep-research` (built-in)
+:::
 
 ---
 

@@ -63,22 +63,29 @@ Any other effort value (`medium`, `significant_rework`, or unknown/standalone-wi
 Parse what's being asked.
 What's the core feature?
 
+**Problem check.** Most requests arrive with the solution already attached ("we need a dashboard", "add SSO"). Before accepting it, check whether anyone stated the problem underneath: what goes wrong today, for whom, and how often.
+
+If the input answers that, record it in one line and move on. If it doesn't, **ask** — and if no answer comes, write an `open-questions.md` row saying the problem was never articulated, rather than inventing one. A guessed problem statement is worse than a missing one: it reads as established and steers every phase after this. This is a one-line check, not a business case — sizing the value and weighing build-vs-buy belong to a conversation with the people who hold the budget, not to this pipeline.
+
 ### 2. Ask Clarifying Questions (if needed)
 If requirement is vague:
 - What provider/tool? (e.g., Stripe for payments)
 - Performance targets? (<100ms? <1s?)
 - Scale requirements? (10 req/sec? 10K?)
-- Security/compliance? (PCI-DSS? GDPR?)
+- Security posture? (Authn/authz model? Secrets handling?)
+- Regulatory regime or personal-data obligation? (PCI-DSS? SOC 2? GDPR retention or erasure duties?)
+- Accessibility obligation? (WCAG 2.x AA? Section 508? EN 301 549?)
 - Team expertise? (Familiar with X?)
 - Timeline? (Week? Month?)
 
+Ask the accessibility and regulatory questions only where they can plausibly apply. `00-context.md`'s accessibility-investment signals set the default: an existing a11y linter, test tool, CI job, or consistent `aria-`/`role=` usage means the answer is probably yes; a project with no UI at all means the question should not be asked. Absent that file, ask only if the feature has a user-facing surface.
+
 ### 3. Constraint Elicitation
-Identify:
-- PERFORMANCE constraints
-- SCALE constraints
-- SECURITY/COMPLIANCE constraints
-- TEAM constraints
-- TIMELINE constraints
+Identify constraints and assign each one a `Category` from the closed vocabulary in [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md): `PERFORMANCE`, `SCALE`, `SECURITY`, `PRIVACY`, `COMPLIANCE`, `ACCESSIBILITY`, `I18N`, `TEAM`, `TIMELINE`, `COMPATIBILITY`, `OTHER`.
+
+`SECURITY`, `PRIVACY`, and `COMPLIANCE` are three different things and must not be collapsed into one row: hardening is `SECURITY`, personal-data duties are `PRIVACY`, a named external regime is `COMPLIANCE`.
+
+**Do not invent an obligation the human did not state.** An absent category is the normal case and is what keeps downstream conditional checks quiet — `ACCESSIBILITY`, `PRIVACY`, and `COMPLIANCE` rows each arm a review section that would otherwise stay silent, so write one only when the human actually declared the obligation. Use `OTHER` rather than stretching a category to fit.
 
 ### 4. Identify Scope
 What's INCLUDED in feature?
@@ -108,9 +115,15 @@ How to know this works?
 Metrics to measure?
 Acceptance criteria?
 
-Phrase each criterion in **EARS form** where the requirement genuinely has a trigger and a system response — `When <trigger>, the <system> shall <response>` (e.g. "When a charge request includes an expired card, the payment service shall return a `card_expired` error without contacting Stripe"). This is what makes a criterion machine-testable rather than a vague goal, and it's what `test-verifier-agent` maps tests against downstream (`AC-1`, `AC-2`, ...). Don't force the template onto a criterion that isn't actually a trigger/response pair (e.g. a pure data-shape requirement) — write it as plain prose instead rather than contorting it. In **Lean Mode** (`simple_fix`), only phrase a criterion this way if it was already going to be a criterion worth stating — do not manufacture EARS-shaped criteria for a trivial change that has none.
+Phrase each criterion in **EARS form** where the requirement genuinely has a trigger and a system response — `When <trigger>, the <system> shall <response>` (e.g. "When a charge request includes an expired card, the payment service shall return a `card_expired` error without contacting Stripe"). This is what makes a criterion machine-testable rather than a vague goal, and it's what `test-verifier-agent` maps tests against downstream. Don't force the template onto a criterion that isn't actually a trigger/response pair (e.g. a pure data-shape requirement) — write it as plain prose instead rather than contorting it. In **Lean Mode** (`simple_fix`), only phrase a criterion this way if it was already going to be a criterion worth stating — do not manufacture EARS-shaped criteria for a trivial change that has none.
 
-When step 4b produced Use Cases, tag each criterion that belongs to one with a trailing `(UC-1)` — so the chain from functional flow to testable criterion (`test-verifier-agent` numbers these `AC-1`, `AC-2`, ... by list order downstream) stays traceable. A criterion with no matching UC (e.g. a pure data-shape or non-functional requirement) carries no tag.
+**One outcome criterion, separate from the acceptance criteria.** Acceptance criteria say the feature works as specified; they are all true the moment the tests pass, and they cannot tell you the feature was worth building. Write one additional statement that would be checkable some defined time *after* release: the metric, the direction, the rough magnitude, and when someone would look. It carries no `AC-n` ID and `test-verifier-agent` never maps a test to it — nothing downstream consumes it, which is the point: it is the line a human reads at the gate to decide whether this is worth the pipeline about to run.
+
+If no such statement can be written, say so explicitly instead of inventing a metric nobody will check. "This ships because a customer contract requires it" is a legitimate answer; a fabricated adoption target is not. Skipped entirely in **Lean Mode** (`simple_fix`).
+
+**Give every criterion an explicit, stable ID**, written as a leading `AC-n — ` on the criterion itself: `AC-1 — When a charge request includes an expired card, …`. These IDs are what `test-verifier-agent` maps tests against and what every downstream artifact cites, so they must survive edits: assign them here, at the source, and never renumber. On a Request-changes re-run, a criterion you remove leaves its ID burned (never reassigned to a different criterion) and a criterion you add takes the next free number — even if that leaves a gap in the sequence. Positional numbering assigned downstream would silently change what `AC-3` refers to the moment a criterion is inserted or dropped, invalidating every reference already written in other phases.
+
+When step 4b produced Use Cases, also tag each criterion that belongs to one with a trailing `(UC-1)` — so the chain from functional flow to testable criterion stays traceable. A criterion with no matching UC (e.g. a pure data-shape or non-functional requirement) carries no tag.
 
 ### 7. Integration Points
 Where does this connect?
@@ -155,11 +168,14 @@ next_agent: architect-agent
 ## Constraints
 | Category | Constraint |
 |----------|-----------|
-| Performance | target latency |
-| Scale | throughput target |
-| Security | compliance requirements |
-| Team | team expertise/knowledge |
-| Timeline | deadline if any |
+| PERFORMANCE | target latency |
+| SCALE | throughput target |
+| SECURITY | authn/authz model, secrets handling |
+| COMPLIANCE | named regime, e.g. PCI-DSS Level 2 |
+| TEAM | team expertise/knowledge |
+| TIMELINE | deadline if any |
+
+Categories come from [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)'s closed vocabulary, uppercase and exact. Include only the rows this feature actually has — an empty category is omitted, never listed with a placeholder.
 
 ## Risks
 | ID | Description | Impact | Mitigation/Fix | Disposition |
@@ -167,8 +183,13 @@ next_agent: architect-agent
 | R1 | what could go wrong | critical/high/medium/low | how to mitigate | *(filled by gate)* |
 
 ## Success Criteria
-- When <trigger>, the <system> shall <response> (UC-1) (EARS form — use where the criterion has a real trigger/response; see step 6)
-- criterion 2 (plain prose is fine when there's no trigger/response to name; omit the `(UC-N)` tag when no Use Case applies)
+- AC-1 — When <trigger>, the <system> shall <response> (UC-1) (EARS form — use where the criterion has a real trigger/response; see step 6)
+- AC-2 — criterion 2 (plain prose is fine when there's no trigger/response to name; omit the `(UC-N)` tag when no Use Case applies)
+
+The leading `AC-n` is mandatory and stable — see step 6. Never renumber on a re-run.
+
+## Outcome Criterion
+<one statement checkable after release — metric, direction, rough magnitude, when someone looks. No `AC-n` ID; nothing downstream maps a test to it. Write `not established — <reason>` when none can be stated honestly. Omit this section in Lean Mode.>
 
 ## Integration Points
 - system 1 to connect to
@@ -224,15 +245,18 @@ In **Full Mode**, write or update the ledger files under `.kairos/<feature_folde
 ```markdown
 # Constraints
 
-| ID | Constraint | Source | Status | Updated by | Note |
-|----|-----------|--------|--------|------------|------|
-| C1 | (existing row — update Status) | ... | ✓ resolved / ⚠ deferred / 🔴 open | pm-agent | (explanation) |
-| CN | (your new constraint) | pm-agent | 🔴 open | — | — |
+| ID | Constraint | Category | Source | Status | Updated by | Note |
+|----|-----------|----------|--------|--------|------------|------|
+| C1 | (existing row — update Status) | (unchanged) | ... | ✓ resolved / ⚠ deferred / 🔴 open | pm-agent | (explanation) |
+| CN | (your new constraint) | (from the closed vocabulary) | pm-agent | 🔴 open | — | — |
 ```
 
-Translate every row in the Constraints table into a constraint row. Examples:
-- `Performance: < 200ms p95` → `"Latency must be < 200ms at p95"`
-- `Security: PCI-DSS Level 2` → `"PCI-DSS Level 2 compliance required"`
+Never rewrite an existing row's `Category` cell — it is set once by whoever created the row and is what downstream conditional checks key on. Only `Status`, `Updated by`, and `Note` change here. Before appending, apply [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)'s Writer Rule: a legacy 6-column table is migrated to the 7-column form first, every pre-existing row getting its best-matching Category, and `OTHER` when none fits.
+
+Translate every row in the body Constraints table into a constraint row, carrying its Category across unchanged. Examples:
+- `PERFORMANCE: < 200ms p95` → `"Latency must be < 200ms at p95"`, Category `PERFORMANCE`
+- `COMPLIANCE: PCI-DSS Level 2` → `"PCI-DSS Level 2 compliance required"`, Category `COMPLIANCE`
+- `ACCESSIBILITY: WCAG 2.2 AA` → `"WCAG 2.2 AA on all public-facing screens"`, Category `ACCESSIBILITY`
 
 Freshly-surfaced Risks table rows are a separate case: when orchestrator-invoked, the orchestrator's Risk Disposition Loop writes their constraint/open-question rows itself, sourced from the human's per-item choice — do not also write them here, or they'll be duplicated. When running standalone (no orchestrator loop ran), write them yourself as above, one constraint row per risk mitigation.
 

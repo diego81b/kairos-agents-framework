@@ -24,6 +24,7 @@ Copy this block into any issue description or paste it directly in the chat:
 - [ ] security-reviewer-agent
 - [ ] test-verifier-agent
 - [ ] release-planner-agent
+- [ ] documentation-agent
 ```
 
 Check (`[x]`) only the agents you want to activate. For the implementation step, pick **one** of `implementer-tdd-agent` (TDD, default) or `implementer-coder-agent` (no TDD). Add `security-reviewer-agent` when the feature touches auth, payments, or any write endpoint.
@@ -44,6 +45,7 @@ Full pipeline — new functionality going to production.
 - [x] security-reviewer-agent
 - [x] test-verifier-agent
 - [x] release-planner-agent
+- [ ] documentation-agent
 ```
 
 ---
@@ -62,6 +64,7 @@ Skip design and deployment planning; focus on fix + verification.
 - [ ] security-reviewer-agent
 - [x] test-verifier-agent
 - [ ] release-planner-agent
+- [ ] documentation-agent
 ```
 
 ---
@@ -80,6 +83,7 @@ Minimal pipeline — urgent production fix, skip analysis and planning.
 - [ ] security-reviewer-agent
 - [ ] test-verifier-agent
 - [ ] release-planner-agent
+- [ ] documentation-agent
 ```
 
 ---
@@ -98,6 +102,7 @@ All phases except deployment — improving existing code without a new release.
 - [ ] security-reviewer-agent
 - [x] test-verifier-agent
 - [ ] release-planner-agent
+- [ ] documentation-agent
 ```
 
 ---
@@ -116,6 +121,7 @@ Analysis and writing only — no code, no deployment.
 - [ ] security-reviewer-agent
 - [ ] test-verifier-agent
 - [ ] release-planner-agent
+- [ ] documentation-agent
 ```
 
 ---
@@ -151,7 +157,7 @@ When the orchestrator shows the Case B selection prompt, paste the entire templa
 | # | Agent | Role |
 |---|-------|------|
 | pre | `context-extractor-agent` | Full-repo scan → stack, patterns, conventions (standalone, optional) |
-| pre | `impact-assessment-agent` | Issue-scoped grounding → effort, domains, agent recommendations (standalone, optional) |
+| pre | `impact-assessment-agent` | Issue-scoped grounding → effort, domains, work breakdown, agent recommendations (standalone, optional) |
 | 1 | `pm-agent` | Requirements analysis, acceptance criteria, risks |
 | 2 | `architect-agent` | System design, API contracts, DB schema |
 | 3 | `implementer-tdd-agent` | TDD code generation (plan gate + code gate) — **default** |
@@ -160,3 +166,4 @@ When the orchestrator shows the Case B selection prompt, paste the entire templa
 | 4b | `security-reviewer-agent` | Adversarial security review — IDOR, auth, injection, secrets, data exposure (optional) |
 | 5 | `test-verifier-agent` | Test coverage and assertion quality |
 | 6 | `release-planner-agent` | Deployment steps, rollback, monitoring |
+| 6b | `documentation-agent` | Feature-facing docs — README, API reference, CHANGELOG (optional) |

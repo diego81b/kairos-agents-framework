@@ -79,6 +79,7 @@ kairos-agents-framework/
 │   ├── orchestrator-agent.md
 │   ├── context-extractor-agent.md  ← Pre-pipeline: full-repo context (standalone)
 │   ├── impact-assessment-agent.md  ← Pre-pipeline: issue grounding (standalone)
+│   ├── bug-triage-agent.md         ← Bug reproduction + root cause (standalone)
 │   ├── pm-agent.md
 │   ├── architect-agent.md
 │   ├── implementer-tdd-agent.md    ← TDD implementer (default)
@@ -90,11 +91,12 @@ kairos-agents-framework/
 │   ├── documentation-agent.md      ← Feature-facing docs (optional, Phase 6b)
 │   ├── retrospective-agent.md      ← Lessons capture (standalone, post-pipeline)
 │   ├── improvement-advisor-agent.md ← Framework change proposals (standalone, infrequent)
+│   ├── dependency-audit-agent.md   ← Dependency + tech-debt backlog (standalone, periodic)
 │   └── team/             ← Team Mode specialists (Claude Code only)
 ├── skills/               ← Shared checklists/formats reused across agents (see Skills & MCP)
 ├── commands/             ← Claude Code slash commands (/kairos:setup, /kairos:view)
-├── .opencode/agents/     ← OpenCode mirror of the 14 core agents above (see Setup > OpenCode)
-└── .kimi-code/agents/    ← Kimi Code mirror of the 14 core agents above (see Setup > Kimi Code)
+├── .opencode/agents/     ← OpenCode mirror of the 16 core agents above (see Setup > OpenCode)
+└── .kimi-code/agents/    ← Kimi Code mirror of the 16 core agents above (see Setup > Kimi Code)
 ```
 
 `.opencode/agents/` and `.kimi-code/agents/` only exist here, inside the KAIROS repo, as hand-maintained mirrors for those two tools. Your own project never has all of these at once — it gets **one** agent directory matching your tool (`.claude/agents/`, `.cursor/agents/`, `.github/agents/`, `.codex/agents/`, `.opencode/agents/`, or `.kimi-code/agents/`), populated from whichever of the above your tool needs. Claude Code is the one exception: a plugin install needs no copying at all — see its [setup page](/setup/claude-code) for both paths.
