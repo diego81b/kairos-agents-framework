@@ -36,7 +36,7 @@ If any item below is missing from both sources, **stop immediately** and emit th
 | Change surface | `03-implementation.md`'s `## Files Written` section, or file paths pasted manually | 🚨 **AGENT ERROR — qa-plan-agent: no change surface received**. Without the list of files that actually shipped, regression retest selection and manual cases would be invented rather than derived. Paste the changed file paths, or run the implementer first. |
 | Acceptance criteria | Success Criteria list from `01-requirements.md` (pm-agent), or pasted manually | 🚨 **AGENT ERROR — qa-plan-agent: no acceptance criteria received**. UAT sign-off criteria cannot be derived from the code alone — that would be this agent grading its own homework. Paste the `AC-n` list, or run pm-agent first. |
 | `feature_folder` | Orchestrator context, or specify one manually | ⚠️ **WARNING — qa-plan-agent: no `feature_folder` provided**. A default of `feature_unnamed` will be used. |
-| `05-test-verification.md` | Output of test-verifier-agent | ⚠️ **WARNING — qa-plan-agent: no test verification artifact**. This is the normal case on the `implementer-coder-agent` path (no test suite). Set `coverage_basis: none` and treat **every** `AC-n` as unverified by automation — the manual plan must then cover all of them, not only the gaps. Never assume coverage that was not reported. |
+| `05-test-verification.md` | Output of test-verifier-agent | ⚠️ **WARNING — qa-plan-agent: no test verification artifact**. This is the normal case on the `implementer-coder-agent` path (no test suite). Say so in one line under `## Coverage Complement` and treat **every** `AC-n` as unverified by automation — the manual plan must then cover all of them, not only the gaps. Never assume coverage that was not reported. |
 | `00b-impact.md` | Output of impact-assessment-agent | ⚠️ **WARNING — qa-plan-agent: no impact assessment**. Effort is inferred from the change surface instead; exploratory charters are scoped from the file list alone. |
 
 Follow [`agent-contract`](../skills/agent-contract/SKILL.md)'s Missing-Input Error Format — `{agent-name}: qa-plan-agent`.
@@ -73,9 +73,9 @@ Read `05-test-verification.md` and build the set of what automation does **not**
 - Every row of its `## Uncovered` table (file + lines + reason).
 - Every `AC-n` with a non-empty `Gap` cell in its `## Acceptance Criteria Mapping` table.
 - Every `AC-n` absent from that table entirely.
-- Any check in its `checks` block that is `FAIL` — a failing `determinism` check means the automated result for that area is not trustworthy, so it re-enters the manual set even when the lines are "covered".
+- Any row in its `## Checks` table that is `FAIL` — a failing Determinism check means the automated result for that area is not trustworthy, so it re-enters the manual set even when the lines are "covered".
 
-When `coverage_basis: none` (no test-verifier artifact), the complement is every `AC-n` in `01-requirements.md`.
+With no test-verifier artifact at all, the complement is every `AC-n` in `01-requirements.md`.
 
 This set is the input to step 2. Do not add to it from intuition: if you believe an area is under-verified but nothing above names it, say so in one line under the Manual Test Cases table as an observation, and do not fabricate a row for it.
 
@@ -129,12 +129,7 @@ One file: `05b-qa-plan.md`. YAML frontmatter carries the machine contract for or
 ---
 phase: qa-plan
 status: READY   # or NEEDS_ATTENTION
-coverage_basis: test-verifier   # test-verifier | none
-manual_cases: { functional: 6, exploratory: 3, total: 9 }
-uat_summary: { criteria: 4, unverifiable: 0 }
 risk_counts: { critical: 0, high: 1, medium: 2, low: 0, total: 3 }
-open_dispositions: 3   # count of Risks rows with empty Disposition cell
-next_agent: release-planner-agent
 ---
 
 # QA Plan — <feature title>
@@ -239,6 +234,8 @@ Never rewrite an existing row's `Category` cell — it is set once by whoever cr
 **`open-questions.md`** — Add one row per `AC-n` marked **not verifiable as written**, and per still-open behavioral question the plan had to route around.
 
 ### 3. Open in Editor
+When the orchestrator invoked you, skip this step — its gate prints the `## Summary` block and offers the full file on request, so force-opening it here puts the whole document in front of a human who only needed four lines. Open it on a standalone run, where no gate does that for you.
+
 After writing, open the output file in the editor.
 Run from the project root, substituting the actual `feature_folder` value received from the orchestrator:
 

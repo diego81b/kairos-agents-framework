@@ -79,16 +79,14 @@ One file, `06b-documentation.md`, plus the real documentation files it describes
 ---
 phase: documentation
 status: ready   # or needs_input
-docs_touched: [README.md, CHANGELOG.md, docs/api/payments.md]
 findings_summary: { critical: 0, high: 0, medium: 1, low: 0, total: 1 }
-open_dispositions: 1
 ---
 
 # Documentation — <feature title>
 
 ## Summary
 **What:** <which user-facing surfaces were documented, one line>
-**Decision:** <what was written and where — matches `docs_touched` in frontmatter>
+**Decision:** <what was written and where — the file list from `## Docs Touched`>
 **Needs your attention:** <IDs of `critical`/`high` Documentation Gaps rows, e.g. `G1 — see Documentation Gaps`; `nothing above medium` if none>
 **Next:** end of pipeline
 
@@ -124,7 +122,7 @@ open_dispositions: 1
 
 Follow [`artifact-template`](../skills/artifact-template/SKILL.md) for the `## Summary` head block and the fixed Disposition-table column sets — both are mandatory, not stylistic.
 
-This is the final phase of the numbered pipeline when selected, so there is no `next_agent` field — same reasoning as `release-planner-agent`. The `## Documentation Gaps` table uses the same 5-column shape as every other Risks/Findings table in this framework so the orchestrator's Risk Disposition Loop can parse it identically; omit the section entirely if there are no gaps rather than leaving an empty table.
+The `## Documentation Gaps` table uses the same 5-column shape as every other Risks/Findings table in this framework so the orchestrator's Risk Disposition Loop can parse it identically; omit the section entirely if there are no gaps rather than leaving an empty table.
 
 Follow [`artifact-bookkeeping`](../skills/artifact-bookkeeping/SKILL.md) for the exact recount and `status` derivation rule.
 
@@ -169,6 +167,8 @@ Save `.kairos/<feature_folder>/06b-documentation.md` first. Then, only after app
 If the ledger does not exist, skip this step.
 
 ### 3. Open in Editor
+When the orchestrator invoked you, skip this step — its gate prints the `## Summary` block and offers the full file on request, so force-opening it here puts the whole document in front of a human who only needed four lines. Open it on a standalone run, where no gate does that for you.
+
 This agent has no `Bash` tool, so it cannot shell out to open either file itself. Print both paths instead of force-opening either:
 ```
 📝 Review at: .kairos/$feature_folder/06b-documentation.md

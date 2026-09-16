@@ -37,7 +37,7 @@ Follow [`agent-contract`](../skills/agent-contract/SKILL.md)'s Missing-Input Err
 
 Before proceeding, read all three ledger files:
 
-- `.kairos/<feature_folder>/ledger/constraints.md` — verify that each constraint is satisfied by the implementation; you may re-open constraints the implementer marked resolved if code does not comply
+- `.kairos/<feature_folder>/ledger/constraints.md` — read every row and verify the implementation satisfies it; re-open any row the implementer marked resolved when the code does not comply. Reading is on every row; writing is only on the rows you act on (see Ledger Update below)
 - `.kairos/<feature_folder>/ledger/decisions.md` — understand architectural decisions you must verify compliance with
 - `.kairos/<feature_folder>/ledger/open-questions.md` — answer any questions you can from code inspection
 
@@ -132,25 +132,14 @@ Apply [`coding-discipline`](../skills/coding-discipline/SKILL.md) — this check
 
 ## Output Format
 
-One file: `04-review.md`. YAML frontmatter carries the orchestrator-branching fields (status, pass/fail checks, counts, convergence signal); the Markdown body carries the human-reviewable review — the full Issues list, one row per issue, as a table. A review with 20+ issues is unreadable as a JSON array; it's a normal table in Markdown.
+One file: `04-review.md`. YAML frontmatter carries only what the orchestrator branches on: the verdict, the issue tally, and the loop's iteration counter. The per-check pass/fail results live in the body's `## Checks` table, next to the Issues list they explain — one place, not two.
 
 ```markdown
 ---
 phase: code-review
 status: READY   # or NEEDS_FIXES
-checks:
-  correctness: "✓ PASS"    # or "✗ FAIL"
-  standards: "✓ PASS"
-  architecture: "✓ PASS"
-  security: "✓ PASS"
-  performance: "✓ PASS"
-  accessibility: "✓ PASS"  # or "✗ FAIL", or "N/A — no accessibility obligation declared" (never counts as FAIL)
-  testing: "✓ PASS"        # or "✗ FAIL", or "N/A — no-TDD path" (implementer-coder-agent ran; never counts as FAIL)
-  simplicity: "✓ PASS"     # or "✗ FAIL"
 issues_summary: { critical: 0, high: 2, medium: 1, low: 3, total: 6 }
-open_dispositions: 6   # count of Issues table rows with an empty Disposition cell
-convergence_signal: { issues_critical_high: 2, issues_total: 6, iteration: 1 }
-next_agent: test-verifier-agent
+convergence_signal: { iteration: 1 }
 ---
 
 # Code Review — <feature title>
@@ -166,8 +155,14 @@ next_agent: test-verifier-agent
 |-------|--------|
 | Correctness | ✓ PASS |
 | Standards | ✓ PASS |
+| Architecture | ✓ PASS |
+| Security | ✓ PASS |
+| Performance | ✓ PASS |
+| Accessibility | N/A — no accessibility obligation declared |
+| Testing | ✓ PASS |
 | Simplicity | ✓ PASS |
-| ... | ... |
+
+All eight rows are always present. `✓ PASS` / `✗ FAIL`, or `N/A — <reason>` for the two that can be out of scope: Accessibility when no `ACCESSIBILITY` constraint row was declared, Testing on the no-TDD path. An `N/A` never counts as a FAIL.
 
 ## Issues
 Ordered by severity: critical first, then high, then medium, then low.
@@ -182,7 +177,7 @@ Ordered by severity: critical first, then high, then medium, then low.
 - **Description** — what's wrong. Fold the file:line and category into it (e.g. `` `src/x.js:42` (security) — description text ``) so no location or category information is lost.
 - **Impact** — the severity scale (critical / high / medium / low). Same values as before; only the column name changed to match the universal shape.
 - **Mitigation/Fix** — a concrete fix suggestion for the issue. You already reason about what's wrong, so propose the remedy.
-- **Disposition** — leave empty (`*(filled by gate)*`). The orchestrator's Risk Disposition Loop fills it from the human's per-row choice; `open_dispositions` counts how many are still empty.
+- **Disposition** — leave empty (`*(filled by gate)*`). The orchestrator's Risk Disposition Loop fills it from the human's per-row choice.
 
 Follow [`artifact-template`](../skills/artifact-template/SKILL.md) for the `## Summary` head block and the fixed Disposition-table column sets — both are mandatory, not stylistic.
 
@@ -226,7 +221,7 @@ In **Lean Mode**, skip the full re-walk below: touch each ledger file only if th
 
 In **Full Mode**, update all three ledger files under `.kairos/<feature_folder>/ledger/`:
 
-**`constraints.md`** — Update the Status of EVERY existing row:
+**`constraints.md`** — Update the Status of the rows this phase acted on — one it satisfied, deferred, re-opened, or contradicted. That includes a row you did not create: a constraint the code no longer honours is a row this phase acted on, and re-opening it is the point. What you skip is the row you have nothing to say about. The full re-walk of every row belongs to `architect-agent` (first accounting pass) and `release-planner-agent` (final accounting); here, leave an untouched row exactly as you found it. Apply [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)'s Writer Rule to any row you do write:
 - Constraint verified as met by code → keep `✓ resolved` or mark it if the implementer left it `🔴 open` but code actually satisfies it
 - Constraint the implementer marked resolved but code does NOT satisfy → re-open to `🔴 open` with the file/line evidence
 - Constraint not applicable to review → leave as-is
@@ -244,14 +239,14 @@ Freshly-surfaced Issues table rows are written by the orchestrator's Risk Dispos
 
 ```markdown
 convergence_signal:
-  issues_critical_high: <count of critical + high rows in the 04-review.md Issues table>
-  issues_total: <total issues count>
   iteration: <iteration number from Loop State>
 ```
 
 Do NOT create `## Loop State` yourself — only update it if the orchestrator already placed it there.
 
 ### 3. Open in Editor
+When the orchestrator invoked you, skip this step — its gate prints the `## Summary` block and offers the full file on request, so force-opening it here puts the whole document in front of a human who only needed four lines. Open it on a standalone run, where no gate does that for you.
+
 After writing, open the review doc in the editor.
 Run from the project root, substituting the actual `feature_folder` value received from the orchestrator:
 

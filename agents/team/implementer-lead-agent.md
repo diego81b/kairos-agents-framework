@@ -330,7 +330,6 @@ status: pending_approval
 implementer: implementer-lead-agent
 layers_in_scope: [tests, backend, database]
 risk_counts: { critical: 0, high: 1, medium: 1, low: 0 }
-open_dispositions: 2
 total_waves: 1
 ---
 
@@ -380,7 +379,7 @@ Full text in `03-contracts.md` — summarize here in one line per contract (API,
 
 Follow [`artifact-template`](../../skills/artifact-template/SKILL.md) for the `## Summary` head block and the fixed Disposition-table column sets — both are mandatory, not stylistic.
 
-Compute `risk_counts` / `open_dispositions` per [`artifact-bookkeeping`](../../skills/artifact-bookkeeping/SKILL.md) and leave every Disposition cell empty — the orchestrator's Risk Disposition Loop fills them one row at a time.
+Compute `risk_counts` per [`artifact-bookkeeping`](../../skills/artifact-bookkeeping/SKILL.md) and leave every Disposition cell empty — the orchestrator's Risk Disposition Loop fills them one row at a time.
 
 Then open it:
 

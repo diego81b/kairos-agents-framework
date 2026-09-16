@@ -163,7 +163,7 @@ Severity rubric:
 
 ## Output Format
 
-One file: `05-test-verification.md`. YAML frontmatter carries the machine contract (status, execution summary, coverage summary, the 7 named checks, counts, convergence signal, next agent) for orchestrator branching. The Markdown body carries the human-reviewable tables — uncovered lines, AC mapping, and issues are all naturally tabular and belong in the body, not in frontmatter.
+One file: `05-test-verification.md`. YAML frontmatter carries only what the orchestrator branches on: the verdict, the execution and coverage summaries its status rule reads, the issue tally, and the loop's convergence signal. Everything else — the 7 named checks, uncovered lines, AC mapping, issues — is a table in the body, where a human can read it.
 
 ```markdown
 ---
@@ -182,18 +182,8 @@ coverage_summary:
   branch: 78
   function: 92
   uncovered_count: 1
-checks:
-  comprehensiveness: PASS   # PASS|FAIL
-  coverage: PASS            # PASS|FAIL
-  assertion_strength: FAIL  # PASS|FAIL
-  determinism: PASS         # PASS|FAIL
-  hygiene: PASS             # PASS|FAIL
-  mocking: PASS             # PASS|FAIL
-  tdd_reality: PASS         # PASS|FAIL|UNKNOWN
 issues_summary: { critical: 0, high: 1, medium: 1, low: 1, total: 3 }
-open_dispositions: 3   # count of Issues table rows with empty Disposition cell
-convergence_signal: { issues_critical_high: 1, issues_total: 3, ac_gaps: 1, coverage_delta: "+4%", iteration: 1 }
-next_agent: release-planner-agent
+convergence_signal: { ac_gaps: 1, iteration: 1 }
 ---
 
 # Test Verification — <feature title>
@@ -203,6 +193,17 @@ next_agent: release-planner-agent
 **Decision:** <the verdict — matches `status` in frontmatter, e.g. `NEEDS_FIXES — 1 high issue, 1 AC gap`>
 **Needs your attention:** <IDs of `critical`/`high` Issues rows plus any Acceptance Criteria gap, e.g. `I1, AC-3 — see below`; `nothing above medium` if none>
 **Next:** release-planner-agent
+
+## Checks
+| Check | Result |
+|-------|--------|
+| Comprehensiveness | PASS |
+| Coverage | PASS |
+| Assertion strength | FAIL |
+| Determinism | PASS |
+| Hygiene | PASS |
+| Mocking | PASS |
+| TDD reality | PASS |   <!-- PASS|FAIL|UNKNOWN — UNKNOWN on the no-TDD path -->
 
 ## Uncovered
 | File | Lines | Reason |
@@ -275,7 +276,7 @@ In **Lean Mode**, skip the full re-walk below: touch each ledger file only if th
 
 In **Full Mode**, update all three ledger files under `.kairos/<feature_folder>/ledger/`:
 
-**`constraints.md`** — Update the Status of EVERY existing row:
+**`constraints.md`** — Update the Status of the rows this phase acted on — one it satisfied, deferred, re-opened, or contradicted. That includes a row you did not create: a constraint the code no longer honours is a row this phase acted on, and re-opening it is the point. What you skip is the row you have nothing to say about. The full re-walk of every row belongs to `architect-agent` (first accounting pass) and `release-planner-agent` (final accounting); here, leave an untouched row exactly as you found it. Apply [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)'s Writer Rule to any row you do write:
 - Coverage constraints met → mark `✓ resolved` with actual percentages
 - Coverage constraints not met → mark `🔴 open` with actual vs required
 - TDD compliance constraints → update based on `tdd_reality` check result
@@ -291,16 +292,15 @@ Never rewrite an existing row's `Category` cell — it is set once by whoever cr
 
 ```markdown
 convergence_signal:
-  issues_critical_high: <count of critical + high rows in the 05-test-verification.md Issues table>
-  issues_total: <total issues count>
   ac_gaps: <count of gapIds from the Acceptance Criteria Mapping table — 0 if the Success Criteria list was unavailable>
-  coverage_delta: "<line coverage delta vs previous iteration, e.g. '+4%', or 'N/A' on first loop iteration>"
   iteration: <iteration number from Loop State>
 ```
 
 Do NOT create `## Loop State` yourself — only update it if the orchestrator already placed it there.
 
 ### 3. Open in Editor
+When the orchestrator invoked you, skip this step — its gate prints the `## Summary` block and offers the full file on request, so force-opening it here puts the whole document in front of a human who only needed four lines. Open it on a standalone run, where no gate does that for you.
+
 After writing, open the output file in the editor.
 Run from the project root, substituting the actual `feature_folder` value received from the orchestrator:
 

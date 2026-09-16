@@ -110,8 +110,10 @@ model: opus
 Rules that apply when editing agent files:
 
 - **Artifact format**: every phase output is a Markdown file with a small YAML frontmatter
-  header (only fields the orchestrator branches on: status, counts, `next_agent`) followed
-  by a plain-Markdown body. Never introduce JSON artifact formats — nothing parses these
+  header followed by a plain-Markdown body. A field earns its place in the frontmatter only
+  if the orchestrator branches on it — a verdict, a tally it thresholds, a loop signal.
+  Anything a human merely reads belongs in the body, where the `## Summary` block already
+  answers the gate. Never introduce JSON artifact formats — nothing parses these
   files programmatically; consumers are other agents (prompt text) or humans at HITL gates.
 - **Risks/Issues/Findings tables** carry a `Disposition` column, resolved row-by-row by the
   orchestrator's Risk Disposition Loop before the whole-artifact gate.

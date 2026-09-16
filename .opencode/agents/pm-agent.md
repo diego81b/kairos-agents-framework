@@ -37,7 +37,7 @@ Follow [`agent-contract`](../skills/agent-contract/SKILL.md)'s Missing-Input Err
 Before proceeding, check if `.kairos/<feature_folder>/ledger/` exists:
 
 1. If it exists, read all three files:
-   - `ledger/constraints.md` — existing constraints from context-extractor or impact-assessment; you will update their status and add yours
+   - `ledger/constraints.md` — existing constraints from context-extractor or impact-assessment; you will add yours, and update the Status of any existing row your analysis acts on
    - `ledger/decisions.md` — any early decisions already recorded
    - `ledger/open-questions.md` — existing questions you might answer from your analysis
 
@@ -53,7 +53,12 @@ When effort is `simple_fix`, run in **Lean Mode**:
 - Risk Analysis (step 5) produces a `## Risks` table only if a real risk exists. An empty table for a trivial change is overhead, not rigor — omit the section entirely rather than padding it.
 - Ledger Update (2b) becomes additive-only (see that section below).
 
-Any other effort value (`medium`, `significant_rework`, or unknown/standalone-without-classification) runs the Full process below, unchanged.
+When effort is `medium`, run in **Trimmed Mode** — Full process, two sections shorter:
+- Use Cases (step 4b) collapse to **one line each**: `UC-n: <title> — <actor> wants <goal>`. No numbered Main Flow. Nothing downstream reads the steps: `architect-agent` names the UC IDs its selected option serves, the implementers tag waves with `UC-n`, and neither re-derives the flow. Write the full form only when a flow has a branch someone will get wrong without it.
+- Constraint Elicitation (step 3) stays in full. Constraints arm downstream checks; a missing one is a check that silently never runs.
+- `## Outcome Criterion` stays in full. `qa-plan-agent` carries it through verbatim, and qa-plan is recommended from `medium` upward.
+
+`significant_rework` (or unknown/standalone-without-classification) runs the Full process below, unchanged.
 
 ## Your Process
 
@@ -99,7 +104,7 @@ For each primary way a user (or calling system) accomplishes the goal from step 
 - **Goal** — what they're trying to accomplish
 - **Main Flow** — the steps, in order, as the actor experiences them
 
-Keep it to the primary paths — 2-5 use cases covers most features. A flow that's really a variant of another (same actor, same goal, one branching step) is an alternate flow under that same UC, not a new one.
+In **Trimmed Mode** (`medium`), write one line per use case — `UC-n: <title> — <actor> wants <goal>` — and no Main Flow, unless a flow has a branch a reader would otherwise get wrong. Keep it to the primary paths — 2-5 use cases covers most features. A flow that's really a variant of another (same actor, same goal, one branching step) is an alternate flow under that same UC, not a new one.
 
 This is the functional anchor every downstream phase reads before touching a technical detail. It's what you'd tell a stakeholder who asks "what does this actually do for the user" — the thing that's easy to lose sight of once architecture, contracts, and file lists take over. On a large or multi-wave implementation, this is what keeps later waves aimed at the actual goal instead of just the contract that was last read.
 
@@ -139,8 +144,6 @@ Output a single Markdown file with a YAML frontmatter header. Frontmatter carrie
 phase: pm-agent
 status: ready
 risk_counts: { critical: 0, high: 1, medium: 2, low: 1 }
-open_dispositions: 4
-next_agent: architect-agent
 ---
 
 # PM Analysis — <feature_folder>
@@ -155,7 +158,7 @@ next_agent: architect-agent
 <feature description — what's included, what's explicitly excluded, dependencies on other systems>
 
 ## Use Cases
-*(Omit entirely in Lean Mode — see step 4b)*
+*(Omit entirely in Lean Mode; one line per use case in Trimmed Mode — see step 4b)*
 
 ### UC-1: <short functional title>
 **Actor:** <who initiates it>
@@ -165,17 +168,12 @@ next_agent: architect-agent
 2. <step>
 3. <step>
 
-## Constraints
-| Category | Constraint |
-|----------|-----------|
-| PERFORMANCE | target latency |
-| SCALE | throughput target |
-| SECURITY | authn/authz model, secrets handling |
-| COMPLIANCE | named regime, e.g. PCI-DSS Level 2 |
-| TEAM | team expertise/knowledge |
-| TIMELINE | deadline if any |
+*(Trimmed Mode — `medium` effort: one line per use case instead, `UC-1: <title> — <actor> wants <goal>`, no Main Flow. See step 4b.)*
 
-Categories come from [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)'s closed vocabulary, uppercase and exact. Include only the rows this feature actually has — an empty category is omitted, never listed with a placeholder.
+## Constraints
+<one line: `N constraints recorded in `ledger/constraints.md` (C1-CN).` Name nothing else here.>
+
+The constraints themselves go straight into the ledger in step 2b — that table is the one every downstream agent reads (`architect-agent`, both implementers, `code-reviewer-agent`, `security-reviewer-agent`, `qa-plan-agent`, `release-planner-agent` all name `ledger/constraints.md`, none of them this section). Writing them twice means a reader has to work out which copy is current the moment the architect updates a Status, so this section is a pointer, not a second copy.
 
 ## Risks
 | ID | Description | Impact | Mitigation/Fix | Disposition |
@@ -200,7 +198,7 @@ Follow [`artifact-template`](../skills/artifact-template/SKILL.md) for the `## S
 
 Follow [`artifact-bookkeeping`](../skills/artifact-bookkeeping/SKILL.md) for the exact recount rule — recompute after every edit, never hand-increment a single field.
 
-`risk_counts` and `open_dispositions` are derived by counting Risks table rows — by Impact value, and by empty Disposition cells respectively. `status` is always `ready` (this agent has no pass/fail state). Leave every Disposition cell empty — the orchestrator's Risk Disposition Loop (or, when running standalone, the human via the gate below) fills it in, not you.
+`risk_counts` is derived by counting Risks table rows by Impact value. `status` is always `ready` (this agent has no pass/fail state). Leave every Disposition cell empty — the orchestrator's Risk Disposition Loop (or, when running standalone, the human via the gate below) fills it in, not you.
 
 If a risk's reasoning doesn't fit one row, keep a one-line Description with a "see below" pointer and add a short prose paragraph immediately under the table for that risk — the table itself keeps exactly these 5 columns so the disposition loop can still parse it.
 
@@ -240,7 +238,7 @@ In **Lean Mode**, skip the full re-walk below: touch each ledger file only if th
 
 In **Full Mode**, write or update the ledger files under `.kairos/<feature_folder>/ledger/`:
 
-**`constraints.md`** — Update Status for every existing row, then add a new row for each constraint identified in this phase:
+**`constraints.md`** — Add a new row for each constraint this phase elicited, and update the Status of any existing row your analysis acted on — one it answered, re-scoped, or contradicted. The full re-walk of every row belongs to `architect-agent` (first accounting pass) and `release-planner-agent` (final accounting); here, leave an untouched row exactly as you found it:
 
 ```markdown
 # Constraints
@@ -253,7 +251,7 @@ In **Full Mode**, write or update the ledger files under `.kairos/<feature_folde
 
 Never rewrite an existing row's `Category` cell — it is set once by whoever created the row and is what downstream conditional checks key on. Only `Status`, `Updated by`, and `Note` change here. Before appending, apply [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)'s Writer Rule: a legacy 6-column table is migrated to the 7-column form first, every pre-existing row getting its best-matching Category, and `OTHER` when none fits.
 
-Translate every row in the body Constraints table into a constraint row, carrying its Category across unchanged. Examples:
+Every constraint this phase elicited is written here and only here — the body's `## Constraints` section is a one-line pointer to this table, not a second copy. Pick each row's Category from the closed vocabulary, uppercase and exact, and never stretch one to fit. Examples:
 - `PERFORMANCE: < 200ms p95` → `"Latency must be < 200ms at p95"`, Category `PERFORMANCE`
 - `COMPLIANCE: PCI-DSS Level 2` → `"PCI-DSS Level 2 compliance required"`, Category `COMPLIANCE`
 - `ACCESSIBILITY: WCAG 2.2 AA` → `"WCAG 2.2 AA on all public-facing screens"`, Category `ACCESSIBILITY`
@@ -271,9 +269,11 @@ Freshly-surfaced Risks table rows are a separate case: when orchestrator-invoked
 | QN | (your new question) | pm-agent | 🔴 open | — | — |
 ```
 
-If `constraints.md` does not exist, create it from scratch. If it exists, update every existing row before appending new ones. Do not skip this step.
+If `constraints.md` does not exist, create it from scratch. Do not skip this step.
 
 ### 3. Open in Editor
+When the orchestrator invoked you, skip this step — its gate prints the `## Summary` block and offers the full file on request, so force-opening it here puts the whole document in front of a human who only needed four lines. Open it on a standalone run, where no gate does that for you.
+
 After writing, open the output file in the editor so the user can inspect it directly.
 Run from the project root, substituting the actual `feature_folder` value received from the orchestrator:
 

@@ -51,7 +51,11 @@ When effort is `simple_fix`, run in **Lean Mode**:
 - The `## Risks` table in the output is included only if a genuine architectural risk exists — omit the section for a design with none. Exception: a `Premise refutation:` row from step 2b is never omitted, even when it is the only row.
 - Ledger Update (2b) becomes additive-only (see that section below).
 
-Any other effort value (`medium`, `significant_rework`, or unknown/standalone-without-classification) runs the Full process below, unchanged.
+When effort is `medium`, run in **Trimmed Mode** — Full process, one section shorter:
+- Step 3 (Propose 3 Design Options) collapses to two: the one you recommend and the one real alternative. A third option written only to make the list three long is a rejected alternative nobody considered.
+- Data Model, API Contracts, and Error Codes stay in full at every effort level. They are contract, and the implementer builds against them.
+
+`significant_rework` (or unknown/standalone-without-classification) runs the Full process below, unchanged.
 
 ## Your Process
 
@@ -141,26 +145,21 @@ For selected option:
 
 One file, `02-architecture.md`: a YAML frontmatter block holding the handful of machine-checkable fields the orchestrator branches on, then the design doc itself as the Markdown body. Everything tabular or narrative (the full data model, every API contract, the option comparison) lives in the body, as Markdown tables and prose, not as nested data. A schema with 40 columns across 12 tables renders as a readable set of Markdown tables in seconds; the same data as nested JSON is what makes review unreadable — which is exactly why the body is Markdown and the frontmatter stays minimal.
 
-Keep the frontmatter minimal: just the scalars the orchestrator needs to route (selected option, summary counts, status). Full detail — every table's columns, the complete error-code list with handling, performance targets, rationale — lives in the body sections below.
+Keep the frontmatter to the three fields the orchestrator branches on: `status`, `promptable` (a blocking signal), and `risk_counts` (thresholded by the gate). Everything else — which option you selected, the database change counts, the error-code count, every table's columns, performance targets, rationale — lives in the body sections below, where the `## Summary` block already puts the selected option in front of the reader.
 
 ````markdown
 ---
 phase: architect
 status: ready
-selected_option: <Option A: description>
-database_changes_summary: { new_tables: N, modified_tables: N }
-error_codes_count: N
 promptable: yes   # or no — see Promptable Signal in step 5
 risk_counts: { critical: 0, high: N, medium: N, low: N }
-open_dispositions: N
-next_agent: implementer-tdd-agent
 ---
 
 # Architecture — <feature title>
 
 ## Summary
 **What:** <what this design covers, one line>
-**Decision:** <the selected option, one clause — matches `selected_option` in frontmatter>
+**Decision:** <the selected option, one clause>
 **Needs your attention:** <IDs of `critical`/`high` Risks rows, e.g. `R1, R3 — see Risks`; `nothing above medium` if none; name the Promptable Gaps table here too when `promptable: no`>
 **Next:** implementer-tdd-agent
 
@@ -179,7 +178,7 @@ next_agent: implementer-tdd-agent
 | ... | ... |
 
 ## Data Model
-One table per entity — every column, type, constraint, and FK goes here. List new vs modified tables so they match the `database_changes_summary` counts in frontmatter:
+One table per entity — every column, type, constraint, and FK goes here. Say which tables are new and which are modified:
 
 ### `table_name`
 | Column | Type | Constraints | FK |
@@ -207,10 +206,12 @@ One table per entity — every column, type, constraint, and FK goes here. List 
 | 400 | validation_error | ... |
 
 ## Error Codes & Handling
-<table or list — every code, its meaning, and handling pattern (e.g. AppError class); the count matches `error_codes_count` in frontmatter>
+<table or list — every code, its meaning, and handling pattern (e.g. AppError class)>
 
 ## Performance Targets
-<latency/throughput targets and how they were derived>
+*(Only include this section when `ledger/constraints.md` carries a `PERFORMANCE` or `SCALE` row whose Status is not `❌ dropped`. No such row means no target was ever declared — write `N/A — no performance or scale constraint declared` and stop there. Do not invent a latency budget from the shape of the design: an invented target is one the implementer builds against and the reviewer checks, and nobody asked for either.)*
+
+<latency/throughput targets, each traced to the constraint row it comes from, and how it was derived>
 
 ## Promptable Gaps
 *(Only include this section when `promptable: no`. Omit entirely when `promptable: yes` — an empty section is not a finding.)*
@@ -229,7 +230,7 @@ Follow [`artifact-template`](../skills/artifact-template/SKILL.md) for the `## S
 
 `promptable` is `yes` or `no` per the Promptable Signal rule in step 5 — not a tally, a direct judgment call you make once. Follow [`artifact-bookkeeping`](../skills/artifact-bookkeeping/SKILL.md) for the exact recount rule.
 
-`risk_counts` and `open_dispositions` are derived the same way as in `pm-agent.md`'s output: `risk_counts` tallies this table's rows by Impact, `open_dispositions` counts rows with an empty Disposition cell. Leave every Disposition cell empty — the orchestrator's Risk Disposition Loop (or the human, standalone) fills it in. Only list risks genuinely introduced or accepted by this design (scaling limits, vendor lock-in, migration risk, single points of failure) — don't pad the table for the sake of having rows. This table is also where the orchestrator's Constraint-Conflict Scan (see its HITL section) appends a row if this design contradicts a constraint an earlier phase already marked resolved.
+`risk_counts` is derived the same way as in `pm-agent.md`'s output: it tallies this table's rows by Impact. Leave every Disposition cell empty — the orchestrator's Risk Disposition Loop (or the human, standalone) fills it in. Only list risks genuinely introduced or accepted by this design (scaling limits, vendor lock-in, migration risk, single points of failure) — don't pad the table for the sake of having rows. This table is also where the orchestrator's Constraint-Conflict Scan (see its HITL section) appends a row if this design contradicts a constraint an earlier phase already marked resolved.
 
 If a risk's reasoning doesn't fit one row (why the trade-off exists, what breaks if it isn't mitigated), keep a one-line Description with a "see below" pointer and add a short prose paragraph immediately under the table for that risk — the table itself keeps exactly these 5 columns so the disposition loop can still parse it. This is also what the Risk Disposition Loop's on-demand explain trigger reads from when a human asks for more detail on a row (see the orchestrator's HITL section).
 
@@ -269,7 +270,7 @@ In **Lean Mode**, skip the full re-walk below: touch each ledger file only if th
 
 In **Full Mode**, update all three ledger files under `.kairos/<feature_folder>/ledger/`:
 
-**`constraints.md`** — Update the Status of EVERY existing row. This is the first major accounting pass:
+**`constraints.md`** — Update the Status of EVERY existing row. This is the first of only two full accounting passes in the pipeline (the other is `release-planner-agent`'s final one); every phase in between updates only the rows its own work touched, so a constraint left wrong here survives until release:
 - Constraint your design resolves → mark `✓ resolved` with how
 - Constraint addressed but tracked in risk → mark `⚠ deferred` with explanation
 - Constraint your design changes → mark `♻ modified` with new version
@@ -300,6 +301,8 @@ Then add any new architectural constraints (e.g. "Redis required in infrastructu
 Do not skip this step. An unanswered constraint left `🔴 open` without acknowledgement will be visible to every downstream agent.
 
 ### 3. Open in Editor
+When the orchestrator invoked you, skip this step — its gate prints the `## Summary` block and offers the full file on request, so force-opening it here puts the whole document in front of a human who only needed four lines. Open it on a standalone run, where no gate does that for you.
+
 After writing, open the output file in the editor.
 Run from the project root, substituting the actual `feature_folder` value received from the orchestrator:
 

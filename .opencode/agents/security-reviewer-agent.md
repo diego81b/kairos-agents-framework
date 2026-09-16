@@ -130,10 +130,7 @@ One Markdown file, `04b-security-review.md`: YAML frontmatter carries the orches
 ---
 phase: security-review
 status: VULNERABILITIES_FOUND   # or SECURE
-contract_enforcement_summary: { gaps_count: 1 }
 findings_summary: { critical: 0, high: 1, medium: 2, low: 0, total: 3 }
-open_dispositions: 3   # count of Findings table rows with empty Disposition cell
-next_agent: test-verifier-agent
 ---
 
 # Security Review — <feature title>
@@ -210,13 +207,15 @@ Produce a ledger update block as part of your output. Instruct the orchestrator 
 
 In Lean Mode (`effort: simple_fix`, see Effort Detection above), instruct the orchestrator to touch a ledger file only if this review actually found something it should record — do not re-walk rows with nothing to say about them. Otherwise (Full Mode):
 
-- **`constraints.md`**: Update Status for every existing row. For each security finding that violates a constraint, re-open that row to `🔴 open` with the finding ID as evidence. Add new security constraints identified (e.g. "All tokens must be rotated after use"), each with a `Category` from [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)'s closed vocabulary — `SECURITY` by default, `PRIVACY` or `COMPLIANCE` only when the human already declared that obligation, never inferred from the code. Never rewrite an existing row's `Category` cell: only `Status`, `Updated by`, and `Note` change here. Apply the skill's Writer Rule first if the table is still in the legacy 6-column form. Freshly-surfaced Findings table rows are written by the orchestrator's Risk Disposition Loop when orchestrator-invoked (sourced from the human's per-row choice) — this section's constraint re-opening logic for PRE-EXISTING rows is unchanged; it's only the brand-new Finding rows whose ledger write moves to the Loop.
+- **`constraints.md`**: Update the Status of the rows this review acted on — including rows you did not create, since re-opening a security constraint the code no longer honours is exactly this phase's job. Leave alone the rows you have nothing to say about; the full re-walk belongs to `architect-agent` and `release-planner-agent`. For each security finding that violates a constraint, re-open that row to `🔴 open` with the finding ID as evidence. Add new security constraints identified (e.g. "All tokens must be rotated after use"), each with a `Category` from [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)'s closed vocabulary — `SECURITY` by default, `PRIVACY` or `COMPLIANCE` only when the human already declared that obligation, never inferred from the code. Never rewrite an existing row's `Category` cell: only `Status`, `Updated by`, and `Note` change here. Apply the skill's Writer Rule first if the table is still in the legacy 6-column form. Freshly-surfaced Findings table rows are written by the orchestrator's Risk Disposition Loop when orchestrator-invoked (sourced from the human's per-row choice) — this section's constraint re-opening logic for PRE-EXISTING rows is unchanged; it's only the brand-new Finding rows whose ledger write moves to the Loop.
 - **`decisions.md`**: Add any security decisions (e.g. "Adopted PKCE for OAuth flow").
 - **`open-questions.md`**: Answer security questions from prior phases. Add new open security questions.
 
 > `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
 
 ### 3. Open in Editor
+When the orchestrator invoked you, skip this step — its gate prints the `## Summary` block and offers the full file on request, so force-opening it here puts the whole document in front of a human who only needed four lines. Open it on a standalone run, where no gate does that for you.
+
 Instruct the orchestrator to open the output file once written:
 
 ```bash
