@@ -27,7 +27,7 @@ claude plugin enable kairos
 
 Confirm with `claude plugin list`.
 
-This gets you the 14 core agents, the internal skills (`contract-checklist`, `coding-discipline`, etc.), and the `/kairos:setup` / `/kairos:view` slash commands in one shot. Agents are invoked with the `kairos:` scope — `@kairos:orchestrator-agent`, `@kairos:pm-agent` — and Team Mode agents with `@kairos:team:implementer-lead-agent`.
+This gets you the 17 core agents, the internal skills (`contract-checklist`, `coding-discipline`, etc.), and the `/kairos:setup` / `/kairos:view` slash commands in one shot. Agents are invoked with the `kairos:` scope — `@kairos:orchestrator-agent`, `@kairos:pm-agent` — and Team Mode agents with `@kairos:team:implementer-lead-agent`.
 
 ### Option B — Manual copy
 
@@ -57,6 +57,7 @@ your-project/
 │       ├── orchestrator-agent.md
 │       ├── context-extractor-agent.md     ← Pre-pipeline: full-repo context (standalone)
 │       ├── impact-assessment-agent.md     ← Pre-pipeline: issue grounding + agent recommendations (standalone)
+│       ├── bug-triage-agent.md            ← Bug reproduction + root cause (standalone)
 │       ├── pm-agent.md
 │       ├── architect-agent.md
 │       ├── implementer-tdd-agent.md       ← TDD implementer (default — use when project has a test suite)
@@ -64,7 +65,12 @@ your-project/
 │       ├── code-reviewer-agent.md
 │       ├── security-reviewer-agent.md     ← Adversarial security review (optional, read-only)
 │       ├── test-verifier-agent.md
+│       ├── qa-plan-agent.md
 │       ├── release-planner-agent.md
+│       ├── documentation-agent.md          ← Feature-facing docs (optional, Phase 6b)
+│       ├── retrospective-agent.md         ← Standalone, post-pipeline: lessons capture
+│       ├── improvement-advisor-agent.md   ← Standalone, infrequent: framework change proposals
+│       ├── dependency-audit-agent.md      ← Standalone, periodic: dependency + tech-debt backlog
 │       └── team/                      ← Team Mode specialists
 │           ├── implementer-lead-agent.md
 │           ├── teammate-tests-agent.md
@@ -192,7 +198,7 @@ It reads that file's frontmatter and body, then publishes an Artifact with a sta
 You can also point it at `_recap.md` — the orchestrator's own end-of-pipeline summary — by naming it explicitly, e.g. `/kairos:view _recap.md`; it won't show up in the no-argument file list since that only lists numbered phase files. `_recap.md` carries no frontmatter, so the rendered page skips the status badge and stat tiles and shows just the condensed summary and its audit trail.
 
 ::: warning Run it from the primary session, not a subagent
-`/kairos:view` publishes an Artifact, which needs the `Artifact` and `Skill` tools. Run it from the session's primary agent. If you `@`-mention `kairos:orchestrator-agent` (or any other core agent) mid-conversation, Claude Code dispatches it as a subagent restricted to that agent's own `tools:` frontmatter — none of the 14 core pipeline agents grant `Artifact` or `Skill`, so the command fails to publish. Same root cause as the `AskUserQuestion` loss described in Step 3 above; exit and relaunch from the primary session if you hit it.
+`/kairos:view` publishes an Artifact, which needs the `Artifact` and `Skill` tools. Run it from the session's primary agent. If you `@`-mention `kairos:orchestrator-agent` (or any other core agent) mid-conversation, Claude Code dispatches it as a subagent restricted to that agent's own `tools:` frontmatter — none of the 16 core pipeline agents grant `Artifact` or `Skill`, so the command fails to publish. Same root cause as the `AskUserQuestion` loss described in Step 3 above; exit and relaunch from the primary session if you hit it.
 :::
 
 ## Optional — Issue tracker integration
@@ -387,7 +393,7 @@ KAIROS's shipped frontmatter splits agents into two tiers — `opus` for the 6 r
    }
    ```
    Coarse but zero-maintenance: **all** subagents — including architect and security review — run on that one model, so it's a blunt cost cut, not a per-tier tuning.
-3. **Shadow copy (manual variant of option 0)** — a same-named agent file in your project's `.claude/agents/` outranks the plugin's copy for the **bare** name (project scope > plugin scope). Caveat: the plugin's orchestrator routes via scoped calls (`@kairos:pm-agent`, …), which keep resolving to the plugin's agents with shipped models — so a lone shadow copy only affects direct bare-name invocations. For pipeline-wide effect, copy all 14 core agents and rewrite the scoped `@kairos:` calls to bare names (this is exactly what `/kairos:setup` automates).
+3. **Shadow copy (manual variant of option 0)** — a same-named agent file in your project's `.claude/agents/` outranks the plugin's copy for the **bare** name (project scope > plugin scope). Caveat: the plugin's orchestrator routes via scoped calls (`@kairos:pm-agent`, …), which keep resolving to the plugin's agents with shipped models — so a lone shadow copy only affects direct bare-name invocations. For pipeline-wide effect, copy all 17 core agents and rewrite the scoped `@kairos:` calls to bare names (this is exactly what `/kairos:setup` automates).
 
 There is intentionally no KAIROS-side config file for this: Claude Code offers no hook the plugin could use to rewrite frontmatter at install time.
 
@@ -415,6 +421,7 @@ These are the tiers `agents/*.md` actually ships with — same split as "Customi
 | `impact-assessment-agent` | `opus` | Never downgrade — its recommendation drives every downstream agent's scope |
 | `security-reviewer-agent` | `opus` | Never downgrade — adversarial security analysis requires full reasoning |
 | `improvement-advisor-agent` | `opus` | Rarely invoked; keep on `opus` for cross-feature pattern recognition |
+| `bug-triage-agent` | `opus` | Never downgrade — root-cause reasoning from partial evidence |
 | `pm-agent` | `sonnet` | Upgrade to `opus` for enterprise features with competing constraints (compliance, multi-region, strict SLAs) |
 | `implementer-tdd-agent` | `sonnet` | Upgrade to `opus` for complex TDD cycles spanning many files |
 | `implementer-coder-agent` | `sonnet` | Upgrade to `opus` for complex codebases; no TDD overhead |
@@ -423,6 +430,7 @@ These are the tiers `agents/*.md` actually ships with — same split as "Customi
 | `release-planner-agent` | `sonnet` | Sufficient for deployment planning |
 | `documentation-agent` | `sonnet` | Sufficient for README/CHANGELOG/API-reference generation |
 | `retrospective-agent` | `sonnet` | Sufficient for lessons synthesis from existing artifacts |
+| `dependency-audit-agent` | `sonnet` | Scanning and tabulation; upgrade only for large monorepos with tangled transitive trees |
 
 ### Team Mode agents
 

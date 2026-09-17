@@ -57,6 +57,10 @@ How to rollback if needed:
 - Estimated time
 - Data implications
 
+When this release carries a schema change or a data migration, read `02-architecture.md`'s `## Data Model` migration-safety block and carry its resolutions into the rollback steps rather than restating them generically. If that block is missing (architect-agent didn't run, or the migration appeared later), work through [`migration-safety`](../skills/migration-safety/SKILL.md) yourself now — §5 Reversibility, §6 what a code rollback does to new-shaped data, and §7 ordering against the code deploy are the three that decide whether the rollback you're writing actually works.
+
+A migration that is not reversible without data loss must say so explicitly here. If the correct recovery is roll-forward-with-a-fix rather than rollback, write that as the strategy instead of listing a rollback procedure that must never be used.
+
 ### 4. Monitoring
 What to monitor:
 - Key metrics
@@ -75,10 +79,7 @@ One file: `06-deployment-plan.md`. YAML frontmatter carries the lean machine con
 ---
 phase: release-plan
 status: ready   # or blocked
-rollback_summary: { trigger: "when to rollback", estimated_time_minutes: 15 }
-monitoring_summary: { metrics_count: 2 }
 risk_counts: { critical: 0, high: 1, medium: 1, low: 0 }
-open_dispositions: 2   # count of Risk table rows with empty Disposition cell
 ---
 
 # Deployment Plan — <feature title>
@@ -115,7 +116,7 @@ open_dispositions: 2   # count of Risk table rows with empty Disposition cell
 
 Follow [`artifact-template`](../skills/artifact-template/SKILL.md) for the `## Summary` head block and the fixed Disposition-table column sets — both are mandatory, not stylistic.
 
-This is the final phase, so there is no `next_agent` field. `Description` folds the old Risk text together with its Detection method (`… — detected via: …`); `Mitigation/Fix` carries the old Response column content; `Impact` is new — infer a reasonable `critical`/`high`/`medium`/`low` rating per deployment risk from context (rollback-related risks are often high/critical; monitoring-gap risks often medium). Leave every `Disposition` cell empty in your own output — the orchestrator's Risk Disposition Loop fills them at the gate. `open_dispositions` counts the rows with an empty Disposition cell.
+`Description` folds the old Risk text together with its Detection method (`… — detected via: …`); `Mitigation/Fix` carries the old Response column content; `Impact` is new — infer a reasonable `critical`/`high`/`medium`/`low` rating per deployment risk from context (rollback-related risks are often high/critical; monitoring-gap risks often medium). Leave every `Disposition` cell empty in your own output — the orchestrator's Risk Disposition Loop fills them at the gate.
 
 If a risk's reasoning doesn't fit one row, keep a one-line Description with a "see below" pointer and add a short prose paragraph immediately under the table for that risk — the table itself keeps exactly these 5 columns so the disposition loop can still parse it.
 
@@ -159,10 +160,12 @@ Save the single runbook to `.kairos/<feature_folder>/06-deployment-plan.md`.
 
 Update all three ledger files under `.kairos/<feature_folder>/ledger/`:
 
-**`constraints.md`** — Final accounting. Update the Status of EVERY remaining row:
+**`constraints.md`** — Final accounting, and the pipeline's second and last full re-walk (the first was `architect-agent`'s). Update the Status of EVERY remaining row — the phases in between touched only their own rows, so this pass is what puts the rest in a terminal state:
 - Deployment constraints met → mark `✓ resolved`
 - Constraints deferred to post-release monitoring → mark `⚠ deferred` with monitoring plan reference
 - Any constraint still `🔴 open` → this is a release blocker; list it in your deployment plan risks section and set this artifact's frontmatter `status` to `blocked`
+
+Never rewrite an existing row's `Category` cell — it is set once by whoever created the row and is what downstream conditional checks key on. Only `Status`, `Updated by`, and `Note` change here. This agent adds no new constraint rows.
 
 **`decisions.md`** — Add deployment decisions (rollback strategy, canary percentage, feature flag choices).
 
@@ -179,6 +182,8 @@ After writing, report the ledger summary in your output:
 ```
 
 ### 3. Open in Editor
+When the orchestrator invoked you, skip this step — its gate prints the `## Summary` block and offers the full file on request, so force-opening it here puts the whole document in front of a human who only needed four lines. Open it on a standalone run, where no gate does that for you.
+
 After writing, open the output file in the editor.
 Run from the project root, substituting the actual `feature_folder` value received from the orchestrator:
 

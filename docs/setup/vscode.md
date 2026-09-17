@@ -41,11 +41,14 @@ your-project/
 │       ├── code-reviewer-agent.agent.md
 │       ├── security-reviewer-agent.agent.md  <- Adversarial security review (optional, read-only)
 │       ├── test-verifier-agent.agent.md
+│       ├── qa-plan-agent.agent.md
 │       ├── release-planner-agent.agent.md
 │       ├── documentation-agent.agent.md      <- Feature-facing docs (optional, Phase 6b)
 │       ├── retrospective-agent.agent.md      <- Standalone, post-pipeline: lessons capture
 │       ├── improvement-advisor-agent.agent.md <- Standalone, infrequent: framework change proposals
-│       └── impact-assessment-agent.agent.md  <- Pre-pipeline: issue grounding + recommendations (standalone)
+│       ├── impact-assessment-agent.agent.md  <- Pre-pipeline: issue grounding + recommendations (standalone)
+│       ├── bug-triage-agent.agent.md         <- Bug reproduction + root cause (standalone)
+│       └── dependency-audit-agent.agent.md   <- Standalone, periodic: dependency + tech-debt backlog
 ```
 
 ## Step 2 — Agent file format
@@ -151,14 +154,17 @@ Same reasoning/execution split as the shipped `agents/*.md` frontmatter — see 
 | `impact-assessment-agent` | `opus` | o1, o3, Gemini Ultra — drives every downstream agent's scope |
 | `security-reviewer-agent` | `opus` | o1, o3, Gemini Ultra — adversarial analysis needs strongest model |
 | `improvement-advisor-agent` | `opus` | o1, o3, Gemini Ultra |
+| `bug-triage-agent` | `opus` | o1, o3, Gemini Ultra |
 | `pm-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
 | `implementer-tdd-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
 | `implementer-coder-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro — no TDD overhead |
 | `code-reviewer-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
 | `test-verifier-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
+| `qa-plan-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
 | `release-planner-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
 | `documentation-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
 | `retrospective-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
+| `dependency-audit-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
 
 ::: warning Team Mode not supported
 VS Code does not support KAIROS Team Mode agents (`agents/team/`). Those require Claude Code with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`.

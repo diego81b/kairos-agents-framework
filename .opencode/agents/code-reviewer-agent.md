@@ -37,7 +37,7 @@ Follow [`agent-contract`](../skills/agent-contract/SKILL.md)'s Missing-Input Err
 
 Before proceeding, read all three ledger files:
 
-- `.kairos/<feature_folder>/ledger/constraints.md` — verify that each constraint is satisfied by the implementation; you may re-open constraints the implementer marked resolved if code does not comply
+- `.kairos/<feature_folder>/ledger/constraints.md` — read every row and verify the implementation satisfies it; re-open any row the implementer marked resolved when the code does not comply. Reading is on every row; writing is only on the rows you act on (see Ledger Update below)
 - `.kairos/<feature_folder>/ledger/decisions.md` — understand architectural decisions you must verify compliance with
 - `.kairos/<feature_folder>/ledger/open-questions.md` — answer any questions you can from code inspection
 
@@ -57,7 +57,7 @@ When effort is `simple_fix`, run in **Lean Mode** for the rest of this run:
 - Under Security (check 4), the dependency-changelog/lockfile sub-check only runs when this diff actually bumps a dependency version; otherwise state `no dependency change in this diff` and move on. The rest of check 4 (secrets grep, input validation, auth checks) still runs in full.
 - 2b Ledger Update becomes additive-only (see that section below).
 
-Any other effort value runs the Full process for every check, unchanged.
+Any other effort value runs the Full process for every check, unchanged — except Accessibility (check 6), which is gated on a declared obligation rather than on effort; see its own N/A rule.
 
 ## Your Checks
 
@@ -100,7 +100,19 @@ This check reads the implementation logic directly. It is distinct from Testing 
 - No memory leaks?
 - Latency targets met?
 
-### 6. Testing
+### 6. Accessibility
+
+First check whether accessibility is even in scope: read `.kairos/<feature_folder>/ledger/constraints.md`. If it has a row whose `Category` cell is `ACCESSIBILITY` and whose `Status` is not `❌ dropped`, an accessibility obligation was declared upstream — run the checks below against it. If there is no such row (or the file is missing, or its header has no `Category` column — see [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)), accessibility is out of scope for this implementation: mark this check `N/A — no accessibility obligation declared` in the output, do not evaluate the sub-items below, and do not let it contribute to `status: NEEDS_FIXES`. This is a scope decision made upstream (this product carries no accessibility obligation), not a defect to flag here. **Do not infer an obligation from the diff touching UI code** — most projects with a user interface have never declared one, and a check that fires on every UI diff is a check the human learns to skip.
+
+Lean Mode does not change this rule in either direction: if an `ACCESSIBILITY` row is declared, this check runs in full even at `effort: simple_fix`; if none is declared, it is `N/A` even at `effort: significant_rework`. The gate here is the obligation, not the diff size.
+
+- Every interactive element reachable and operable by keyboard, in a focus order that matches the visual one?
+- Every control, image, and form field carries an accessible name (label, `aria-label`, `alt`) — not only a visual one?
+- State conveyed by more than colour alone (error, selected, required, disabled)?
+- Dynamic content (validation errors, async results, toasts) announced to assistive technology rather than only rendered?
+- Does the diff meet the specific standard named in the constraint row, at the level it names — not "accessibility in general"?
+
+### 7. Testing
 
 First check whether tests are even in scope: read `03-implementation.md`'s frontmatter. If it has `tdd_verification`/`coverage_summary` fields, `implementer-tdd-agent` produced this code and tests exist — run the checks below. If those fields are absent (`implementer-coder-agent` ran, by design with "no test files, no coverage report" — see that agent's Important Notes), tests are out of scope for this implementation: mark this check `N/A — no-TDD path (implementer-coder-agent)` in the output, do not evaluate the sub-items below, and do not let it contribute to `status: NEEDS_FIXES`. This is a scope decision made upstream (project has no test suite, or tests explicitly out of scope), not a defect to flag here.
 
@@ -110,7 +122,7 @@ First check whether tests are even in scope: read `03-implementation.md`'s front
 - Edge cases tested?
 - Performance tested?
 
-### 7. Simplicity / Over-Engineering
+### 8. Simplicity / Over-Engineering
 Apply [`coding-discipline`](../skills/coding-discipline/SKILL.md) — this check is where its scope-discipline and anti-speculative-abstraction principles get graded against the actual diff.
 - Complexity proportional to what the requirement actually needs?
 - New abstraction justified by ≥2 real use cases, not a speculative "might need it later"?
@@ -120,24 +132,14 @@ Apply [`coding-discipline`](../skills/coding-discipline/SKILL.md) — this check
 
 ## Output Format
 
-One file: `04-review.md`. YAML frontmatter carries the orchestrator-branching fields (status, pass/fail checks, counts, convergence signal); the Markdown body carries the human-reviewable review — the full Issues list, one row per issue, as a table. A review with 20+ issues is unreadable as a JSON array; it's a normal table in Markdown.
+One file: `04-review.md`. YAML frontmatter carries only what the orchestrator branches on: the verdict, the issue tally, and the loop's iteration counter. The per-check pass/fail results live in the body's `## Checks` table, next to the Issues list they explain — one place, not two.
 
 ```markdown
 ---
 phase: code-review
 status: READY   # or NEEDS_FIXES
-checks:
-  correctness: "✓ PASS"    # or "✗ FAIL"
-  standards: "✓ PASS"
-  architecture: "✓ PASS"
-  security: "✓ PASS"
-  performance: "✓ PASS"
-  testing: "✓ PASS"        # or "✗ FAIL", or "N/A — no-TDD path" (implementer-coder-agent ran; never counts as FAIL)
-  simplicity: "✓ PASS"     # or "✗ FAIL"
 issues_summary: { critical: 0, high: 2, medium: 1, low: 3, total: 6 }
-open_dispositions: 6   # count of Issues table rows with an empty Disposition cell
-convergence_signal: { issues_critical_high: 2, issues_total: 6, iteration: 1 }
-next_agent: test-verifier-agent
+convergence_signal: { iteration: 1 }
 ---
 
 # Code Review — <feature title>
@@ -153,8 +155,14 @@ next_agent: test-verifier-agent
 |-------|--------|
 | Correctness | ✓ PASS |
 | Standards | ✓ PASS |
+| Architecture | ✓ PASS |
+| Security | ✓ PASS |
+| Performance | ✓ PASS |
+| Accessibility | N/A — no accessibility obligation declared |
+| Testing | ✓ PASS |
 | Simplicity | ✓ PASS |
-| ... | ... |
+
+All eight rows are always present. `✓ PASS` / `✗ FAIL`, or `N/A — <reason>` for the two that can be out of scope: Accessibility when no `ACCESSIBILITY` constraint row was declared, Testing on the no-TDD path. An `N/A` never counts as a FAIL.
 
 ## Issues
 Ordered by severity: critical first, then high, then medium, then low.
@@ -169,7 +177,7 @@ Ordered by severity: critical first, then high, then medium, then low.
 - **Description** — what's wrong. Fold the file:line and category into it (e.g. `` `src/x.js:42` (security) — description text ``) so no location or category information is lost.
 - **Impact** — the severity scale (critical / high / medium / low). Same values as before; only the column name changed to match the universal shape.
 - **Mitigation/Fix** — a concrete fix suggestion for the issue. You already reason about what's wrong, so propose the remedy.
-- **Disposition** — leave empty (`*(filled by gate)*`). The orchestrator's Risk Disposition Loop fills it from the human's per-row choice; `open_dispositions` counts how many are still empty.
+- **Disposition** — leave empty (`*(filled by gate)*`). The orchestrator's Risk Disposition Loop fills it from the human's per-row choice.
 
 Follow [`artifact-template`](../skills/artifact-template/SKILL.md) for the `## Summary` head block and the fixed Disposition-table column sets — both are mandatory, not stylistic.
 
@@ -213,11 +221,13 @@ In **Lean Mode**, skip the full re-walk below: touch each ledger file only if th
 
 In **Full Mode**, update all three ledger files under `.kairos/<feature_folder>/ledger/`:
 
-**`constraints.md`** — Update the Status of EVERY existing row:
+**`constraints.md`** — Update the Status of the rows this phase acted on — one it satisfied, deferred, re-opened, or contradicted. That includes a row you did not create: a constraint the code no longer honours is a row this phase acted on, and re-opening it is the point. What you skip is the row you have nothing to say about. The full re-walk of every row belongs to `architect-agent` (first accounting pass) and `release-planner-agent` (final accounting); here, leave an untouched row exactly as you found it. Apply [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)'s Writer Rule to any row you do write:
 - Constraint verified as met by code → keep `✓ resolved` or mark it if the implementer left it `🔴 open` but code actually satisfies it
 - Constraint the implementer marked resolved but code does NOT satisfy → re-open to `🔴 open` with the file/line evidence
 - Constraint not applicable to review → leave as-is
 - Add any new quality constraints found (e.g. "error responses must always include a `request_id` field")
+
+Never rewrite an existing row's `Category` cell — it is set once by whoever created the row and is what downstream conditional checks key on. Only `Status`, `Updated by`, and `Note` change here. Any new row you add carries a `Category` from [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)'s closed vocabulary; apply its Writer Rule first if the table is still in the legacy 6-column form.
 
 Freshly-surfaced Issues table rows are written by the orchestrator's Risk Disposition Loop when orchestrator-invoked (sourced from the human's per-row choice) — do not also write them here in that case. When running standalone, write them yourself as before. The constraint-row re-open/status-pass logic above and the Loop State `convergence_signal` write below are separate, existing mechanisms — leave them unchanged.
 
@@ -229,14 +239,14 @@ Freshly-surfaced Issues table rows are written by the orchestrator's Risk Dispos
 
 ```markdown
 convergence_signal:
-  issues_critical_high: <count of critical + high rows in the 04-review.md Issues table>
-  issues_total: <total issues count>
   iteration: <iteration number from Loop State>
 ```
 
 Do NOT create `## Loop State` yourself — only update it if the orchestrator already placed it there.
 
 ### 3. Open in Editor
+When the orchestrator invoked you, skip this step — its gate prints the `## Summary` block and offers the full file on request, so force-opening it here puts the whole document in front of a human who only needed four lines. Open it on a standalone run, where no gate does that for you.
+
 After writing, open the review doc in the editor.
 Run from the project root, substituting the actual `feature_folder` value received from the orchestrator:
 

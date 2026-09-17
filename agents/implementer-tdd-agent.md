@@ -112,7 +112,6 @@ The plan is a single Markdown document: YAML frontmatter for the few fields the 
 phase: implementer-plan
 status: pending_approval
 risk_counts: { critical: 0, high: 1, medium: 1, low: 0 }
-open_dispositions: 2
 total_waves: 2
 ---
 
@@ -169,7 +168,7 @@ medium
 | R1 | Stripe SDK version mismatch with Node 18 | high | Pin stripe@^14 and add engines check in package.json | |
 | R2 | Webhook signature verification omitted | medium | Verify `Stripe-Signature` header before processing events | |
 
-Infer a reasonable impact level (`critical`/`high`/`medium`/`low`) per risk from context and give a concrete mitigation, or `no mitigation proposed — flag only` if none applies. Compute `risk_counts`/`open_dispositions` per [`artifact-bookkeeping`](../skills/artifact-bookkeeping/SKILL.md). Leave every Disposition cell empty — the orchestrator's Risk Disposition Loop fills it in one row at a time; standalone runs approve/reject the whole table as one bundle at the Phase 0 gate below.
+Infer a reasonable impact level (`critical`/`high`/`medium`/`low`) per risk from context and give a concrete mitigation, or `no mitigation proposed — flag only` if none applies. Compute `risk_counts` per [`artifact-bookkeeping`](../skills/artifact-bookkeeping/SKILL.md). Leave every Disposition cell empty — the orchestrator's Risk Disposition Loop fills it in one row at a time; standalone runs approve/reject the whole table as one bundle at the Phase 0 gate below.
 
 ## Waves
 
@@ -370,11 +369,13 @@ In **Lean Mode**, skip the full re-walk below: touch each ledger file only if th
 
 In **Full Mode**, update all three ledger files under `.kairos/<feature_folder>/ledger/`:
 
-**`constraints.md`** — Update the Status of EVERY existing row:
+**`constraints.md`** — Update the Status of the rows this phase acted on — one it satisfied, deferred, re-opened, or contradicted. That includes a row you did not create: a constraint the code no longer honours is a row this phase acted on, and re-opening it is the point. What you skip is the row you have nothing to say about. The full re-walk of every row belongs to `architect-agent` (first accounting pass) and `release-planner-agent` (final accounting); here, leave an untouched row exactly as you found it. Apply [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)'s Writer Rule to any row you do write:
 - Constraint your implementation satisfies → mark `✓ resolved` with the file/pattern that satisfies it
 - Technical constraint deferred to later (e.g. monitoring) → mark `⚠ deferred`
 - Constraint re-opened by implementation difficulty → mark `🔴 open` with explanation
 - Add any new technical constraints surfaced during coding (e.g. "async queue required for retry logic")
+
+Never rewrite an existing row's `Category` cell — it is set once by whoever created the row and is what downstream conditional checks key on. Only `Status`, `Updated by`, and `Note` change here. Any new row you add carries a `Category` from [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)'s closed vocabulary; apply its Writer Rule first if the table is still in the legacy 6-column form.
 
 **`decisions.md`** — Add implementation decisions:
 - Pattern chosen (e.g. "Repository pattern for data access")
@@ -391,6 +392,8 @@ Freshly-surfaced Phase-0 Risks table rows are written by the orchestrator's Risk
 If this is a multi-wave run (`status: partial`), update the ledger at the end of each wave, not just the final wave.
 
 ### 3. Open in Editor
+When the orchestrator invoked you, skip this step — its gate prints the `## Summary` block and offers the full file on request, so force-opening it here puts the whole document in front of a human who only needed four lines. Open it on a standalone run, where no gate does that for you.
+
 After writing, open the summary file in the editor so the user can inspect it directly.
 Run from the project root, substituting the actual `feature_folder` value received from the orchestrator:
 
