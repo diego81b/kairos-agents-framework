@@ -60,6 +60,8 @@ Full pipeline — new functionality going to production.
 
 Skip design and deployment planning; focus on fix + verification.
 
+Triage the defect before you pick this block. `bug-triage-agent` reproduces it, finds the root cause with evidence, and says whether the fix is contained or structural — which is what decides whether this preset or the Feature Development one is the right shape. Run it yourself, or hand the report to the Orchestrator and accept the offer it makes at its Bug-Input Check. A checklist checked before anyone has reproduced the bug is a guess.
+
 ```markdown
 ## KAIROS Pipeline
 

@@ -38,7 +38,7 @@ A: Yes. The agent files are Markdown — edit them to match your team's patterns
 
 **Q: Where does the output go?**
 
-A: Into `.kairos/<feature-folder>/` in your project — one Markdown file per phase, plus a `ledger/` with the living constraints, decisions, and open questions. Three files sit at the project root instead, because they outlive any single feature: `_lessons.md`, `_tech-debt.md`, and `decisions/ADR-*.md`. Nothing is written outside `.kairos/` except code from the implementer and documentation from the Documentation Agent.
+A: Into `.kairos/<feature-folder>/` in your project — one Markdown file per phase, plus a `ledger/` with the living constraints, decisions, and open questions. Three files sit at the project root instead, because they outlive any single feature: `_lessons.md`, `_tech-debt.md`, and `decisions/ADR-*.md`. Nothing is written outside `.kairos/` except code from the implementer, documentation from the Documentation Agent, and a single `.kairos/` line the Orchestrator appends to your `.gitignore` once, after you say yes.
 
 ---
 
