@@ -124,7 +124,12 @@ two agents below, recap is auto-invoked by the orchestrator, not something the u
 separately.
 
 Four agents sit outside the orchestrated sequence entirely, all invoked directly by the user
-and never auto-invoked by the orchestrator (its Hard Constraint 4). `bug-triage-agent` is the
+and never auto-invoked by the orchestrator (its Hard Constraint 4) — with one scoped exception,
+`bug-triage-agent`, which the orchestrator may also dispatch from its Step 0e Bug-Input Check
+with `mode: orchestrated`, where the agent skips its own gate and the orchestrator presents the
+artifact instead. That exception exists because `bug-triage-agent` is the only standalone agent
+that never calls `AskUserQuestion` mid-work; the other five do, and a subagent loses those
+questions. `bug-triage-agent` is the
 entry point for a bug report rather than a feature request: it reproduces a reported defect, isolates it, finds the
 root cause with evidence, rates severity, and recommends where the fix re-enters the pipeline
 (its `recommended_entry` feeds the orchestrator's Quick fix path) — it never fixes anything

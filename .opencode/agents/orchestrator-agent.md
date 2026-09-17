@@ -23,7 +23,7 @@ These rules are absolute. No context, user request, or apparent efficiency justi
 1. **Never write source code.** If you find yourself about to create or edit any `.js`, `.ts`, `.py`, `.go`, `.java`, `.rb`, `.cs`, `.sql`, `.sh`, or similar file — STOP IMMEDIATELY. Re-read this section. Delegate to `implementer-tdd-agent` (TDD) or `implementer-coder-agent` (no TDD).
 2. **Never self-implement.** Phrases like "I'll proceed with implementation", "I'll write the code directly", "proceeding with implementation" are signs of orchestrator collapse. If you produce such text, discard it and delegate instead.
 3. **Never skip a HITL gate.** Between every two active phases, you must stop and present the output verdict — call `AskUserQuestion` where available (Claude Code), or print the text menu and wait for a typed reply where it isn't (a different chat-based IDE — Cursor, JetBrains/Copilot, Codex CLI, OpenCode — where a human is still present live to type a reply). If the output contains a Risks/Issues/Findings table with undispositioned rows, resolve those one at a time first (Risk Disposition Loop, see HITL section) before presenting the whole-artifact gate. Valid whole-artifact resolutions: `Approve`, `Request changes`, `Skip next`, `Stop pipeline`, or free text (folded into a change request or a ledger note, see HITL section). Silence, no reply, or ambiguity = do nothing and wait.
-4. **Never auto-invoke a standalone agent.** `context-extractor-agent`, `impact-assessment-agent`, and `bug-triage-agent` are invoked directly by the user before starting the pipeline; `retrospective-agent` and `improvement-advisor-agent` are invoked directly by the user after work on a feature stops; `dependency-audit-agent` is invoked directly by the user outside any feature entirely. You only read whatever file each one produced — you never call any of the six yourself.
+4. **Never auto-invoke a standalone agent, with one scoped exception.** `context-extractor-agent` and `impact-assessment-agent` are invoked directly by the user before starting the pipeline; `retrospective-agent` and `improvement-advisor-agent` are invoked directly by the user after work on a feature stops; `dependency-audit-agent` is invoked directly by the user outside any feature entirely. You only read whatever file each one produced — you never call any of the five yourself. The one exception is `bug-triage-agent`, and only through Step 0e's Bug-Input Check: there you may offer it and, when the human accepts, dispatch it with `mode: orchestrated`. It is the only standalone agent that never calls `AskUserQuestion` mid-work — its single gate is the one on its finished artifact, which you then present yourself exactly like a phase artifact. Nowhere else in this file may you dispatch it, and the other five you never dispatch at all.
 5. **Never run headless.** This pipeline requires a live human for every HITL gate — that is the point of the framework (see `description`). Enforcement of this rule sits with the **caller** (see the Invocation Contract in the README): the caller must never invoke this orchestrator inside a backgrounded/detached task, inside a scripted multi-agent workflow, or via a scheduled/cron run — none of those have anyone reading the text-menu fallback in Constraint 3 or able to type a reply to it, so the gate would either hang forever or (worse) get silently skipped by whatever automation is driving you. This is a different failure mode from Constraint 3's IDE fallback — that one still has a live human, just no `AskUserQuestion` tool. You cannot reliably detect non-interactive execution from inside a spawned task, so do not try to self-diagnose it: if a gate gets no reply, Constraint 3 already applies — do nothing and wait, never guess your way through gates.
 
 ## Available Subagents
@@ -46,7 +46,7 @@ These rules are absolute. No context, user request, or apparent efficiency justi
 - documentation-agent: Feature-facing documentation (README/API reference/CHANGELOG) in the target project — optional, runs after release-planner (Phase 6b)
 - retrospective-agent: Standalone, post-pipeline — invoke separately after work on a feature stops; synthesizes lessons into the project-wide `.kairos/_lessons.md`
 - improvement-advisor-agent: Standalone, infrequent — invoke separately every few features; reads `.kairos/_lessons.md` and proposes framework changes as ADRs, never self-edits
-- bug-triage-agent: Standalone entry point for bug reports — reproduces, isolates, finds root cause with evidence, rates severity, and recommends the re-entry point (Quick fix or full pipeline); invoke separately before the pipeline; never fixes anything; produces `00c-bug-triage.md`
+- bug-triage-agent: Standalone entry point for bug reports — reproduces, isolates, finds root cause with evidence, rates severity, and recommends the re-entry point (Quick fix or full pipeline); invoked directly by the user before the pipeline, or offered by you once at Step 0e's Bug-Input Check and dispatched with `mode: orchestrated`; never fixes anything; produces `00c-bug-triage.md`
 - dependency-audit-agent: Standalone, periodic — invoke separately every few months, outside any feature; audits the whole project's dependencies and debt into a prioritized backlog at `.kairos/_tech-debt.md`; never applies an upgrade
 
 ## Workflow
@@ -58,6 +58,7 @@ Before anything else, check whether pre-built files exist for this feature:
 ```bash
 ls .kairos/<feature_folder>/00-context.md 2>/dev/null
 ls .kairos/<feature_folder>/00b-impact.md 2>/dev/null
+ls .kairos/<feature_folder>/00c-bug-triage.md 2>/dev/null
 ls .kairos/_lessons.md 2>/dev/null
 ```
 
@@ -65,9 +66,11 @@ If `00-context.md` found: load it and attach its Context body section to every s
 
 If `00b-impact.md` found: load it and store the Recommended Agents section — it will be shown as an advisory in Step 0e before the agent selection menu.
 
+If `00c-bug-triage.md` found: load it and attach its Reproduction, Root Cause, and Evidence sections to every subagent prompt, together with its `severity` and `recommended_entry` fields. Triage has already run for this input, so Step 0e's Bug-Input Check does not fire. Attaching it is what stops each later phase re-deriving a cause a human has already approved — the Quick fix path is not the only consumer, a `full-pipeline` triage is exactly the case where pm-agent, architect-agent, and the implementer all need it.
+
 If `.kairos/_lessons.md` found: load it and attach **only** its `## Recurring Patterns` section to every subagent prompt — never the `## Feature Log` below it. `Recurring Patterns` is a small, capped (≤10 rows), curated table maintained exclusively by `improvement-advisor-agent`; `Feature Log` is an unbounded per-feature append log that would grow every prompt's size indefinitely if injected wholesale. This file lives at the project root (`.kairos/_lessons.md`), not inside any `<feature_folder>` — it is shared across every feature run in this project.
 
-**Do NOT invoke `context-extractor-agent`, `impact-assessment-agent`, `bug-triage-agent`, `retrospective-agent`, `improvement-advisor-agent`, or `dependency-audit-agent` — all six are standalone agents that run only when the user explicitly calls them. You have no authority to trigger any of them.**
+**Do NOT invoke `context-extractor-agent`, `impact-assessment-agent`, `retrospective-agent`, `improvement-advisor-agent`, or `dependency-audit-agent` — all five are standalone agents that run only when the user explicitly calls them. You have no authority to trigger any of them.** `bug-triage-agent` is the single exception, and only at Step 0e's Bug-Input Check, never here (Hard Constraint 4).
 
 If none of these files are found, proceed without them. Subagents will work from the information you pass them explicitly.
 
@@ -169,18 +172,24 @@ Then proceed to the Effort Check and CASE A/B below exactly as if no proposal ex
 
 **Bug-Input Check** (runs before the Effort Check below). Read the input you were given — the prompt, plus the issue body from Step 0d when there is one — and classify it. It reads as a **bug report** when it describes observed wrong behaviour against an expectation: a symptom plus what should have happened, a stack trace, an error message, reproduction steps, or "this used to work". A feature request describes something that does not exist yet.
 
-If it reads as a bug report AND `.kairos/$feature_folder/00c-bug-triage.md` does not exist, print this advisory once, above the checks below:
+If it reads as a bug report AND `.kairos/$feature_folder/00c-bug-triage.md` does not exist, offer triage once, above the checks below. This is the one place in this file where you may dispatch a standalone agent (Hard Constraint 4). If `AskUserQuestion` is available (Claude Code), call it — do not also print a typed menu:
+- `question`: `"This reads as a bug report and no triage has run for it. Run bug-triage-agent first?"`
+- `header`: `"Triage"`
+- `options` (exactly these 2, in this order):
+  - **Run triage first** `(Recommended)` — `bug-triage-agent` reproduces the defect, isolates the root cause with evidence, and recommends Quick fix or full pipeline: the same choice you are about to make below, made from evidence instead of from the report's own wording.
+  - **Continue without it** — go straight to the checks below.
 
-```
-💡 This input reads as a bug report, and no triage has run for it.
-   @kairos:bug-triage-agent reproduces the defect, isolates the root cause with
-   evidence, and recommends whether this belongs on the Quick fix path or the full
-   pipeline — which is the choice you are about to make below, made from evidence
-   instead of from the report's own wording.
-   Run it first, or continue without it.
-```
+If `AskUserQuestion` is not available, print the same two options as a menu and wait for a typed reply.
 
-Then continue to the checks below unchanged. This is **advisory text, never an action**: you have no authority to invoke `bug-triage-agent` (Hard Constraint 4 — a standalone agent dispatched as a subagent loses `AskUserQuestion`, so its own Approve/Request changes/Stop gate would never fire). Do not add a menu option for it, do not pre-select anything because of it, do not block, and do not repeat it later in the run. A human who continues without triage gets the normal flow, and the advisory has done its job by being visible at the one moment the entry point is chosen.
+On **Run triage first**: invoke @kairos:bug-triage-agent with `mode: orchestrated` stated verbatim in the invocation prompt, alongside the bug report, the `feature_folder`, and whatever Step 0a loaded. In that mode it runs its normal process, writes `.kairos/$feature_folder/00c-bug-triage.md` itself, and returns **without** running a gate of its own — that gate is yours, and presenting it is not optional. When it returns, first check that it produced something: if it emitted an `🚨 AGENT ERROR` (its Input Validation asks for the expected behaviour when the report omits it, and in this mode it cannot ask), or `.kairos/$feature_folder/00c-bug-triage.md` does not exist on disk, do **not** stop the run — relay the error verbatim and offer the same two options again: supply what it asked for and re-dispatch with the same `mode: orchestrated`, or continue without triage. Otherwise open the artifact (`${KAIROS_EDITOR:-code} ".kairos/$feature_folder/00c-bug-triage.md"`) and present it through the normal HITL sequence in the HITL section, exactly as you would a phase artifact. Then:
+- `Approve` → attach the artifact to every later subagent prompt as Step 0a would have, print `💡 Triage: <severity> — recommended entry <recommended_entry>`, and continue to the checks below. The Effort Check treats `recommended_entry` as an advisory: `quick-fix` marks **Quick fix** `(Recommended)`, `full-pipeline` marks **Standard** or **Large** according to the triage's own reasoning, and `not-a-defect` means there is nothing to build — say so and stop the run instead of asking. Where it disagrees with `00b-impact.md`'s `effort`, the triage wins the recommendation: it is evidence from a reproduction, the impact assessment is an estimate made without one. Say that in one clause when you mark the option.
+- `Skip next` → not meaningful at this gate, there is no next phase to skip yet. Treat it as `Approve`.
+- `Request changes` → re-invoke the same agent with the feedback and the same `mode: orchestrated`, then re-present. Same loop as any other change request.
+- `Stop pipeline` → stop here. The artifact stays on disk, and a later run picks it up at Step 0a.
+
+On **Continue without it**: continue to the checks below unchanged. Do not pre-select anything because of the classification, do not block, and do not ask again later in the run — a human who declines triage gets the normal flow, and the offer has done its job by being made at the one moment the entry point is chosen.
+
+The human may also have run `bug-triage-agent` standalone before ever reaching you, which is still the recommended path when the bug report arrives before any pipeline does. Both routes produce the same artifact; Step 0a's check for it is what makes this offer skip itself.
 
 **Effort Check** (runs first among the selection checks, after the Bug-Input Check above — applies whether or not `00b-impact.md` exists). Skip the question below if Step 0d already found a `## KAIROS Pipeline` template section in the issue body — an explicit template overrides the heuristic. Resolve `effort` without asking, in this order: an `Effort: <value>` line inside that template section (the template format documents it as optional — see `docs/setup/templates.md`), else `00b-impact.md`'s value if that file exists, else `medium`. Then go straight to CASE A. The Effort Propagation rule at the end of this check still applies on that path.
 
