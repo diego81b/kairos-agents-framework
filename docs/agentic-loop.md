@@ -13,7 +13,7 @@ An implementer writes code, a verifying agent checks it, finds issues, sends it 
 | **Phase 3** | Implementer ↔ Test Verifier | Test Verifier returns `NEEDS_FIXES` |
 | **Phase 4** | Code Reviewer ↔ Implementer | Code Reviewer returns `NEEDS_FIXES` with a `critical` or `high` issue |
 
-Both default to `manual` (no auto-retry — every `NEEDS_FIXES` still stops and asks you). You turn auto-retry on per loop, per pipeline run, at agent selection time.
+The default depends on the effort you picked at the Effort Check. `simple_fix` and `medium` both preset `phase4: auto 1` (one silent retry on a review finding) and `phase3: manual`, announced at Step 0f where you can still change them — the orchestrator does not ask. Only `significant_rework` gets the full loop-policy prompt at agent selection time, because that is the one size where the retry budget is worth deciding before anyone has seen a finding.
 
 ## Worked Example
 
@@ -31,7 +31,7 @@ That's the whole mechanism: loops only skip the *retry-approval* step, never the
 
 ## How to Enable
 
-The orchestrator asks at agent selection time, right after you pick the agents. It prints the cost estimate, then asks one question per loop with four fixed choices:
+For `significant_rework`, the orchestrator asks at agent selection time, right after you pick the agents. It prints the cost estimate, then asks one question per loop with four fixed choices:
 
 | Question | Choices |
 |---|---|
@@ -39,6 +39,8 @@ The orchestrator asks at agent selection time, right after you pick the agents. 
 | **Phase 4 loop** — Code Reviewer ↔ Implementer, auto-retry on critical/high issues | same four |
 
 No number to type: pick a button per loop. In IDEs without the checkbox prompt the orchestrator prints the same options as a typed menu and you reply `"phase3: auto 3 / phase4: manual"` (empty reply keeps both `manual`).
+
+For `simple_fix` and `medium` this prompt is skipped entirely. The preset (`phase3: manual`, `phase4: auto 1`) appears on the Step 0f pipeline announcement marked `(preset — reply to change)`; replying there with a different policy applies it before Phase 1.
 
 Works with any Phase-3 implementer — TDD, code-only, or Team Mode's lead agent. Under Team Mode the `Auto — 3 retries` option disappears: each retry there spawns a full team, so the ceiling is 2.
 

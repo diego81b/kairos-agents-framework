@@ -4,6 +4,43 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v8.1.0 — September 17, 2026
+
+Makes the effort classification actually reach the agents that were written to act on it, and cuts the two costs a run pays regardless of size: a Full process on a small change, and a gate question nobody can answer.
+
+The `effort` field and its Lean Mode have existed since 7.x, but they were emitted only by `impact-assessment-agent` — an optional pre-pipeline step most runs skip. With no `00b-impact.md` on disk, every agent fell through to its own "treat as `medium`+" fallback and ran the Full process, on every change, forever. The orchestrator now resolves `effort` itself at Step 0e and states it in every subagent invocation, and `medium` finally has a behaviour of its own instead of being an alias for "as large as possible".
+
+### Added
+
+- **`agents/orchestrator-agent.md`** — Step 0e's Quick-Fix Check becomes a three-band **Effort Check** (`simple_fix` / `medium` / `significant_rework`), with `00b-impact.md`'s value pre-selected when that file exists. A new mandatory **Effort Propagation** rule states the resolved value verbatim in the invocation prompt of every subagent, which is what makes Lean and Trimmed Mode fire at all.
+- **`agents/orchestrator-agent.md`** — Step 0f's pipeline announcement now always shows the resolved effort, the mode it implies, and the resolved loop policy, marked `(preset — reply to change)` when either came from a preset rather than a prompt. A run no longer starts with its two cost-driving settings invisible.
+- **`agents/orchestrator-agent.md`** — the whole-artifact gate (HITL step 5) gains the **on-demand explain** trigger that until now existed only on Risk Disposition rows. Asking "why" or "non capisco" at a phase gate returns what the phase produced, what changes if you approve versus request changes, and whether the choice is cheap to revisit — then re-shows the same gate instead of advancing.
+- **`agents/implementer-tdd-agent.md`**, **`agents/implementer-coder-agent.md`**, **`agents/code-reviewer-agent.md`**, **`agents/test-verifier-agent.md`**, **`agents/qa-plan-agent.md`** — new **Trimmed Mode** for `effort: medium`, until now present only in `pm-agent` and `architect-agent`. Each names exactly what gets shorter: waves only when the change spans more than one domain, boundary tests instead of the full category set, a one-line Performance check on a diff with no loop or query, a single exploratory charter. Coverage bars, assertion grading, rollback, and every ledger accounting pass stay full.
+- **`agents/orchestrator-agent.md`** — **Effort Persistence**: the resolved value is written into `ledger/audit-log.md`'s header line, and Step 0b's Resume-existing flow reads it back before invoking the next phase. A pipeline routinely spans sessions; without this, a resumed run entered past Step 0e with no effort set and silently reverted every remaining phase to Full.
+- **`docs/setup/templates.md`** — the `## KAIROS Pipeline` template block gains an optional `Effort:` line (`simple_fix` / `medium` / `significant_rework`), read at Step 0e. A template-driven run no longer has to default to `medium`.
+- **`agents/release-planner-agent.md`** — gains an Effort Detection section, having had none. In Lean Mode the runbook collapses to a single-stage rollout when the change carries no endpoint, schema, migration, or config change, and Monitoring names the existing alert instead of proposing new metrics. Rollback Strategy, Scope Coverage, and the final ledger re-walk are unchanged at every size.
+
+### Changed
+
+- **`agents/pm-agent.md`** — step 2 is rewritten from a flat list of eight technical questions into **derive first, ask second, record third**. Answers already visible in the repo or `00-context.md` are derived rather than asked, questions are capped at 3 and ranked by what would change the requirements document, each one states the consequence of its answer, and "I don't know" produces a labelled assumption plus an `open-questions.md` row instead of a stalled phase. Performance and scale targets are no longer routine fields — a number nobody has measured becomes binding the moment it is written down.
+- **`agents/orchestrator-agent.md`** — every Risk Disposition row now carries exactly one `(Recommended)` option, derived mechanically from the row itself (no concrete fix → Escalate, `high`/`critical` → Mitigate now, `medium` → Accept), and every option states its consequence in plain language. Escalate and Defer are explicitly distinguished: Escalate means someone else still has to decide, Defer means the decision is made and the answer is "we ship with it".
+- **`agents/orchestrator-agent.md`** — the Loop Policy prompt no longer runs for `simple_fix` or `medium`. Both preset `phase4` to `auto 1`, announced at Step 0f where it can still be changed. Choosing a retry budget before anyone has seen a finding is a decision with no information behind it; only `significant_rework` still gets asked.
+- **`agents/pm-agent.md`**, **`agents/architect-agent.md`**, **`agents/implementer-tdd-agent.md`**, **`agents/test-verifier-agent.md`**, **`agents/qa-plan-agent.md`**, **`agents/security-reviewer-agent.md`**, **`agents/release-planner-agent.md`** — all now read `effort` in the same three-step priority order already used by `implementer-coder-agent` and `code-reviewer-agent`: the orchestrator's stated value first, `00b-impact.md` second, own inference last, explicitly labelled a last resort.
+- **`docs/workflow.md`** — Phase 0 documents the Effort Check and its propagation rule; the Lean Mode tip becomes a three-mode block covering Lean, Trimmed, and Full.
+- **`docs/agentic-loop.md`** — "Both default to `manual`" is no longer true: the page now documents the per-effort presets and states that only `significant_rework` still sees the loop-policy prompt.
+- **`agents/team/implementer-lead-agent.md`** — the Team Mode Lead writes the same `03-implementation.md` and is reachable by both Loop Actuators, so it gets the same cumulative rule: a `## Pass Log` and a `## Files Generated` union with a `Pass` column.
+- **`agents/implementer-tdd-agent.md`**, **`agents/implementer-coder-agent.md`** — `03-implementation.md` is now **cumulative per feature, not per pass**. A new `## Pass Log` records every invocation against the same implementation (planned wave, Loop Actuator iteration, manual re-run after Request changes) and `## Files Written` gains a `Pass` column and becomes the union across all of them.
+- **`agents/code-reviewer-agent.md`**, **`agents/release-planner-agent.md`**, **`agents/orchestrator-agent.md`** — all three readers of that table now name the cumulative union explicitly, instead of reading whatever the last pass happened to leave behind.
+
+### Fixed
+
+- **`agents/implementer-tdd-agent.md`**, **`agents/implementer-coder-agent.md`** — a multi-wave implementation lost every earlier wave's record. `orchestrator-agent.md` documented the defect rather than fixing it: "per-wave artifact bookkeeping is not automated — wave 2 overwrites `03-implementation.md` unless the human is told, so tell them." Three readers consumed that file as the complete list of what the feature shipped, so a 3-wave feature was reviewed, scope-checked, and recapped against the last wave alone.
+- **`agents/orchestrator-agent.md`** — the same loss on the second axis: the Loop Actuator archived each iteration as `03-implementation-iter{N}.md` and nothing ever folded those fixes back into the base file, so after any auto-retry loop the canonical artifact described the pre-loop code. The archives are now explicitly copies, and the base file stays cumulative.
+- **`agents/orchestrator-agent.md`** — Step 0b's resume flow never read `status: partial`. A multi-wave run resumed in a later session found `03-implementation.md` on disk, concluded Phase 3 was complete, and advanced to code-reviewer — the remaining waves were never implemented at all.
+- **`.opencode/agents/`**, **`.kimi-code/agents/`** — both mirrors updated for all ten touched agents; bodies verified byte-for-byte identical to their `agents/` sources.
+
+---
+
 ## v8.0.0 — September 14, 2026
 
 Closes the SDLC coverage gaps that are reachable from a terminal session: design-time threat modelling, bug intake, dependency and tech-debt auditing, migration safety, and a reusable mechanism for quality obligations that apply to some projects and not others. Deployment execution and operations stay deliberately out of scope, now documented as such.

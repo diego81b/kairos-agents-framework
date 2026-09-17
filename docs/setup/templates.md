@@ -16,6 +16,8 @@ Copy this block into any issue description or paste it directly in the chat:
 ```markdown
 ## KAIROS Pipeline
 
+Effort: medium
+
 - [ ] pm-agent
 - [ ] architect-agent
 - [ ] implementer-tdd-agent
@@ -27,6 +29,8 @@ Copy this block into any issue description or paste it directly in the chat:
 - [ ] release-planner-agent
 - [ ] documentation-agent
 ```
+
+The `Effort:` line is **optional** and takes `simple_fix`, `medium`, or `significant_rework`. It is how a template says how big the change is: the orchestrator stamps that value into every agent it invokes, which is what puts them in Lean, Trimmed, or Full mode. Leave it out and a template-driven run defaults to `medium` (Trimmed) — so a small fix driven entirely from a template is worth marking `simple_fix` explicitly.
 
 Check (`[x]`) only the agents you want to activate. For the implementation step, pick **one** of `implementer-tdd-agent` (TDD, default) or `implementer-coder-agent` (no TDD). Add `security-reviewer-agent` when the feature touches auth, payments, or any write endpoint. Add `qa-plan-agent` when a person will verify this feature by hand — it plans the manual and exploratory cases, the regression retest list, and the UAT sign-off, and posts them to the issue.
 

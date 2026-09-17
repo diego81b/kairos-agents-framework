@@ -650,6 +650,8 @@ Then clean up the team:
 
 ## Output Format
 
+**`03-implementation.md` is cumulative per feature, never per pass** — the same rule the solo implementers apply, and it matters here for the same reason: both Loop Actuators can re-invoke you in Iteration Mode, and a multi-wave plan re-invokes you per wave. Before writing, read the existing `03-implementation.md` if it is there and carry it forward. `## Pass Log` gains one row for this pass and keeps every earlier row verbatim. `## Files Generated` is the **union** across every pass, each row naming the pass that last touched it — `code-reviewer-agent` picks what to review from that table, `release-planner-agent`'s Scope Coverage Check traces every in-scope item to it, and the orchestrator's `_recap.md` publishes it as Files Changed, so a table scoped to this pass alone makes all three under-report with no error anywhere. `## Test Results`, `## Contract Compliance`, and the `changes_this_iteration` frontmatter field describe this pass only and are replaced, not accumulated; the orchestrator separately archives the whole file as `03-implementation-iter{N}.md` on each loop iteration.
+
 Write to `.kairos/<feature_folder>/03-implementation.md` — YAML frontmatter as the lean machine contract, Markdown body as the human-readable report:
 
 ```markdown
@@ -684,14 +686,25 @@ changes_this_iteration:            # Iteration Mode only — omit this field ent
 **Needs your attention:** <any contract divergence accepted, teammate that did not complete, or untested path; `none` if nothing>
 **Next:** code-reviewer-agent
 
+## Pass Log
+
+| Pass | Kind | What it did |
+|------|------|-------------|
+| P1 | wave 1 of 2 | initial team implementation of the payments module |
+| P2 | loop iteration 1 — code-reviewer findings | backend teammate fixed 2 high-severity issues |
+
+*(One row per invocation of this agent against this implementation — planned wave, Loop Actuator iteration, or manual re-run after Request changes. Earlier rows are carried forward verbatim, never rewritten.)*
+
 ## Files Generated
 
-| Layer | Files |
-|-------|-------|
-| Tests | `test/payments.test.js`, `test/payments.integration.test.js` |
-| Backend | `src/routes/payments.js`, `src/services/payment.service.js` |
-| Frontend | `src/components/PaymentForm.jsx`, `src/hooks/usePayments.js` |
-| Database | `migrations/001_create_payments.sql`, `migrations/002_add_indexes.sql` |
+*(Cumulative across every pass in the Pass Log, not just this one. `Pass` names the latest pass that wrote the files on that row.)*
+
+| Layer | Files | Pass |
+|-------|-------|------|
+| Tests | `test/payments.test.js`, `test/payments.integration.test.js` | P1 |
+| Backend | `src/routes/payments.js`, `src/services/payment.service.js` | P2 |
+| Frontend | `src/components/PaymentForm.jsx`, `src/hooks/usePayments.js` | P1 |
+| Database | `migrations/001_create_payments.sql`, `migrations/002_add_indexes.sql` | P1 |
 
 ## Test Results
 

@@ -58,7 +58,7 @@ If the ledger does not exist (standalone invocation), skip this check.
 ## Effort Detection & Lean Mode
 
 Before PHASE 0, determine effort, in this priority order:
-1. If the orchestrator's invocation prompt states an explicit `effort` value (e.g. from Step 0e's Quick-Fix Check — see `agents/orchestrator-agent.md`), use it directly. This is authoritative — a human already confirmed it; do not re-derive or second-guess it.
+1. If the orchestrator's invocation prompt states an explicit `effort` value (e.g. from Step 0e's Effort Check — see `agents/orchestrator-agent.md`), use it directly. This is authoritative — a human already confirmed it; do not re-derive or second-guess it.
 2. Else, Pipeline mode: read `effort` from `.kairos/<feature_folder>/00b-impact.md` frontmatter, if that file exists.
 3. Else, judge it yourself regardless of mode — `simple_fix` if the change touches ≤2 files, adds no new endpoint/schema/auth surface, and needs no new dependency; otherwise treat as `medium`+.
 
@@ -67,7 +67,11 @@ When effort is `simple_fix`, run in **Lean Mode** for the rest of this run:
 - 2b Ledger Update becomes additive-only (see that section below).
 - The PHASE 0 plan file and its gate still apply unchanged — Lean Mode trims the plan's content, never the write to `03-implementation-plan.md` or the approval step.
 
-Any other effort value (`medium` or `significant_rework`) runs the Full process below, unchanged.
+When effort is `medium`, run in **Trimmed Mode** — the Full process, one section shorter:
+- `Waves` in the PHASE 0 plan are produced **only when the change actually spans more than one domain** (db / backend / frontend). A single-domain `medium` change has nothing to sequence, and a one-wave table is a header with no information in it.
+- Everything else — the plan file, its gate, the Risks table, and the full Ledger Update — is unchanged.
+
+`significant_rework` runs the Full process below, unchanged.
 
 ## Your Process
 
@@ -225,11 +229,22 @@ iteration_mode: { active: false, iteration: null }
 **Needs your attention:** <anything the reviewer must look at first — an untested path, a deviation from the plan; `none` if nothing>
 **Next:** code-reviewer-agent
 
+## Pass Log
+
+| Pass | Kind | What it did |
+|------|------|-------------|
+| P1 | wave 1 of 3 | initial implementation of the auth module |
+| P2 | loop iteration 1 — code-reviewer findings | fixed 2 high-severity issues in token validation |
+
+*(One row per invocation of this agent against this implementation — planned wave, Loop Actuator iteration, or manual re-run after Request changes. Earlier rows are carried forward verbatim, never rewritten.)*
+
 ## Files Written
 
-| Path | Kind | Lines |
-|------|------|-------|
-| src/path/to/file.js | code | 84 |
+*(Cumulative across every pass in the Pass Log, not just this one. One row per file; `Pass` names the latest pass that wrote it.)*
+
+| Path | Kind | Lines | Pass |
+|------|------|-------|------|
+| src/path/to/file.js | code | 84 | P2 |
 
 ## Git Status
 
@@ -281,6 +296,15 @@ Do NOT pass output to the next phase until the user explicitly approves.
 ### 2. Write to Project
 - Write code files directly to their target paths in the project
 - Save the implementation summary to `.kairos/<feature_folder>/03-implementation.md` — distinct from the Phase 0 plan file (`03-implementation-plan.md`, saved earlier at the Phase 0 checkpoint).
+**`03-implementation.md` is cumulative per feature, never per pass.** Three different things re-invoke this agent against the same implementation: a planned wave (`next_wave` from a multi-wave plan), a Loop Actuator iteration driven by `code-reviewer-agent` or `test-verifier-agent` findings, and a manual re-run after a human chose **Request changes** at the Phase 3 gate. In all three cases, read the existing `03-implementation.md` before writing and carry it forward:
+
+- **`## Files Written` is the union of every pass.** A file touched again in a later pass keeps its single row, with `Pass` updated to the latest pass that wrote it and `Lines` reflecting its current state on disk. Never emit a table scoped to this pass alone. Three readers downstream treat this list as everything the feature shipped — `code-reviewer-agent` decides what to review from it, `release-planner-agent`'s Scope Coverage Check traces every in-scope item to it, and the orchestrator's `_recap.md` publishes it as Files Changed — so a per-pass table makes all three under-report, silently and with no error anywhere.
+- **`## Pass Log` gains one line for this pass and keeps every earlier line verbatim.** It is the record of why this file was written more than once.
+- **Frontmatter tallies, `coverage_summary`, and `status` describe the cumulative state**, not this pass in isolation.
+- **`## Test Execution`, `## Git Status`, and `## Changes This Iteration` describe this pass only** — they are a per-pass snapshot and are replaced, not accumulated. The orchestrator separately archives the whole file as `03-implementation-iter{N}.md` on each loop iteration, so the per-pass detail of an earlier pass is never lost by being replaced here.
+
+If no earlier file exists, this is `P1` and the sections start fresh. If one exists but cannot be read, still write — and say so explicitly in `## Pass Log` rather than presenting a partial union as complete.
+
 
 > `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
 

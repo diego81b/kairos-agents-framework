@@ -43,7 +43,12 @@ If the ledger does not exist, proceed; the PM agent may not have run yet (standa
 
 ## Effort Detection & Lean Mode
 
-Before designing, check `.kairos/<feature_folder>/00b-impact.md` for its `effort` field (produced upstream by impact-assessment-agent). If it doesn't exist (standalone invocation), judge it yourself: `simple_fix` if the change needs no new endpoint, no schema change, no new integration, and has one obvious implementation approach; otherwise treat as `medium`+.
+Before designing, determine effort, in this priority order:
+1. If the orchestrator's invocation prompt states an explicit `effort` value (from Step 0e's Effort Check — see `agents/orchestrator-agent.md`), use it directly. This is authoritative: a human confirmed the size at the gate. Do not re-derive or second-guess it.
+2. Else, read the `effort` field from `.kairos/<feature_folder>/00b-impact.md` (produced upstream by impact-assessment-agent), if that file exists.
+3. Else, judge it yourself: `simple_fix` if the change needs no new endpoint, no schema change, no new integration, and has one obvious implementation approach; otherwise treat as `medium`+.
+
+Step 3 is a last resort, not the normal path — `00b-impact.md` comes from an optional pre-pipeline agent most runs skip, so without step 1 nearly every invocation would land on `medium`+ and run the Full process regardless of actual size.
 
 When effort is `simple_fix`, run in **Lean Mode**:
 - Step 3 (Propose 3 Design Options) collapses to the one approach you'd actually recommend, with a 1-2 line rationale — do not manufacture two rejected alternatives for a change with no real design fork.

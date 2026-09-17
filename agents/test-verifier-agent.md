@@ -50,7 +50,12 @@ If the ledger does not exist, proceed without it.
 
 ## Effort Detection & Lean Mode
 
-Check `.kairos/<feature_folder>/00b-impact.md` for its `effort` field. If absent (standalone invocation), infer it from `03-implementation.md`'s file count/scope the same way implementer-tdd-agent would.
+Determine effort, in this priority order:
+1. If the orchestrator's invocation prompt states an explicit `effort` value (from Step 0e's Effort Check — see `agents/orchestrator-agent.md`), use it directly. This is authoritative: a human confirmed the size at the gate. Do not re-derive or second-guess it.
+2. Else, check `.kairos/<feature_folder>/00b-impact.md` for its `effort` field.
+3. Else, infer it from `03-implementation.md`'s file count/scope the same way implementer-tdd-agent would.
+
+Step 3 is a last resort, not the normal path — `00b-impact.md` comes from an optional pre-pipeline agent most runs skip, so without step 1 nearly every invocation would land on `medium`+ and grade against the Full checklist regardless of actual size.
 
 When effort is `simple_fix`, run in **Lean Mode** — this matters here specifically because implementer-tdd-agent's own Lean Mode (see its Effort Detection section) only generates HAPPY PATH + ERROR CASES tests by default for a `simple_fix`. Grading that output against the Full checklist below would flag missing boundary/edge tests that were never supposed to exist — the same category of mismatch as the code-reviewer/coder-agent coverage bug, just one phase over:
 - Test Comprehensiveness (check 1): only require happy path, error paths, and AC mapping. Boundaries/edge-cases are not required and their absence is not an issue — unless the implementation output's own plan flagged one as a real risk, in which case its absence IS still a gap.
@@ -58,7 +63,14 @@ When effort is `simple_fix`, run in **Lean Mode** — this matters here specific
 - Checks 3-7 (Assertion Strength, Determinism, Hygiene, Mocking Discipline, TDD Reality) are unchanged — these grade the quality of whatever tests actually exist, and already scale with actual test count; leaning them out would let real defects through.
 - 2b Ledger Update becomes additive-only (see that section below).
 
-Any other effort value, or Full Mode implementer output (categories beyond happy+error present), runs the Full checklist below.
+When effort is `medium`, run in **Trimmed Mode** — same reason as Lean Mode above, one band up. `implementer-tdd-agent`'s Trimmed Mode generates HAPPY PATH, ERROR CASES, and BOUNDARIES by default, and adds EDGE/PERFORMANCE only where something concrete asked for them:
+- Test Comprehensiveness (check 1): require happy path, error paths, boundaries, and AC mapping. A missing EDGE or PERFORMANCE case is not an issue **unless** the architecture spec, an `AC-n`, or a Risks row in the implementation plan named a concrete reason for one — in which case its absence IS still a gap, and a real one.
+- Checks 2-7 (Coverage Adequacy, Assertion Strength, Determinism, Hygiene, Mocking Discipline, TDD Reality) are unchanged. These grade the quality of whatever tests exist and already scale with actual test count; trimming them would let real defects through.
+- The Ledger Update (2b) is unchanged at `medium` — full re-walk.
+
+The pairing with the implementer is not optional bookkeeping: grading Trimmed output against the Full checklist manufactures findings for categories that were never supposed to exist, which is exactly the failure the Lean pairing above was written to prevent.
+
+Any other effort value, or Full Mode implementer output (categories beyond happy+error+boundaries present), runs the Full checklist below.
 
 ## Your Process
 

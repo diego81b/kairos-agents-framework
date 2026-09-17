@@ -25,7 +25,7 @@ If any item below is missing from both sources, **stop immediately** and emit th
 
 | Required | How to supply it | Missing → emit this error |
 |----------|-----------------|---------------------------|
-| Code files to review | `03-implementation.md` from implementer, or file paths/content pasted manually | 🚨 **AGENT ERROR — code-reviewer-agent: no code files received**. Paste the code or file paths to review, or run the implementer agent first. |
+| Code files to review | `03-implementation.md`'s cumulative `## Files Written` table — the union across every pass in its Pass Log, never only the pass the file happens to end on. A multi-wave or post-loop implementation has written more than the last pass shows. Or file paths/content pasted manually. | 🚨 **AGENT ERROR — code-reviewer-agent: no code files received**. Paste the code or file paths to review, or run the implementer agent first. |
 | `feature_folder` | Orchestrator context, or specify one manually | ⚠️ **WARNING — code-reviewer-agent: no `feature_folder` provided**. A default of `feature_unnamed` will be used. |
 | Architecture spec | `02-architecture.md` from architect-agent (has the data model and API contracts), or a manual description | ⚠️ **WARNING — code-reviewer-agent: no architecture spec**. Architecture compliance check will be skipped; all other checks will proceed. |
 
@@ -44,7 +44,7 @@ If the ledger does not exist, proceed without it.
 ## Effort Detection & Lean Mode
 
 Determine effort, in this priority order:
-1. If the orchestrator's invocation prompt states an explicit `effort` value (e.g. from Step 0e's Quick-Fix Check — see `agents/orchestrator-agent.md`), use it directly — a human already confirmed it.
+1. If the orchestrator's invocation prompt states an explicit `effort` value (e.g. from Step 0e's Effort Check — see `agents/orchestrator-agent.md`), use it directly — a human already confirmed it.
 2. Else, check `.kairos/<feature_folder>/00b-impact.md` for its `effort` field.
 3. Else, infer it from the diff size/scope the same way implementer-tdd-agent would.
 
@@ -54,6 +54,10 @@ When effort is `simple_fix`, run in **Lean Mode** for the rest of this run:
 - Performance collapses to a one-line check (`✓ PASS — no loop/query/hot-path change in this diff`) unless the diff touches a loop, a query, or a documented hot path.
 - Under Security (check 4), the dependency-changelog/lockfile sub-check only runs when this diff actually bumps a dependency version; otherwise state `no dependency change in this diff` and move on. The rest of check 4 (secrets grep, input validation, auth checks) still runs in full.
 - 2b Ledger Update becomes additive-only (see that section below).
+
+When effort is `medium`, run in **Trimmed Mode** — every check below in full, with one exception:
+- Performance collapses to a one-line check (`✓ PASS — no loop/query/hot-path change in this diff`) unless the diff touches a loop, a query, or a documented hot path. Architecture Compliance stays full at this size: `medium` is precisely where a new endpoint or schema quietly drifts from the design.
+- The Ledger Update (2b) is unchanged at `medium` — full re-walk.
 
 Any other effort value runs the Full process for every check, unchanged — except Accessibility (check 6), which is gated on a declared obligation rather than on effort; see its own N/A rule.
 
