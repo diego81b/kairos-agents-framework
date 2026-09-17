@@ -5,7 +5,7 @@
 
 ---
 
-KAIROS is a framework that wires specialized AI agents into a single, human-controlled pipeline. You describe what you want to build; KAIROS breaks it into phases — requirements, design, code, review, tests, deployment — and produces production-ready output at every step.
+KAIROS is a framework that wires specialized AI agents into a single, human-controlled pipeline. You describe what you want to build; KAIROS breaks it into phases — requirements, design, code, review, tests, deployment — and each phase ends in a written artifact you approve before the next one starts. The point is not to reach code faster; it is that nothing reaches code unreviewed.
 
 The human never loses control: every phase ends at a checkpoint where you approve, redirect, or skip before anything moves forward.
 
@@ -124,7 +124,7 @@ Pre-built presets for common task types — Feature, Bug Fix, Hotfix, Refactor, 
 
 A typical KAIROS feature run produces:
 
-- ✅ Production-ready code following your project's patterns
+- ✅ Code following your project's existing patterns, reviewed at a gate before it lands
 - ✅ Comprehensive test suite with coverage >80% _(when using `implementer-tdd-agent`)_
 - ✅ Architecture decision record with sound API contracts _(via pre-contract checklist gate)_
 - ✅ Code review report (security, performance, standards)

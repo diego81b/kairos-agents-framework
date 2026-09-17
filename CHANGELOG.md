@@ -60,6 +60,7 @@ The `effort` field and its Lean Mode have existed since 7.x, but they were emitt
 - **`vercel.json`** — deleted. Nothing referenced it: no workflow, no secret, no deploy hook. It survived a host migration and made every reader believe a push to `main` redeployed the site. The Vercel walkthrough in `internal/DEPLOYMENT.md` now hands you the file's contents to create yourself, for deploying your own copy.
 - **`docs/metrics.md`** — the published quality figures are gone: "80-90% correct on first pass", "~70% fewer bugs", and the page's claim that these came "from teams using KAIROS in production". Nothing in the project measured them. The page is now **Quality**: what the framework actually enforces, each line naming the agent or skill that enforces it, what it explicitly does not promise, and how to measure the rest in your own repository.
 - **`docs/index.md`** — the home page promised "40-50% faster development, 80-90% quality output" and "from 8 hours per feature down to 2-3 hours". All three are unmeasured. The hero and the feature cards now state the actual proposition: a gate after every phase, a written trail on disk, and quality of what ships rather than speed of getting there.
+- **`docs/overview.md`** — the opening paragraph promised "production-ready output at every step" and the What You Get list led with "production-ready code". Both now describe what the pipeline actually guarantees: a written artifact at every phase and a gate before anything lands.
 
 ---
 
