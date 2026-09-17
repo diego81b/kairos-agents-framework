@@ -92,7 +92,7 @@ any change to `docs/`, `agents/`, or `skills/` (agent files are embedded in the 
   conventions; keep them consistent with this file when the conventions change.
 - `internal/` — internal reference docs (cost analysis, routing logic, PROOF methodology).
   **Not published** to the site; do not link to it from `docs/`.
-- `vercel.json`, `netlify.toml` — deployment configs (see Deployment below).
+- `netlify.toml` — the deployment config (see Deployment below). There is no Vercel config: an orphaned `vercel.json` was deleted after it was confirmed that nothing referenced it.
 
 ## Conventions for Agent Files
 
@@ -269,9 +269,6 @@ and the new changelog block alongside the commit message.
   Netlify deploy hook (via secret `NETLIFY_DEPLOY_HOOK`) on pushes of `v*` tags.
   `netlify.toml` holds the build command/output and pins Node 22. A push to `main` or
   `develop` deploys nothing — only a version tag does.
-- `vercel.json` is a leftover config from an earlier host. No workflow and no secret
-  reference it; ignore it when reasoning about deployment, and delete it if Vercel is
-  confirmed dead.
 - A release therefore means: bump versions + changelog, commit, tag `vX.Y.Z`, push the tag.
 
 ## Security Considerations

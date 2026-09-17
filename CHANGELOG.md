@@ -49,6 +49,11 @@ The `effort` field and its Lean Mode have existed since 7.x, but they were emitt
 - **`agents/orchestrator-agent.md`** — Step 0a loaded `00-context.md` and `00b-impact.md` but never `00c-bug-triage.md`. Only the Quick fix branch ever read a triage, so a triage that concluded `full-pipeline` — the case where the evidence matters most — reached no phase agent at all, and pm-agent, architect-agent, and the implementer each re-derived a root cause a human had already approved. The triage is now loaded at Step 0a and attached to every subagent prompt.
 - **`CLAUDE.md`**, **`AGENTS.md`** — both described Vercel as the primary host, auto-deploying on every push to `main`. Nothing in the repository does that: the only deploy automation is `.github/workflows/deploy-docs.yml`, which fires a Netlify hook on `v*` tags, and `vercel.json` is referenced by no workflow and no secret. Contributors reading either file were told the site redeploys on a push that in fact deploys nothing.
 - **`.claude-plugin/plugin.json`**, **`AGENTS.md`**, **`internal/DEPLOYMENT.md`** — the plugin's `homepage` and both docs pointed at `kairos-docs.vercel.app`, which is not where the site lives. All three now point at <https://kairos-agents.netlify.app>, and the deployment guide states up front that this repo redeploys only on a `v*` tag rather than on a push.
+- **`internal/DEPLOYMENT.md`** — the guide's Repository Structure block still described a 7-agent repo with filenames that no longer exist (`orchestrator.md`, `implementer-agent.md`, a flat `docs/setup.md`). It now matches the real tree: 17 core agents plus `agents/team/`, both tool mirrors, `skills/`, `commands/`, and the per-tool `docs/setup/` directory. The build settings it quotes also said Node 20 where `netlify.toml` pins 22.
+
+### Removed
+
+- **`vercel.json`** — deleted. Nothing referenced it: no workflow, no secret, no deploy hook. It survived a host migration and made every reader believe a push to `main` redeployed the site. The Vercel walkthrough in `internal/DEPLOYMENT.md` now hands you the file's contents to create yourself, for deploying your own copy.
 
 ---
 

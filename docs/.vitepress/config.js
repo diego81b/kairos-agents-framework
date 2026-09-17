@@ -16,7 +16,6 @@ export default defineConfig({
     'DEPLOYMENT.md',
     'LICENSE',
     'netlify.toml',
-    'vercel.json',
     'package.json',
     'package-lock.json',
     'docs/changelog.md'

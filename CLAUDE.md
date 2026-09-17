@@ -179,4 +179,4 @@ Claude Code plugin slash commands, auto-discovered since the plugin root is the 
 
 ### Deployment
 
-The site is deployed on **Netlify**, and only from a version tag: `.github/workflows/deploy-docs.yml` POSTs the `NETLIFY_DEPLOY_HOOK` secret on any `v*` tag push, and `netlify.toml` holds the real build (`npm run docs:build` → `docs/.vitepress/dist`, Node 22). Pushing to `main` or `develop` deploys nothing. `vercel.json` is a leftover from an earlier host: no workflow and no secret reference it — do not treat it as a live deploy path.
+The site is deployed on **Netlify**, and only from a version tag: `.github/workflows/deploy-docs.yml` POSTs the `NETLIFY_DEPLOY_HOOK` secret on any `v*` tag push, and `netlify.toml` holds the real build (`npm run docs:build` → `docs/.vitepress/dist`, Node 22). Pushing to `main` or `develop` deploys nothing. Netlify is the only host: an earlier `vercel.json` was removed once it was confirmed that no workflow and no secret referenced it.
