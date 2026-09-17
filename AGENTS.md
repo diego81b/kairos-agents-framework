@@ -11,7 +11,7 @@ runtime beyond the documentation site build. The deliverables are:
 - **`agents/`** — the framework artifact itself: 16 core AI agent definition files
   (Markdown + YAML frontmatter) plus 5 optional Team Mode agents in `agents/team/`.
 - **`docs/`** — a VitePress site that documents the framework and exposes the agent
-  files to users (published at https://kairos-docs.vercel.app).
+  files to users (published at https://kairos-agents.netlify.app).
 - **`.opencode/agents/`** — a hand-maintained mirror of the 17 core agent files,
   translated to OpenCode's frontmatter schema (see "OpenCode Mirror Sync" below).
 - **`.kimi-code/agents/`** — a hand-maintained mirror of the 17 core agent files,

@@ -4,7 +4,7 @@
   "version": "8.1.0",
   "description": "Intelligent multi-agent SDLC pipeline with human-gated phases",
   "author": { "name": "Diego Baldeschi", "email": "diego.baldeschi@comm-it.it" },
-  "homepage": "https://kairos-docs.vercel.app",
+  "homepage": "https://kairos-agents.netlify.app",
   "repository": "https://github.com/diego81b/kairos-agents-framework",
   "license": "AGPL-3.0",
   "keywords": ["kairos", "sdlc", "agents", "pipeline", "tdd"],
