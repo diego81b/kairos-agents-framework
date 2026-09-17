@@ -150,6 +150,7 @@ convergence_signal: { iteration: 1 }
 **What:** <what was reviewed, one line>
 **Decision:** <the verdict — matches `status` in frontmatter, e.g. `NEEDS_FIXES — 2 high issues`>
 **Needs your attention:** <IDs of `critical`/`high` Issues rows, e.g. `I1, I4 — see Issues`; `nothing above medium` if none>
+**Open:** <ledger IDs of the questions this phase leaves open, e.g. `Q3, Q7 — see ledger/open-questions.md`; `none` when it leaves none>
 **Next:** test-verifier-agent
 
 ## Checks

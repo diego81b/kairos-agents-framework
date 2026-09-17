@@ -6,7 +6,7 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ## v8.1.0 — September 17, 2026
 
-Makes the effort classification actually reach the agents that were written to act on it, and cuts the two costs a run pays regardless of size: a Full process on a small change, and a gate question nobody can answer.
+Makes the effort classification actually reach the agents that were written to act on it, and cuts the two costs a run pays regardless of size: a Full process on a small change, and a gate question nobody can answer. It also stops open questions being invisible until the pipeline is over.
 
 The `effort` field and its Lean Mode have existed since 7.x, but they were emitted only by `impact-assessment-agent` — an optional pre-pipeline step most runs skip. With no `00b-impact.md` on disk, every agent fell through to its own "treat as `medium`+" fallback and ran the Full process, on every change, forever. The orchestrator now resolves `effort` itself at Step 0e and states it in every subagent invocation, and `medium` finally has a behaviour of its own instead of being an alias for "as large as possible".
 
@@ -19,6 +19,9 @@ The `effort` field and its Lean Mode have existed since 7.x, but they were emitt
 - **`agents/orchestrator-agent.md`** — **Effort Persistence**: the resolved value is written into `ledger/audit-log.md`'s header line, and Step 0b's Resume-existing flow reads it back before invoking the next phase. A pipeline routinely spans sessions; without this, a resumed run entered past Step 0e with no effort set and silently reverted every remaining phase to Full.
 - **`docs/setup/templates.md`** — the `## KAIROS Pipeline` template block gains an optional `Effort:` line (`simple_fix` / `medium` / `significant_rework`), read at Step 0e. A template-driven run no longer has to default to `medium`.
 - **`agents/release-planner-agent.md`** — gains an Effort Detection section, having had none. In Lean Mode the runbook collapses to a single-stage rollout when the change carries no endpoint, schema, migration, or config change, and Monitoring names the existing alert instead of proposing new metrics. Rollback Strategy, Scope Coverage, and the final ledger re-walk are unchanged at every size.
+- **`skills/artifact-template/SKILL.md`** — the mandatory `## Summary` head block gains a fifth line, `**Open:**`, carrying the `ledger/open-questions.md` IDs of the questions that phase left unanswered (`Q3, Q7 — see ledger`), or `none`. Same discipline as `Needs your attention`: IDs only, never restated text that drifts the moment someone answers, capped at three plus `and N more`. Since the orchestrator prints this block verbatim at every gate, open questions go from end-of-pipeline visibility to every-gate visibility.
+- **`skills/artifact-template/SKILL.md`** — new writer rule: **an open point written in prose but not in `open-questions.md` does not exist.** A question raised in a paragraph and nowhere else is invisible to every later phase, to the end-of-run ledger audit, and to `_recap.md`. Every agent now checks its body against the ledger before writing the Summary.
+- **`agents/orchestrator-agent.md`** — the gate print gains a second count line of the orchestrator's own: `N question(s) still 🔴 open in ledger`, read from the ledger rather than from the artifact. It is a cross-check, not a repeat: the artifact's `Open:` line says what *this* phase left open, this count says what is unresolved across *every* phase so far. When they disagree, the human is looking at questions an earlier phase raised and nobody closed.
 
 ### Changed
 
@@ -31,13 +34,17 @@ The `effort` field and its Lean Mode have existed since 7.x, but they were emitt
 - **`agents/team/implementer-lead-agent.md`** — the Team Mode Lead writes the same `03-implementation.md` and is reachable by both Loop Actuators, so it gets the same cumulative rule: a `## Pass Log` and a `## Files Generated` union with a `Pass` column.
 - **`agents/implementer-tdd-agent.md`**, **`agents/implementer-coder-agent.md`** — `03-implementation.md` is now **cumulative per feature, not per pass**. A new `## Pass Log` records every invocation against the same implementation (planned wave, Loop Actuator iteration, manual re-run after Request changes) and `## Files Written` gains a `Pass` column and becomes the union across all of them.
 - **`agents/code-reviewer-agent.md`**, **`agents/release-planner-agent.md`**, **`agents/orchestrator-agent.md`** — all three readers of that table now name the cumulative union explicitly, instead of reading whatever the last pass happened to leave behind.
+- **`agents/*.md`** (all 16 artifact-writing agents) and **`agents/team/implementer-lead-agent.md`** — every rendered `## Summary` template gains the `**Open:**` line, 20 blocks in total. `impact-assessment-agent` keeps pointing at its own `## Open Questions` table, since it runs before the ledger exists.
+- **`skills/artifact-template/SKILL.md`**, **`agents/orchestrator-agent.md`** — the block's line cap moves from six to seven and the gate print cap from ~5 to ~7 lines, so the contract and the printer do not contradict each other.
+- **`docs/workflow.md`** — describes the five-line Summary block and the orchestrator's two count lines.
+- **`.opencode/agents/`**, **`.kimi-code/agents/`** — both mirrors updated for every touched agent; bodies verified byte-for-byte identical to their `agents/` sources.
+
 
 ### Fixed
 
 - **`agents/implementer-tdd-agent.md`**, **`agents/implementer-coder-agent.md`** — a multi-wave implementation lost every earlier wave's record. `orchestrator-agent.md` documented the defect rather than fixing it: "per-wave artifact bookkeeping is not automated — wave 2 overwrites `03-implementation.md` unless the human is told, so tell them." Three readers consumed that file as the complete list of what the feature shipped, so a 3-wave feature was reviewed, scope-checked, and recapped against the last wave alone.
 - **`agents/orchestrator-agent.md`** — the same loss on the second axis: the Loop Actuator archived each iteration as `03-implementation-iter{N}.md` and nothing ever folded those fixes back into the base file, so after any auto-retry loop the canonical artifact described the pre-loop code. The archives are now explicitly copies, and the base file stays cumulative.
 - **`agents/orchestrator-agent.md`** — Step 0b's resume flow never read `status: partial`. A multi-wave run resumed in a later session found `03-implementation.md` on disk, concluded Phase 3 was complete, and advanced to code-reviewer — the remaining waves were never implemented at all.
-- **`.opencode/agents/`**, **`.kimi-code/agents/`** — both mirrors updated for all ten touched agents; bodies verified byte-for-byte identical to their `agents/` sources.
 
 ---
 

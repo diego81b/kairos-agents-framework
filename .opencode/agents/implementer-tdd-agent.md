@@ -131,6 +131,7 @@ total_waves: 2
 **What:** <what this plan builds, one line>
 **Decision:** <the implementation approach chosen, one clause — including the wave split when `total_waves` > 1>
 **Needs your attention:** <IDs of `critical`/`high` Risks rows, e.g. `R1 — see Risks`; `nothing above medium` if none>
+**Open:** <ledger IDs of the questions this phase leaves open, e.g. `Q3, Q7 — see ledger/open-questions.md`; `none` when it leaves none>
 **Next:** awaiting plan approval — then step 3b (same agent, approved plan)
 
 ## Approach
@@ -302,6 +303,7 @@ iteration_mode: { active: false, iteration: null }
 **What:** <what was built this wave, one line>
 **Decision:** <TDD verdict in one clause, e.g. `RED and GREEN both verified, REFACTOR complete`>
 **Needs your attention:** <anything the reviewer must look at first — a skipped test, an `unknown` verification, a deviation from the plan; `none` if nothing>
+**Open:** <ledger IDs of the questions this phase leaves open, e.g. `Q3, Q7 — see ledger/open-questions.md`; `none` when it leaves none>
 **Next:** code-reviewer-agent
 
 ## Pass Log

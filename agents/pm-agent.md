@@ -164,6 +164,7 @@ risk_counts: { critical: 0, high: 1, medium: 2, low: 1 }
 **What:** <what this analysis covers, one line>
 **Decision:** <the scope boundary set — what's in and what's explicitly out — or `none — analysis only`>
 **Needs your attention:** <IDs of `critical`/`high` Risks rows, e.g. `R2 — see Risks`; `nothing above medium` if none>
+**Open:** <ledger IDs of the questions this phase leaves open, e.g. `Q3, Q7 — see ledger/open-questions.md`; `none` when it leaves none>
 **Next:** architect-agent
 
 ## Scope

@@ -86,6 +86,7 @@ log_entry_appended: true
 **What:** <which feature run this retrospective covers, one line>
 **Decision:** none — analysis only
 **Needs your attention:** <the single lesson most worth acting on, by ID, e.g. `L1 — see What To Do Differently`; `none` if nothing stands out>
+**Open:** <ledger IDs of the questions this phase leaves open, e.g. `Q3, Q7 — see ledger/open-questions.md`; `none` when it leaves none>
 **Next:** end of pipeline
 
 ## What Went Well

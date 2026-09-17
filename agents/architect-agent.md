@@ -166,6 +166,7 @@ risk_counts: { critical: 0, high: N, medium: N, low: N }
 **What:** <what this design covers, one line>
 **Decision:** <the selected option, one clause>
 **Needs your attention:** <IDs of `critical`/`high` Risks rows, e.g. `R1, R3 — see Risks`; `nothing above medium` if none; name the Promptable Gaps table here too when `promptable: no`>
+**Open:** <ledger IDs of the questions this phase leaves open, e.g. `Q3, Q7 — see ledger/open-questions.md`; `none` when it leaves none>
 **Next:** implementer-tdd-agent
 
 ## Selected Option

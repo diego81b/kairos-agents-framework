@@ -137,6 +137,7 @@ findings_summary: { critical: 0, high: 1, medium: 2, low: 0, total: 3 }
 **What:** <what was reviewed and against which attack surface, one line>
 **Decision:** <the verdict — matches `status` in frontmatter, e.g. `VULNERABILITIES_FOUND — 1 high`>
 **Needs your attention:** <IDs of `critical`/`high` Findings rows, e.g. `F1 — see Findings`; `nothing above medium` if none. Never restate a secret's value here.>
+**Open:** <ledger IDs of the questions this phase leaves open, e.g. `Q3, Q7 — see ledger/open-questions.md`; `none` when it leaves none>
 **Next:** test-verifier-agent
 
 ## Contract Enforcement

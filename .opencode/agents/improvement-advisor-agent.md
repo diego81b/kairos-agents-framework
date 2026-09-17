@@ -109,6 +109,7 @@ proposals_count: N
 **What:** <how many Feature Log entries were analyzed and over which features, one line>
 **Decision:** <how many confirmed patterns exist now (carried + new) and how many new ADRs were drafted this run>
 **Needs your attention:** <IDs of the ADRs awaiting a human decision, e.g. `ADR-001, ADR-002`; `none` when no proposal was drafted>
+**Open:** <ledger IDs of the questions this phase leaves open, e.g. `Q3, Q7 — see ledger/open-questions.md`; `none` when it leaves none>
 **Next:** end of pipeline — a human applies any accepted ADR by hand
 
 ## Recurring Patterns

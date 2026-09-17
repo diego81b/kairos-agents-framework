@@ -146,6 +146,7 @@ risk_counts: { critical: 0, high: 1, medium: 2, low: 0, total: 3 }
 **What:** <what a human must verify by hand and why automation cannot, one line>
 **Decision:** <matches `status`, e.g. `NEEDS_ATTENTION — 1 high regression risk, 1 AC not verifiable as written`>
 **Needs your attention:** <IDs of `critical`/`high` Risks rows plus any unverifiable AC, e.g. `RR2, AC-4 — see below`; `nothing above medium` if none>
+**Open:** <ledger IDs of the questions this phase leaves open, e.g. `Q3, Q7 — see ledger/open-questions.md`; `none` when it leaves none>
 **Next:** release-planner-agent   <!-- when `status: NEEDS_ATTENTION`, write `stop — <one-clause reason>` instead, per artifact-template §1 -->
 
 ## Coverage Complement

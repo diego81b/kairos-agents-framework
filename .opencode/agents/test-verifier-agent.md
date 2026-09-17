@@ -208,6 +208,7 @@ convergence_signal: { ac_gaps: 1, iteration: 1 }
 **What:** <what test suite was run and what it covers, one line>
 **Decision:** <the verdict — matches `status` in frontmatter, e.g. `NEEDS_FIXES — 1 high issue, 1 AC gap`>
 **Needs your attention:** <IDs of `critical`/`high` Issues rows plus any Acceptance Criteria gap, e.g. `I1, AC-3 — see below`; `nothing above medium` if none>
+**Open:** <ledger IDs of the questions this phase leaves open, e.g. `Q3, Q7 — see ledger/open-questions.md`; `none` when it leaves none>
 **Next:** release-planner-agent
 
 ## Checks

@@ -106,6 +106,7 @@ risk_counts: { critical: 0, high: 1, medium: 1, low: 0 }
 **What:** <what is being deployed, one line>
 **Decision:** <the rollout strategy chosen in one clause, e.g. `canary at 10% then full rollout`>
 **Needs your attention:** <IDs of `critical`/`high` Risks rows, e.g. `R1 — see Risks`; `nothing above medium` if none>
+**Open:** <ledger IDs of the questions this phase leaves open, e.g. `Q3, Q7 — see ledger/open-questions.md`; `none` when it leaves none>
 **Next:** end of pipeline
 
 ## Deployment Steps

@@ -12,20 +12,23 @@ It governs two things only — the head block, and the column sets of Dispositio
 
 ## 1. The Summary block
 
-Every artifact body opens with `## Summary` as its first section — after the `# <Title>` heading where the phase uses one, immediately after the frontmatter where it doesn't — and nothing else comes before the phase's own sections. Four bold labels, in this order, one line each, always all four present:
+Every artifact body opens with `## Summary` as its first section — after the `# <Title>` heading where the phase uses one, immediately after the frontmatter where it doesn't — and nothing else comes before the phase's own sections. Five bold labels, in this order, one line each, always all five present:
 
 ```markdown
 ## Summary
 **What:** <what this phase produced, one line>
 **Decision:** <the one choice this phase made, or `none — analysis only`>
 **Needs your attention:** <row IDs of every critical/high row, or `nothing above medium`>
+**Open:** <ledger IDs of the questions this phase leaves open, or `none`>
 **Next:** <next agent, or `end of pipeline`, or `stop — <reason>`>
 ```
 
 Rules:
 
-- **Six lines maximum**, heading included. This block is what the orchestrator prints at the gate (HITL step 3), which is capped at ~5 lines. A block that runs long defeats its own purpose.
+- **Seven lines maximum**, heading included. This block is what the orchestrator prints at the gate (HITL step 3), which is capped at ~7 lines. A block that runs long defeats its own purpose.
 - **`Needs your attention` carries row IDs, never restated descriptions** — `R1, R3 — see Risks` or `F2 — see Findings`. The Risk Disposition Loop edits those rows after this file is written; a restated description drifts out of sync the moment it does, and a reader who wants the detail is one scroll away. Cap at three IDs, then `and N more`. Write `nothing above medium` when no row is `critical` or `high`, or `none` when the phase has no Impact-rated table at all — never leave the line out.
+- **`Open` carries `ledger/open-questions.md` row IDs**, never restated questions and never IDs invented locally — `Q3, Q7 — see ledger`. That file is the authoritative list; a question this phase raised has a row there before this line names it. Cap at three IDs, then `and N more`. Write `none` when this phase left nothing open — never leave the line out. (`impact-assessment-agent` is the one exception: it runs before the ledger exists and names its own `## Open Questions` table's IDs instead.)
+- **An open point written in prose but not in `open-questions.md` does not exist.** This is the rule that makes the line above honest. A question raised in a paragraph of the body, and nowhere else, is invisible to every later phase, to the orchestrator's end-of-run ledger audit, and to `_recap.md` — it reaches nobody. Before writing the Summary, check that every unresolved question the body raises has a ledger row; raise the row if it doesn't, then name it here.
 - **`Decision` is the phase's own choice**, not a summary of the work: the selected architecture option, the effort classification, the pass/fail verdict, the chosen deployment strategy. Phases that only observe (`context-extractor`, `retrospective`) write `none — analysis only`.
 - **`Next` is the only place the successor is named.** Name the agent that runs after this one; when the phase is terminal (`release-planner`, `documentation`), write `end of pipeline`; when the phase's own `status` blocks advancement, write `stop — <one-clause reason>`. No frontmatter field duplicates it — the orchestrator derives the next phase from which artifacts exist, not from a field the artifact declares about itself.
 - Write the block **last**, after the body is complete and the tallies are final — it describes what the artifact actually says, not what you set out to write.

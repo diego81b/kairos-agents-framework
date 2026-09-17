@@ -113,6 +113,7 @@ recommended_entry: quick-fix | full-pipeline | not-a-defect
 **What:** <the observed wrong behaviour vs what was expected, one line>
 **Decision:** <severity + recommended entry, e.g. `high — quick-fix`>
 **Needs your attention:** <the one thing a human must decide or supply; `none` if nothing stands out>
+**Open:** <ledger IDs of the questions this phase leaves open, e.g. `Q3, Q7 — see ledger/open-questions.md`; `none` when it leaves none>
 **Next:** <`@kairos:orchestrator-agent` with the recommended entry; `none` when `not-a-defect`>
 
 ## Reproduction

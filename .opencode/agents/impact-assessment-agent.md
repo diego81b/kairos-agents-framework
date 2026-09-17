@@ -150,7 +150,8 @@ recommended_agents: [architect-agent, implementer-tdd-agent, security-reviewer-a
 ## Summary
 **What:** <what this issue touches, one line>
 **Decision:** <the effort classification — matches `effort` in frontmatter>
-**Needs your attention:** <IDs of `critical`/`high` Risks rows plus any Open Questions that block scoping, e.g. `R1, Q1 — see below`; `nothing above medium` if none>
+**Needs your attention:** <IDs of `critical`/`high` Risks rows, e.g. `R1 — see Risks`; `nothing above medium` if none>
+**Open:** <IDs from this artifact's own `## Open Questions` table, e.g. `Q1, Q2 — see Open Questions`; `none` when it leaves none. This agent runs before the ledger exists, so its IDs are the table's own — every later phase names `ledger/open-questions.md` IDs instead>
 **Next:** <first agent in `recommended_agents`>
 
 ## Effort
