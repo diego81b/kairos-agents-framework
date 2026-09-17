@@ -15,8 +15,8 @@ hero:
 
 features:
   - icon: 🤖
-    title: 16 Core Agents + Team Mode
-    details: "Standalone entry points (Context Extractor, Impact Assessment, Bug Triage) plus the Orchestrator, PM Agent, Architect, two Implementers (TDD and code-only), Security Reviewer, Code Reviewer, Test Verifier, Release Planner, and an optional Documentation Agent — plus three standalone agents outside the sequence (Retrospective, Improvement Advisor, Dependency Audit). Optional Team Mode adds 5 parallel specialists (Claude Code only)."
+    title: 17 Core Agents + Team Mode
+    details: "Standalone entry points (Context Extractor, Impact Assessment, Bug Triage) plus the Orchestrator, PM Agent, Architect, two Implementers (TDD and code-only), Code Reviewer, Security Reviewer, Test Verifier, QA Plan Agent, Release Planner, and an optional Documentation Agent — plus three standalone agents outside the sequence (Retrospective, Improvement Advisor, Dependency Audit). Optional Team Mode adds 5 parallel specialists (Claude Code only)."
   - icon: ⚡
     title: 40-50% Faster Development
     details: "From 8 hours per feature down to 2-3 hours with 5-8 API calls. Real TDD enforced when using the TDD implementer."

@@ -14,7 +14,7 @@ Two differences matter for KAIROS:
 
 ## Step 1 — Copy agents to `.kimi-code/agents/`
 
-KAIROS ships a ready-made Kimi Code agent pack at [`.kimi-code/agents/`](https://github.com/diego81b/kairos-agents-framework/tree/main/.kimi-code/agents) in this repository — the 16 core pipeline agents, already converted. Copy the whole folder into your project:
+KAIROS ships a ready-made Kimi Code agent pack at [`.kimi-code/agents/`](https://github.com/diego81b/kairos-agents-framework/tree/main/.kimi-code/agents) in this repository — the 17 core pipeline agents, already converted. Copy the whole folder into your project:
 
 ```bash
 # From your project root
