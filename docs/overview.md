@@ -53,6 +53,7 @@ Each subagent:
 | 4 | **Code Reviewer** | Standards, security, performance, contract compliance | `04-review.md` |
 | 4b | **Security Reviewer** _(optional)_ | Adversarial security pass — IDOR, auth, injection, secrets, data exposure | `04b-security-review.md` |
 | 5 | **Test Verifier** | Coverage adequacy (>80%), edge cases, assertion quality | `05-test-verification.md` |
+| 5b | **QA Plan Agent** *(optional)* | Manual & exploratory cases, regression retest list, test data/environment, UAT sign-off | `05b-qa-plan.md` |
 | 6 | **Release Planner** | Deployment steps, rollback strategy, monitoring thresholds | `06-deployment-plan.md` |
 | 6b | **Documentation Agent** _(optional)_ | Feature-facing docs in the target project — README, API reference, CHANGELOG | `06b-documentation.md` |
 
@@ -109,7 +110,7 @@ In Claude Code the selection is four checkbox questions, not typed numbers — y
 | **Analysis** (multi) | `pm-agent` — Requirements analysis · `architect-agent` — System design |
 | **Implementer** (single) | `implementer-tdd-agent` *(recommended — TDD, works everywhere)* · `implementer-coder-agent` — code-only, no TDD (project has no test suite) · `implementer-lead-agent` — Team Mode, Lead + 4 teammates (~3.5× cost) · **No implementer** |
 | **Review** (multi) | `code-reviewer-agent` — Quality assurance · `security-reviewer-agent` — Adversarial security review (recommended for auth, payments, write endpoints) · `test-verifier-agent` — Test quality & coverage |
-| **Release** (multi) | `release-planner-agent` — Deployment planning · `documentation-agent` — Feature-facing docs (recommended when API contracts or user-facing behavior changed) |
+| **Release** (multi) | `qa-plan-agent` — Manual & exploratory QA plan (recommended when a person will verify by hand, or when the implementer wrote no tests) · `release-planner-agent` — Deployment planning · `documentation-agent` — Feature-facing docs (recommended when API contracts or user-facing behavior changed) |
 
 Leaving a question empty means those phases don't run. In IDEs without the checkbox prompt (Cursor, JetBrains/Copilot, Codex CLI, OpenCode) the orchestrator prints the same list as a numbered menu and you reply with numbers (`1 3 4`), agent names, or a pasted KAIROS template block.
 
@@ -142,6 +143,7 @@ agents/
 ├── orchestrator-agent.md        ← Coordinator
 ├── context-extractor-agent.md   ← Pre-pipeline: full-repo context
 ├── impact-assessment-agent.md   ← Pre-pipeline: issue-scoped grounding + agent recommendations
+├── bug-triage-agent.md          ← Standalone: bug reproduction + root cause
 ├── pm-agent.md                  ← Requirements
 ├── architect-agent.md           ← System design
 ├── implementer-tdd-agent.md     ← TDD code generation (default)
@@ -149,10 +151,12 @@ agents/
 ├── code-reviewer-agent.md       ← Quality review
 ├── security-reviewer-agent.md   ← Adversarial security review (optional, read-only)
 ├── test-verifier-agent.md       ← Test quality
+├── qa-plan-agent.md             ← Manual & exploratory QA plan
 ├── release-planner-agent.md     ← Deployment planning
 ├── documentation-agent.md       ← Feature-facing docs (optional, Phase 6b)
 ├── retrospective-agent.md       ← Standalone, post-pipeline: lessons capture
 ├── improvement-advisor-agent.md ← Standalone, infrequent: framework change proposals (ADRs)
+├── dependency-audit-agent.md    ← Standalone, periodic: dependency + tech-debt backlog
 └── team/                        ← Team Mode specialists
     ├── implementer-lead-agent.md
     ├── teammate-tests-agent.md

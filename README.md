@@ -6,7 +6,7 @@ Intelligent multi-agent SDLC orchestration
 
 ## What's Included
 
-- **agents/** - 14 core agent definitions + 5 optional Team Mode specialists
+- **agents/** - 17 core agent definitions + 5 optional Team Mode specialists
 - **docs/** - Complete documentation site (VitePress)
 - **CHANGELOG.md** - Version history
 

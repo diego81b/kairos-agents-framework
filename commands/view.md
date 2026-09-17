@@ -7,7 +7,7 @@ allowed-tools: Read, Glob, Artifact, Skill, AskUserQuestion
 
 **Claude Code only** — this command publishes an Artifact, a capability this host provides and others (Cursor, JetBrains/Copilot, Codex CLI, OpenCode, Kimi Code) do not. If you are not running in Claude Code, stop and say so instead of attempting the steps below.
 
-**Primary session only** — run this from the session's primary agent, not from a subagent invoked mid-conversation (e.g. `@kairos:orchestrator-agent`). A subagent only has the tools listed in its own frontmatter, and none of the 14 core pipeline agents grant `Artifact` or `Skill` — this command will fail to publish. If you're inside a subagent chat, exit and rerun `/kairos:view` from the primary session.
+**Primary session only** — run this from the session's primary agent, not from a subagent invoked mid-conversation (e.g. `@kairos:orchestrator-agent`). A subagent only has the tools listed in its own frontmatter, and none of the 16 core pipeline agents grant `Artifact` or `Skill` — this command will fail to publish. If you're inside a subagent chat, exit and rerun `/kairos:view` from the primary session.
 
 You are turning ONE `.kairos/<feature_folder>/<phase-file>.md` into a compact, readable HTML page — never the whole feature folder, never more than one file per invocation.
 
@@ -33,7 +33,7 @@ Call the `Skill` tool with `artifact-design` before writing any HTML — this is
 Build a single HTML page that distills the file, it does not paste it verbatim:
 
 - Header: phase name (from the filename) and its verdict field (`status:` or, for an architect artifact, `promptable:`). Some files carry no frontmatter at all — `_recap.md` (the orchestrator's own end-of-pipeline summary, Step 10) and `_lessons.md` chief among them. For one of these, drop the verdict badge entirely rather than inventing one; the header is just the phase name (for `_recap.md`, the feature folder name) plus whatever date the body itself states.
-- Small stat tiles for whichever tally fields are present in the frontmatter — `risk_counts`, `issues_summary`, `findings_summary`, `open_dispositions`. Zero for a frontmatter-less file; skip the tile row rather than rendering an empty one.
+- Small stat tiles for whichever tally fields are present in the frontmatter — `risk_counts`, `issues_summary`, `findings_summary`. Zero for a frontmatter-less file; skip the tile row rather than rendering an empty one.
 - Any Risks/Issues/Findings/Contract-Drift table in the body → a real HTML table, one row per finding, with a visible `Disposition` badge per row (Accept / Mitigate / Escalate / Defer / open).
 - Long prose sections (rationale, analysis) → summarized to their key points, not reproduced wholesale. Preserve every table and every concrete number as-is; compress prose only.
 

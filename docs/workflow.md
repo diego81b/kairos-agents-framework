@@ -17,6 +17,7 @@ Every gate below is an interactive `AskUserQuestion` prompt — **but only when 
 | 4 | Code Reviewer | `04-review.md` | ✅ / ✏️ / ⏭️ / ⛔ |
 | 4b | Security Reviewer *(optional)* | `04b-security-review.md` | ✅ / ✏️ / ⏭️ / ⛔ |
 | 5 | Test Verifier | `05-test-verification.md` | ✅ / ✏️ / ⏭️ / ⛔ |
+| 5b | QA Plan Agent *(optional)* | `05b-qa-plan.md` | ✅ / ✏️ / ⏭️ / ⛔ |
 | 6 | Release Planner | `06-deployment-plan.md` | ✅ / ✏️ / ⛔ |
 
 Phase 3 routes to one of two paths: the single Implementer Agent (default, works everywhere — plan gate, then RED → GREEN → REFACTOR), or Team Mode (Claude Code only, explicit request required) where an Implementer Lead defines binding contracts and spawns Tests / Backend / Frontend / Database teammates in parallel before aggregating their output.
@@ -31,7 +32,7 @@ Only selected agents run. Order is never changed.
 
 ### Artifact Format — Markdown + Frontmatter
 
-Every phase writes a single Markdown file: a small YAML frontmatter header (status, counts, `next_agent` — what the orchestrator branches on) followed by the report body (data model tables, issues lists, findings, runbooks — what the human actually reads at the gate). Every body opens with the same four-line `## Summary` block — **What / Decision / Needs your attention / Next** — so a gate is readable in seconds without scrolling the whole artifact; the Orchestrator prints that block verbatim at the checkpoint rather than writing its own version of it, and the detail stays underneath for whoever wants it. Nothing in this pipeline parses these files with real code — every consumer is either the next agent reading it as prompt text or a human at a gate — so a full schema or a long issues list is plain Markdown, not JSON: unreadable as nested JSON, but a table that scans in seconds. Any Risks/Issues/Findings table carries a `Disposition` column, left empty by the agent and filled in by the Risk Disposition Loop above.
+Every phase writes a single Markdown file: a small YAML frontmatter header carrying only what the orchestrator branches on — a verdict, the tallies its status rules threshold, a loop signal where a loop exists — followed by the report body (data model tables, issues lists, findings, runbooks — what the human actually reads at the gate). Every body opens with the same four-line `## Summary` block — **What / Decision / Needs your attention / Next** — so a gate is readable in seconds without scrolling the whole artifact; the Orchestrator prints that block verbatim at the checkpoint rather than writing its own version of it, names the artifact path, and opens the full file only if you ask — the detail underneath is the next agent's prompt input, and putting all of it in front of you every phase is what turns a gate into a document review. Nothing in this pipeline parses these files with real code — every consumer is either the next agent reading it as prompt text or a human at a gate — so a full schema or a long issues list is plain Markdown, not JSON: unreadable as nested JSON, but a table that scans in seconds. Any Risks/Issues/Findings table carries a `Disposition` column, left empty by the agent and filled in by the Risk Disposition Loop above.
 
 ---
 
@@ -250,6 +251,30 @@ User confirms coverage is adequate from `05-test-verification.md`. FAIL sends th
 
 ::: tip Skips re-running tests on a clean first pass
 `implementer-tdd-agent` already executes the test suite twice (RED and GREEN) and reports coverage in `03-implementation.md`. On the first test-verifier invocation for a feature — no prior `05-test-verification.md`, and GREEN shows a clean pass — Test Verifier reuses those results instead of re-running the suite. The static audit (comprehensiveness, assertion strength, determinism, hygiene, mocking, TDD reality check) always runs in full regardless; only the redundant command re-run is skipped. Any loop re-check, Guard regression check, or standalone invocation always re-executes.
+:::
+
+---
+
+## Phase 5b: QA Plan (QA Plan Agent) — optional
+
+- Build the coverage complement: what Test Verifier reported as uncovered, plus every `AC-n` with a gap
+- Write manual and exploratory test cases a person can execute without reading the code
+- Select regression retests by grepping real callers of every changed symbol
+- List test data and environment needs, each with the line of code that demands it
+- State UAT sign-off per `AC-n`, and carry pm-agent's Outcome Criterion through verbatim
+
+_Input: `05-test-verification.md` (optional), `01-requirements.md`, `03-implementation.md`_
+_Output: a single Markdown file — frontmatter (status, coverage basis, case counts, regression-risk tallies) + the plan body_
+_Saved to: `.kairos/<feature_folder>/05b-qa-plan.md`_
+
+::: info HITL checkpoint
+User reviews the plan before it goes to whoever will execute it. `NEEDS_ATTENTION` is not a loop trigger — nothing re-invokes an implementer from here; it means a regression risk or an unverifiable acceptance criterion needs a human decision first.
+
+`✅ Approve` · `✏️ Request changes` · `⏭️ Skip next` · `⛔ Stop`
+:::
+
+::: tip Runs after the loop, and posts to the issue
+Phase 5b runs only once the Phase 3 loop has exited and its regression Guard has resolved — a QA plan written mid-loop describes code that is about to change again. It is also the one artifact whose reader sits outside the pipeline, so it posts itself to the issue tracker when an issue reference was given. No `jira`/`glab` on the machine is fine: it prints a paste-ready comment instead of failing the phase.
 :::
 
 ---

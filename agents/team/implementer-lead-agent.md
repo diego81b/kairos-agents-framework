@@ -298,6 +298,8 @@ If `AskUserQuestion` is available, batch rows into groups of up to 4 (its per-ca
   - **Escalate** — needs Architect redesign for this field specifically. Write a `constraints.md` row `🔴 open` tagged `BLOCKING` AND an `open-questions.md` row. Flips the following gate's recommended default to "Stop — flag to Architect for redesign" instead of "Accept divergence".
   - **Defer** — proceed with the divergence documented as a known gap. Write an `open-questions.md` row, status `🔴 open`, note `deferred contract mismatch`.
 
+Every `constraints.md` row this loop writes carries a `Category` from [`constraint-taxonomy`](../../skills/constraint-taxonomy/SKILL.md)'s closed vocabulary, chosen to match the row's own Description and `OTHER` when none fits — never `ACCESSIBILITY`, `PRIVACY`, or `COMPLIANCE` unless the human already declared that obligation. Apply the skill's Writer Rule first if the table is still in the legacy 6-column form.
+
 `AskUserQuestion` is not guaranteed here just because this is Claude Code — you run as a spawned subagent regardless of invocation mode, and that alone can make it unavailable. If it isn't, print the same 4 options per row as a text menu (one row, or up to 4 at once, at a time) and wait for a typed reply before moving to the next row/group.
 - If the human's free-text reply for a row asks for more detail instead of picking one of the 4 options (e.g. "explain", "why", "perché", "spiega") — write 2-4 plain-language sentences on what this specific divergence changes for the code being built and what breaks if left unresolved, grounded in the row's actual fields/file references, not a generic definition of "contract mismatch" — then re-present the same 4 options for that row instead of moving on.
 - Write the chosen disposition back into the Disposition cell for that row.
@@ -328,7 +330,6 @@ status: pending_approval
 implementer: implementer-lead-agent
 layers_in_scope: [tests, backend, database]
 risk_counts: { critical: 0, high: 1, medium: 1, low: 0 }
-open_dispositions: 2
 total_waves: 1
 ---
 
@@ -378,7 +379,7 @@ Full text in `03-contracts.md` — summarize here in one line per contract (API,
 
 Follow [`artifact-template`](../../skills/artifact-template/SKILL.md) for the `## Summary` head block and the fixed Disposition-table column sets — both are mandatory, not stylistic.
 
-Compute `risk_counts` / `open_dispositions` per [`artifact-bookkeeping`](../../skills/artifact-bookkeeping/SKILL.md) and leave every Disposition cell empty — the orchestrator's Risk Disposition Loop fills them one row at a time.
+Compute `risk_counts` per [`artifact-bookkeeping`](../../skills/artifact-bookkeeping/SKILL.md) and leave every Disposition cell empty — the orchestrator's Risk Disposition Loop fills them one row at a time.
 
 Then open it:
 
@@ -720,6 +721,8 @@ After Step 6 (REFACTOR complete, contracts verified) — or after Step 5's compl
 - Constraint deferred (e.g. monitoring, future sprint) → mark `⚠ deferred`
 - Constraint violated or not addressed → mark `🔴 open` with explanation
 - Add any new constraints surfaced during Team Mode coordination
+
+Never rewrite an existing row's `Category` cell — it is set once by whoever created the row and is what downstream conditional checks key on. Only `Status`, `Updated by`, and `Note` change here. Any new row you add carries a `Category` from [`constraint-taxonomy`](../../skills/constraint-taxonomy/SKILL.md)'s closed vocabulary; apply its Writer Rule first if the table is still in the legacy 6-column form.
 
 **`decisions.md`** — Add lead-phase decisions:
 - Contract choices made during Step 2 (why you chose specific API shapes, error codes)

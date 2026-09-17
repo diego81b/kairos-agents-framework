@@ -17,7 +17,7 @@ curl -fsSL https://opencode.ai/install | bash
 
 ## Step 1 — Copy agents to `.opencode/agents/`
 
-KAIROS ships a ready-made OpenCode agent pack at [`.opencode/agents/`](https://github.com/diego81b/kairos-agents-framework/tree/main/.opencode/agents) in this repository — the 14 core pipeline agents, already converted (note the **plural** "agents"). Copy the whole folder into your project:
+KAIROS ships a ready-made OpenCode agent pack at [`.opencode/agents/`](https://github.com/diego81b/kairos-agents-framework/tree/main/.opencode/agents) in this repository — the 16 core pipeline agents, already converted (note the **plural** "agents"). Copy the whole folder into your project:
 
 ```bash
 # From your project root
@@ -109,6 +109,7 @@ OpenCode is a gateway to many providers, and hardcoding one `provider/model-id` 
     "implementer-coder-agent":   { "model": "{env:KAIROS_FAST_MODEL}" },
     "code-reviewer-agent":       { "model": "{env:KAIROS_FAST_MODEL}" },
     "test-verifier-agent":       { "model": "{env:KAIROS_FAST_MODEL}" },
+    "qa-plan-agent":             { "model": "{env:KAIROS_FAST_MODEL}" },
     "release-planner-agent":     { "model": "{env:KAIROS_FAST_MODEL}" },
     "documentation-agent":       { "model": "{env:KAIROS_FAST_MODEL}" },
     "retrospective-agent":       { "model": "{env:KAIROS_FAST_MODEL}" }
@@ -137,7 +138,7 @@ This project uses the KAIROS multi-agent development framework.
 Agent definitions are in `agents/` (Markdown, canonical) and `.opencode/agents/` (OpenCode copies).
 
 Always follow the KAIROS workflow sequence:
-pm-agent → architect-agent → implementer-tdd-agent (TDD) OR implementer-coder-agent (no TDD) → code-reviewer-agent → test-verifier-agent → release-planner-agent
+pm-agent → architect-agent → implementer-tdd-agent (TDD) OR implementer-coder-agent (no TDD) → code-reviewer-agent → test-verifier-agent → qa-plan-agent → release-planner-agent
 
 After each phase, present the output and wait for explicit approval (✅ / ✏️ / ⛔) before proceeding.
 Save each approved output to `.kairos/<feature_folder>/0X-*.md`.

@@ -41,6 +41,7 @@ Read the repository to extract:
 - **Naming and folder conventions**: how are files named? How are folders structured? (e.g. `kebab-case`, feature folders, co-located tests)
 - **Test setup**: test framework, coverage tool, current coverage if reported, test file location pattern
 - **Call graph for granularity**: for the modules the issue draft plausibly touches, trace entry points, service boundaries, and data flow paths using Read + Grep — not just a file listing
+- **Accessibility investment signals**: whether the project already invests in accessibility — an a11y linter in the dependency list (`eslint-plugin-jsx-a11y`, `eslint-plugin-vuejs-accessibility`), a testing tool (`axe-core`, `pa11y`, `@testing-library/jest-dom`'s a11y matchers), an a11y job in CI, or `aria-`/`role=` attributes used consistently rather than incidentally. Report what you found as evidence, not as a verdict: this feeds the default of `pm-agent`'s accessibility elicitation question, and a project with no UI at all is a signal that the question should not be asked. Never turn a signal into a constraint row yourself — see Ledger Seeding below.
 
 ### 2. Issue Analysis
 Cross-reference the issue draft against what you found in step 1:
@@ -135,13 +136,15 @@ Use the format:
 ```markdown
 # Constraints
 
-| ID | Constraint | Source | Status | Updated by | Note |
-|----|-----------|--------|--------|------------|------|
-| C1 | No breaking changes to existing REST API | context-extractor | 🔴 open | — | — |
-| C2 | Files under src/legacy/ must not be modified | context-extractor | 🔴 open | — | — |
+| ID | Constraint | Category | Source | Status | Updated by | Note |
+|----|-----------|----------|--------|--------|------------|------|
+| C1 | No breaking changes to existing REST API | COMPATIBILITY | context-extractor | 🔴 open | — | — |
+| C2 | Files under src/legacy/ must not be modified | COMPATIBILITY | context-extractor | 🔴 open | — | — |
 ```
 
 Status values: `🔴 open` · `✓ resolved` · `⚠ deferred` · `♻ modified` · `❌ dropped`
+
+Every row needs a `Category` from the closed vocabulary in [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md) — use `OTHER` rather than stretching a category to fit. A codebase scan legitimately surfaces `COMPATIBILITY`, `TEAM`, and `OTHER` rows; it does **not** declare an obligation the human never stated, so never write an `ACCESSIBILITY`, `PRIVACY`, or `COMPLIANCE` row from inferred evidence — those belong to `pm-agent`'s elicitation, and inferring them here arms a downstream check the project never asked for.
 
 If no codebase-derived constraints are found, skip ledger seeding entirely — the PM agent will create the ledger when it runs.
 

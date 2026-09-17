@@ -24,7 +24,7 @@ glab issue note <issue-id> --body "$(cat .kairos/<feature_folder>/{output_file})
 
 ## Title-prefixed body
 
-`pm-agent`, `architect-agent`'s implementer counterparts (`implementer-tdd-agent`, `implementer-coder-agent`), and `impact-assessment-agent` prefix `{title}` before the file content instead:
+`pm-agent`, `architect-agent`'s implementer counterparts (`implementer-tdd-agent`, `implementer-coder-agent`), `impact-assessment-agent`, and `qa-plan-agent` prefix `{title}` before the file content instead:
 
 **Jira** (`jira-cli`):
 ```bash
@@ -46,6 +46,23 @@ curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issu
   -H "Content-Type: application/json" \
   -d "{\"content\":{\"raw\":\"{title}\"}}"
 ```
+
+## No tracker CLI available
+
+Never assume `jira`, `glab`, or `curl` is installed — corporate machines frequently have none of them, and an unguarded call fails in the middle of a phase gate. Before running any command above, check: `command -v jira`, `command -v glab`.
+
+If none is present, or the command fails, **do not fail the phase** — the artifact is already durable on disk. Print the ready-to-paste comment body and the command the user can run later:
+
+```
+📋 Not posted automatically (<no tracker CLI found | post failed: <reason>>).
+Paste this as a comment on <issue ref>:
+
+<{title}, if this agent uses the title-prefixed form>
+
+<content of .kairos/<feature_folder>/{output_file}>
+```
+
+Then continue. This applies to every agent below as well.
 
 ## No-Bash agents
 
