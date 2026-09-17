@@ -189,7 +189,7 @@ export default defineConfig({
         items: [
           { text: 'Workflow', link: '/workflow' },
           { text: 'Agentic Loop', link: '/agentic-loop' },
-          { text: 'Metrics', link: '/metrics' }
+          { text: 'Quality', link: '/metrics' }
         ]
       },
       {
