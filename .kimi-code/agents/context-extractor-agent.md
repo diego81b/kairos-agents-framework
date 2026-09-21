@@ -67,6 +67,7 @@ status: ready
 **What:** <what was scanned and what the issue touches, one line>
 **Decision:** none — analysis only
 **Needs your attention:** <no-touch zones or missing patterns the next phase must respect; `none` if nothing stands out>
+**Open:** <ledger IDs of the questions this phase leaves open, e.g. `Q3, Q7 — see ledger/open-questions.md`; `none` when it leaves none>
 **Next:** <impact-assessment-agent, or pm-agent when Pre-B is skipped>
 
 ## Context

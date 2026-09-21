@@ -20,7 +20,7 @@ Team Mode files (`agents/team/`) are out of scope — leave them untouched.
 
 Glob for `.claude/agents/*-agent.md` in the current project root.
 
-- **All 16 core files present** → copy-install mode. Go to Step 3.
+- **All 17 core files present** → copy-install mode. Go to Step 3.
 - **Missing (or only some present)** → plugin mode. Go to Step 2.
 
 ## Step 2 — Plugin mode only: choose how to apply models
@@ -51,7 +51,7 @@ Ask via `AskUserQuestion`:
 
 ## Step 4 — Apply
 
-For each of the 16 core files in `.claude/agents/`, set the frontmatter `model:` line according to the tier map and the chosen strategy. Edit **only** the `model:` line inside the YAML frontmatter — never the body. Preserve each file's formatting and line endings.
+For each of the 17 core files in `.claude/agents/`, set the frontmatter `model:` line according to the tier map and the chosen strategy. Edit **only** the `model:` line inside the YAML frontmatter — never the body. Preserve each file's formatting and line endings.
 
 ## Step 5 — Report
 

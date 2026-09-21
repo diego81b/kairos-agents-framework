@@ -53,7 +53,12 @@ If the ledger does not exist, proceed without it.
 
 ## Effort Detection & Lean Mode
 
-Check `.kairos/<feature_folder>/00b-impact.md` for its `effort` field. If absent, infer it from the change surface in `03-implementation.md` the same way the implementer would.
+Determine effort, in this priority order:
+1. If the orchestrator's invocation prompt states an explicit `effort` value (from Step 0e's Effort Check — see `agents/orchestrator-agent.md`), use it directly. This is authoritative: a human confirmed the size at the gate. Do not re-derive or second-guess it.
+2. Else, check `.kairos/<feature_folder>/00b-impact.md` for its `effort` field.
+3. Else, infer it from the change surface in `03-implementation.md` the same way the implementer would.
+
+Step 3 is a last resort, not the normal path — `00b-impact.md` comes from an optional pre-pipeline agent most runs skip, so without step 1 nearly every invocation would land on `medium`+ and run the full process regardless of actual size.
 
 When effort is `simple_fix`, run in **Lean Mode**:
 - Manual Test Cases: happy path plus the single error path the change touches. No boundary or locale cases unless an `AC-n` or a constraint names one.
@@ -63,7 +68,12 @@ When effort is `simple_fix`, run in **Lean Mode**:
 - UAT Sign-off: one line naming who accepts it. No ceremony.
 - Ledger Update (step 2b) becomes additive-only.
 
-Any other effort value runs the full process below.
+When effort is `medium`, run in **Trimmed Mode** — the full process, two sections shorter:
+- Exploratory Charters: **one charter**, aimed at the single area the implementation touched that automated tests cover least. A `medium` change has some unknown territory, rarely several; a list of charters nobody will run is the fastest way to make this artifact ignored by the one reader it has outside the pipeline.
+- Test Data & Environment: only what the changed files actually read — an env var, a fixture, a migration. Skip the standing inventory.
+- Manual Test Cases, Regression Retest Selection, and UAT Sign-off are **unchanged**. Those three are the whole reason this phase exists, and they scale with the change surface on their own.
+
+`significant_rework` (or an unknown effort) runs the full process below.
 
 ## Your Process
 
@@ -138,6 +148,7 @@ risk_counts: { critical: 0, high: 1, medium: 2, low: 0, total: 3 }
 **What:** <what a human must verify by hand and why automation cannot, one line>
 **Decision:** <matches `status`, e.g. `NEEDS_ATTENTION — 1 high regression risk, 1 AC not verifiable as written`>
 **Needs your attention:** <IDs of `critical`/`high` Risks rows plus any unverifiable AC, e.g. `RR2, AC-4 — see below`; `nothing above medium` if none>
+**Open:** <ledger IDs of the questions this phase leaves open, e.g. `Q3, Q7 — see ledger/open-questions.md`; `none` when it leaves none>
 **Next:** release-planner-agent   <!-- when `status: NEEDS_ATTENTION`, write `stop — <one-clause reason>` instead, per artifact-template §1 -->
 
 ## Coverage Complement

@@ -40,6 +40,20 @@ Before proceeding, read all three ledger files:
 
 If the ledger does not exist, proceed without it.
 
+## Effort Detection & Lean Mode
+
+Determine effort, in this priority order:
+1. If the orchestrator's invocation prompt states an explicit `effort` value (from Step 0e's Effort Check — see `agents/orchestrator-agent.md`), use it directly. This is authoritative: a human confirmed the size at the gate. Do not re-derive or second-guess it.
+2. Else, read the `effort` field from `.kairos/<feature_folder>/00b-impact.md`, if that file exists.
+3. Else, infer it from what `03-implementation.md` actually shipped — its cumulative `## Files Written` table, and whether any of them is a migration, an endpoint, or a config change.
+
+When effort is `simple_fix`, run in **Lean Mode**:
+- Deployment Steps collapse to a **single-stage rollout** — pre-deployment check, deploy, verify — whenever the change adds no endpoint, no schema change, no migration, and no config or infrastructure change. A staged canary for a contained code change is a runbook nobody follows, and a runbook nobody follows is worse than a short one they do.
+- Monitoring names the **existing** alert or dashboard that would catch this change going wrong, rather than proposing new metrics and thresholds. A one-line fix does not earn its own SLO.
+- Rollback Strategy, the Scope Coverage Check, and the Ledger Update below are **unchanged**. Rollback is what a small change most needs (it is the one most likely to ship without anyone watching), and the final accounting pass is what puts every ledger row in a terminal state before release — neither scales with task size.
+
+`medium` and `significant_rework` both run the Full process below, unchanged, including the full final ledger re-walk.
+
 ## Your Planning
 
 ### 1. Deployment Steps
@@ -47,6 +61,8 @@ If the ledger does not exist, proceed without it.
 2. Staging deployment
 3. Production canary (10%)
 4. Full rollout
+
+(In Lean Mode, see above: a single-stage rollout replaces steps 2-4 when the change carries no endpoint, schema, migration, or config change.)
 
 ### 2. Risk Mitigation
 For each risk:
@@ -71,7 +87,7 @@ What to monitor:
 
 ### 5. Scope Coverage Check
 
-Before writing the runbook, re-read `01-requirements.md`'s `## Scope` section (if it exists) alongside what `03-implementation.md`'s Files Written actually shipped. For each item explicitly listed as included in scope, confirm it is traceable to a file, endpoint, or test that was actually produced — not inferred from the architecture spec alone, since a selected-agent subset (see orchestrator Step 0e) may have skipped architect-agent entirely. List any scope item with no traceable implementation as a `## Scope Gaps` table row (same 5-column shape as Risks) rather than silently proceeding to the deployment plan. If `01-requirements.md` doesn't exist (pm-agent wasn't run), state explicitly in the runbook that no scope-coverage check was possible — do not silently omit the section.
+Before writing the runbook, re-read `01-requirements.md`'s `## Scope` section (if it exists) alongside what `03-implementation.md`'s cumulative `## Files Written` table actually shipped — the union across every pass in its Pass Log, never only the last pass. A multi-wave implementation, or one that went through a Loop Actuator, wrote files across several passes, and reading one pass in isolation reports scope gaps that do not exist. For each item explicitly listed as included in scope, confirm it is traceable to a file, endpoint, or test that was actually produced — not inferred from the architecture spec alone, since a selected-agent subset (see orchestrator Step 0e) may have skipped architect-agent entirely. List any scope item with no traceable implementation as a `## Scope Gaps` table row (same 5-column shape as Risks) rather than silently proceeding to the deployment plan. If `01-requirements.md` doesn't exist (pm-agent wasn't run), state explicitly in the runbook that no scope-coverage check was possible — do not silently omit the section.
 
 ## Output Format
 
@@ -90,6 +106,7 @@ risk_counts: { critical: 0, high: 1, medium: 1, low: 0 }
 **What:** <what is being deployed, one line>
 **Decision:** <the rollout strategy chosen in one clause, e.g. `canary at 10% then full rollout`>
 **Needs your attention:** <IDs of `critical`/`high` Risks rows, e.g. `R1 — see Risks`; `nothing above medium` if none>
+**Open:** <ledger IDs of the questions this phase leaves open, e.g. `Q3, Q7 — see ledger/open-questions.md`; `none` when it leaves none>
 **Next:** end of pipeline
 
 ## Deployment Steps

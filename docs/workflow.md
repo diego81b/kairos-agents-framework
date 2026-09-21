@@ -32,7 +32,7 @@ Only selected agents run. Order is never changed.
 
 ### Artifact Format — Markdown + Frontmatter
 
-Every phase writes a single Markdown file: a small YAML frontmatter header carrying only what the orchestrator branches on — a verdict, the tallies its status rules threshold, a loop signal where a loop exists — followed by the report body (data model tables, issues lists, findings, runbooks — what the human actually reads at the gate). Every body opens with the same four-line `## Summary` block — **What / Decision / Needs your attention / Next** — so a gate is readable in seconds without scrolling the whole artifact; the Orchestrator prints that block verbatim at the checkpoint rather than writing its own version of it, names the artifact path, and opens the full file only if you ask — the detail underneath is the next agent's prompt input, and putting all of it in front of you every phase is what turns a gate into a document review. Nothing in this pipeline parses these files with real code — every consumer is either the next agent reading it as prompt text or a human at a gate — so a full schema or a long issues list is plain Markdown, not JSON: unreadable as nested JSON, but a table that scans in seconds. Any Risks/Issues/Findings table carries a `Disposition` column, left empty by the agent and filled in by the Risk Disposition Loop above.
+Every phase writes a single Markdown file: a small YAML frontmatter header carrying only what the orchestrator branches on — a verdict, the tallies its status rules threshold, a loop signal where a loop exists — followed by the report body (data model tables, issues lists, findings, runbooks — what the human actually reads at the gate). Every body opens with the same five-line `## Summary` block — **What / Decision / Needs your attention / Open / Next** — so a gate is readable in seconds without scrolling the whole artifact. `Open` carries the `ledger/open-questions.md` IDs of the questions that phase left unanswered, which is what keeps an open point from being buried in a paragraph nobody rereads; the Orchestrator prints that block verbatim at the checkpoint rather than writing its own version of it, adds two counts of its own (rows dispositioned, and questions still open across *every* phase — a cross-check against what this one artifact claims), names the artifact path, and opens the full file only if you ask — the detail underneath is the next agent's prompt input, and putting all of it in front of you every phase is what turns a gate into a document review. Nothing in this pipeline parses these files with real code — every consumer is either the next agent reading it as prompt text or a human at a gate — so a full schema or a long issues list is plain Markdown, not JSON: unreadable as nested JSON, but a table that scans in seconds. Any Risks/Issues/Findings table carries a `Disposition` column, left empty by the agent and filled in by the Risk Disposition Loop above.
 
 ---
 
@@ -44,9 +44,10 @@ Every phase writes a single Markdown file: a small YAML frontmatter header carry
 
 **Pipeline start:**
 - Developer provides a natural-language feature request (with optional issue reference)
-- Orchestrator loads `00-context.md` and `00b-impact.md` if present
-- **Quick-Fix Check** (skipped only when a `## KAIROS Pipeline` template section was found in the issue body): one question — "Quick fix, or full feature?" Quick fix presets `active_agents` to `implementer-coder-agent` + `code-reviewer-agent`, sets `loop_policy` to `auto 1`, and widens the Risk Disposition Loop's auto-accept threshold to `medium` for this run — skipping the full selection menu and the loop-policy prompt below entirely. Full feature proceeds as before.
-- If `00b-impact.md` found, displays a `💡 Impact Assessment` advisory block before the selection menu (effort, domains, recommended agents) — advisory only, nothing pre-selected
+- Orchestrator loads `00-context.md`, `00b-impact.md`, and `00c-bug-triage.md` if present. A triage on disk is attached to every later subagent prompt, not just read by the Quick fix path
+- **Bug-Input Check** (before the Effort Check): if the input reads as a bug report — a symptom against an expectation, a stack trace, reproduction steps, "this used to work" — and no `00c-bug-triage.md` exists, the Orchestrator offers to run `bug-triage-agent` first. On accept it dispatches it with `mode: orchestrated`: the agent reproduces, finds the root cause, writes `00c-bug-triage.md`, and returns without a gate of its own, which the Orchestrator then presents as it would any phase artifact. Approve and `recommended_entry` becomes an advisory at the Effort Check below. This is the single exception to the Orchestrator never dispatching a standalone agent, and it holds only because `bug-triage-agent` asks nothing mid-work — every other standalone agent does, and would lose those questions as a subagent
+- **Effort Check** (skipped only when a `## KAIROS Pipeline` template section was found in the issue body): one question — "How big is this change?" — answered as `simple_fix`, `medium`, or `significant_rework`. When `00b-impact.md` exists, its `effort` value is the pre-selected default; otherwise the orchestrator proposes one from the request itself. **The chosen value is stamped into the invocation prompt of every subagent that runs**, so each agent enters Lean, Trimmed, or Full mode from a value a human confirmed instead of re-deriving the size itself (or silently defaulting to `medium`+ and running Full). `simple_fix` additionally presets `active_agents` to `implementer-coder-agent` + `code-reviewer-agent`, sets `loop_policy` to `auto 1`, and widens the Risk Disposition Loop's auto-accept threshold to `medium` — skipping the selection menu and the loop-policy prompt below entirely. `medium` presets `loop_policy.phase4` to `auto 1` (announced at Step 0f, overridable there) and still shows the selection menu. `significant_rework` asks everything, as before.
+- If `00b-impact.md` found, displays a `💡 Impact Assessment` advisory block before the selection menu (effort, domains, recommended agents). The agent list stays advisory — nothing is pre-selected — but its `effort` value is pre-selected as the recommended answer at the Effort Check above.
 - If the invocation prompt already dictates an agent list, the orchestrator treats it as an unconfirmed proposal and still requires explicit confirmation through the selection menu
 - Orchestrator reads the `## KAIROS Pipeline` section from the issue body (if present), or shows an interactive numbered list; when no `00b-impact.md` advisory exists, the orchestrator adds its own `💡 Suggested selection` line derived from the feature request — advisory only, never auto-applied
 - User confirms or adjusts the agent selection; orchestrator announces the active pipeline before Phase 1
@@ -58,8 +59,8 @@ _Output: confirmed `active_agents` list + `feature_folder` path_
 Only agents explicitly selected in Phase 0 will run. Phases for inactive agents are skipped automatically. Use [Pipeline Templates](/setup/templates) to pre-configure agent selection in your issue tracker.
 :::
 
-::: tip Quick-Fix Check trades TDD discipline for speed
-Choosing "Quick fix" routes to `implementer-coder-agent` (no TDD cycle, no `test-verifier-agent` phase) even in a repo with a test suite. If you want tests generated for a small change, pick "Full feature" or hand-pick `implementer-tdd-agent` from the selection menu instead.
+::: tip Quick fix trades TDD discipline for speed
+Answering `simple_fix` at the Effort Check routes to `implementer-coder-agent` (no TDD cycle, no `test-verifier-agent` phase) even in a repo with a test suite. If you want tests generated for a small change, pick `medium` or hand-pick `implementer-tdd-agent` from the selection menu instead.
 :::
 
 ---
@@ -124,6 +125,12 @@ This phase has **two HITL checkpoints** — a plan gate before any file is writt
 _Input: `02-architecture.md` + project profile_
 _Output: implementation plan → (approval) → code files + test files + coverage report_
 _Saved to: `.kairos/<feature_folder>/03-implementation-plan.md`, then project paths + `.kairos/<feature_folder>/03-implementation.md`_
+
+::: tip One artifact per feature, not per pass
+The implementer is re-invoked on the same implementation for three different reasons: a planned wave from a multi-wave plan, a Loop Actuator iteration driven by code-reviewer or test-verifier findings, and a manual re-run after you chose Request changes at the gate. All three append to the **same** `03-implementation.md`: a `## Pass Log` records why each pass ran, and `## Files Written` is the union across all of them, each row naming the pass that last touched it. Loop iterations are additionally archived as `03-implementation-iter{N}.md`, but those are a per-iteration trail — the base file stays the cumulative record.
+
+This matters because three readers treat that table as everything the feature shipped: `code-reviewer-agent` picks what to review from it, `release-planner-agent`'s Scope Coverage Check traces each in-scope item to it, and `_recap.md` publishes it as Files Changed. A per-pass table made all three under-report with no error anywhere.
+:::
 
 ::: info HITL checkpoint — Plan gate
 User reviews the implementation plan (files, test cases, approach) **before any code is written**. Reject at zero cost.
@@ -198,8 +205,14 @@ User reviews the quality report (`04-review.md`). NEEDS\_FIXES sends the issues 
 `✅ Approve` · `✏️ Request changes` · `⏭️ Skip next` · `⛔ Stop`
 :::
 
-::: tip Lean Mode for simple fixes
-When `effort: simple_fix` (from `00b-impact.md`, or self-inferred standalone), Architecture Compliance and Performance collapse to a one-line N/A unless the diff actually adds an endpoint/schema/integration point or touches a loop/query/hot path; the dependency-changelog check only runs when a dependency version actually changed. Correctness, Security, Simplicity, and Standards always run in full — those are what actually catch bugs on a small diff.
+::: tip Effort modes — Lean, Trimmed, Full
+Every phase agent reads `effort` in the same priority order: the orchestrator's invocation prompt first (a human confirmed it at the Effort Check), then `00b-impact.md`, then its own inference as a last resort.
+
+**Lean Mode** (`simple_fix`) — here, Architecture Compliance and Performance collapse to a one-line N/A unless the diff actually adds an endpoint/schema/integration point or touches a loop/query/hot path; the dependency-changelog check only runs when a dependency version actually changed. Correctness, Security, Simplicity, and Standards always run in full — those are what actually catch bugs on a small diff.
+
+**Trimmed Mode** (`medium`) — the Full process, minus the sections nothing downstream reads: Performance collapses to a one-line check unless the diff touches a loop, query, or documented hot path. Every other check runs in full.
+
+**Full Mode** (`significant_rework`, or an unknown effort) — unchanged.
 :::
 
 ---

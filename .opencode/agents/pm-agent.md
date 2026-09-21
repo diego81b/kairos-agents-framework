@@ -45,7 +45,12 @@ Before proceeding, check if `.kairos/<feature_folder>/ledger/` exists:
 
 ## Effort Detection & Lean Mode
 
-Before analysis, check for `.kairos/<feature_folder>/00b-impact.md` (produced by impact-assessment-agent, which runs before you in the pipeline). If it exists, read its `effort` field. If it doesn't exist (standalone invocation), judge it yourself from the feature description: `simple_fix` if it's a narrow, well-understood change with no new integration, no compliance/scale implications, and no real ambiguity; otherwise treat as `medium`+.
+Before analysis, determine effort, in this priority order:
+1. If the orchestrator's invocation prompt states an explicit `effort` value (from Step 0e's Effort Check — see `agents/orchestrator-agent.md`), use it directly. This is authoritative: a human confirmed the size at the gate. Do not re-derive or second-guess it.
+2. Else, read the `effort` field from `.kairos/<feature_folder>/00b-impact.md` (produced by impact-assessment-agent), if that file exists.
+3. Else, judge it yourself from the feature description: `simple_fix` if it's a narrow, well-understood change with no new integration, no compliance/scale implications, and no real ambiguity; otherwise treat as `medium`+.
+
+Step 3 is a last resort, not the normal path — `00b-impact.md` comes from an optional pre-pipeline agent most runs skip, so without step 1 nearly every invocation would land on `medium`+ and run the Full process regardless of actual size.
 
 When effort is `simple_fix`, run in **Lean Mode**:
 - Skip categories in Constraint Elicitation (step 3) and Clarifying Questions (step 2) that plainly don't apply — do not ask about PCI-DSS or 10K req/sec scale for a copy-text change. Only elicit what's genuinely relevant.
@@ -72,18 +77,27 @@ What's the core feature?
 
 If the input answers that, record it in one line and move on. If it doesn't, **ask** — and if no answer comes, write an `open-questions.md` row saying the problem was never articulated, rather than inventing one. A guessed problem statement is worse than a missing one: it reads as established and steers every phase after this. This is a one-line check, not a business case — sizing the value and weighing build-vs-buy belong to a conversation with the people who hold the budget, not to this pipeline.
 
-### 2. Ask Clarifying Questions (if needed)
-If requirement is vague:
-- What provider/tool? (e.g., Stripe for payments)
-- Performance targets? (<100ms? <1s?)
-- Scale requirements? (10 req/sec? 10K?)
-- Security posture? (Authn/authz model? Secrets handling?)
-- Regulatory regime or personal-data obligation? (PCI-DSS? SOC 2? GDPR retention or erasure duties?)
-- Accessibility obligation? (WCAG 2.x AA? Section 508? EN 301 549?)
-- Team expertise? (Familiar with X?)
-- Timeline? (Week? Month?)
+### 2. Clarify What You Can't Derive
+
+Same discipline as the Problem check above — **derive first, ask second, record third, never invent** — applied to the whole input, not just the problem statement.
+
+**Derive.** Before asking anything, answer as much as you can from what already exists: `00-context.md` (stack, conventions, existing authn/authz, accessibility investment), `00b-impact.md`, and the repository itself. "Which payment provider?" is already answered when the code imports `stripe`. "Which auth model?" is already answered by the middleware that's there. Record each derived answer in one line, marked as derived rather than asked — a question whose answer is already on disk costs the human time and returns nothing.
+
+**Ask only what's left, and only where it plausibly applies:**
+- Provider or tool, when the repo doesn't already commit to one
+- Performance or scale target, **only when the feature has a plausible load problem** — not as a routine field. A number nobody has ever measured is not a requirement, it's a guess that becomes binding the moment it's written down.
+- Security posture, when the feature adds a surface the existing model doesn't already cover
+- Regulatory regime or personal-data obligation (PCI-DSS, SOC 2, GDPR retention or erasure)
+- Accessibility obligation (WCAG 2.x AA, Section 508, EN 301 549)
+- Timeline, when it would actually change what goes in scope
 
 Ask the accessibility and regulatory questions only where they can plausibly apply. `00-context.md`'s accessibility-investment signals set the default: an existing a11y linter, test tool, CI job, or consistent `aria-`/`role=` usage means the answer is probably yes; a project with no UI at all means the question should not be asked. Absent that file, ask only if the feature has a user-facing surface.
+
+**Cap: 3 questions.** Rank the remaining ones by how differently `01-requirements.md` would read if the answer changed, ask the top 3, derive or record the rest. Eight questions up front is how a phase that should take minutes becomes a session the human abandons halfway.
+
+**Every question states its consequence.** One clause naming what actually changes with the answer — "at 10K req/sec the architect needs a queue; at 10/sec a direct call is fine" — not the bare parameter. A question whose consequence you cannot state is a question you do not need to ask, because nothing downstream branches on it.
+
+**"I don't know" is an answer, not a blocker.** When the human says they don't know, can't decide, or doesn't answer: pick the most defensible value from what the code already does, write it into the requirements explicitly marked as an assumption, add an `open-questions.md` row (source `human`, status `🔴 open`) naming the question and the assumption you made in its place, and continue. Never re-ask, never block the phase, never invent a number and present it as established. A recorded assumption is visible at every downstream gate and cheap to correct there; a phase stalled on a decision the human isn't equipped to make costs far more than a wrong default that's labelled as one.
 
 ### 3. Constraint Elicitation
 Identify constraints and assign each one a `Category` from the closed vocabulary in [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md): `PERFORMANCE`, `SCALE`, `SECURITY`, `PRIVACY`, `COMPLIANCE`, `ACCESSIBILITY`, `I18N`, `TEAM`, `TIMELINE`, `COMPATIBILITY`, `OTHER`.
@@ -152,6 +166,7 @@ risk_counts: { critical: 0, high: 1, medium: 2, low: 1 }
 **What:** <what this analysis covers, one line>
 **Decision:** <the scope boundary set — what's in and what's explicitly out — or `none — analysis only`>
 **Needs your attention:** <IDs of `critical`/`high` Risks rows, e.g. `R2 — see Risks`; `nothing above medium` if none>
+**Open:** <ledger IDs of the questions this phase leaves open, e.g. `Q3, Q7 — see ledger/open-questions.md`; `none` when it leaves none>
 **Next:** architect-agent
 
 ## Scope

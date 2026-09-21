@@ -88,6 +88,7 @@ findings_summary: { critical: 0, high: 0, medium: 1, low: 0, total: 1 }
 **What:** <which user-facing surfaces were documented, one line>
 **Decision:** <what was written and where — the file list from `## Docs Touched`>
 **Needs your attention:** <IDs of `critical`/`high` Documentation Gaps rows, e.g. `G1 — see Documentation Gaps`; `nothing above medium` if none>
+**Open:** <ledger IDs of the questions this phase leaves open, e.g. `Q3, Q7 — see ledger/open-questions.md`; `none` when it leaves none>
 **Next:** end of pipeline
 
 ## Docs Touched

@@ -99,6 +99,7 @@ backlog_count: 8
 **What:** <what was audited: ecosystems, manifest count, direct dependency count, one line>
 **Decision:** none — analysis only
 **Needs your attention:** <the highest-priority row IDs, e.g. `D1, D2 — see Backlog`; `nothing above medium` if none>
+**Open:** <ledger IDs of the questions this phase leaves open, e.g. `Q3, Q7 — see ledger/open-questions.md`; `none` when it leaves none>
 **Next:** a human picks rows from the Backlog and takes each through the pipeline
 
 ## Vulnerabilities

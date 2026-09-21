@@ -78,7 +78,7 @@ Standalone pre-pipeline agent. Run after Context Extractor (optional) to produce
 
 ## Bug Triage
 
-Standalone entry point for a bug report rather than a feature request. Reproduces the defect, isolates it, finds the root cause with evidence, rates severity, and recommends where the fix re-enters the pipeline — its `recommended_entry` feeds the Orchestrator's Quick fix path. Never fixes anything itself. Produces `00c-bug-triage.md`.
+Standalone entry point for a bug report rather than a feature request. Reproduces the defect, isolates it, finds the root cause with evidence, rates severity, and recommends where the fix re-enters the pipeline — its `recommended_entry` feeds the Orchestrator's Quick fix path. Never fixes anything itself. Produces `00c-bug-triage.md`. Runs either directly from you or dispatched by the Orchestrator's Bug-Input Check in Orchestrated mode, where it skips its own gate and the Orchestrator presents the artifact instead.
 
 <<< @/agents/bug-triage-agent.md{md}
 

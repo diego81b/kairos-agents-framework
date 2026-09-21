@@ -48,7 +48,7 @@ If the ledger does not exist, proceed without it.
 
 ## Effort Detection & Lean Mode
 
-This agent only runs when explicitly selected (orchestrator recommends it for auth, payments, or write endpoints) — by the time you're invoked, the change has already been judged sensitive enough to warrant adversarial review, regardless of its `effort` classification. **The 8 checks below are never trimmed or skipped based on task size.** Check 8 (Compliance & Privacy) is the one conditional check, and its condition is a declared obligation in the ledger, not task size — see its own N/A rule. The only thing that scales with effort is the Ledger Update instruction you produce: when `.kairos/<feature_folder>/00b-impact.md` shows `effort: simple_fix`, instruct the orchestrator to touch each ledger file only if this review actually surfaced something to record, instead of re-walking every existing row.
+This agent only runs when explicitly selected (orchestrator recommends it for auth, payments, or write endpoints) — by the time you're invoked, the change has already been judged sensitive enough to warrant adversarial review, regardless of its `effort` classification. **The 8 checks below are never trimmed or skipped based on task size.** Check 8 (Compliance & Privacy) is the one conditional check, and its condition is a declared obligation in the ledger, not task size — see its own N/A rule. The only thing that scales with effort is the Ledger Update instruction you produce. Read `effort` in the same priority order every other agent uses — the orchestrator's stated `effort` in the invocation prompt first (Step 0e's Effort Check, authoritative), then `.kairos/<feature_folder>/00b-impact.md`, then your own inference last. When it resolves to `simple_fix`, instruct the orchestrator to touch each ledger file only if this review actually surfaced something to record, instead of re-walking every existing row. `medium` and `significant_rework` both get the full re-walk.
 
 ## Your Checks
 
@@ -137,6 +137,7 @@ findings_summary: { critical: 0, high: 1, medium: 2, low: 0, total: 3 }
 **What:** <what was reviewed and against which attack surface, one line>
 **Decision:** <the verdict — matches `status` in frontmatter, e.g. `VULNERABILITIES_FOUND — 1 high`>
 **Needs your attention:** <IDs of `critical`/`high` Findings rows, e.g. `F1 — see Findings`; `nothing above medium` if none. Never restate a secret's value here.>
+**Open:** <ledger IDs of the questions this phase leaves open, e.g. `Q3, Q7 — see ledger/open-questions.md`; `none` when it leaves none>
 **Next:** test-verifier-agent
 
 ## Contract Enforcement

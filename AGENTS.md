@@ -8,10 +8,10 @@ KAIROS is an intelligent multi-agent SDLC orchestration framework, distributed a
 **documentation-only project**. There is no compiled code, no test suite, and no
 runtime beyond the documentation site build. The deliverables are:
 
-- **`agents/`** — the framework artifact itself: 16 core AI agent definition files
+- **`agents/`** — the framework artifact itself: 17 core AI agent definition files
   (Markdown + YAML frontmatter) plus 5 optional Team Mode agents in `agents/team/`.
 - **`docs/`** — a VitePress site that documents the framework and exposes the agent
-  files to users (published at https://kairos-docs.vercel.app).
+  files to users (published at https://kairos-agents.netlify.app).
 - **`.opencode/agents/`** — a hand-maintained mirror of the 17 core agent files,
   translated to OpenCode's frontmatter schema (see "OpenCode Mirror Sync" below).
 - **`.kimi-code/agents/`** — a hand-maintained mirror of the 17 core agent files,
@@ -74,7 +74,7 @@ any change to `docs/`, `agents/`, or `skills/` (agent files are embedded in the 
 
 ## Repository Layout
 
-- `agents/` — 16 core pipeline agents (canonical source) + `team/` (5 Team Mode agents, Claude Code only).
+- `agents/` — 17 core pipeline agents (canonical source) + `team/` (5 Team Mode agents, Claude Code only).
 - `.opencode/agents/` — OpenCode mirror of the 17 core agents (derived, kept in sync by hand).
 - `.kimi-code/agents/` — Kimi Code mirror of the 17 core agents (derived, kept in sync by hand).
 - `docs/` — VitePress site. Config: `docs/.vitepress/config.js` (nav, sidebar, `srcDir: '..'`).
@@ -92,7 +92,7 @@ any change to `docs/`, `agents/`, or `skills/` (agent files are embedded in the 
   conventions; keep them consistent with this file when the conventions change.
 - `internal/` — internal reference docs (cost analysis, routing logic, PROOF methodology).
   **Not published** to the site; do not link to it from `docs/`.
-- `vercel.json`, `netlify.toml` — deployment configs (see Deployment below).
+- `netlify.toml` — the deployment config (see Deployment below). There is no Vercel config: an orphaned `vercel.json` was deleted after it was confirmed that nothing referenced it.
 
 ## Conventions for Agent Files
 
@@ -126,7 +126,7 @@ Rules that apply when editing agent files:
 
 ## OpenCode Mirror Sync
 
-Every file in `agents/` (the 16 core pipeline agents, **not** `agents/team/`) has a
+Every file in `agents/` (the 17 core pipeline agents, **not** `agents/team/`) has a
 hand-maintained counterpart in `.opencode/agents/`. There is no conversion script — the
 mirror is kept in sync by hand, on purpose.
 
@@ -152,7 +152,7 @@ Claude-Code-specific; a frontmatter-only port ships a non-functional agent.
 
 ## Kimi Code Mirror Sync
 
-Every file in `agents/` (the 16 core pipeline agents, **not** `agents/team/`) has a
+Every file in `agents/` (the 17 core pipeline agents, **not** `agents/team/`) has a
 hand-maintained counterpart in `.kimi-code/agents/`. Same discipline as the OpenCode
 mirror: no conversion script, kept in sync by hand, on purpose.
 
@@ -220,7 +220,7 @@ Non-trivial change (title + body):
 ```
 feat(orchestrator): add context-extractor pre-pipeline step
 
-Agents now receive a pre-built 00-context.json produced by the
+Agents now receive a pre-built 00-context.md produced by the
 context-extractor-agent, reducing redundant codebase analysis.
 
 Closes #38
@@ -265,12 +265,11 @@ and the new changelog block alongside the commit message.
 
 ## Deployment
 
-- **Vercel** (primary): auto-deploys on push to `main`. `vercel.json` sets
-  `buildCommand: npm run docs:build`, `outputDirectory: docs/.vitepress/dist`.
-- **Netlify**: `.github/workflows/deploy-docs.yml` triggers a Netlify deploy hook
-  (via secret `NETLIFY_DEPLOY_HOOK`) on pushes of `v*` tags. `netlify.toml` mirrors the
-  same build command/output and pins Node 22.
-- A release therefore means: bump versions + changelog, commit, tag `vX.Y.Z`, push.
+- **Netlify** (the only live deploy path): `.github/workflows/deploy-docs.yml` triggers a
+  Netlify deploy hook (via secret `NETLIFY_DEPLOY_HOOK`) on pushes of `v*` tags.
+  `netlify.toml` holds the build command/output and pins Node 22. A push to `main` or
+  `develop` deploys nothing — only a version tag does.
+- A release therefore means: bump versions + changelog, commit, tag `vX.Y.Z`, push the tag.
 
 ## Security Considerations
 
