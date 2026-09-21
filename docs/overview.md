@@ -5,7 +5,7 @@
 
 ---
 
-KAIROS is a framework that wires specialized AI agents into a single, human-controlled pipeline. You describe what you want to build; KAIROS breaks it into phases — requirements, design, code, review, tests, deployment — and produces production-ready output at every step.
+KAIROS is a framework that wires specialized AI agents into a single, human-controlled pipeline. You describe what you want to build; KAIROS breaks it into phases — requirements, design, code, review, tests, deployment — and each phase ends in a written artifact you approve before the next one starts. The point is not to reach code faster; it is that nothing reaches code unreviewed.
 
 The human never loses control: every phase ends at a checkpoint where you approve, redirect, or skip before anything moves forward.
 
@@ -48,7 +48,7 @@ Each subagent:
 | pre | **Impact Assessment** | Issue-scoped grounding → effort, domains, agent recommendations | `00b-impact.md` |
 | 0 | **Orchestrator** | Coordinates the pipeline, manages HITL | Routes & aggregates |
 | 1 | **PM Agent** | Requirements, constraints, acceptance criteria | `01-requirements.md` |
-| 2 | **Architect Agent** | 3 design options → recommended choice, API contracts, DB schema | `02-architecture.md` |
+| 2 | **Architect Agent** | design options → recommended choice, API contracts, DB schema, threat model, migration safety | `02-architecture.md` |
 | 3 | **Implementer Agent** | Implementation plan → TDD cycle (tests first, then code) — **default when the project has a test suite**; a code-only variant (no TDD) is available for projects without one | Code + `03-implementation.md` |
 | 4 | **Code Reviewer** | Standards, security, performance, contract compliance | `04-review.md` |
 | 4b | **Security Reviewer** _(optional)_ | Adversarial security pass — IDOR, auth, injection, secrets, data exposure | `04b-security-review.md` |
@@ -57,9 +57,9 @@ Each subagent:
 | 6 | **Release Planner** | Deployment steps, rollback strategy, monitoring thresholds | `06-deployment-plan.md` |
 | 6b | **Documentation Agent** _(optional)_ | Feature-facing docs in the target project — README, API reference, CHANGELOG | `06b-documentation.md` |
 
-All output files are saved to `.kairos/<feature-folder>/` — one subfolder per feature, named from the issue reference (e.g. `PROJ-42_add-stripe-payments`). Each phase writes a single Markdown file: a small YAML frontmatter header (status, counts, next agent) followed by the human-readable report (data model, issues, findings, runbook) — see the [Workflow](/workflow) page for why.
+All output files are saved to `.kairos/<feature-folder>/` — one subfolder per feature, named from the issue reference (e.g. `PROJ-42_add-stripe-payments`). Each phase writes a single Markdown file: a small YAML frontmatter header carrying only what the Orchestrator branches on — a verdict, the tallies its status rules threshold, and a loop signal where a loop exists — followed by the human-readable report (data model, issues, findings, runbook) — see the [Workflow](/workflow) page for why.
 
-Two more agents sit outside this table entirely: **Retrospective Agent** and **Improvement Advisor** are standalone, invoked directly by you after work on a feature stops — never auto-invoked by the Orchestrator. Retrospective Agent distills a finished feature's own artifacts into lessons, appended to the project-root `.kairos/_lessons.md`; Improvement Advisor reads that file back every few features and proposes framework changes as ADR records, never editing an agent file itself. See [All Agents](./agents) for both.
+Four agents sit outside this table entirely, all invoked directly by you rather than scheduled by the pipeline. **Bug Triage** is the entry point when what you have is a defect rather than a feature: it reproduces, finds the root cause, and recommends where the fix re-enters the pipeline. It is also the one standalone agent the Orchestrator may dispatch itself — when your input reads as a bug report and no triage exists, it offers to run it and then gates the result like any phase artifact. **Dependency Audit** runs every few months outside any feature, turning dependencies and accumulated debt into a prioritized backlog at `.kairos/_tech-debt.md`. **Retrospective Agent** distills a finished feature's own artifacts into lessons, appended to the project-root `.kairos/_lessons.md`; **Improvement Advisor** reads that file back every few features and proposes framework changes as ADR records, never editing an agent file itself. See [All Agents](./agents) for all four.
 
 ### Team Mode — optional extension (Claude Code only)
 
@@ -124,7 +124,7 @@ Pre-built presets for common task types — Feature, Bug Fix, Hotfix, Refactor, 
 
 A typical KAIROS feature run produces:
 
-- ✅ Production-ready code following your project's patterns
+- ✅ Code following your project's existing patterns, reviewed at a gate before it lands
 - ✅ Comprehensive test suite with coverage >80% _(when using `implementer-tdd-agent`)_
 - ✅ Architecture decision record with sound API contracts _(via pre-contract checklist gate)_
 - ✅ Code review report (security, performance, standards)
@@ -166,11 +166,16 @@ agents/
 
 skills/                          ← Shared checklists/formats reused across agents — see Skills & MCP
 ├── agent-contract/SKILL.md
-├── contract-checklist/SKILL.md
-├── code-simplification/SKILL.md
+├── analysis-discipline/SKILL.md
 ├── artifact-bookkeeping/SKILL.md
+├── artifact-template/SKILL.md
+├── code-simplification/SKILL.md
 ├── coding-discipline/SKILL.md
-└── issue-tracker-comment/SKILL.md
+├── constraint-taxonomy/SKILL.md
+├── contract-checklist/SKILL.md
+├── issue-tracker-comment/SKILL.md
+├── migration-safety/SKILL.md
+└── threat-model/SKILL.md
 
 commands/                        ← Claude Code slash commands (/kairos:setup, /kairos:view)
 ```

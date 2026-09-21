@@ -179,4 +179,4 @@ Claude Code plugin slash commands, auto-discovered since the plugin root is the 
 
 ### Deployment
 
-Vercel auto-deploys on push (`vercel.json`: buildCommand `npm run docs:build`, output `docs/.vitepress/dist/`). CI skips builds not triggered by version tags (see `.github/workflows/`).
+The site is deployed on **Netlify**, and only from a version tag: `.github/workflows/deploy-docs.yml` POSTs the `NETLIFY_DEPLOY_HOOK` secret on any `v*` tag push, and `netlify.toml` holds the real build (`npm run docs:build` → `docs/.vitepress/dist`, Node 22). Pushing to `main` or `develop` deploys nothing. Netlify is the only host: an earlier `vercel.json` was removed once it was confirmed that no workflow and no secret referenced it.

@@ -16,7 +16,6 @@ export default defineConfig({
     'DEPLOYMENT.md',
     'LICENSE',
     'netlify.toml',
-    'vercel.json',
     'package.json',
     'package-lock.json',
     'docs/changelog.md'
@@ -190,7 +189,7 @@ export default defineConfig({
         items: [
           { text: 'Workflow', link: '/workflow' },
           { text: 'Agentic Loop', link: '/agentic-loop' },
-          { text: 'Metrics', link: '/metrics' }
+          { text: 'Quality', link: '/metrics' }
         ]
       },
       {
