@@ -41,12 +41,12 @@ Exactly these twelve values. Uppercase, exact match.
 | `TEAM` | Skills available, ownership boundaries, review capacity |
 | `TIMELINE` | Deadlines, sequencing against external dates |
 | `COMPATIBILITY` | Backward compatibility, supported versions, no-touch zones |
-| `VERIFICATION` | A check no single developer environment can stage: several applications running together, a particular configuration or flag, concurrent sessions on distinct machines, a role or tenant the developer does not hold |
+| `VERIFICATION` | A check no single developer environment can stage: several applications running together, a particular configuration or flag, concurrent sessions on distinct machines, a role or tenant the developer does not hold. Its `Constraint` text names the `AC-n` it covers |
 | `OTHER` | Anything the list above does not fit |
 
 `OTHER` is always legal and **never gates anything**. Use it rather than stretching a category to fit; a mis-categorized row is worse than an uncategorized one, because it silently arms a check the project never asked for.
 
-`VERIFICATION` is about how an obligation is *checked*, not about what the system must do. "Two operators on two machines must not both save the same order" is the requirement and belongs in an acceptance criterion; "checking it needs two signed-in sessions on separate machines" is the `VERIFICATION` row. Declare it only when the human names the setup — the presence of a second application in the architecture does not declare it.
+`VERIFICATION` is about how an obligation is *checked*, not about what the system must do. Its `Constraint` text names the `AC-n` it covers (`"AC-7: checking concurrent-edit behavior needs two signed-in sessions on separate machines"`), which is what `test-verifier-agent` reads to route that criterion to manual verification instead of counting it as a coverage gap. "Two operators on two machines must not both save the same order" is the requirement and belongs in an acceptance criterion; "checking it needs two signed-in sessions on separate machines" is the `VERIFICATION` row. Declare it only when the human names the setup — the presence of a second application in the architecture does not declare it.
 
 `SECURITY` and `PRIVACY` are distinct. "Passwords must be hashed with argon2id" is `SECURITY`. "Email addresses must be erasable on request" is `PRIVACY`. A row about a named regime that mandates both is `COMPLIANCE`, and warrants a separate `PRIVACY` row when it carries specific data-handling duties.
 

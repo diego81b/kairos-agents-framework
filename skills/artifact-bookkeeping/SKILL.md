@@ -42,7 +42,7 @@ Each phase's `status` (or equivalent verdict field) is a fixed threshold rule ov
 Given the numbered `AC-1, AC-2, ...` list from `01-requirements.md`'s Success Criteria and the Acceptance Criteria Mapping table's rows:
 
 - `mapped` — count of AC numbers with at least one non-empty entry in the Tests column.
-- `gapIds` — AC numbers with an empty Tests column (a `—` in the Tests column, with the gap explained in the Gap column instead).
+- `gapIds` — AC numbers with an empty Tests column (a `—` in the Tests column, with the gap explained in the Gap column instead). A Tests cell reading `manual — <Cn> → 5b` is **not** empty: that criterion is routed to manual verification by a declared `VERIFICATION` constraint row and is not a gap. It counts as `mapped` for this purpose and never reaches `convergence_signal.ac_gaps`, because a loop cannot close it — see `test-verifier-agent`'s three-state rule.
 
 Same recount discipline as §1, applied to a different table. `gapIds` feeds directly into §2's `test-verifier-agent` status rule above — a non-empty `gapIds` blocks `READY` the same way a critical/high issue does.
 

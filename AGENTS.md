@@ -45,7 +45,9 @@ re-enters the pipeline (`00c-bug-triage.md`) — it never fixes anything.
 dependencies and debt into the project-root `.kairos/_tech-debt.md` — it never applies an
 upgrade. `retrospective-agent.md` appends to the project-root `.kairos/_lessons.md`;
 `improvement-advisor-agent.md` reads it back every few features and proposes framework changes
-as `.kairos/decisions/ADR-*.md` records, never editing `agents/*.md` itself.
+as `.kairos/decisions/ADR-*.md` records, never editing `agents/*.md` itself. `qa-plan-agent.md`
+owns a fourth project-root file, `.kairos/_qa-regression.md`: the cumulative catalogue of manual
+cases, which it appends to at each feature and selects from at the next one.
 
 KAIROS deliberately stops at verification: deployment execution, post-deploy verification,
 observability, incident response, load testing, and cost analysis are out of scope, because

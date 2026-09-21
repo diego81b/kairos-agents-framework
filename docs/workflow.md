@@ -275,6 +275,8 @@ User confirms coverage is adequate from `05-test-verification.md`. FAIL sends th
 - Answer any `VERIFICATION` constraint declared upstream — which case covers it, or a `high` risk row when none does; `N/A` when none was declared, which is the normal case
 - Select regression retests by grepping real callers of every changed symbol
 - List test data and environment needs, each with the line of code that demands it
+- Select the existing `QA-n` cases from the project-wide catalogue whose area this change touched, each with the changed file that puts it there
+- Append this run's reusable manual cases to `.kairos/_qa-regression.md`, retire the ones this change automated or removed
 - State UAT sign-off per `AC-n`, and carry pm-agent's Outcome Criterion through verbatim
 
 _Input: `05-test-verification.md` (optional), `01-requirements.md`, `03-implementation.md`_

@@ -472,7 +472,7 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
       iteration: 1 of <max_retries>
       blocking_prev: null
       blocking_curr: <count of critical/high issues from {checker}'s output, plus `convergence_signal.ac_gaps` when `{checker}` is test-verifier-agent (its Acceptance Criteria gap count) — code-reviewer-agent has no AC concept, so the Phase 4 loop uses critical/high alone>
-      cumulative_issues: <critical/high issues[] from {checker}'s output, plus each Acceptance Criteria Mapping gap row (AC id + what's missing) when `{checker}` is test-verifier-agent — this iteration's list only, replaced in full each iteration below, never accumulated across iterations despite the field name>
+      cumulative_issues: <critical/high issues[] from {checker}'s output, plus each Acceptance Criteria Mapping gap row (AC id + what's missing — state-3 rows only, never one routed to manual verification) when `{checker}` is test-verifier-agent — this iteration's list only, replaced in full each iteration below, never accumulated across iterations despite the field name>
       ```
    2. **Loop** — repeat until exit condition:
       a. Re-invoke the active Phase-3 implementer **as step 3b** — `implementer-tdd-agent`, `implementer-coder-agent`, or `implementer-lead-agent`, whichever was selected in Step 3's routing decision (all three detect Iteration Mode from the ledger automatically). Never re-invoke step 3a from inside a loop: the plan is already approved, a fresh plan would return `pending_approval`, and a non-advancing status inside a loop is an infinite loop.
@@ -793,6 +793,7 @@ With issue number (`"Add Stripe payments — issue #42"`):
 .kairos/
 ├── _lessons.md                    ← Retrospective Agent / Improvement Advisor — project-wide, see below
 ├── _tech-debt.md                  ← Dependency Audit Agent (standalone, periodic) — project-wide, see below
+├── _qa-regression.md              ← QA Plan Agent — cumulative manual case catalogue, project-wide, see below
 ├── decisions/
 │   └── ADR-001-<slug>.md          ← Improvement Advisor — project-wide, see below
 └── issue-42_add-stripe-payments/

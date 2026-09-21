@@ -42,7 +42,7 @@ Follow [`agent-contract`](../skills/agent-contract/SKILL.md)'s Missing-Input Err
 
 Before proceeding, read all three ledger files:
 
-- `.kairos/<feature_folder>/ledger/constraints.md` — check for testing/coverage constraints (e.g. "> 80% line coverage required"); verify they are met
+- `.kairos/<feature_folder>/ledger/constraints.md` — check for testing/coverage constraints (e.g. "> 80% line coverage required"); verify they are met. Also read every row whose `Category` is `VERIFICATION`: each names the `AC-n` it covers, and that is the only thing that puts a criterion in state 2 of the Acceptance Criteria Mapping below.
 - `.kairos/<feature_folder>/ledger/decisions.md` — note any decisions that affect test strategy
 - `.kairos/<feature_folder>/ledger/open-questions.md` — answer any test-related questions from prior phases
 
@@ -112,8 +112,20 @@ Run the checks below. Each check produces zero or more issues.
 - Error paths covered (thrown errors, rejected promises, non-2xx responses)?
 - Boundaries covered (min, max, zero, empty, null, undefined, off-by-one)?
 - Edge cases (concurrency, timezone, locale, large input)?
-- Acceptance criteria from `01-requirements.md`'s Success Criteria list (by their own `AC-n` IDs) each mapped to ≥1 test?
+- Acceptance criteria from `01-requirements.md`'s Success Criteria list (by their own `AC-n` IDs) each accounted for — mapped to ≥1 test at whatever level verifies it, or verified outside the suite (see the three states below)?
 - For a pure function with a well-defined input domain (parser, validator, calculator), are there tests over generated/randomized or systematically-varied inputs, not only a handful of hand-picked examples?
+
+**The Acceptance Criteria Mapping table has three states, not two.** A unit test proves the code does what it was meant to do; it does not prove a use case works end to end, and stretching one to cover a use case is how a suite becomes slow, mocked, and dishonest. So each `AC-n` lands in exactly one of:
+
+1. **Covered by automation** — the `Tests` cell names the test(s), at whatever level actually verifies it: unit, integration, or end-to-end. The level is not the criterion; the assertion is.
+2. **Verified outside the suite** — write `manual — <Cn> → 5b` in the `Tests` cell, where `<Cn>` is the `constraints.md` row whose `Category` is `VERIFICATION` and whose text names this `AC-n`. Leave the `Gap` cell `—`. This is an integration-level check a person performs: it needs configuration, more than one application, sessions on separate machines, or a role nobody in the pipeline holds.
+3. **Gap** — nothing verifies it anywhere. The `Tests` cell is `—` and the `Gap` cell says what is missing.
+
+Only state 3 is a gap. It is the only one that counts in `gapIds`, the only one that reaches `convergence_signal.ac_gaps`, and therefore the only one that can drive the Phase 3 loop. Sending an implementer round the loop for a criterion that needs two machines produces one of two things: a mocked test that fakes the second actor and lies about coverage, or a loop that cannot converge and exits on the thrash check.
+
+State 2 is **never your judgment call**. It requires a `VERIFICATION` row that a human declared upstream, naming that `AC-n`; apply [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)'s §3 predicate (`Status` not `❌ dropped`) and §4 Reader Rule. No such row, or a row that does not name this `AC-n`, means state 3 — you never decide on your own that something is not automatable. If you believe a criterion belongs in state 2 and no row declares it, say so in one line under the table and still count it as a gap.
+
+A criterion in state 2 is not verified yet, only routed: `qa-plan-agent` (Phase 5b) writes the case and its setup, and its UAT Sign-off is where the `AC-n` gets accepted. When 5b does not run, the `VERIFICATION` row stays `🔴 open` and `release-planner-agent`'s final accounting puts it in front of a human before release — that is the net, and it is why state 2 is safe to exclude from the loop.
 
 #### 2. Coverage Adequacy
 - Line coverage ≥ 80%?
@@ -228,6 +240,7 @@ convergence_signal: { ac_gaps: 1, iteration: 1 }
 |----|-------|-----|
 | AC-1 | createCharge succeeds with valid card | — |
 | AC-3 | — | no test covers expired-card path |
+| AC-7 | manual — C4 → 5b | — |
 
 ## Issues
 | ID | Category | File:Line | Description | Impact | Mitigation/Fix | Disposition |
@@ -246,7 +259,7 @@ Follow [`artifact-bookkeeping`](../skills/artifact-bookkeeping/SKILL.md) for the
 Before adding a finding to the Issues table, verify it isn't a false positive: re-check the actual test and SUT code, not just the pattern that triggered the flag.
 
 `status` rules:
-- `READY` — zero `critical` and zero `high` issues, coverage check is `PASS`, and zero Acceptance Criteria gaps (when the Success Criteria list was available — see Input Validation above).
+- `READY` — zero `critical` and zero `high` issues, coverage check is `PASS`, and zero Acceptance Criteria gaps (when the Success Criteria list was available — see Input Validation above). A criterion routed to manual verification under a declared `VERIFICATION` row is not a gap and does not block `READY`.
 - `NEEDS_FIXES` — any `critical` or `high` issue, coverage `FAIL`, or any Acceptance Criteria gap.
 
 ## After Generating Output
@@ -305,7 +318,7 @@ Never rewrite an existing row's `Category` cell — it is set once by whoever cr
 
 ```markdown
 convergence_signal:
-  ac_gaps: <count of gapIds from the Acceptance Criteria Mapping table — 0 if the Success Criteria list was unavailable>
+  ac_gaps: <count of gapIds from the Acceptance Criteria Mapping table — state-3 rows only, never a criterion routed to manual verification by a declared `VERIFICATION` row; 0 if the Success Criteria list was unavailable>
   iteration: <iteration number from Loop State>
 ```
 
