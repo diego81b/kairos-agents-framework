@@ -272,6 +272,7 @@ User confirms coverage is adequate from `05-test-verification.md`. FAIL sends th
 
 - Build the coverage complement: what Test Verifier reported as uncovered, plus every `AC-n` with a gap
 - Write manual and exploratory test cases a person can execute without reading the code, each with the `Setup` it needs — applications, configuration, concurrent sessions, machines, roles
+- Answer any `VERIFICATION` constraint declared upstream — which case covers it, or a `high` risk row when none does; `N/A` when none was declared, which is the normal case
 - Select regression retests by grepping real callers of every changed symbol
 - List test data and environment needs, each with the line of code that demands it
 - State UAT sign-off per `AC-n`, and carry pm-agent's Outcome Criterion through verbatim
@@ -287,7 +288,7 @@ User reviews the plan before it goes to whoever will execute it. `NEEDS_ATTENTIO
 :::
 
 ::: tip Runs after the loop, and posts to the issue
-Phase 5b runs only once the Phase 3 loop has exited and its regression Guard has resolved — a QA plan written mid-loop describes code that is about to change again. It is also the one artifact whose reader sits outside the pipeline, so it posts itself to the issue tracker when an issue reference was given. No `jira`/`glab` on the machine is fine: it prints a paste-ready comment instead of failing the phase. That comment is the acceptance/QA split in practice: the issue's `AC-n` list stays developer-verifiable, and the setup a check really needs — two applications, a specific configuration, two sessions on two machines — travels in the comment instead of bloating the criteria.
+Phase 5b runs only once the Phase 3 loop has exited and its regression Guard has resolved — a QA plan written mid-loop describes code that is about to change again. It is also the one artifact whose reader sits outside the pipeline, so it posts itself to the issue tracker when an issue reference was given. No `jira`/`glab` on the machine is fine: it prints a paste-ready comment instead of failing the phase. That comment is the acceptance/QA split in practice: the issue's `AC-n` list stays developer-verifiable, and the setup a check really needs — two applications, a specific configuration, two sessions on two machines — travels in the comment instead of bloating the criteria. What gets posted is an extract, not the file: cases, setup, retests, test data and sign-off, without the Summary and Coverage Complement the gate reads and a tester cannot act on.
 :::
 
 ---

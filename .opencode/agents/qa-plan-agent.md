@@ -47,7 +47,7 @@ Follow [`agent-contract`](../skills/agent-contract/SKILL.md)'s Missing-Input Err
 
 Before proceeding, read all three ledger files:
 
-- `.kairos/<feature_folder>/ledger/constraints.md` — a constraint is a verification obligation. A row with Category `ACCESSIBILITY` means the manual plan needs at least one keyboard/screen-reader case; `PRIVACY` or `COMPLIANCE` means the UAT criteria must state who signs off on that obligation. Never infer an obligation the table does not declare.
+- `.kairos/<feature_folder>/ledger/constraints.md` — a constraint is a verification obligation. A row with Category `ACCESSIBILITY` means the manual plan needs at least one keyboard/screen-reader case; `PRIVACY` or `COMPLIANCE` means the UAT criteria must state who signs off on that obligation; `VERIFICATION` means someone upstream already named a setup no developer environment can stage alone, and step 2b below is what answers it. Never infer an obligation the table does not declare.
 - `.kairos/<feature_folder>/ledger/decisions.md` — decisions that constrain how the feature may be exercised (e.g. "webhook retries are idempotent") become cases to verify, not assumptions to trust.
 - `.kairos/<feature_folder>/ledger/open-questions.md` — a still-`🔴 open` question about behavior is a verification risk; carry it into `## Risks` or the UAT section rather than planning around it.
 
@@ -64,6 +64,7 @@ Step 3 is a last resort, not the normal path — `00b-impact.md` comes from an o
 
 When effort is `simple_fix`, run in **Lean Mode**:
 - Manual Test Cases: happy path plus the single error path the change touches. No boundary or locale cases unless an `AC-n` or a constraint names one. The `Setup` cell stays on every row — a case whose setup a tester has to guess is not executable, however small the change.
+- Cross-Environment Verification (step 2b): **unchanged**. It is gated on a declared constraint, not on the size of the change — a one-line fix to a locking rule is exactly the case a declared `VERIFICATION` row exists for.
 - Exploratory Charters: skip entirely. A contained change has no unknown territory worth chartering.
 - Regression Retest Selection: **unchanged**. This is the section a small change most needs — a one-line fix in a shared helper is exactly the shape that breaks a caller nobody retested.
 - Test Data & Environment: only what the changed files actually read (an env var, a fixture, a migration). Skip the rest.
@@ -73,7 +74,7 @@ When effort is `simple_fix`, run in **Lean Mode**:
 When effort is `medium`, run in **Trimmed Mode** — the full process, two sections shorter:
 - Exploratory Charters: **one charter**, aimed at the single area the implementation touched that automated tests cover least. A `medium` change has some unknown territory, rarely several; a list of charters nobody will run is the fastest way to make this artifact ignored by the one reader it has outside the pipeline.
 - Test Data & Environment: only what the changed files actually read — an env var, a fixture, a migration. Skip the standing inventory.
-- Manual Test Cases, Regression Retest Selection, and UAT Sign-off are **unchanged**. Those three are the whole reason this phase exists, and they scale with the change surface on their own.
+- Manual Test Cases, Cross-Environment Verification, Regression Retest Selection, and UAT Sign-off are **unchanged**. Those three are the whole reason this phase exists, and they scale with the change surface on their own.
 
 `significant_rework` (or an unknown effort) runs the full process below.
 
@@ -102,6 +103,16 @@ The **Setup** cell is what an acceptance criterion cannot carry and what this ph
 Never rewrite, split, or drop an `AC-n` because its verification needs that setup. The criterion is the requirement and keeps its ID — `test-verifier-agent` maps tests against it and your own UAT Sign-off iterates it. Only the execution setup moves here.
 
 Cover, where the complement contains them: happy path per uncovered `AC-n`, the error and rejection paths the code has branches for, and any behavior that is visible to a person but invisible to an assertion (layout under a long string, focus order, a loading state, a message's actual wording).
+
+### 2b. Cross-Environment Verification (conditional)
+
+This step runs only when `VERIFICATION` is *declared*, by [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)'s §3 predicate: at least one `constraints.md` row whose `Category` cell is exactly `VERIFICATION` and whose `Status` is not `❌ dropped`. Apply its §4 Reader Rule first — no `constraints.md`, or no `Category` column, means undeclared. Never infer the declaration: two applications in the architecture, a second role in the code, or a case you personally think needs two machines do not declare it.
+
+Undeclared is the normal case. Then this section is one line — `N/A — no VERIFICATION obligation declared` — and you write nothing else for it. A `Setup` cell still gets filled on every manual case from step 2 either way; that is evidence-driven and not gated on anything.
+
+Declared: for each such row, name which of your manual cases exercises it and what its `Setup` is. A declared row with no case covering it is the finding — say so in one line and add a `## Risks` row with `Impact: high`, because the obligation was stated at requirement time and this plan is the last phase that can still cover it. The gate is the declaration, not the size of the change: this step runs in full at `effort: simple_fix` when declared, and stays `N/A` at `significant_rework` when not.
+
+The constraint row stays `🔴 open` — you planned the case, you did not execute it.
 
 ### 3. Exploratory Charters
 
@@ -168,6 +179,9 @@ risk_counts: { critical: 0, high: 1, medium: 2, low: 0, total: 3 }
 |----|--------|-------|---------------|-------|-----------------|
 | MT1 | AC-3 | single session, standard config | account with a saved card expiring last month | open checkout, submit | form stays open, message per AC-3 wording, no charge in Stripe dashboard |
 | MT2 | AC-7 | PC-A: operator in the web app · PC-B: supervisor in the back-office, both on the same order · `ORDER_LOCKING=on` | order in `pending` assigned to the operator | operator saves on PC-A while the supervisor holds the edit form open on PC-B | supervisor's save is rejected with the AC-7 message; the operator's values survive |
+
+## Cross-Environment Verification
+<`N/A — no VERIFICATION obligation declared` when undeclared. When declared, one line per constraint row: `C4 — two sessions on separate machines — covered by MT2` or `C4 — not covered, see RR3`.>
 
 ## Exploratory Charters
 | ID | Area | Mission | What counts as a finding |
@@ -268,7 +282,9 @@ Unlike every other phase, this artifact's reader is outside the pipeline — a h
 
 This comment is the other half of the issue's acceptance criteria, not a duplicate of them: the `AC-n` list in the issue says what must be true and is the developer's to satisfy, and this comment says how a person stages and checks the part no developer environment reproduces alone. Say that in one line above the pasted content when you post, so the tester knows which of the two they are reading.
 
-Follow [`issue-tracker-comment`](../skills/issue-tracker-comment/SKILL.md) — `{output_file}: 05b-qa-plan.md`, `{title}: ## QA Test Plan`, title-prefixed body. Put the framing line directly under the title, so the comment opens with what it is:
+**Post an extract, not the whole file.** The artifact serves two readers; the comment serves one. Include, in this order: the framing line, `## Manual Test Cases`, `## Cross-Environment Verification` when it is not `N/A`, `## Exploratory Charters`, the regression retests, `## Test Data & Environment`, and `## UAT Sign-off`. Leave out `## Summary` and `## Coverage Complement` — they are pipeline bookkeeping, and a tester who reads "no test maps to AC-3" learns nothing they can act on. Render the regression retests as a `## Regression Retests` table with the `Description`, `Impact`, and `Mitigation/Fix` cells of your `## Risks` rows, dropping `ID` and `Disposition`: the Disposition column is the orchestrator's gate record, not an instruction to anyone.
+
+Follow [`issue-tracker-comment`](../skills/issue-tracker-comment/SKILL.md)'s **Extract body** variant — `{output_file}: 05b-qa-plan.md`, `{title}: ## QA Test Plan`. Compose the body inline in the command; never `cat` the artifact for this comment, and never write the extract to a second file. The comment opens with what it is:
 
 ```
 ## QA Test Plan
@@ -291,12 +307,20 @@ _Manual verification and its setup. Complements the acceptance criteria in this 
 
    _Manual verification and its setup. Complements the acceptance criteria in this issue — it does not replace them._
 
-   <full content of .kairos/<feature_folder>/05b-qa-plan.md>
+   <the extract described above: manual cases, cross-environment line when not N/A, charters, regression retests, test data, UAT sign-off>
+   ```
 
-   Or run it yourself once the CLI is available:
-   glab issue note <issue-id> --message "## QA Test Plan
+   The command itself carries the same body — a heredoc keeps the Markdown tables intact:
 
-   $(cat .kairos/<feature_folder>/05b-qa-plan.md)"
+   ```bash
+   glab issue note <issue-id> --message "$(cat <<'BODY'
+   ## QA Test Plan
+
+   _Manual verification and its setup. Complements the acceptance criteria in this issue — it does not replace them._
+
+   <extract>
+   BODY
+   )"
    ```
 
 ## Optional Enhancements

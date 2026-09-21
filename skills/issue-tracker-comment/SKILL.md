@@ -24,7 +24,7 @@ glab issue note <issue-id> --message "$(cat .kairos/<feature_folder>/{output_fil
 
 ## Title-prefixed body
 
-`pm-agent`, `architect-agent`'s implementer counterparts (`implementer-tdd-agent`, `implementer-coder-agent`), `impact-assessment-agent`, and `qa-plan-agent` prefix `{title}` before the file content instead:
+`pm-agent`, `architect-agent`'s implementer counterparts (`implementer-tdd-agent`, `implementer-coder-agent`), and `impact-assessment-agent` prefix `{title}` before the file content instead:
 
 **Jira** (`jira-cli`):
 ```bash
@@ -35,6 +35,32 @@ jira issue comment add PROJ-42 "{title}\n\n$(cat .kairos/<feature_folder>/{outpu
 ```bash
 glab issue note <issue-id> --message "{title}\n\n$(cat .kairos/<feature_folder>/{output_file})"
 ```
+
+## Extract body
+
+`qa-plan-agent` posts a subset of its artifact rather than the file: its reader is a tester, and half of `05b-qa-plan.md` is pipeline bookkeeping that tester cannot act on. The agent's own step names which sections go in. Compose the body inline — no `cat` of the artifact, and no second file written to hold the extract:
+
+**GitLab** (`glab`):
+```bash
+glab issue note <issue-id> --message "$(cat <<'BODY'
+{title}
+
+<extract>
+BODY
+)"
+```
+
+**Jira** (`jira-cli`):
+```bash
+jira issue comment add PROJ-42 "$(cat <<'BODY'
+{title}
+
+<extract>
+BODY
+)"
+```
+
+A heredoc, not an inline string: the extract carries Markdown tables and backticks, and quoting those into a one-line argument is how a comment arrives mangled.
 
 ## Bitbucket (REST API)
 

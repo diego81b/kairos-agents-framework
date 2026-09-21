@@ -100,11 +100,13 @@ Ask the accessibility and regulatory questions only where they can plausibly app
 **"I don't know" is an answer, not a blocker.** When the human says they don't know, can't decide, or doesn't answer: pick the most defensible value from what the code already does, write it into the requirements explicitly marked as an assumption, add an `open-questions.md` row (source `human`, status `🔴 open`) naming the question and the assumption you made in its place, and continue. Never re-ask, never block the phase, never invent a number and present it as established. A recorded assumption is visible at every downstream gate and cheap to correct there; a phase stalled on a decision the human isn't equipped to make costs far more than a wrong default that's labelled as one.
 
 ### 3. Constraint Elicitation
-Identify constraints and assign each one a `Category` from the closed vocabulary in [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md): `PERFORMANCE`, `SCALE`, `SECURITY`, `PRIVACY`, `COMPLIANCE`, `ACCESSIBILITY`, `I18N`, `TEAM`, `TIMELINE`, `COMPATIBILITY`, `OTHER`.
+Identify constraints and assign each one a `Category` from the closed vocabulary in [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md): `PERFORMANCE`, `SCALE`, `SECURITY`, `PRIVACY`, `COMPLIANCE`, `ACCESSIBILITY`, `I18N`, `TEAM`, `TIMELINE`, `COMPATIBILITY`, `VERIFICATION`, `OTHER`.
 
 `SECURITY`, `PRIVACY`, and `COMPLIANCE` are three different things and must not be collapsed into one row: hardening is `SECURITY`, personal-data duties are `PRIVACY`, a named external regime is `COMPLIANCE`.
 
-**Do not invent an obligation the human did not state.** An absent category is the normal case and is what keeps downstream conditional checks quiet — `ACCESSIBILITY`, `PRIVACY`, and `COMPLIANCE` rows each arm a review section that would otherwise stay silent, so write one only when the human actually declared the obligation. Use `OTHER` rather than stretching a category to fit.
+`VERIFICATION` is the one category about checking rather than about the system: it records that verifying something here needs a setup a developer cannot stage alone — two applications running together, a particular configuration, concurrent sessions on distinct machines, a role or tenant they do not hold. Ask for it only where the human's own description already implies more than one actor or system in the same scenario, and state the consequence: "if checking this needs a second operator on another machine, Phase 5b writes the setup and posts it to the issue; the acceptance criterion itself stays as it is." A declared row never changes how a criterion is written — see step 6.
+
+**Do not invent an obligation the human did not state.** An absent category is the normal case and is what keeps downstream conditional checks quiet — `ACCESSIBILITY`, `PRIVACY`, `COMPLIANCE`, and `VERIFICATION` rows each arm a check that would otherwise stay silent, so write one only when the human actually declared the obligation. Use `OTHER` rather than stretching a category to fit.
 
 ### 4. Identify Scope
 What's INCLUDED in feature?
@@ -272,6 +274,7 @@ Every constraint this phase elicited is written here and only here — the body'
 - `PERFORMANCE: < 200ms p95` → `"Latency must be < 200ms at p95"`, Category `PERFORMANCE`
 - `COMPLIANCE: PCI-DSS Level 2` → `"PCI-DSS Level 2 compliance required"`, Category `COMPLIANCE`
 - `ACCESSIBILITY: WCAG 2.2 AA` → `"WCAG 2.2 AA on all public-facing screens"`, Category `ACCESSIBILITY`
+- `VERIFICATION: concurrent edit` → `"Checking concurrent-edit behavior needs two signed-in sessions on separate machines"`, Category `VERIFICATION`
 
 Freshly-surfaced Risks table rows are a separate case: when orchestrator-invoked, the orchestrator's Risk Disposition Loop writes their constraint/open-question rows itself, sourced from the human's per-item choice — do not also write them here, or they'll be duplicated. When running standalone (no orchestrator loop ran), write them yourself as above, one constraint row per risk mitigation.
 

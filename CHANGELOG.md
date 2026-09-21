@@ -13,11 +13,15 @@ Nothing is dropped or renumbered for this: `test-verifier-agent` maps tests agai
 ### Added
 
 - **`agents/qa-plan-agent.md`** — Manual Test Cases gain a **`Setup`** column: the applications that must be running, the configuration or flag the case needs, how many concurrent sessions and on which machines, and the role each session is signed in as. Filled only where the case needs it (`single session, standard config` is a complete answer), and kept in Lean Mode too — a case whose setup a tester has to guess is not executable. The agent now also names the two reasons a check is manual: no assertion can see it, or no single developer environment can stage it.
+- **`skills/constraint-taxonomy/SKILL.md`** — twelfth category `VERIFICATION`: a check no single developer environment can stage. It is the third tenant of the declared-obligation mechanism, after `ACCESSIBILITY` and `PRIVACY`/`COMPLIANCE`, and it records how something is *checked*, never what the system must do — the requirement stays an acceptance criterion.
+- **`agents/qa-plan-agent.md`** — new conditional step **2b Cross-Environment Verification**, gated on a declared `VERIFICATION` row exactly like the existing accessibility and privacy checks: it names which manual case covers each declared row, or raises a `high` risk when none does. Undeclared prints one `N/A` line, which is the normal case, and the step is never skipped by Lean or Trimmed Mode — the gate is the declaration, not the size of the change.
+- **`agents/pm-agent.md`** — elicits `VERIFICATION` where the human's own description already implies more than one actor or system in the same scenario, and never manufactures it otherwise.
 - **`agents/pm-agent.md`** — a criterion states a trigger and an observable outcome, never the setup needed to produce it. A criterion whose verification needs heavy choreography is still written and still keeps its `AC-n`; the choreography is planned in Phase 5b instead of being folded into the criterion or used as a reason to drop it.
 
 ### Changed
 
 - **`agents/qa-plan-agent.md`** — the Issue Tracker Comment step now opens the posted comment with a line saying what it is: the manual half beside the issue's acceptance criteria, not a replacement for them. Same line in the paste-ready fallback used when no `jira`/`glab` is installed.
+- **`agents/qa-plan-agent.md`**, **`skills/issue-tracker-comment/SKILL.md`** — that comment now carries an **extract** instead of the whole artifact: manual cases with their setup, the cross-environment line, charters, regression retests, test data and UAT sign-off. The `## Summary` and `## Coverage Complement` sections stay in `.kairos/`, where the gate reads them; the `Disposition` column, which is the orchestrator's gate record, never reaches the tester. New **Extract body** variant in the shared skill, composed inline through a heredoc so Markdown tables survive quoting.
 - **`docs/workflow.md`**, **`docs/agents.md`**, **`CLAUDE.md`** — document the split at both ends of the pipeline: Phase 1's acceptance-criteria bullet and Phase 5b's QA-comment note.
 
 ### Fixed
