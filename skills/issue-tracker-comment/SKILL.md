@@ -19,7 +19,7 @@ jira issue comment add PROJ-42 "$(cat .kairos/<feature_folder>/{output_file})"
 
 **GitLab** (`glab`):
 ```bash
-glab issue note <issue-id> --body "$(cat .kairos/<feature_folder>/{output_file})"
+glab issue note <issue-id> --message "$(cat .kairos/<feature_folder>/{output_file})"
 ```
 
 ## Title-prefixed body
@@ -33,7 +33,7 @@ jira issue comment add PROJ-42 "{title}\n\n$(cat .kairos/<feature_folder>/{outpu
 
 **GitLab** (`glab`):
 ```bash
-glab issue note <issue-id> --body "{title}\n\n$(cat .kairos/<feature_folder>/{output_file})"
+glab issue note <issue-id> --message "{title}\n\n$(cat .kairos/<feature_folder>/{output_file})"
 ```
 
 ## Bitbucket (REST API)

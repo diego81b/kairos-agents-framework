@@ -220,7 +220,7 @@ Each agent posts its validated output as a comment after your approval:
 jira issue comment add PROJ-42 "$(cat .kairos/PROJ-42_my-feature/01-requirements.md)"
 
 # GitLab (glab CLI — https://gitlab.com/gitlab-org/cli)
-glab issue note 42 --body "$(cat .kairos/issue-42_my-feature/01-requirements.md)"
+glab issue note 42 --message "$(cat .kairos/issue-42_my-feature/01-requirements.md)"
 
 # Bitbucket (REST API)
 curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issues/42/comments" \

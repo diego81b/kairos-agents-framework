@@ -90,6 +90,17 @@ non-final code. 5b runs once, on settled code. Its output is also the one artifa
 reader is outside the pipeline, so its Issue Tracker Comment step is recommended rather than
 merely offered — and degrades to a paste-ready block when no tracker CLI is installed.
 
+That comment is also where the acceptance/QA split lands. An `AC-n` states a trigger and an
+observable outcome and stays verifiable by the developer in their own environment; it never
+carries the choreography a check needs — several applications running together, a particular
+configuration, two concurrent sessions on distinct machines, a role or environment the
+developer does not own. That choreography is the `Setup` column of 5b's Manual Test Cases,
+and posting the plan on the issue is what hands it to whoever executes it. The `AC-n` itself
+is never dropped or rewritten for this reason: `test-verifier-agent` maps tests against those
+IDs and 5b's own UAT Sign-off iterates them, so a criterion that exists only as a QA case has
+no ID to be signed off against. The requirement stays in the issue; the setup moves to the
+comment.
+
 Two more standalone agents sit off that table entirely: `bug-triage-agent.md`
 (`00c-bug-triage.md`) is the entry point for a bug report rather than a feature request, and
 `dependency-audit-agent.md` (`.kairos/_tech-debt.md`) runs outside any feature at all.

@@ -4,6 +4,28 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v8.2.0 — September 21, 2026
+
+Separates what the developer must satisfy from what a tester must stage. Acceptance criteria were absorbing both, and a criterion that needs two applications, a particular configuration, or two concurrent sessions on two machines to be checked stops being readable as a requirement — so the setup now travels in Phase 5b's QA comment on the issue, while the `AC-n` stays exactly where it was.
+
+Nothing is dropped or renumbered for this: `test-verifier-agent` maps tests against those IDs and `qa-plan-agent`'s own UAT Sign-off iterates them, so a criterion that existed only as a QA case would have no ID to be signed off against. The requirement stays in the issue; the choreography moves to the comment.
+
+### Added
+
+- **`agents/qa-plan-agent.md`** — Manual Test Cases gain a **`Setup`** column: the applications that must be running, the configuration or flag the case needs, how many concurrent sessions and on which machines, and the role each session is signed in as. Filled only where the case needs it (`single session, standard config` is a complete answer), and kept in Lean Mode too — a case whose setup a tester has to guess is not executable. The agent now also names the two reasons a check is manual: no assertion can see it, or no single developer environment can stage it.
+- **`agents/pm-agent.md`** — a criterion states a trigger and an observable outcome, never the setup needed to produce it. A criterion whose verification needs heavy choreography is still written and still keeps its `AC-n`; the choreography is planned in Phase 5b instead of being folded into the criterion or used as a reason to drop it.
+
+### Changed
+
+- **`agents/qa-plan-agent.md`** — the Issue Tracker Comment step now opens the posted comment with a line saying what it is: the manual half beside the issue's acceptance criteria, not a replacement for them. Same line in the paste-ready fallback used when no `jira`/`glab` is installed.
+- **`docs/workflow.md`**, **`docs/agents.md`**, **`CLAUDE.md`** — document the split at both ends of the pipeline: Phase 1's acceptance-criteria bullet and Phase 5b's QA-comment note.
+
+### Fixed
+
+- **`skills/issue-tracker-comment/SKILL.md`**, **`agents/qa-plan-agent.md`**, **`docs/workflow.md`**, **`docs/setup/claude-code.md`** — every GitLab example used `glab issue note --body`, a flag that does not exist: the command takes `-m` / `--message`, so a copy-pasted post failed on the spot. Corrected everywhere, mirrors included.
+
+---
+
 ## v8.1.0 — September 17, 2026
 
 Makes the effort classification actually reach the agents that were written to act on it, and cuts the two costs a run pays regardless of size: a Full process on a small change, and a gate question nobody can answer. It also stops open questions being invisible until the pipeline is over.
