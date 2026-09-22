@@ -472,7 +472,7 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
       iteration: 1 of <max_retries>
       blocking_prev: null
       blocking_curr: <count of critical/high issues from {checker}'s output, plus `convergence_signal.ac_gaps` when `{checker}` is test-verifier-agent (its Acceptance Criteria gap count) — code-reviewer-agent has no AC concept, so the Phase 4 loop uses critical/high alone>
-      cumulative_issues: <critical/high issues[] from {checker}'s output, plus each Acceptance Criteria Mapping gap row (AC id + what's missing) when `{checker}` is test-verifier-agent — this iteration's list only, replaced in full each iteration below, never accumulated across iterations despite the field name>
+      cumulative_issues: <critical/high issues[] from {checker}'s output, plus each Acceptance Criteria Mapping gap row (AC id + what's missing — state-3 rows only, never one routed to manual verification) when `{checker}` is test-verifier-agent — this iteration's list only, replaced in full each iteration below, never accumulated across iterations despite the field name>
       ```
    2. **Loop** — repeat until exit condition:
       a. Re-invoke the active Phase-3 implementer **as step 3b** — `implementer-tdd-agent`, `implementer-coder-agent`, or `implementer-lead-agent`, whichever was selected in Step 3's routing decision (all three detect Iteration Mode from the ledger automatically). Never re-invoke step 3a from inside a loop: the plan is already approved, a fresh plan would return `pending_approval`, and a non-advancing status inside a loop is an infinite loop.
@@ -622,7 +622,7 @@ KAIROS is a HITL pipeline. After EVERY active subagent completes:
    - `question`: one line naming the phase and its verdict, e.g. `"PM analysis ready — how do you want to proceed?"`
    - `header`: short phase label, e.g. `"PM Gate"`, `"Architect Gate"`, `"Release Gate"` (≤12 chars)
    - `options` (exactly these 4, in this order):
-     - **Approve** — continue to the next active agent. Mark `(Recommended)` when the subagent reported no blocking status (no `NEEDS_FIXES` / `VULNERABILITIES_FOUND` / `NEEDS_ATTENTION` / `blocked` / `promptable: no`, no `critical`/`high` item, and no unresolved **Escalate** from step 2).
+     - **Approve** — continue to the next active agent. Mark `(Recommended)` when the subagent reported no blocking status (no `NEEDS_FIXES` / `VULNERABILITIES_FOUND` / `NEEDS_ATTENTION` / `blocked` / `promptable: no`, no `critical`/`high` item, and no unresolved **Escalate** from step 2). **Carve-out for the phases with no pass/fail state** — the rows in [`artifact-bookkeeping`](../skills/artifact-bookkeeping/SKILL.md) §2 that read *no pass/fail state* (`pm-agent`, `impact-assessment-agent`, `context-extractor-agent`, `bug-triage-agent`, `dependency-audit-agent`), plus the Phase 3a plan artifact already carved out in step 1a above: a `critical`/`high` row that step 2 has **already dispositioned** does not strip this recommendation. The human's answer to that row was Mitigate now, which binds it as a requirement for the next phase; Request changes would throw away an artifact that is doing its job and regenerate the same risk. An unresolved **Escalate** still flips the recommendation, and an undispositioned row never reaches this step — without this carve-out a requirements analysis naming one high risk leaves the gate with no recommended option at all, which is exactly what step 2 forbids one row lower down.
      - **Request changes** — re-run this agent with feedback. Mark `(Recommended)` instead of Approve when the subagent reported a blocking status (including `promptable: no`), or step 2 produced an **Escalate**. When `promptable: no` drove the recommendation, pass architect-agent's Promptable Gaps table along as the feedback for the re-run instead of asking the human to restate it.
      - **Skip next** — approve this output, skip the next agent in the pipeline.
      - **Stop pipeline** — halt; do not call any further agent. Mark `(Recommended)` — over both Approve and Request changes — when step 2 produced a **Refute premise** disposition: the pipeline is aimed at a scenario the input itself misdescribed, so say plainly that the right move is to rescope the issue or close it. Request changes is not the answer there — re-running the phase against a false premise just regenerates output for a scenario that cannot occur. Approve remains available if the human judges the refutation wrong.
@@ -793,6 +793,7 @@ With issue number (`"Add Stripe payments — issue #42"`):
 .kairos/
 ├── _lessons.md                    ← Retrospective Agent / Improvement Advisor — project-wide, see below
 ├── _tech-debt.md                  ← Dependency Audit Agent (standalone, periodic) — project-wide, see below
+├── _qa-regression.md              ← QA Plan Agent — cumulative manual case catalogue, project-wide, see below
 ├── decisions/
 │   └── ADR-001-<slug>.md          ← Improvement Advisor — project-wide, see below
 └── issue-42_add-stripe-payments/

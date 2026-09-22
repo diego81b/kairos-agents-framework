@@ -41,7 +41,14 @@ No install required — these ship with Claude Code.
 | `security-review` | Adversarial security audit checklist — asks "how do I break this," not just "does this pass a compliance box" | `security-reviewer-agent`, `teammate-backend-agent` |
 | `verify` / `run` | Actually executes the project (build, test, run) to confirm a change works, instead of trusting a static read of the code | `implementer-tdd-agent`, `implementer-coder-agent`, `test-verifier-agent`, `teammate-tests-agent`, `teammate-frontend-agent`, `release-planner-agent` |
 | `deep-research` | Multi-source investigation pattern for open-ended questions, before committing to an answer | `context-extractor-agent`, `impact-assessment-agent`, `pm-agent`, `architect-agent`, `retrospective-agent` |
-| `outcome-issue-generator` | Drafts outcome-driven issue/ticket text from a requirement | `pm-agent` |
+
+### User-installed skills
+
+Not shipped with Claude Code and not part of the KAIROS plugin — a personal or third-party skill the user installs themselves. KAIROS never requires it.
+
+| Skill | What it does | Agents that benefit |
+|-------|---------------|---------------------|
+| `issues-generator` | Drafts GitHub/GitLab issue text from a requirement, in either an implementation-ready or an outcome-driven mode | `pm-agent` |
 
 ### Internal (KAIROS-authored) skills
 
@@ -51,7 +58,7 @@ No install required — these ship as part of the KAIROS plugin itself, under `s
 |-------|-------------------|---------------------|
 | [`agent-contract`](/skills/agent-contract/SKILL) | One shared `🚨 AGENT ERROR` format for a missing required input, instead of nine agents each inventing their own wording | `pm-agent`, `architect-agent`, `impact-assessment-agent`, `code-reviewer-agent`, `security-reviewer-agent`, `test-verifier-agent`, `qa-plan-agent`, `release-planner-agent`, `documentation-agent`, `retrospective-agent` |
 | [`analysis-discipline`](/skills/analysis-discipline/SKILL) | Review-side counterpart of `coding-discipline`: evidence-backed findings, restraint on low-value nitpicks, scope-bounded investigation, and brief direct pushback when the evidence contradicts the requested approach | `context-extractor-agent`, `impact-assessment-agent`, `bug-triage-agent`, `pm-agent`, `architect-agent`, `code-reviewer-agent`, `security-reviewer-agent`, `test-verifier-agent`, `qa-plan-agent`, `dependency-audit-agent` |
-| [`constraint-taxonomy`](/skills/constraint-taxonomy/SKILL) | The closed `Category` vocabulary of `ledger/constraints.md`, written once at row creation and never rewritten, plus the reader/writer/gating rules that let a review section run only when its obligation was declared upstream — an obligation is never inferred from the code | every agent that creates or updates a constraint row, plus `code-reviewer-agent` (Accessibility) and `security-reviewer-agent` (Compliance & Privacy), which are gated on it |
+| [`constraint-taxonomy`](/skills/constraint-taxonomy/SKILL) | The closed `Category` vocabulary of `ledger/constraints.md`, written once at row creation and never rewritten, plus the reader/writer/gating rules that let a review section run only when its obligation was declared upstream — an obligation is never inferred from the code | every agent that creates or updates a constraint row, plus `code-reviewer-agent` (Accessibility), `security-reviewer-agent` (Compliance & Privacy) and `qa-plan-agent` (Cross-Environment Verification), which are gated on it |
 | [`contract-checklist`](/skills/contract-checklist/SKILL) | 9 questions to resolve before finalizing any API/DB contract — entity lifecycle, IDOR risk, idempotency, delete behavior, pagination, error shape | `architect-agent`, `implementer-lead-agent` |
 | [`threat-model`](/skills/threat-model/SKILL) | Design-time STRIDE-lite: trust boundaries, attack surface added, who holds authority, what the attacker controls, data crossing the boundary, failure and abuse, blast radius — findings land in the architecture artifact's own Risks table | `architect-agent` (Step 5b) |
 | [`migration-safety`](/skills/migration-safety/SKILL) | Expand/contract sequencing, lock duration at production row counts, idempotent and restartable backfill, reversibility, what a code rollback does to data already written in the new shape, ordering against the code deploy | `architect-agent` (when the data model changes), `release-planner-agent` (rollback strategy) |
@@ -59,7 +66,7 @@ No install required — these ship as part of the KAIROS plugin itself, under `s
 | [`artifact-bookkeeping`](/skills/artifact-bookkeeping/SKILL) | Pure-arithmetic rules for tallying a Risk/Issue/Finding table by impact and deriving each phase's pass/fail status from a fixed threshold — no agent "eyeballs" a count | `pm-agent`, `architect-agent`, `impact-assessment-agent`, both implementers, `code-reviewer-agent`, `security-reviewer-agent`, `test-verifier-agent`, `qa-plan-agent`, `release-planner-agent`, `documentation-agent`, `orchestrator-agent` |
 | [`artifact-template`](/skills/artifact-template/SKILL) | The mandatory 4-line `## Summary` head block every phase artifact opens with, and the fixed column sets for any table the Risk Disposition Loop parses — so a gate is readable in seconds and no two phases spell `Mitigation/Fix` differently | every agent that writes a `.kairos/` phase artifact, plus `orchestrator-agent` (reads the Summary at each gate) |
 | [`coding-discipline`](/skills/coding-discipline/SKILL) | Pre-implementation checklist: scope discipline, no speculative abstraction, surface assumptions, trust boundaries, WHY-only comments | `implementer-tdd-agent`, `implementer-coder-agent`, `implementer-lead-agent`, all 4 teammate agents |
-| [`issue-tracker-comment`](/skills/issue-tracker-comment/SKILL) | Shared jira/glab/bitbucket commands for posting a phase's output as a comment on the originating issue | every phase agent's own optional tracker-comment step |
+| [`issue-tracker-comment`](/skills/issue-tracker-comment/SKILL) | Shared jira/glab/bitbucket commands for posting a phase's output as a comment on the originating issue — whole file, title-prefixed, or the extract body `qa-plan-agent` sends a tester | every phase agent's own optional tracker-comment step |
 
 These replace what used to be third-party plugin dependencies (`karpathy-guidelines` and 11 Trail of Bits plugins) — see `CHANGELOG.md` for the removal. Their guidance was folded into each consuming agent's own checklist natively (a concrete check item, an unconditional process step) rather than gated behind "if this external skill is installed."
 
@@ -67,13 +74,13 @@ These replace what used to be third-party plugin dependencies (`karpathy-guideli
 
 ## Full agent × enhancement map
 
-| Agent | Phase | Built-in skills | MCP |
+| Agent | Phase | Skills | MCP |
 |-------|-------|-----------------|-----|
 | `orchestrator-agent` | Coordinator | — | — |
 | `context-extractor-agent` | Pre | `deep-research` | — |
 | `impact-assessment-agent` | Pre | `deep-research` | — |
 | `bug-triage-agent` | Pre (bugs) | `deep-research` | — |
-| `pm-agent` | 1 | `deep-research`, `outcome-issue-generator` | — |
+| `pm-agent` | 1 | `deep-research`, `issues-generator` | — |
 | `architect-agent` | 2 | `deep-research` | — |
 | `implementer-tdd-agent` | 3a | `verify`/`run` | — |
 | `implementer-coder-agent` | 3b | `verify`/`run` | — |

@@ -100,11 +100,13 @@ Ask the accessibility and regulatory questions only where they can plausibly app
 **"I don't know" is an answer, not a blocker.** When the human says they don't know, can't decide, or doesn't answer: pick the most defensible value from what the code already does, write it into the requirements explicitly marked as an assumption, add an `open-questions.md` row (source `human`, status `🔴 open`) naming the question and the assumption you made in its place, and continue. Never re-ask, never block the phase, never invent a number and present it as established. A recorded assumption is visible at every downstream gate and cheap to correct there; a phase stalled on a decision the human isn't equipped to make costs far more than a wrong default that's labelled as one.
 
 ### 3. Constraint Elicitation
-Identify constraints and assign each one a `Category` from the closed vocabulary in [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md): `PERFORMANCE`, `SCALE`, `SECURITY`, `PRIVACY`, `COMPLIANCE`, `ACCESSIBILITY`, `I18N`, `TEAM`, `TIMELINE`, `COMPATIBILITY`, `OTHER`.
+Identify constraints and assign each one a `Category` from the closed vocabulary in [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md): `PERFORMANCE`, `SCALE`, `SECURITY`, `PRIVACY`, `COMPLIANCE`, `ACCESSIBILITY`, `I18N`, `TEAM`, `TIMELINE`, `COMPATIBILITY`, `VERIFICATION`, `OTHER`.
 
 `SECURITY`, `PRIVACY`, and `COMPLIANCE` are three different things and must not be collapsed into one row: hardening is `SECURITY`, personal-data duties are `PRIVACY`, a named external regime is `COMPLIANCE`.
 
-**Do not invent an obligation the human did not state.** An absent category is the normal case and is what keeps downstream conditional checks quiet — `ACCESSIBILITY`, `PRIVACY`, and `COMPLIANCE` rows each arm a review section that would otherwise stay silent, so write one only when the human actually declared the obligation. Use `OTHER` rather than stretching a category to fit.
+`VERIFICATION` is the one category about checking rather than about the system: it records that verifying something here needs a setup a developer cannot stage alone — two applications running together, a particular configuration, concurrent sessions on distinct machines, a role or tenant they do not hold. **Its `Constraint` text must name the `AC-n` it covers**, because that naming is what `test-verifier-agent` reads to classify those criteria as verified outside the suite instead of as coverage gaps — an unnamed criterion is a gap, and a gap drives the Phase 3 loop against a test nobody can write. Ask for it only where the human's own description already implies more than one actor or system in the same scenario, and state the consequence: "if checking this needs a second operator on another machine, Phase 5b writes the setup and posts it to the issue; the acceptance criterion itself stays as it is." A declared row never changes how a criterion is written — see step 6.
+
+**Do not invent an obligation the human did not state.** An absent category is the normal case and is what keeps downstream conditional checks quiet — `ACCESSIBILITY`, `PRIVACY`, `COMPLIANCE`, and `VERIFICATION` rows each arm a check that would otherwise stay silent, so write one only when the human actually declared the obligation. Use `OTHER` rather than stretching a category to fit.
 
 ### 4. Identify Scope
 What's INCLUDED in feature?
@@ -141,6 +143,8 @@ Phrase each criterion in **EARS form** where the requirement genuinely has a tri
 If no such statement can be written, say so explicitly instead of inventing a metric nobody will check. "This ships because a customer contract requires it" is a legitimate answer; a fabricated adoption target is not. Skipped entirely in **Lean Mode** (`simple_fix`).
 
 **Give every criterion an explicit, stable ID**, written as a leading `AC-n — ` on the criterion itself: `AC-1 — When a charge request includes an expired card, …`. These IDs are what `test-verifier-agent` maps tests against and what every downstream artifact cites, so they must survive edits: assign them here, at the source, and never renumber. On a Request-changes re-run, a criterion you remove leaves its ID burned (never reassigned to a different criterion) and a criterion you add takes the next free number — even if that leaves a gap in the sequence. Positional numbering assigned downstream would silently change what `AC-3` refers to the moment a criterion is inserted or dropped, invalidating every reference already written in other phases.
+
+**A criterion states a trigger and an observable outcome, never the setup needed to produce it.** Keep every `AC-n` verifiable by the developer who implements it, in their own environment — by an automated test or by a check they can run alone. When verifying one genuinely requires choreography (two applications running together, a particular configuration, concurrent sessions on distinct machines, a role the developer does not hold), the criterion still gets written and still gets its ID: the choreography is not its business. It is planned in Phase 5b (`qa-plan-agent`), which carries it in the `Setup` column of its manual cases and posts it on the issue for whoever tests it. Do not fold a setup description into a criterion, and do not drop a criterion because its setup is heavy.
 
 When step 4b produced Use Cases, also tag each criterion that belongs to one with a trailing `(UC-1)` — so the chain from functional flow to testable criterion stays traceable. A criterion with no matching UC (e.g. a pure data-shape or non-functional requirement) carries no tag.
 
@@ -219,17 +223,37 @@ If a risk's reasoning doesn't fit one row, keep a one-line Description with a "s
 
 ## After Generating Output
 
+### Risk Disposition Loop (standalone runs only)
+If invoked by the orchestrator, skip this — it runs the same loop itself, centrally, over the file written in step 2 (see its HITL section). Run it here only when running standalone, so a standalone run resolves a multi-row Risks table one row at a time instead of approving or rejecting every row as a single bundle.
+
+> **Risk Disposition Loop** — before presenting the gate below, resolve every `## Risks` row whose Disposition cell is still empty. Unlike `impact-assessment-agent`, which asks the questions and hands the resolved table back, this agent has `Write`/`Edit`: write each chosen disposition straight into the Risks table of the output you save in step 2 — no second edit pass, because the gate runs before that write.
+> - **Auto-dispose `low`-impact rows as Accept** before prompting for anything: write `Accept` into their Disposition cell, no prompt, no ledger row. Only `medium`/`high`/`critical` rows reach the prompt loop — a list of minor risks does not earn one human decision per row.
+> - If `AskUserQuestion` is available: batch the remaining rows into groups of up to 4 (its per-call maximum), in table order. One question per row, worded `"R{id} ({impact}): {description}"`, with exactly these 4 options:
+>   - **Accept** — acknowledge it and move on; nothing changes downstream and nobody works this row later. No ledger row written.
+>   - **Mitigate now** — the row's Mitigation/Fix text becomes a binding requirement `architect-agent` must satisfy before its own gate. Write a `constraints.md` row, status `🔴 open`, note `MUST — from pm-agent R{id}`.
+>   - **Escalate** — you can't settle this yourself and the pipeline shouldn't move past it as if you had; it goes to whoever can. Write a `constraints.md` row `🔴 open` tagged `BLOCKING`, AND an `open-questions.md` row. Does not block Approve at the gate below, but flips its recommended default to Request changes.
+>   - **Defer** — out of scope now, shipped with the risk knowingly taken; nobody is assigned to it. Write an `open-questions.md` row, status `🔴 open`, note `deferred risk`.
+>
+>   Escalate and Defer are the pair people confuse: **Escalate means someone else still has to decide, Defer means the decision is made and the answer is "we ship with it"**. Say that distinction in the option descriptions.
+> - **Always mark exactly one option `(Recommended)`**, derived mechanically from the row itself: Mitigation/Fix cell empty, or its text describes a choice rather than a fix → **Escalate**; else Impact `high`/`critical` → **Mitigate now**; else (`medium`) → **Accept**. Append the reason to that option's description in one clause. Never mark two, never leave a row with none, and never let the recommendation stand in for the explain trigger below.
+> - **Category on every constraint row this loop writes** (Mitigate now, Escalate): pick the value from [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)'s closed vocabulary that best matches the row's own Description, and `OTHER` when none fits. Never pick `ACCESSIBILITY`, `PRIVACY`, or `COMPLIANCE` unless the row itself is about an obligation the human already declared — those three arm conditional review sections downstream. Apply the skill's Writer Rule first if `constraints.md` is still in the legacy 6-column form, and never rewrite the `Category` cell of a row that already exists.
+> - **On-demand explain**: if the human's free-text reply for a row asks for more detail instead of picking one of the 4 options (e.g. "explain", "why", "perché", "spiega", "non capisco") — don't record it as a disposition and don't treat it as change feedback. Write 2-4 plain-language sentences grounded in this row's own content: what could concretely go wrong, why it matters in practice, and what a junior dev with no prior context on this row would need to know to choose confidently — not a restatement of the Description. Then re-ask the same row with the same 4 options; don't advance until it gets an actual disposition.
+> - If `AskUserQuestion` is unavailable: print the same 4-option menu per row, one at a time, and wait for a typed reply before showing the next row. The explain trigger applies the same way.
+> - Every ledger row this loop writes is written **regardless of Lean or Full Mode** — step 2b's Lean-Mode rule (touch a ledger file only if this phase's analysis changed something) is about your own analysis, not about a row the human just asked for at the gate.
+> - Every row ends with a filled Disposition cell — including **Accept**, so none is left empty — plus the ledger row above for the other three options. `risk_counts` stays exactly as generated: Impact doesn't change with disposition.
+> - Only once every row has a disposition, present the gate below.
+
 ### 1. Present for Validation
 If invoked by the orchestrator, skip this step — the orchestrator owns gate presentation, including its Risk Disposition Loop that walks the human through the Risks table row by row before the whole-artifact gate (see its HITL section). Use this only when running standalone.
 
-Standalone runs do not get the per-item Risk Disposition Loop — all Risks rows are approved or rejected as one bundle by the gate below. Prefer running through the orchestrator when the Risks table is non-trivial.
+Standalone runs get the same per-row resolution from the loop above, run by this agent instead of the orchestrator — the gate below is reached only once every Risks row carries a disposition.
 
 If the `AskUserQuestion` tool is available (Claude Code), call it:
 - `question`: `"PM analysis ready — how do you want to proceed?"`
 - `header`: `"PM Gate"`
 - `options`:
-  - **Approve** (Recommended by default — this agent has no pass/fail status) — continue to Architect Agent.
-  - **Request changes** — specify what to adjust; re-run this agent with that feedback.
+  - **Approve** (Recommended by default when no row was dispositioned Escalate — this agent has no pass/fail status, and a `high` risk answered with Mitigate now is a bound requirement for the architect, not a reason to regenerate the analysis) — continue to Architect Agent.
+  - **Request changes** (Recommended when any row was dispositioned Escalate) — specify what to adjust; re-run this agent with that feedback.
   - **Stop** — halt here.
 Free text via "Other" is treated as change feedback; if it reads as a standalone note instead, append it to `.kairos/<feature_folder>/ledger/open-questions.md` (source `human`, status `🔴 open`) rather than re-running.
 
@@ -270,8 +294,9 @@ Every constraint this phase elicited is written here and only here — the body'
 - `PERFORMANCE: < 200ms p95` → `"Latency must be < 200ms at p95"`, Category `PERFORMANCE`
 - `COMPLIANCE: PCI-DSS Level 2` → `"PCI-DSS Level 2 compliance required"`, Category `COMPLIANCE`
 - `ACCESSIBILITY: WCAG 2.2 AA` → `"WCAG 2.2 AA on all public-facing screens"`, Category `ACCESSIBILITY`
+- `VERIFICATION: concurrent edit` → `"AC-7: checking concurrent-edit behavior needs two signed-in sessions on separate machines"`, Category `VERIFICATION` (the `AC-n` prefix is mandatory on this category)
 
-Freshly-surfaced Risks table rows are a separate case: when orchestrator-invoked, the orchestrator's Risk Disposition Loop writes their constraint/open-question rows itself, sourced from the human's per-item choice — do not also write them here, or they'll be duplicated. When running standalone (no orchestrator loop ran), write them yourself as above, one constraint row per risk mitigation.
+Freshly-surfaced Risks table rows are a separate case: when orchestrator-invoked, the orchestrator's Risk Disposition Loop writes their constraint/open-question rows itself, sourced from the human's per-item choice — do not also write them here, or they'll be duplicated. When running standalone, the Risk Disposition Loop above already wrote them from the human's per-row choice — don't write them a second time here either.
 
 **`open-questions.md`** — Add any unresolved questions from your analysis:
 
@@ -305,7 +330,7 @@ These skills and MCP tools enhance this agent when installed. KAIROS works fully
 
 **Skills** — invoke via `Skill` tool when available:
 - `deep-research` — research domain constraints or technology tradeoffs before finalizing requirements
-- `outcome-issue-generator` (built-in) — convert requirements into structured issues
+- `issues-generator` (user-installed, not built-in) — convert requirements into structured issues
 
 ## Important Notes
 - You have FRESH context (no parent conversation)

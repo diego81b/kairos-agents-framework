@@ -4,7 +4,7 @@ description: Closed vocabulary for the ledger's constraint Category column, plus
 
 # Constraint Taxonomy
 
-Shared reference for `context-extractor-agent`, `pm-agent`, `architect-agent`, `impact-assessment-agent`, `implementer-coder-agent`, `implementer-tdd-agent`, `implementer-lead-agent`, `code-reviewer-agent`, `security-reviewer-agent`, `test-verifier-agent`, `release-planner-agent`, `documentation-agent`, and `orchestrator-agent`.
+Shared reference for `context-extractor-agent`, `pm-agent`, `architect-agent`, `impact-assessment-agent`, `implementer-coder-agent`, `implementer-tdd-agent`, `implementer-lead-agent`, `code-reviewer-agent`, `security-reviewer-agent`, `test-verifier-agent`, `qa-plan-agent`, `release-planner-agent`, `documentation-agent`, and `orchestrator-agent`.
 
 Some quality dimensions apply to a minority of projects. Accessibility, privacy, and regulatory compliance are obligations a product either carries or does not — most do not. A review check that fires on every run regardless, and is therefore waived on every run, teaches the human at the gate to stop reading that section. The opposite failure is just as real: a check that never exists cannot catch the one project that needed it.
 
@@ -27,7 +27,7 @@ This skill resolves both with one mechanism: **an obligation is checked when, an
 
 ## 2. The Closed Vocabulary
 
-Exactly these eleven values. Uppercase, exact match.
+Exactly these twelve values. Uppercase, exact match.
 
 | Category | Covers |
 |----------|--------|
@@ -41,9 +41,12 @@ Exactly these eleven values. Uppercase, exact match.
 | `TEAM` | Skills available, ownership boundaries, review capacity |
 | `TIMELINE` | Deadlines, sequencing against external dates |
 | `COMPATIBILITY` | Backward compatibility, supported versions, no-touch zones |
+| `VERIFICATION` | A check no single developer environment can stage: several applications running together, a particular configuration or flag, concurrent sessions on distinct machines, a role or tenant the developer does not hold. Its `Constraint` text names the `AC-n` it covers |
 | `OTHER` | Anything the list above does not fit |
 
 `OTHER` is always legal and **never gates anything**. Use it rather than stretching a category to fit; a mis-categorized row is worse than an uncategorized one, because it silently arms a check the project never asked for.
+
+`VERIFICATION` is about how an obligation is *checked*, not about what the system must do. Its `Constraint` text names the `AC-n` it covers (`"AC-7: checking concurrent-edit behavior needs two signed-in sessions on separate machines"`), which is what `test-verifier-agent` reads to route that criterion to manual verification instead of counting it as a coverage gap. "Two operators on two machines must not both save the same order" is the requirement and belongs in an acceptance criterion; "checking it needs two signed-in sessions on separate machines" is the `VERIFICATION` row. Declare it only when the human names the setup — the presence of a second application in the architecture does not declare it.
 
 `SECURITY` and `PRIVACY` are distinct. "Passwords must be hashed with argon2id" is `SECURITY`. "Email addresses must be erasable on request" is `PRIVACY`. A row about a named regime that mandates both is `COMPLIANCE`, and warrants a separate `PRIVACY` row when it carries specific data-handling duties.
 
@@ -81,7 +84,7 @@ Cited by every "update the Status of every existing row" block:
 
 ## 7. Adding a New Conditional Check
 
-The pattern generalizes; `ACCESSIBILITY` in `code-reviewer-agent` and `PRIVACY`/`COMPLIANCE` in `security-reviewer-agent` are the first two tenants, and `I18N` or a specific `COMPLIANCE` regime would be the next with no new machinery. A new conditional check needs four things, and nothing else:
+The pattern generalizes; `ACCESSIBILITY` in `code-reviewer-agent`, `PRIVACY`/`COMPLIANCE` in `security-reviewer-agent`, and `VERIFICATION` in `qa-plan-agent`'s Cross-Environment Verification section are the current tenants, and `I18N` or a specific `COMPLIANCE` regime would be the next with no new machinery. A new conditional check needs four things, and nothing else:
 
 1. A category from §2 that a human can be asked about at requirement time.
 2. An elicitation question in `pm-agent` that does not manufacture the obligation when the human has none.

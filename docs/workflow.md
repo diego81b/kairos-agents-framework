@@ -38,9 +38,10 @@ Every phase writes a single Markdown file: a small YAML frontmatter header carry
 
 ## Phase 0: Prep & Agent Selection
 
-**Pre-pipeline (optional, both standalone):**
-- Run `@context-extractor-agent` first to produce `00-context.md` (full-repo scan — stack, patterns, conventions)
-- Run `@impact-assessment-agent` to produce `00b-impact.md` (issue-scoped grounding — effort, domains, recommended agents). Consumes `00-context.md` if present; does not rescan what it already covers. `test-verifier-agent` is only recommended when a TDD implementer is selected AND effort is `medium` or `significant_rework` — a `simple_fix` on the TDD path relies on `code-reviewer-agent`'s own Testing check instead of a dedicated verification phase.
+**Pre-pipeline (optional, both standalone — you launch them yourself; the Orchestrator never runs them for you, it only reads what they left on disk):**
+- Run `context-extractor-agent` first to produce `00-context.md` (full-repo scan — stack, patterns, conventions)
+- Run `impact-assessment-agent` to produce `00b-impact.md` (issue-scoped grounding — effort, domains, recommended agents). Consumes `00-context.md` if present; does not rescan what it already covers. `test-verifier-agent` is only recommended when a TDD implementer is selected AND effort is `medium` or `significant_rework` — a `simple_fix` on the TDD path relies on `code-reviewer-agent`'s own Testing check instead of a dedicated verification phase.
+- Launch each of them as the session's **primary agent**, the same way you launch the Orchestrator — see your host's [setup page](/setup/). Naming one with `@` inside an already-open chat dispatches it as a subagent, and a subagent has no `AskUserQuestion`: the context extractor's confirmation gate and the impact assessment's row-by-row Risk Disposition Loop both degrade to the text-menu fallback.
 
 **Pipeline start:**
 - Developer provides a natural-language feature request (with optional issue reference)
@@ -69,7 +70,7 @@ Answering `simple_fix` at the Effort Check routes to `implementer-coder-agent` (
 
 - Break down the feature into scope, constraints, and risks
 - Identify edge cases and integration points
-- Define acceptance criteria
+- Define acceptance criteria — trigger and observable outcome, verifiable by the developer in their own environment; the setup a heavier check needs is Phase 5b's, and the criterion still keeps its `AC-n`
 
 _Input: feature description + project context_
 _Output: a single Markdown file — frontmatter (status, counts) + body (scope, constraints, risks, success criteria) — see "Artifact Format" above_
@@ -271,9 +272,12 @@ User confirms coverage is adequate from `05-test-verification.md`. FAIL sends th
 ## Phase 5b: QA Plan (QA Plan Agent) — optional
 
 - Build the coverage complement: what Test Verifier reported as uncovered, plus every `AC-n` with a gap
-- Write manual and exploratory test cases a person can execute without reading the code
+- Write manual and exploratory test cases a person can execute without reading the code, each with the `Setup` it needs — applications, configuration, concurrent sessions, machines, roles
+- Answer any `VERIFICATION` constraint declared upstream — which case covers it, or a `high` risk row when none does; `N/A` when none was declared, which is the normal case
 - Select regression retests by grepping real callers of every changed symbol
 - List test data and environment needs, each with the line of code that demands it
+- Select the existing `QA-n` cases from the project-wide catalogue whose area this change touched, each with the changed file that puts it there
+- Append this run's reusable manual cases to `.kairos/_qa-regression.md`, retire the ones this change automated or removed
 - State UAT sign-off per `AC-n`, and carry pm-agent's Outcome Criterion through verbatim
 
 _Input: `05-test-verification.md` (optional), `01-requirements.md`, `03-implementation.md`_
@@ -287,7 +291,7 @@ User reviews the plan before it goes to whoever will execute it. `NEEDS_ATTENTIO
 :::
 
 ::: tip Runs after the loop, and posts to the issue
-Phase 5b runs only once the Phase 3 loop has exited and its regression Guard has resolved — a QA plan written mid-loop describes code that is about to change again. It is also the one artifact whose reader sits outside the pipeline, so it posts itself to the issue tracker when an issue reference was given. No `jira`/`glab` on the machine is fine: it prints a paste-ready comment instead of failing the phase.
+Phase 5b runs only once the Phase 3 loop has exited and its regression Guard has resolved — a QA plan written mid-loop describes code that is about to change again. It is also the one artifact whose reader sits outside the pipeline, so it posts itself to the issue tracker when an issue reference was given. No `jira`/`glab` on the machine is fine: it prints a paste-ready comment instead of failing the phase. That comment is the acceptance/QA split in practice: the issue's `AC-n` list stays developer-verifiable, and the setup a check really needs — two applications, a specific configuration, two sessions on two machines — travels in the comment instead of bloating the criteria. What gets posted is an extract, not the file: cases, setup, retests, test data and sign-off, without the Summary and Coverage Complement the gate reads and a tester cannot act on.
 :::
 
 ---
@@ -360,7 +364,7 @@ jira issue comment add PROJ-42 "## PM Analysis\n\n..."
 jira issue comment add PROJ-42 "## Architecture Design\n\n..."
 
 # GitLab (glab):
-glab issue note 42 --body "## PM Analysis\n\n..."
+glab issue note 42 --message "## PM Analysis\n\n..."
 
 # Bitbucket (REST API):
 curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issues/42/comments" \
