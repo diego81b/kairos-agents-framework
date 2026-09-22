@@ -38,9 +38,10 @@ Every phase writes a single Markdown file: a small YAML frontmatter header carry
 
 ## Phase 0: Prep & Agent Selection
 
-**Pre-pipeline (optional, both standalone):**
-- Run `@context-extractor-agent` first to produce `00-context.md` (full-repo scan — stack, patterns, conventions)
-- Run `@impact-assessment-agent` to produce `00b-impact.md` (issue-scoped grounding — effort, domains, recommended agents). Consumes `00-context.md` if present; does not rescan what it already covers. `test-verifier-agent` is only recommended when a TDD implementer is selected AND effort is `medium` or `significant_rework` — a `simple_fix` on the TDD path relies on `code-reviewer-agent`'s own Testing check instead of a dedicated verification phase.
+**Pre-pipeline (optional, both standalone — you launch them yourself; the Orchestrator never runs them for you, it only reads what they left on disk):**
+- Run `context-extractor-agent` first to produce `00-context.md` (full-repo scan — stack, patterns, conventions)
+- Run `impact-assessment-agent` to produce `00b-impact.md` (issue-scoped grounding — effort, domains, recommended agents). Consumes `00-context.md` if present; does not rescan what it already covers. `test-verifier-agent` is only recommended when a TDD implementer is selected AND effort is `medium` or `significant_rework` — a `simple_fix` on the TDD path relies on `code-reviewer-agent`'s own Testing check instead of a dedicated verification phase.
+- Launch each of them as the session's **primary agent**, the same way you launch the Orchestrator — see your host's [setup page](/setup/). Naming one with `@` inside an already-open chat dispatches it as a subagent, and a subagent has no `AskUserQuestion`: the context extractor's confirmation gate and the impact assessment's row-by-row Risk Disposition Loop both degrade to the text-menu fallback.
 
 **Pipeline start:**
 - Developer provides a natural-language feature request (with optional issue reference)

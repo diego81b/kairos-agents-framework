@@ -14,7 +14,7 @@ Every modification to an agent file must be accompanied by an entry in [`CHANGEL
 
 ## [Context Extractor](/agents/context-extractor-agent)
 
-Scans the codebase and an issue draft to produce a structured context file (`00-context.md`) that all downstream agents consume. Run this agent before launching the Orchestrator to give every phase accurate, verified knowledge of your stack, patterns, and conventions — without each agent re-scanning the repository independently.
+Standalone, pre-pipeline — you launch it, the Orchestrator never does. Scans the codebase and an issue draft to produce a structured context file (`00-context.md`) that all downstream agents consume. Run this agent before launching the Orchestrator to give every phase accurate, verified knowledge of your stack, patterns, and conventions — without each agent re-scanning the repository independently.
 
 ::: tip Optional enhancements
 **Skills:** `deep-research` (built-in)
@@ -24,7 +24,7 @@ Scans the codebase and an issue draft to produce a structured context file (`00-
 
 ## [Impact Assessment](/agents/impact-assessment-agent)
 
-Issue-scoped grounding agent. Run this before the Orchestrator (optionally, after Context Extractor) to answer three questions before you select agents: How big is this? What already exists and what is missing? Which pipeline agents does this issue actually need?
+Standalone, pre-pipeline — you launch it, the Orchestrator never does. Issue-scoped grounding agent. Run this before the Orchestrator (optionally, after Context Extractor) to answer three questions before you select agents: How big is this? What already exists and what is missing? Which pipeline agents does this issue actually need?
 
 Unlike the Context Extractor, which scans the full repository, this agent reads only the code the issue directly touches. It consumes `00-context.md` if already present rather than rescanning. Output is `00b-impact.md` with effort estimate (`simple_fix / medium / significant_rework`), domains touched (backend / frontend / db / auth / integrations), reusable assets with real file paths, gaps, risks, and a `recommended_agents` list with per-agent justification.
 

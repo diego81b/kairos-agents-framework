@@ -21,24 +21,25 @@ No exceptions. A pull request that modifies an agent without a matching changelo
 
 ## Quick jump
 
-| Agent | File |
-|---|---|
-| [Context Extractor](#context-extractor) | `agents/context-extractor-agent.md` |
-| [Impact Assessment](#impact-assessment) | `agents/impact-assessment-agent.md` |
-| [Bug Triage](#bug-triage) | `agents/bug-triage-agent.md` |
-| [Orchestrator](#orchestrator) | `agents/orchestrator-agent.md` |
-| [PM Agent](#pm-agent) | `agents/pm-agent.md` |
-| [Architect Agent](#architect-agent) | `agents/architect-agent.md` |
-| [Implementer Agent — TDD](#implementer-tdd-agent) | `agents/implementer-tdd-agent.md` |
-| [Implementer Agent — Code Only](#implementer-coder-agent) | `agents/implementer-coder-agent.md` |
-| [Code Reviewer](#code-reviewer) | `agents/code-reviewer-agent.md` |
-| [Security Reviewer](#security-reviewer) | `agents/security-reviewer-agent.md` |
-| [Test Verifier](#test-verifier) | `agents/test-verifier-agent.md` |
-| [QA Plan Agent](#qa-plan-agent) | `agents/qa-plan-agent.md` |
-| [Release Planner](#release-planner) | `agents/release-planner-agent.md` |
-| [Documentation Agent](#documentation-agent) | `agents/documentation-agent.md` |
-| [Retrospective Agent](#retrospective-agent) | `agents/retrospective-agent.md` |
-| [Improvement Advisor](#improvement-advisor) | `agents/improvement-advisor-agent.md` |
+| Agent | File | Started by |
+|---|---|---|
+| [Context Extractor](#context-extractor) | `agents/context-extractor-agent.md` | **You** |
+| [Impact Assessment](#impact-assessment) | `agents/impact-assessment-agent.md` | **You** |
+| [Bug Triage](#bug-triage) | `agents/bug-triage-agent.md` | **You**, or the Orchestrator at its Bug-Input Check |
+| [Orchestrator](#orchestrator) | `agents/orchestrator-agent.md` | **You** (drives the pipeline rows) |
+| [PM Agent](#pm-agent) | `agents/pm-agent.md` | Orchestrator |
+| [Architect Agent](#architect-agent) | `agents/architect-agent.md` | Orchestrator |
+| [Implementer Agent — TDD](#implementer-tdd-agent) | `agents/implementer-tdd-agent.md` | Orchestrator |
+| [Implementer Agent — Code Only](#implementer-coder-agent) | `agents/implementer-coder-agent.md` | Orchestrator |
+| [Code Reviewer](#code-reviewer) | `agents/code-reviewer-agent.md` | Orchestrator |
+| [Security Reviewer](#security-reviewer) | `agents/security-reviewer-agent.md` | Orchestrator |
+| [Test Verifier](#test-verifier) | `agents/test-verifier-agent.md` | Orchestrator |
+| [QA Plan Agent](#qa-plan-agent) | `agents/qa-plan-agent.md` | Orchestrator |
+| [Release Planner](#release-planner) | `agents/release-planner-agent.md` | Orchestrator |
+| [Documentation Agent](#documentation-agent) | `agents/documentation-agent.md` | Orchestrator |
+| [Retrospective Agent](#retrospective-agent) | `agents/retrospective-agent.md` | **You** |
+| [Improvement Advisor](#improvement-advisor) | `agents/improvement-advisor-agent.md` | **You** |
+| [Dependency Audit](#dependency-audit) | `agents/dependency-audit-agent.md` | **You** |
 
 > Team Mode agent files are on a [separate page](/agent-files-team).
 >
