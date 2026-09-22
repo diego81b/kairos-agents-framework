@@ -63,7 +63,7 @@ Master coordinator — initiates workflow, routes tasks to specialist agents, ma
 Analyzes requirements, creates detailed specifications, identifies edge cases, and documents acceptance criteria. Transforms a vague feature request into a precise implementation brief.
 
 ::: tip Optional enhancements
-**Skills:** `deep-research` (built-in), `outcome-issue-generator` (built-in)
+**Skills:** `deep-research` (built-in), `issues-generator` (user-installed)
 :::
 
 ---

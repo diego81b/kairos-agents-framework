@@ -29,6 +29,7 @@ Nothing is dropped or renumbered for this: `test-verifier-agent` maps tests agai
 ### Fixed
 
 - **`skills/issue-tracker-comment/SKILL.md`**, **`agents/qa-plan-agent.md`**, **`docs/workflow.md`**, **`docs/setup/claude-code.md`** — every GitLab example used `glab issue note --body`, a flag that does not exist: the command takes `-m` / `--message`, so a copy-pasted post failed on the spot. Corrected everywhere, mirrors included.
+- **`agents/pm-agent.md`**, **`docs/agents.md`**, **`docs/skills-mcp.md`** — the optional skill hint still named `outcome-issue-generator`, a skill superseded by the merged `issues-generator`, and labelled it a Claude Code built-in. It is neither: the name is stale, and the merged skill is user-installed, so the docs promised something the plugin does not ship. Renamed everywhere, mirrors included, and moved into its own "User-installed skills" table instead of the built-in one.
 
 ---
 

@@ -310,7 +310,7 @@ These skills and MCP tools enhance this agent when installed. KAIROS works fully
 
 **Skills** — invoke via `Skill` tool when available:
 - `deep-research` — research domain constraints or technology tradeoffs before finalizing requirements
-- `outcome-issue-generator` (built-in) — convert requirements into structured issues
+- `issues-generator` (user-installed, not built-in) — convert requirements into structured issues
 
 ## Important Notes
 - You have FRESH context (no parent conversation)
