@@ -118,7 +118,9 @@ Rules that apply when editing agent files:
   answers the gate. Never introduce JSON artifact formats — nothing parses these
   files programmatically; consumers are other agents (prompt text) or humans at HITL gates.
 - **Risks/Issues/Findings tables** carry a `Disposition` column, resolved row-by-row by the
-  orchestrator's Risk Disposition Loop before the whole-artifact gate.
+  orchestrator's Risk Disposition Loop before the whole-artifact gate — or by `pm-agent` and
+  `impact-assessment-agent` themselves, which carry their own copy of that loop for the runs
+  the orchestrator never sees.
 - **HITL gates are mandatory**: agents must never skip a human gate, and the orchestrator
   must never run headless. Where `AskUserQuestion` is unavailable (non-Claude-Code hosts),
   agents fall back to a printed text menu.

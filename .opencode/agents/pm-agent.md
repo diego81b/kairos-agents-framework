@@ -223,17 +223,37 @@ If a risk's reasoning doesn't fit one row, keep a one-line Description with a "s
 
 ## After Generating Output
 
+### Risk Disposition Loop (standalone runs only)
+If invoked by the orchestrator, skip this — it runs the same loop itself, centrally, over the file written in step 2 (see its HITL section). Run it here only when running standalone, so a standalone run resolves a multi-row Risks table one row at a time instead of approving or rejecting every row as a single bundle.
+
+> **Risk Disposition Loop** — before presenting the gate below, resolve every `## Risks` row whose Disposition cell is still empty. Unlike `impact-assessment-agent`, which asks the questions and hands the resolved table back, this agent has `Write`/`Edit`: write each chosen disposition straight into the Risks table of the output you save in step 2 — no second edit pass, because the gate runs before that write.
+> - **Auto-dispose `low`-impact rows as Accept** before prompting for anything: write `Accept` into their Disposition cell, no prompt, no ledger row. Only `medium`/`high`/`critical` rows reach the prompt loop — a list of minor risks does not earn one human decision per row.
+> - If `AskUserQuestion` is available: batch the remaining rows into groups of up to 4 (its per-call maximum), in table order. One question per row, worded `"R{id} ({impact}): {description}"`, with exactly these 4 options:
+>   - **Accept** — acknowledge it and move on; nothing changes downstream and nobody works this row later. No ledger row written.
+>   - **Mitigate now** — the row's Mitigation/Fix text becomes a binding requirement `architect-agent` must satisfy before its own gate. Write a `constraints.md` row, status `🔴 open`, note `MUST — from pm-agent R{id}`.
+>   - **Escalate** — you can't settle this yourself and the pipeline shouldn't move past it as if you had; it goes to whoever can. Write a `constraints.md` row `🔴 open` tagged `BLOCKING`, AND an `open-questions.md` row. Does not block Approve at the gate below, but flips its recommended default to Request changes.
+>   - **Defer** — out of scope now, shipped with the risk knowingly taken; nobody is assigned to it. Write an `open-questions.md` row, status `🔴 open`, note `deferred risk`.
+>
+>   Escalate and Defer are the pair people confuse: **Escalate means someone else still has to decide, Defer means the decision is made and the answer is "we ship with it"**. Say that distinction in the option descriptions.
+> - **Always mark exactly one option `(Recommended)`**, derived mechanically from the row itself: Mitigation/Fix cell empty, or its text describes a choice rather than a fix → **Escalate**; else Impact `high`/`critical` → **Mitigate now**; else (`medium`) → **Accept**. Append the reason to that option's description in one clause. Never mark two, never leave a row with none, and never let the recommendation stand in for the explain trigger below.
+> - **Category on every constraint row this loop writes** (Mitigate now, Escalate): pick the value from [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)'s closed vocabulary that best matches the row's own Description, and `OTHER` when none fits. Never pick `ACCESSIBILITY`, `PRIVACY`, or `COMPLIANCE` unless the row itself is about an obligation the human already declared — those three arm conditional review sections downstream. Apply the skill's Writer Rule first if `constraints.md` is still in the legacy 6-column form, and never rewrite the `Category` cell of a row that already exists.
+> - **On-demand explain**: if the human's free-text reply for a row asks for more detail instead of picking one of the 4 options (e.g. "explain", "why", "perché", "spiega", "non capisco") — don't record it as a disposition and don't treat it as change feedback. Write 2-4 plain-language sentences grounded in this row's own content: what could concretely go wrong, why it matters in practice, and what a junior dev with no prior context on this row would need to know to choose confidently — not a restatement of the Description. Then re-ask the same row with the same 4 options; don't advance until it gets an actual disposition.
+> - If `AskUserQuestion` is unavailable: print the same 4-option menu per row, one at a time, and wait for a typed reply before showing the next row. The explain trigger applies the same way.
+> - Every ledger row this loop writes is written **regardless of Lean or Full Mode** — step 2b's Lean-Mode rule (touch a ledger file only if this phase's analysis changed something) is about your own analysis, not about a row the human just asked for at the gate.
+> - Every row ends with a filled Disposition cell — including **Accept**, so none is left empty — plus the ledger row above for the other three options. `risk_counts` stays exactly as generated: Impact doesn't change with disposition.
+> - Only once every row has a disposition, present the gate below.
+
 ### 1. Present for Validation
 If invoked by the orchestrator, skip this step — the orchestrator owns gate presentation, including its Risk Disposition Loop that walks the human through the Risks table row by row before the whole-artifact gate (see its HITL section). Use this only when running standalone.
 
-Standalone runs do not get the per-item Risk Disposition Loop — all Risks rows are approved or rejected as one bundle by the gate below. Prefer running through the orchestrator when the Risks table is non-trivial.
+Standalone runs get the same per-row resolution from the loop above, run by this agent instead of the orchestrator — the gate below is reached only once every Risks row carries a disposition.
 
 If the `AskUserQuestion` tool is available (Claude Code), call it:
 - `question`: `"PM analysis ready — how do you want to proceed?"`
 - `header`: `"PM Gate"`
 - `options`:
-  - **Approve** (Recommended by default — this agent has no pass/fail status) — continue to Architect Agent.
-  - **Request changes** — specify what to adjust; re-run this agent with that feedback.
+  - **Approve** (Recommended by default when no row was dispositioned Escalate — this agent has no pass/fail status, and a `high` risk answered with Mitigate now is a bound requirement for the architect, not a reason to regenerate the analysis) — continue to Architect Agent.
+  - **Request changes** (Recommended when any row was dispositioned Escalate) — specify what to adjust; re-run this agent with that feedback.
   - **Stop** — halt here.
 Free text via "Other" is treated as change feedback; if it reads as a standalone note instead, append it to `.kairos/<feature_folder>/ledger/open-questions.md` (source `human`, status `🔴 open`) rather than re-running.
 
@@ -276,7 +296,7 @@ Every constraint this phase elicited is written here and only here — the body'
 - `ACCESSIBILITY: WCAG 2.2 AA` → `"WCAG 2.2 AA on all public-facing screens"`, Category `ACCESSIBILITY`
 - `VERIFICATION: concurrent edit` → `"AC-7: checking concurrent-edit behavior needs two signed-in sessions on separate machines"`, Category `VERIFICATION` (the `AC-n` prefix is mandatory on this category)
 
-Freshly-surfaced Risks table rows are a separate case: when orchestrator-invoked, the orchestrator's Risk Disposition Loop writes their constraint/open-question rows itself, sourced from the human's per-item choice — do not also write them here, or they'll be duplicated. When running standalone (no orchestrator loop ran), write them yourself as above, one constraint row per risk mitigation.
+Freshly-surfaced Risks table rows are a separate case: when orchestrator-invoked, the orchestrator's Risk Disposition Loop writes their constraint/open-question rows itself, sourced from the human's per-item choice — do not also write them here, or they'll be duplicated. When running standalone, the Risk Disposition Loop above already wrote them from the human's per-row choice — don't write them a second time here either.
 
 **`open-questions.md`** — Add any unresolved questions from your analysis:
 
@@ -310,7 +330,7 @@ These skills and MCP tools enhance this agent when installed. KAIROS works fully
 
 **Skills** — invoke via `Skill` tool when available:
 - `deep-research` — research domain constraints or technology tradeoffs before finalizing requirements
-- `outcome-issue-generator` (built-in) — convert requirements into structured issues
+- `issues-generator` (user-installed, not built-in) — convert requirements into structured issues
 
 ## Important Notes
 - You have FRESH context (no parent conversation)

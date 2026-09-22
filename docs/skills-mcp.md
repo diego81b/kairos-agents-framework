@@ -41,7 +41,14 @@ No install required — these ship with Claude Code.
 | `security-review` | Adversarial security audit checklist — asks "how do I break this," not just "does this pass a compliance box" | `security-reviewer-agent`, `teammate-backend-agent` |
 | `verify` / `run` | Actually executes the project (build, test, run) to confirm a change works, instead of trusting a static read of the code | `implementer-tdd-agent`, `implementer-coder-agent`, `test-verifier-agent`, `teammate-tests-agent`, `teammate-frontend-agent`, `release-planner-agent` |
 | `deep-research` | Multi-source investigation pattern for open-ended questions, before committing to an answer | `context-extractor-agent`, `impact-assessment-agent`, `pm-agent`, `architect-agent`, `retrospective-agent` |
-| `outcome-issue-generator` | Drafts outcome-driven issue/ticket text from a requirement | `pm-agent` |
+
+### User-installed skills
+
+Not shipped with Claude Code and not part of the KAIROS plugin — a personal or third-party skill the user installs themselves. KAIROS never requires it.
+
+| Skill | What it does | Agents that benefit |
+|-------|---------------|---------------------|
+| `issues-generator` | Drafts GitHub/GitLab issue text from a requirement, in either an implementation-ready or an outcome-driven mode | `pm-agent` |
 
 ### Internal (KAIROS-authored) skills
 
@@ -67,13 +74,13 @@ These replace what used to be third-party plugin dependencies (`karpathy-guideli
 
 ## Full agent × enhancement map
 
-| Agent | Phase | Built-in skills | MCP |
+| Agent | Phase | Skills | MCP |
 |-------|-------|-----------------|-----|
 | `orchestrator-agent` | Coordinator | — | — |
 | `context-extractor-agent` | Pre | `deep-research` | — |
 | `impact-assessment-agent` | Pre | `deep-research` | — |
 | `bug-triage-agent` | Pre (bugs) | `deep-research` | — |
-| `pm-agent` | 1 | `deep-research`, `outcome-issue-generator` | — |
+| `pm-agent` | 1 | `deep-research`, `issues-generator` | — |
 | `architect-agent` | 2 | `deep-research` | — |
 | `implementer-tdd-agent` | 3a | `verify`/`run` | — |
 | `implementer-coder-agent` | 3b | `verify`/`run` | — |

@@ -116,23 +116,35 @@ export default defineConfig({
               { text: 'Dependency Audit', link: '/agent-files#dependency-audit' }
             ]
           },
-          { text: 'Context Extractor', link: '/agents/context-extractor-agent' },
-          { text: 'Impact Assessment', link: '/agents/impact-assessment-agent' },
-          { text: 'Bug Triage', link: '/agents/bug-triage-agent' },
-          { text: 'Orchestrator', link: '/agents/orchestrator-agent' },
-          { text: 'PM Agent', link: '/agents/pm-agent' },
-          { text: 'Architect Agent', link: '/agents/architect-agent' },
-          { text: 'Implementer Agent — TDD', link: '/agents/implementer-tdd-agent' },
-          { text: 'Implementer Agent — Code Only', link: '/agents/implementer-coder-agent' },
-          { text: 'Code Reviewer', link: '/agents/code-reviewer-agent' },
-          { text: 'Security Reviewer', link: '/agents/security-reviewer-agent' },
-          { text: 'Test Verifier', link: '/agents/test-verifier-agent' },
-          { text: 'QA Plan Agent', link: '/agents/qa-plan-agent' },
-          { text: 'Release Planner', link: '/agents/release-planner-agent' },
-          { text: 'Documentation Agent', link: '/agents/documentation-agent' },
-          { text: 'Retrospective Agent', link: '/agents/retrospective-agent' },
-          { text: 'Improvement Advisor', link: '/agents/improvement-advisor-agent' },
-          { text: 'Dependency Audit', link: '/agents/dependency-audit-agent' }
+          {
+            text: 'Standalone — you run these',
+            collapsed: false,
+            items: [
+              { text: 'Context Extractor', link: '/agents/context-extractor-agent' },
+              { text: 'Impact Assessment', link: '/agents/impact-assessment-agent' },
+              { text: 'Bug Triage', link: '/agents/bug-triage-agent' },
+              { text: 'Retrospective Agent', link: '/agents/retrospective-agent' },
+              { text: 'Improvement Advisor', link: '/agents/improvement-advisor-agent' },
+              { text: 'Dependency Audit', link: '/agents/dependency-audit-agent' }
+            ]
+          },
+          {
+            text: 'Pipeline — driven by the Orchestrator',
+            collapsed: false,
+            items: [
+              { text: 'Orchestrator', link: '/agents/orchestrator-agent' },
+              { text: 'PM Agent', link: '/agents/pm-agent' },
+              { text: 'Architect Agent', link: '/agents/architect-agent' },
+              { text: 'Implementer Agent — TDD', link: '/agents/implementer-tdd-agent' },
+              { text: 'Implementer Agent — Code Only', link: '/agents/implementer-coder-agent' },
+              { text: 'Code Reviewer', link: '/agents/code-reviewer-agent' },
+              { text: 'Security Reviewer', link: '/agents/security-reviewer-agent' },
+              { text: 'Test Verifier', link: '/agents/test-verifier-agent' },
+              { text: 'QA Plan Agent', link: '/agents/qa-plan-agent' },
+              { text: 'Release Planner', link: '/agents/release-planner-agent' },
+              { text: 'Documentation Agent', link: '/agents/documentation-agent' }
+            ]
+          }
         ]
       },
       {

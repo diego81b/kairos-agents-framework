@@ -127,6 +127,8 @@ claude --agent orchestrator-agent
 ::: warning Don't invoke it by name mid-conversation
 Typing `@orchestrator-agent` (or `@kairos:orchestrator-agent`) or "use the orchestrator agent" inside an already-open Claude Code session dispatches it through the `Agent` tool as a **subagent**, not as the session's primary driver. Subagents unconditionally lose access to `AskUserQuestion`, so every HITL gate degrades to the text-menu fallback — and if the parent session ends or resets mid-pipeline, the orchestrator is orphaned and dies with it, mid-phase.
 
+The same applies to every agent that asks you something while it works, not just the orchestrator: `context-extractor-agent`, `impact-assessment-agent`, `retrospective-agent`, and `improvement-advisor-agent` are all launched directly by you, all ask mid-run, and all degrade the same way when `@`-mentioned instead of started with `--agent kairos:<name>`. `bug-triage-agent` and `dependency-audit-agent` are the two exceptions — neither calls `AskUserQuestion` at all, their gates are plain prose — but starting them as the primary agent costs nothing either.
+
 `--agent` is a startup flag only — to switch mid-session, exit (`Ctrl+D` or `/exit`) and relaunch with it. To make this the project default without retyping the flag, add it to `.claude/settings.local.json` (not the shared `settings.json`, or every teammate's plain `claude` session in this repo defaults to the orchestrator too):
 ```json
 {

@@ -35,7 +35,7 @@ your-project/
 │       ├── orchestrator-agent.agent.md
 │       ├── pm-agent.agent.md
 │       ├── architect-agent.agent.md
-│       ├── context-extractor-agent.agent.md
+│       ├── context-extractor-agent.agent.md   <- Pre-pipeline: full-repo context (standalone)
 │       ├── implementer-tdd-agent.agent.md    <- TDD implementer (default)
 │       ├── implementer-coder-agent.agent.md  <- Code-only implementer (no test suite)
 │       ├── code-reviewer-agent.agent.md
