@@ -105,6 +105,17 @@ IDs and 5b's own UAT Sign-off iterates them, so a criterion that exists only as 
 no ID to be signed off against. The requirement stays in the issue; the setup moves to the
 comment.
 
+The artifact has two readers and 5b writes for each in its own language. The gate reads the
+evidence: Summary, Coverage Complement, Risks, with their `file:line` citations and ledger IDs.
+The tester reads product language only: screens, actions, visible outcomes, never a class, a
+file, a SQL object or a pipeline ID. The plan opens with a `## Core` block naming what the
+change fixes and the few behaviours that mean it failed, so the cases that matter come first.
+A manual case checks an outcome a person can observe through the product, never the mechanism
+behind it; a check reachable only through database internals or a hand-built request is a gate
+risk, not a tester's step. That split is also why `## Risks` admits only four row kinds
+(regression retest, `AC-n` not verifiable by hand, uncovered `VERIFICATION` row, an open
+question the release depends on): 5b plans verification, it does not audit the code.
+
 Two more standalone agents sit off that table entirely: `bug-triage-agent.md`
 (`00c-bug-triage.md`) is the entry point for a bug report rather than a feature request, and
 `dependency-audit-agent.md` (`.kairos/_tech-debt.md`) runs outside any feature at all.
