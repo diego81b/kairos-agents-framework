@@ -8,6 +8,8 @@ All notable changes to KAIROS Framework are documented in this file.
 
 A real Phase 5b plan for a concurrency fix ran to sixteen manual cases, four charters and eight risks, and its steps told the tester to hold SQL application locks in a database console, derive lock resource names by hand, and build raw request bodies. It was written for a developer. The plan now writes for two readers in two languages, opens with the change's core, and keeps code evidence where only the gate reads it.
 
+A review found a format defect on one field of a validator, the fix for it touched the same method, and the identical defect on the field beside it survived both code review and test verification. Nothing in the reviewing agents asked them to look for a finding's siblings, and nothing said that unchanged lines inside a touched function are part of the review. Both gaps are closed.
+
 ### Added
 
 - **`agents/qa-plan-agent.md`** — new step 0 **Name the Core** and `## Core` block: one sentence on what the change fixes, the one to three behaviours that mean it failed, and the cases that prove them. For a bug, the reported scenario comes first. Core cases lead the Manual Test Cases table, and the step runs in Lean Mode too.
@@ -23,12 +25,6 @@ A real Phase 5b plan for a concurrency fix ran to sixteen manual cases, four cha
 - **`skills/artifact-template/SKILL.md`** — Expected Behaviour Changes joins qa-plan's Disposition-exempt tables.
 - **`.opencode/agents/`**, **`.kimi-code/agents/`** — both mirrors carry the same body changes.
 - **`CLAUDE.md`**, **`docs/workflow.md`**, **`docs/agents.md`** — document the two-reader split, the Core block and the narrowed Risks table.
-
----
-
-## v8.2.1 — September 23, 2026
-
-A review found a format defect on one field of a validator, the fix for it touched the same method, and the identical defect on the field beside it survived both code review and test verification. Nothing in the reviewing agents asked them to look for a finding's siblings, and nothing said that unchanged lines inside a touched function are part of the review. Both gaps are closed.
 
 ### Fixed
 
