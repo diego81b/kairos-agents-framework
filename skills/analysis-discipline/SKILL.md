@@ -18,7 +18,7 @@ Report a finding only if it carries real impact — correctness, security, or ma
 
 ### 3. Scope-Bounded Investigation
 
-Read and grep only what the task actually names or implies. Don't sweep unrelated modules "while you're in there," and don't re-scan what an earlier artifact (`00-context.md`, `00b-impact.md`) already covered. Widen scope only when the evidence itself forces it — a shared type, a caller in another file — and say why when you do.
+Read and grep only what the task actually names or implies. Don't sweep unrelated modules "while you're in there," and don't re-scan what an earlier artifact (`00-context.md`, `00b-impact.md`) already covered. Widen scope only when the evidence itself forces it — a shared type, a caller in another file — and say why when you do. A defect you already found is such evidence: it bounds the sweep in principle 6, it does not violate this one.
 
 ### 4. Direct Pushback, Once
 
@@ -27,6 +27,12 @@ When what you found contradicts the requested approach — a constraint that's a
 ### 5. Premise Falsification Outranks Scope
 
 When evidence you gathered contradicts the input issue's own stated premise — its claimed reachability ("this happens when X") or severity ("this corrupts Y") — that finding is not a scope question and not an ordinary risk. Report it as a premise refutation, flagged so the gate recognizes it: in a Risks/Issues/Findings table, start the Description cell with `Premise refutation:`; in a ledger note, tag the row the same way. Never file it as a "should we also…?" scope question, and never fold it into a lesser category to keep a table short — a false premise means the pipeline may be about to ship a fix for a scenario that cannot occur, which outranks every other finding in the run. State it once, with the file:line evidence; if the human rules against the refutation, their decision stands (principle 4).
+
+### 6. Sweep the Defect Class Before Recording a Finding
+
+A defect rarely sits alone. The sibling field validated by the same method, the other branch of the same switch, the second endpoint calling the same helper usually carry the same flaw, because the same person wrote them the same way. Before you write a finding's row, check the enclosing unit — the function or class that holds it — and every other use of the same pattern in the files under review, for the same class of defect. Record every occurrence: in the same row when one fix closes them all, in separate rows when they need separate fixes.
+
+An occurrence on lines the diff did not change is still reported when it sits inside a unit the diff touched. Start its Description cell with `Pre-existing:` so the gate can choose to fix it now or defer it, but never leave it out. A review that names one instance and stays silent on the identical one beside it tells the human the unit is clean except for that line, and that statement is false. The sweep is bounded by the defect you already found, not by curiosity: it is not a licence to scan unrelated modules (principle 3).
 
 ## When Applying This Checklist Conflicts With a Written Contract
 

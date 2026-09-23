@@ -51,7 +51,7 @@ No exceptions. A pull request that modifies an agent without a matching changelo
 >
 > The shared [Constraint Taxonomy](skills/constraint-taxonomy/SKILL.md) reference — the closed `Category` vocabulary of the ledger's `constraints.md`, plus the reader, writer, and gating rules that let Code Reviewer's Accessibility check and Security Reviewer's Compliance & Privacy check run only when that obligation was declared upstream — is in `skills/constraint-taxonomy/SKILL.md`.
 >
-> The shared [Analysis Discipline](skills/analysis-discipline/SKILL.md) checklist — evidence-backed findings, restraint on low-value nitpicks, and scope-bounded investigation, applied by every agent that reads, judges, or reports on someone else's requirement, design, or code — is in `skills/analysis-discipline/SKILL.md`.
+> The shared [Analysis Discipline](skills/analysis-discipline/SKILL.md) checklist — evidence-backed findings, restraint on low-value nitpicks, scope-bounded investigation, and a defect-class sweep of the enclosing unit before any finding is recorded, applied by every agent that reads, judges, or reports on someone else's requirement, design, or code — is in `skills/analysis-discipline/SKILL.md`.
 >
 > The shared [Code Simplification](skills/code-simplification/SKILL.md) checklist used by the Implementer Agent (TDD and Code Only) REFACTOR step is in `skills/code-simplification/SKILL.md`.
 >

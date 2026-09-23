@@ -113,6 +113,7 @@ Run the checks below. Each check produces zero or more issues.
 - Boundaries covered (min, max, zero, empty, null, undefined, off-by-one)?
 - Edge cases (concurrency, timezone, locale, large input)?
 - Acceptance criteria from `01-requirements.md`'s Success Criteria list (by their own `AC-n` IDs) each accounted for — mapped to ≥1 test at whatever level verifies it, or verified outside the suite (see the three states below)?
+- For a validator, parser, or converter: is every input field it accepts exercised by at least one test with a malformed value — wrong format, not only empty or missing? Enumerate the fields from the SUT itself, never from the tests: a field no test names is exactly the gap this check exists for. A field covered only by a presence check (`[Required]`, non-null) is an issue even when no `AC-n` mentions it, and in Lean Mode too — a malformed value is an error path, not an edge case.
 - For a pure function with a well-defined input domain (parser, validator, calculator), are there tests over generated/randomized or systematically-varied inputs, not only a handful of hand-picked examples?
 
 **The Acceptance Criteria Mapping table has three states, not two.** A unit test proves the code does what it was meant to do; it does not prove a use case works end to end, and stretching one to cover a use case is how a suite becomes slow, mocked, and dishonest. So each `AC-n` lands in exactly one of:

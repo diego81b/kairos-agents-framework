@@ -4,6 +4,20 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v8.2.1 — September 23, 2026
+
+A review found a format defect on one field of a validator, the fix for it touched the same method, and the identical defect on the field beside it survived both code review and test verification. Nothing in the reviewing agents asked them to look for a finding's siblings, and nothing said that unchanged lines inside a touched function are part of the review. Both gaps are closed.
+
+### Fixed
+
+- **`skills/analysis-discipline/SKILL.md`** — new principle 6, **Sweep the Defect Class Before Recording a Finding**: before writing a finding's row, check the enclosing function or class and every other use of the same pattern in the reviewed files for the same defect, and record every occurrence. An occurrence the diff did not introduce is reported with a `Pre-existing:` prefix so the gate can fix it now or defer it, never omitted. Principle 3 (scope-bounded investigation) now says that a found defect bounds this sweep rather than conflicting with it.
+- **`agents/code-reviewer-agent.md`** — a function the diff touches is reviewed whole, unchanged lines included, and on a loop iteration every unit the fix touched is re-reviewed in full, not only checked for the closed issue. Correctness gains an explicit malformed-input check: a presence check such as `[Required]` guarantees non-empty, never well-formed, and the resulting exception must reach a handler that maps it to the documented error instead of escaping as a 500.
+- **`agents/test-verifier-agent.md`** — for a validator, parser, or converter, every input field it accepts needs at least one malformed-value test, with the fields enumerated from the code under test rather than from the tests. A field covered only by a presence check is an issue even when no `AC-n` names it, and in Lean Mode too, since a malformed value is an error path.
+- **`.opencode/agents/`**, **`.kimi-code/agents/`** — both mirrors carry the same body changes.
+- **`docs/skills-mcp.md`**, **`docs/agent-files.md`** — the `analysis-discipline` summaries name the new sweep.
+
+---
+
 ## v8.2.0 — September 21, 2026
 
 Separates what the developer must satisfy from what a tester must stage. Acceptance criteria were absorbing both, and a criterion that needs two applications, a particular configuration, or two concurrent sessions on two machines to be checked stops being readable as a requirement — so the setup now travels in Phase 5b's QA comment on the issue, while the `AC-n` stays exactly where it was.
