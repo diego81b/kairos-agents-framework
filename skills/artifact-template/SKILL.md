@@ -32,6 +32,7 @@ Rules:
 - **`Decision` is the phase's own choice**, not a summary of the work: the selected architecture option, the effort classification, the pass/fail verdict, the chosen deployment strategy. Phases that only observe (`context-extractor`, `retrospective`) write `none — analysis only`.
 - **`Next` is the only place the successor is named.** Name the agent that runs after this one; when the phase is terminal (`release-planner`, `documentation`), write `end of pipeline`; when the phase's own `status` blocks advancement, write `stop — <one-clause reason>`. No frontmatter field duplicates it — the orchestrator derives the next phase from which artifacts exist, not from a field the artifact declares about itself.
 - Write the block **last**, after the body is complete and the tallies are final — it describes what the artifact actually says, not what you set out to write.
+- **A cumulative artifact gets a cumulative Summary.** `03-implementation.md` is rewritten by every wave, loop iteration and re-run, and each rewrite carries the rest of the file forward — so the Summary must too. It describes the feature's state across every pass, with the current pass named at the end of `What`, never only the pass that happens to write it last: the orchestrator prints it verbatim at the gate, and a per-pass Summary on a cumulative file tells the human only what the last wave did.
 
 ## 2. Disposition table columns
 

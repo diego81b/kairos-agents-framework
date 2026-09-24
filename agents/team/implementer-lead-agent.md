@@ -682,11 +682,11 @@ changes_this_iteration:            # Iteration Mode only — omit this field ent
 # Phase 3 — Team Implementation
 
 ## Summary
-**What:** <what the team built, one line>
+**What:** <the feature's state across every pass, then this pass, one line — e.g. `Payments module: wave 1 of 2 done; this pass: schema and API layer`, or just what the team built when there is a single pass>
 **Decision:** <TDD verdict in one clause, e.g. `RED and GREEN both verified across 3 layers, REFACTOR complete`>
-**Needs your attention:** <any contract divergence accepted, teammate that did not complete, or untested path; `none` if nothing>
+**Needs your attention:** <across the whole feature, not only this pass — any contract divergence accepted, teammate that did not complete, or untested path; `none` if nothing>
 **Open:** <ledger IDs of the questions this phase leaves open, e.g. `Q3, Q7 — see ledger/open-questions.md`; `none` when it leaves none>
-**Next:** code-reviewer-agent
+**Next:** <from `status`: `code-reviewer-agent` when `complete`; `implementer, wave <next_wave> of <total_waves>` when `partial`; `stop — <reason>` when `too_big`>
 
 ## Pass Log
 

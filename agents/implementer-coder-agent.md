@@ -225,11 +225,11 @@ iteration_mode: { active: false, iteration: null }
 ---
 
 ## Summary
-**What:** <what was built this wave, one line>
+**What:** <the feature's state across every pass, then this pass, one line — e.g. `Auth module: waves 1-2 of 3 done; this pass: token refresh endpoints`, or just what was built when there is a single pass>
 **Decision:** <what was implemented and how, one clause>
-**Needs your attention:** <anything the reviewer must look at first — an untested path, a deviation from the plan; `none` if nothing>
+**Needs your attention:** <anything the reviewer must look at first across the whole feature, not only this pass — an untested path, a deviation from the plan; `none` if nothing>
 **Open:** <ledger IDs of the questions this phase leaves open, e.g. `Q3, Q7 — see ledger/open-questions.md`; `none` when it leaves none>
-**Next:** code-reviewer-agent
+**Next:** <from `status`: `code-reviewer-agent` when `complete`; `implementer, wave <next_wave> of <total_waves>` when `partial`; `stop — <reason>` when `too_big`>
 
 ## Pass Log
 
