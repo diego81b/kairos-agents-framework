@@ -2,10 +2,21 @@
 
 KAIROS supports **explicit agent selection** so you decide which phases run — the orchestrator never infers a default pipeline.
 
-There are two ways to declare the pipeline:
+There are three ways to declare the pipeline:
 
 1. **In the issue body** — add a `## KAIROS Pipeline` section to the Jira/GitLab/Bitbucket issue. The orchestrator reads it automatically before asking for confirmation.
 2. **In-chat** — paste the template block when the orchestrator displays the interactive list (Case B — no issue reference or section missing).
+3. **Let the orchestrator write it** — pick the agents from its menu, and when the run started from an issue it offers to save that selection into the issue as a `## KAIROS Pipeline` section. Nobody has to write the block by hand.
+
+### Saving the selection to the issue
+
+When the run started from an issue reference and the selection came from the orchestrator's menu — the issue had no `## KAIROS Pipeline` section, or you changed it with **Modify** — the orchestrator shows the exact block it would write and asks:
+
+- **Add to the issue** — appends the block to the end of the issue description, or replaces only the existing `## KAIROS Pipeline` section. Nothing else in the description changes.
+- **Keep it local** — the selection lives only in `.kairos/<feature_folder>/ledger/run.md` for this run.
+- **Don't ask again in this project** — stops the question for every later run in this project.
+
+The block it writes carries the agents you picked plus the `Effort:` and `Auto-fix:` values the run resolved, so a colleague, or you on another machine, starts from the same settings. A section that was already in the issue and confirmed unchanged is never rewritten. The write works on GitLab (`glab`) and Bitbucket (credentials plus `jq`). On Jira the orchestrator prints the block ready to paste instead, because `jira-cli` returns the rendered description rather than its source, and writing it back would reformat the rest of the issue. The same paste-ready block appears whenever a tool or credential is missing, and the run always continues.
 
 ---
 
@@ -17,22 +28,68 @@ Copy this block into any issue description or paste it directly in the chat:
 ## KAIROS Pipeline
 
 Effort: medium
+Auto-fix: 1
 
+### Analysis
 - [ ] pm-agent
 - [ ] architect-agent
+
+### Build (pick one)
 - [ ] implementer-tdd-agent
 - [ ] implementer-coder-agent
+- [ ] implementer-lead-agent
+
+### Review
 - [ ] code-reviewer-agent
 - [ ] security-reviewer-agent
 - [ ] test-verifier-agent
+
+### After build
 - [ ] qa-plan-agent
 - [ ] release-planner-agent
 - [ ] documentation-agent
 ```
 
-The `Effort:` line is **optional** and takes `simple_fix`, `medium`, or `significant_rework`. It is how a template says how big the change is: the orchestrator stamps that value into every agent it invokes, which is what puts them in Lean, Trimmed, or Full mode. Leave it out and a template-driven run defaults to `medium` (Trimmed) — so a small fix driven entirely from a template is worth marking `simple_fix` explicitly.
+Check (`[x]`) only the agents you want to activate. The group headings are there to make the list readable, not to be parsed: the orchestrator only looks at which names are checked.
 
-Check (`[x]`) only the agents you want to activate. For the implementation step, pick **one** of `implementer-tdd-agent` (TDD, default) or `implementer-coder-agent` (no TDD). Add `security-reviewer-agent` when the feature touches auth, payments, or any write endpoint. Add `qa-plan-agent` when a person will verify this feature by hand — it plans the manual and exploratory cases, the regression retest list, and the UAT sign-off, and posts them to the issue.
+**Build — pick one.** `implementer-tdd-agent` writes tests first and is the default. `implementer-coder-agent` writes code without tests, for projects with no test suite. `implementer-lead-agent` is Team Mode: a lead plus four parallel specialists, Claude Code only, about 3.5× the cost. Checking more than one is an error: the orchestrator says so and asks you to choose.
+
+**Optional agents.** Three agents are worth adding only when their trigger applies:
+
+| Agent | Add it when |
+|---|---|
+| `security-reviewer-agent` | The change touches auth, payments, or any endpoint that writes data |
+| `qa-plan-agent` | A person will verify the feature by hand. It plans the manual cases, the retests and the sign-off, and posts them to the issue |
+| `documentation-agent` | An API contract or a user-visible behaviour changed |
+
+**`Effort:`** is optional and takes `simple_fix`, `medium`, or `significant_rework`. It says how big the change is: the orchestrator passes it to every agent, and that value decides whether they run a short, trimmed, or full process. Leave it out and the run uses `medium`, so a small fix driven entirely from a template is worth marking `simple_fix`.
+
+**`Auto-fix:`** takes a number: how many times the agents may fix their own problems before stopping to ask you. It covers two moments, after code review finds a serious problem and after test verification finds a gap. `0` means always ask.
+
+The line also switches on the defaults that come with the effort. With an `Auto-fix:` line, `simple_fix` gets its short path: a wider automatic acceptance of low and medium risks, and no separate gate on the implementation plan. Without one, the block is read as an older template (see below): nothing is fixed automatically, every problem stops for you, and with `significant_rework` you are asked at the start of the run.
+
+To set the two moments apart, write two lines instead of one; a moment with no line of its own falls back to the effort default (1 after review and 0 after tests for `simple_fix` and `medium`, asked at the start for `significant_rework`):
+
+```markdown
+Auto-fix after review: 1
+Auto-fix after tests: 2
+```
+
+The ceiling is 5, or 2 with `implementer-lead-agent`, because each Team Mode fix is a whole team run. A higher number is lowered to the ceiling and the orchestrator tells you. With no build agent checked there is nothing to fix and the line is ignored. Auto-fix after tests needs `test-verifier-agent` checked; without it, that number has no effect.
+
+Before the first agent runs, the orchestrator repeats the effort and auto-fix values it will use, so a wrong value can still be corrected there.
+
+::: info Prerequisites are not in the list
+`context-extractor-agent`, `impact-assessment-agent` and `bug-triage-agent` run before the pipeline, and you start them. The orchestrator never starts the first two, and offers the third only when the request reads as a bug report. Run them first when you want them; the orchestrator picks up their output automatically.
+:::
+
+### Older templates keep working
+
+Issues written with the earlier format need no edit, and run the way they ran when they were written:
+
+- A flat checklist with no group headings selects the same agents as the grouped one. Every agent name from the earlier format is unchanged.
+- A block with no `Auto-fix:` line is an older template. `Effort:` still sets how thorough each agent is, and a missing `Effort:` still means `medium`, but nothing else changes: every problem stops for you, and the implementation plan keeps its own gate even at `simple_fix`.
+- To give an existing issue the new behaviour, add an `Auto-fix:` line to it. That line is the only switch.
 
 ---
 
@@ -43,12 +100,24 @@ Full pipeline — new functionality going to production.
 ```markdown
 ## KAIROS Pipeline
 
+Effort: medium
+Auto-fix: 1
+
+### Analysis
 - [x] pm-agent
 - [x] architect-agent
+
+### Build (pick one)
 - [x] implementer-tdd-agent
+- [ ] implementer-coder-agent
+- [ ] implementer-lead-agent
+
+### Review
 - [x] code-reviewer-agent
 - [x] security-reviewer-agent
 - [x] test-verifier-agent
+
+### After build
 - [ ] qa-plan-agent
 - [x] release-planner-agent
 - [ ] documentation-agent
@@ -65,12 +134,24 @@ Triage the defect before you pick this block. `bug-triage-agent` reproduces it, 
 ```markdown
 ## KAIROS Pipeline
 
+Effort: medium
+Auto-fix: 1
+
+### Analysis
 - [x] pm-agent
 - [ ] architect-agent
+
+### Build (pick one)
 - [x] implementer-tdd-agent
+- [ ] implementer-coder-agent
+- [ ] implementer-lead-agent
+
+### Review
 - [x] code-reviewer-agent
 - [ ] security-reviewer-agent
 - [x] test-verifier-agent
+
+### After build
 - [ ] qa-plan-agent
 - [ ] release-planner-agent
 - [ ] documentation-agent
@@ -85,12 +166,24 @@ Minimal pipeline — urgent production fix, skip analysis and planning.
 ```markdown
 ## KAIROS Pipeline
 
+Effort: simple_fix
+Auto-fix: 1
+
+### Analysis
 - [ ] pm-agent
 - [ ] architect-agent
+
+### Build (pick one)
 - [x] implementer-tdd-agent
+- [ ] implementer-coder-agent
+- [ ] implementer-lead-agent
+
+### Review
 - [x] code-reviewer-agent
 - [ ] security-reviewer-agent
 - [ ] test-verifier-agent
+
+### After build
 - [ ] qa-plan-agent
 - [ ] release-planner-agent
 - [ ] documentation-agent
@@ -105,12 +198,25 @@ All phases except deployment — improving existing code without a new release.
 ```markdown
 ## KAIROS Pipeline
 
+Effort: significant_rework
+Auto-fix after review: 1
+Auto-fix after tests: 2
+
+### Analysis
 - [x] pm-agent
 - [x] architect-agent
+
+### Build (pick one)
 - [x] implementer-tdd-agent
+- [ ] implementer-coder-agent
+- [ ] implementer-lead-agent
+
+### Review
 - [x] code-reviewer-agent
 - [ ] security-reviewer-agent
 - [x] test-verifier-agent
+
+### After build
 - [ ] qa-plan-agent
 - [ ] release-planner-agent
 - [ ] documentation-agent
@@ -120,20 +226,31 @@ All phases except deployment — improving existing code without a new release.
 
 ## Preset: Documentation
 
-Analysis and writing only — no code, no deployment.
+Analysis and writing only — no code, no deployment. `documentation-agent` works from the feature request and the requirements when no architecture or implementation artifact exists.
 
 ```markdown
 ## KAIROS Pipeline
 
+Effort: simple_fix
+
+### Analysis
 - [x] pm-agent
 - [ ] architect-agent
+
+### Build (pick one)
 - [ ] implementer-tdd-agent
+- [ ] implementer-coder-agent
+- [ ] implementer-lead-agent
+
+### Review
 - [ ] code-reviewer-agent
 - [ ] security-reviewer-agent
 - [ ] test-verifier-agent
+
+### After build
 - [ ] qa-plan-agent
 - [ ] release-planner-agent
-- [ ] documentation-agent
+- [x] documentation-agent
 ```
 
 ---
@@ -173,7 +290,8 @@ When the orchestrator shows the Case B selection prompt, paste the entire templa
 | 1 | `pm-agent` | Requirements analysis, acceptance criteria, risks |
 | 2 | `architect-agent` | System design, API contracts, DB schema |
 | 3 | `implementer-tdd-agent` | TDD code generation (plan gate + code gate) — **default** |
-| 3b | `implementer-coder-agent` | Code generation without TDD (for projects without a test suite) |
+| 3 | `implementer-coder-agent` | Code generation without TDD (for projects without a test suite) |
+| 3 | `implementer-lead-agent` | Team Mode: lead + 4 parallel specialists (Claude Code only, ~3.5× cost) |
 | 4 | `code-reviewer-agent` | Standards, security, performance review |
 | 4b | `security-reviewer-agent` | Adversarial security review — IDOR, auth, injection, secrets, data exposure (optional) |
 | 5 | `test-verifier-agent` | Test coverage and assertion quality |

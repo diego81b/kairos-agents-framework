@@ -282,20 +282,21 @@ In **Full Mode**, update all three ledger files under `.kairos/<feature_folder>/
 - Constraint your design changes → mark `♻ modified` with new version
 - Constraint irrelevant to this feature → mark `❌ dropped` with justification
 - Constraint not yet addressed → leave `🔴 open`
+- Constraint whose Note reads `BLOCKING — see Q{n}` (an Escalate from a gate) → read `Q{n}` in `open-questions.md`. If it is `✓ answered`, set this row's Status from the answer — `✓ resolved` when it settles the constraint, `⚠ deferred` when it accepts the risk, `♻ modified` when it changes it, `❌ dropped` when it removes it — and cite `Q{n}` in the Note. If `Q{n}` is still `🔴 open`, leave the row `🔴 open`. An older `BLOCKING` row with no `see Q{n}` is walked like any other row.
 
 Never rewrite an existing row's `Category` cell — it is set once by whoever created the row and is what downstream conditional checks key on. Only `Status`, `Updated by`, and `Note` change here. Any new row you add carries a `Category` from [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)'s closed vocabulary; apply its Writer Rule first if the table is still in the legacy 6-column form.
 
 Then add any new architectural constraints (e.g. "Redis required in infrastructure", "JWT must use RS256").
 
-**`decisions.md`** — Seed this file with your phase's decisions. Add a row for each significant choice:
+**`decisions.md`** — Seed this file with your phase's decisions. Add a row for each significant choice. The table has six columns, `ID | Decision | Phase | Rationale | Constraint impact | Supersedes`; if it still has five (written before v8.4.0), add the `Supersedes` column first, with `—` in every existing row. Leave `Supersedes` as `—` on every row you add: only the orchestrator fills it, when a human accepts a decision conflict at the gate. A change of course is a new row, never an edit of an old one.
 
 ```markdown
 # Decisions
 
-| ID | Decision | Phase | Rationale | Constraint impact |
-|----|---------|-------|-----------|-------------------|
-| D1 | Use Redis for caching | architect | meets C1 latency < 200ms | resolves C1 |
-| D2 | Soft-delete pattern for all entities | architect | prevents data loss risk | — |
+| ID | Decision | Phase | Rationale | Constraint impact | Supersedes |
+|----|---------|-------|-----------|-------------------|------------|
+| D1 | Use Redis for caching | architect | meets C1 latency < 200ms | resolves C1 | — |
+| D2 | Soft-delete pattern for all entities | architect | prevents data loss risk | — | — |
 ```
 
 **`open-questions.md`** — Answer any existing questions you can now answer from your design. Add new unresolved questions:

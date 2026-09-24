@@ -4,6 +4,48 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v8.4.0 — September 24, 2026
+
+The `## KAIROS Pipeline` block in an issue could not say everything the orchestrator's own menu asks. Team Mode was missing from it, the optional agents looked like every other line, and there was no way to set how many times the agents may fix their own problems, so a large change driven from an issue still stopped to ask. The block now covers all of it in words an issue author understands. Issues written in the old format select the same agents and run exactly as they did: the new `Auto-fix:` line is the only switch to the new behaviour.
+
+The ledger lost state between sessions and mixed four kinds of record in one file. A resumed pipeline recovered only the effort: the auto-fix budgets, the quick-fix mode and the agent selection were gone, and the resume point could offer a phase nobody had selected. Retry bookkeeping lived in `open-questions.md` beside the real questions, deferred risks counted as open questions forever, an Escalate left two unlinked rows to close, and a legitimate change of decision was flagged as a contradiction at every later gate. Each is fixed, and feature folders written before this version keep resuming: readers fall back to the older location or format, and the orchestrator migrates on first touch.
+
+Nothing in the plugin wrote the `## KAIROS Pipeline` section itself: whoever installed KAIROS had to type the block by hand. The orchestrator now offers to write back the selection the human just confirmed.
+
+### Added
+
+- **`docs/setup/templates.md`** — `Auto-fix: N` line, or the pair `Auto-fix after review: N` / `Auto-fix after tests: N`: how many times the agents may fix their own problems before stopping to ask. `0` means always ask. The line also turns on the defaults that come with the chosen effort; a block without it is an older template and keeps every problem for you.
+- **`docs/setup/templates.md`** — `implementer-lead-agent` (Team Mode) joins the checklist, and the list is grouped into Analysis, Build (pick one), Review and After build, with a table saying when each optional agent is worth adding.
+- **`agents/orchestrator-agent.md`** — Issue Write-back at Step 0f: when the run started from an issue and the selection came from the menu, the orchestrator shows the block it would write and asks **Add to the issue**, **Keep it local**, or **Don't ask again in this project**. It appends the section or replaces only that section, re-reading the description first and writing nothing if that read fails. The block carries the agents, `Effort:` and `Auto-fix:` values the run resolved, and a section already in the issue and confirmed unchanged is never rewritten. GitLab and Bitbucket are written; on Jira, and whenever a tool or credential is missing, it prints a paste-ready block and the run continues.
+- **`agents/orchestrator-agent.md`** — new `ledger/run.md`, written at Step 0f and read back on resume: effort, active agents, auto-fix budgets, quick-fix mode. A resumed run keeps the human's settings and skips the phases they never selected. A folder without it falls back to the effort in the audit log's header, asks once for the auto-fix budgets when an implementer phase is still ahead, and behaves as before otherwise.
+- **`agents/orchestrator-agent.md`** — new `ledger/loops.md` holds the auto-fix state while a retry runs and the history of retries that did not converge. On resume, loop sections an older run left in `open-questions.md` move there, and a retry the earlier session never finished is recorded as `interrupted` instead of being picked up as live by the next implementer.
+- **`agents/orchestrator-agent.md`** — `decisions.md` gains a `Supersedes` column. When a human accepts a decision conflict at a gate, the orchestrator records which decision was replaced, and later conflict scans stop flagging it. No phase agent writes that column, so the agent being checked cannot switch the check off.
+- **`agents/orchestrator-agent.md`** — Template Parsing rules at Step 0d: group headings are ignored, the older flat checklist parses identically, more than one checked implementer falls back to the selection menu instead of picking one, and the Auto-fix lines are read and capped at the same ceiling as the retry prompt. A block with no Auto-fix line runs as before: both retry budgets manual, the plan gate kept at `simple_fix`, and the retry question asked only at `significant_rework`.
+
+### Changed
+
+- **`agents/orchestrator-agent.md`** — a template that sets both auto-fix values skips the retry question even for `significant_rework`; one that sets a single value is asked only about the other. The pipeline announcement and the issue-selection preview state the retry budget as "Auto-fix: N after review, N after tests" instead of loop and phase names.
+- **`docs/setup/templates.md`** — every preset carries an `Effort:` line and, where a build agent is checked, an `Auto-fix:` line; Hotfix is `simple_fix`, and Refactor / Rework shows the two-line auto-fix form.
+- **`.opencode/agents/`**, **`.kimi-code/agents/`** — both mirrors carry the same body changes.
+- **`docs/workflow.md`** — documents the Auto-fix lines and the size presets on the template path.
+- **`agents/orchestrator-agent.md`**, **`agents/pm-agent.md`**, **`agents/impact-assessment-agent.md`**, **`agents/team/implementer-lead-agent.md`** — a Defer writes `⚠ deferred` instead of `🔴 open`, so a risk shipped knowingly no longer counts as an open question at every gate and at pipeline end. Older deferred rows are recognised by their `deferred risk` note. An Escalate writes the constraint and the question with references to each other (`BLOCKING — see Q7`).
+- **`agents/architect-agent.md`**, **`agents/release-planner-agent.md`** — the two full re-walks close an escalated constraint from its question's answer. The release plan lists deferred questions as accepted risks, never as release blockers, and its ledger summary counts them apart.
+- **`agents/implementer-tdd-agent.md`**, **`agents/implementer-coder-agent.md`**, **`agents/team/implementer-lead-agent.md`**, **`agents/code-reviewer-agent.md`**, **`agents/test-verifier-agent.md`** — read and update auto-fix state in `ledger/loops.md`. **`agents/retrospective-agent.md`** reads loop history there, or in `open-questions.md` for an older folder.
+- **`agents/architect-agent.md`** and every other `decisions.md` writer (`implementer-tdd-agent`, `implementer-coder-agent`, `implementer-lead-agent`, `code-reviewer-agent`, `security-reviewer-agent`, `test-verifier-agent`, `qa-plan-agent`, `release-planner-agent`) — migrate an older five-column table before appending, and leave `Supersedes` to the orchestrator.
+- **`CLAUDE.md`**, **`docs/workflow.md`**, **`docs/agentic-loop.md`** — describe the six ledger files, the new statuses and the compatibility rule.
+- **`CLAUDE.md`**, **`docs/setup/templates.md`**, **`docs/workflow.md`** — document the issue write-back, the orchestrator's second narrow exception to writing only inside `.kairos/`.
+
+### Fixed
+
+- **`agents/orchestrator-agent.md`** — on runs without `release-planner-agent` (the Bug Fix, Hotfix and Refactor presets), a constraint left `🔴 open` — an unmet `MUST` from a Mitigate now, or a `BLOCKING` escalation — reached neither the end-of-pipeline warning nor `_recap.md`, which read only the open questions. Both now list open constraints, and the recap's cleanup keeps the phase files while one remains.
+- **`agents/orchestrator-agent.md`** — `_recap.md` gains an `## Accepted Risks` section for deferred risks, which would otherwise have vanished from it once Defer stopped writing `🔴 open`. Deferred risks no longer hold back the cleanup recommendation. The Audit Trail now lists every retry that did not converge and every decision replaced at a gate, and a header line records the run's effort and auto-fix settings from `run.md`.
+- **`agents/implementer-tdd-agent.md`**, **`agents/implementer-coder-agent.md`**, **`agents/team/implementer-lead-agent.md`** — the `## Summary` of `03-implementation.md` described only the last wave or fix pass, while the rest of that cumulative file described the whole feature, so the Phase 3 gate showed what the final wave did instead of the feature. It now states the feature's state with the current pass named at the end, and `Next` follows `status` instead of always naming `code-reviewer-agent`, which contradicted the gate's own "continue with the next wave" question.
+- **`skills/artifact-template/SKILL.md`** — a cumulative artifact gets a cumulative Summary.
+- **`agents/orchestrator-agent.md`** — on the template path the retry budget was left unset while the retry question was still skipped, so what happened on a failed review depended on how the model read an undefined value. An older template now sets both budgets to manual explicitly, matching how those runs actually behaved, and a template with an Auto-fix line gets the effort's size presets, with the template's own checks still deciding which agents run.
+- **`docs/setup/templates.md`** — the Documentation preset checked only `pm-agent`, so it never ran `documentation-agent`.
+
+---
+
 ## v8.3.0 — September 23, 2026
 
 A real Phase 5b plan for a concurrency fix ran to sixteen manual cases, four charters and eight risks, and its steps told the tester to hold SQL application locks in a database console, derive lock resource names by hand, and build raw request bodies. It was written for a developer. The plan now writes for two readers in two languages, opens with the change's core, and keeps code evidence where only the gate reads it.

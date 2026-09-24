@@ -47,11 +47,12 @@ Every phase writes a single Markdown file: a small YAML frontmatter header carry
 - Developer provides a natural-language feature request (with optional issue reference)
 - Orchestrator loads `00-context.md`, `00b-impact.md`, and `00c-bug-triage.md` if present. A triage on disk is attached to every later subagent prompt, not just read by the Quick fix path
 - **Bug-Input Check** (before the Effort Check): if the input reads as a bug report — a symptom against an expectation, a stack trace, reproduction steps, "this used to work" — and no `00c-bug-triage.md` exists, the Orchestrator offers to run `bug-triage-agent` first. On accept it dispatches it with `mode: orchestrated`: the agent reproduces, finds the root cause, writes `00c-bug-triage.md`, and returns without a gate of its own, which the Orchestrator then presents as it would any phase artifact. Approve and `recommended_entry` becomes an advisory at the Effort Check below. This is the single exception to the Orchestrator never dispatching a standalone agent, and it holds only because `bug-triage-agent` asks nothing mid-work — every other standalone agent does, and would lose those questions as a subagent
-- **Effort Check** (skipped only when a `## KAIROS Pipeline` template section was found in the issue body): one question — "How big is this change?" — answered as `simple_fix`, `medium`, or `significant_rework`. When `00b-impact.md` exists, its `effort` value is the pre-selected default; otherwise the orchestrator proposes one from the request itself. **The chosen value is stamped into the invocation prompt of every subagent that runs**, so each agent enters Lean, Trimmed, or Full mode from a value a human confirmed instead of re-deriving the size itself (or silently defaulting to `medium`+ and running Full). `simple_fix` additionally presets `active_agents` to `implementer-coder-agent` + `code-reviewer-agent`, sets `loop_policy` to `auto 1`, and widens the Risk Disposition Loop's auto-accept threshold to `medium` — skipping the selection menu and the loop-policy prompt below entirely. `medium` presets `loop_policy.phase4` to `auto 1` (announced at Step 0f, overridable there) and still shows the selection menu. `significant_rework` asks everything, as before.
+- **Effort Check** (skipped only when a `## KAIROS Pipeline` template section was found in the issue body): one question — "How big is this change?" — answered as `simple_fix`, `medium`, or `significant_rework`. When `00b-impact.md` exists, its `effort` value is the pre-selected default; otherwise the orchestrator proposes one from the request itself. **The chosen value is stamped into the invocation prompt of every subagent that runs**, so each agent enters Lean, Trimmed, or Full mode from a value a human confirmed instead of re-deriving the size itself (or silently defaulting to `medium`+ and running Full). `simple_fix` additionally presets `active_agents` to `implementer-coder-agent` + `code-reviewer-agent`, sets `loop_policy` to `auto 1`, and widens the Risk Disposition Loop's auto-accept threshold to `medium` — skipping the selection menu and the loop-policy prompt below entirely. `medium` presets `loop_policy.phase4` to `auto 1` (announced at Step 0f, overridable there) and still shows the selection menu. `significant_rework` asks everything, as before. When the question is skipped because a template was found, `effort` comes from the template's `Effort:` line (else `00b-impact.md`, else `medium`) and is propagated as usual. The size presets — retry budget, auto-accept threshold, combined plan step for `simple_fix` — apply only when the template has an `Auto-fix:` line, and never override the template's agent list. A template without one is an older template and keeps the behaviour it always had: both retry budgets manual, the plan gate kept, and the retry question asked only at `significant_rework`.
 - If `00b-impact.md` found, displays a `💡 Impact Assessment` advisory block before the selection menu (effort, domains, recommended agents). The agent list stays advisory — nothing is pre-selected — but its `effort` value is pre-selected as the recommended answer at the Effort Check above.
 - If the invocation prompt already dictates an agent list, the orchestrator treats it as an unconfirmed proposal and still requires explicit confirmation through the selection menu
-- Orchestrator reads the `## KAIROS Pipeline` section from the issue body (if present), or shows an interactive numbered list; when no `00b-impact.md` advisory exists, the orchestrator adds its own `💡 Suggested selection` line derived from the feature request — advisory only, never auto-applied
-- User confirms or adjusts the agent selection; orchestrator announces the active pipeline before Phase 1
+- Orchestrator reads the `## KAIROS Pipeline` section from the issue body (if present), or shows an interactive numbered list. A template's optional `Auto-fix:` line (or its `Auto-fix after review:` / `Auto-fix after tests:` pair) sets how many times the agents may fix their own problems before stopping at a gate, overriding the size preset and skipping the retry question. The line is also the opt-in to the size presets, so templates written before it existed run exactly as they did. When no `00b-impact.md` advisory exists, the orchestrator adds its own `💡 Suggested selection` line derived from the feature request — advisory only, never auto-applied
+- User confirms or adjusts the agent selection; orchestrator announces the active pipeline before Phase 1 and saves the run's settings to `ledger/run.md`
+- **Issue write-back** (only when the run started from an issue and the selection came from the menu): the orchestrator shows the `## KAIROS Pipeline` block it would write and asks before appending it to the issue description — never touching the rest of the description. On Jira, or with no tracker CLI, it prints a paste-ready block instead. See [Pipeline Templates](/setup/templates#saving-the-selection-to-the-issue)
 
 _Input: free-text feature request + optional issue reference + optional pre-pipeline Markdown files (`00-context.md` / `00b-impact.md`)_
 _Output: confirmed `active_agents` list + `feature_folder` path_
@@ -318,14 +319,20 @@ User approves the deployment runbook (`06-deployment-plan.md`). This is the fina
 
 ## Shared Ledger — Cross-Phase Project Memory
 
-Each KAIROS run maintains three living files under `.kairos/<feature_folder>/ledger/` that accumulate shared state across all phases:
+Each KAIROS run maintains three living files under `.kairos/<feature_folder>/ledger/` that accumulate shared state across all phases, plus three files the Orchestrator alone keeps there:
 
 | File | Purpose | Seeded by | Updated by |
 |------|---------|-----------|-----------|
 | `constraints.md` | All constraints with per-phase accounting | PM Agent (or Context Extractor if run first) | Every agent |
-| `decisions.md` | Architectural and implementation decisions log | Architect Agent | Any agent |
-| `open-questions.md` | Cross-phase questions with answers | Any agent or human (via HITL gate) | Any agent |
+| `decisions.md` | Architectural and implementation decisions log | Architect Agent | Any agent; the `Supersedes` cell only by the Orchestrator |
+| `open-questions.md` | Cross-phase questions with answers, and deferred risks | Any agent or human (via HITL gate) | Any agent |
+| `run.md` | The run's settings: effort, active agents, auto-fix budgets | Orchestrator, before Phase 1 | Orchestrator |
+| `loops.md` | Auto-fix state while a retry is running, and the history of retries that did not converge | Orchestrator | Orchestrator; the checker adds its convergence signal |
+| `audit-log.md` | One line per gate resolution | Orchestrator | Orchestrator |
 
+`run.md` is what lets a pipeline resume in a later session with the same settings: the resumed run restores the effort, skips the agents that were never selected, and keeps the auto-fix budgets the human chose. `loops.md` keeps retry bookkeeping out of `open-questions.md`, so that file holds only what a person has to read.
+
+Feature folders written before v8.4.0 keep working. A folder with no `run.md` falls back to the effort stored in the audit log's header and asks once for anything else; loop sections found in `open-questions.md` are moved into `loops.md` the first time the Orchestrator touches them; a `decisions.md` table without a `Supersedes` column gains it on its next write.
 ### How the ledger works
 
 **Forced accounting model** — at the end of every phase, each agent must update the Status column of every existing constraint row before adding new ones. An unaddressed constraint stays `🔴 open` and is visible to every downstream agent.
@@ -337,6 +344,12 @@ Each KAIROS run maintains three living files under `.kairos/<feature_folder>/led
 | `⚠ deferred` | Acknowledged but deferred (tracked in risk) |
 | `♻ modified` | Constraint was changed — note new version |
 | `❌ dropped` | Explicitly removed — note justification |
+
+`open-questions.md` uses `🔴 open`, `✓ answered`, and `⚠ deferred`. A risk the human chose to **Defer** at a gate is written `⚠ deferred`, not `🔴 open`: nobody will answer it, so it is left out of the open-question count every gate shows, and the release plan lists it as a risk knowingly taken. A deferred row written by an older version, still `🔴 open` but marked `deferred risk`, is counted the same way.
+
+An **Escalate** writes two rows that point at each other: the `BLOCKING` constraint names its question (`BLOCKING — see Q7`), and the question names the constraint. The two full re-walks (architect and release planner) close the constraint from the question's answer, so answering the question is enough.
+
+When a phase contradicts an earlier decision and the human **Accepts** that conflict at the gate, the Orchestrator records the change in `decisions.md`'s `Supersedes` column. Later conflict scans skip the replaced decision instead of flagging it again. No phase agent writes that column: the agent being checked cannot switch off the check on itself.
 
 ### Why this matters
 

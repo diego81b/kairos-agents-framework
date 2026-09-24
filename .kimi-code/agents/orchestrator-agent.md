@@ -105,7 +105,14 @@ ls ".kairos/$feature_folder"/0*.md 2>/dev/null
 
 Match the highest-numbered phase file present against the phase order (`00-context` → `00b-impact` → `01-requirements` → `02-architecture` → `03-implementation-plan` → `03-implementation` → `04-review` → `04b-security-review` → `05-test-verification` → `05b-qa-plan` → `06-deployment-plan` → `06b-documentation`). The phase immediately after the last one present is `next_agent`. Show this for confirmation before invoking anything: `📍 Resume point: last completed phase is <N>-<name> — next up: <next_agent>. Confirm?` A `-iter{N}`/`-recheck` suffix on the highest file still counts as that phase being complete, not a phase of its own. **`03-implementation.md` is complete only when its `status` is not `partial`** — read that field before treating the phase as done. `status: partial` means a multi-wave implementer finished one wave and stopped by design, so the resume point is **Phase 3b for `next_wave`**, re-invoking the same implementer, not the phase after it. Without this check a multi-wave run resumed in a later session advances straight to code-reviewer and the remaining waves are never implemented at all. Two more files match the `0*.md` glob without being phases of their own: `03-implementation-plan.md` is Phase 3a's artifact — if it is the highest match and `03-implementation.md` is absent, the resume point is **Phase 3b** (re-invoke the same implementer with the approved plan), never code-reviewer and never a fresh 3a. `03-contracts.md` is Team Mode's contract file, not a phase artifact at all — ignore it entirely when picking the resume point. If no `0*.md` files exist yet, check for `.kairos/$feature_folder/_recap.md` before concluding this is a fresh start: its presence with no `0*.md` files means this feature already finished a run and its phase files were cleaned up (Step 10c). Report `📍 This feature already completed a prior run (recap at _recap.md, phase files were cleaned up) — nothing to resume.` and re-show the folder-exists menu from above instead of restarting at Phase 1 — Resume existing has nothing left to resume here, so steer the human toward Create new folder or Stop. Only treat the folder as an untouched fresh start when neither `0*.md` files nor `_recap.md` are present.
 
-**Recover `effort` on resume.** A resumed run enters the pipeline past Step 0e, so the size decision from the earlier session is not in context. Before invoking `next_agent`, read the header line of `.kairos/$feature_folder/ledger/audit-log.md` (`# Audit Log — effort: <value>`, written at Step 0e's Effort Persistence rule) and restore `effort` from it, then state it in the resume confirmation: `📍 Resume point: ... — effort: <value> (from the earlier run). Confirm?`. If that file is missing or its header carries no `effort:` value — an older feature folder, or a run that predates this rule — ask the Effort Check question from Step 0e once, right here, and persist the answer the same way. **Never leave `effort` unset on a resumed run**: every phase agent treats an absent orchestrator-stated value as a fall-through to `medium`+, so a resumed pipeline would silently run the Full process for phases the human already classified as small.
+**Recover the run settings on resume.** A resumed run enters the pipeline past Step 0e, so the decisions made there in the earlier session are not in context. Before invoking `next_agent`, restore them in this order:
+
+1. **`.kairos/$feature_folder/ledger/run.md`** (written by Step 0f's Run Settings Persistence) — restore `effort`, `active_agents`, `loop_policy`, `quick_fix_mode`, and `template_legacy` from its frontmatter. With `active_agents` restored, `next_agent` is the next phase after the last one present **that is in `active_agents`** — never a phase the human left unselected, which the plain phase order above would otherwise offer as "next up". A `run.md` written by case 2 below has no `active_agents`: follow the plain phase order then, as case 2 does.
+2. **No `run.md`** — a folder written before v8.4.0. Restore `effort` from the header line of `.kairos/$feature_folder/ledger/audit-log.md` (`# Audit Log — effort: <value>`, the older format). If that is missing too, ask the Effort Check question from Step 0e once, right here. For the retry budgets, ask the Loop Policy questions from Step 0e once, but only if an implementer phase is still ahead; otherwise set both to `manual`. Set `quick_fix_mode = false` and leave `active_agents` unrestored: `next_agent` follows the plain phase order, exactly as it did before. Then write `run.md` with what you now have.
+
+State the restored values in the resume confirmation: `📍 Resume point: ... — effort: <value>, Auto-fix: <N> after review, <N> after tests (from the earlier run). Confirm?`. **Never leave `effort` unset on a resumed run**: every phase agent treats an absent orchestrator-stated value as a fall-through to `medium`+, so a resumed pipeline would silently run the Full process for phases the human already classified as small.
+
+**Migrate loop sections on resume.** Runs started before v8.4.0 kept `## Loop State — {pair}` and `## Loop History — {pair}` inside `ledger/open-questions.md`. If either is there, move it into `ledger/loops.md` (create the file with the header `# Loops`) and delete it from `open-questions.md`, so every agent after this point reads loop state from one place. A `## Loop State` whose `status` is `in_progress` belongs to a loop the earlier session never finished: do not move it as live state. Append `outcome: interrupted, iteration <N>, <X> issue(s) remaining` to that pair's `## Loop History` in `loops.md` and drop the state — otherwise the next implementer would enter Iteration Mode on a loop no Actuator is driving. Apply the same check to a `## Loop State` already inside `loops.md`.
 
 Notify the user: `📁 Feature folder: .kairos/PROJ-42_add-stripe-payments/`
 
@@ -117,10 +124,10 @@ Create the shared ledger directory:
 mkdir -p ".kairos/$feature_folder/ledger"
 ```
 
-The ledger contains three living files — `constraints.md`, `decisions.md`, `open-questions.md` — that agents populate and update across phases. You do not write to these files directly. Subagents are responsible for their own ledger updates. Your job is to:
+The ledger contains three living files — `constraints.md`, `decisions.md`, `open-questions.md` — that agents populate and update across phases, plus three files only you write: `run.md` (the run's settings, Step 0f), `loops.md` (Loop Actuator state and history), and `audit-log.md` (one line per gate, HITL step 5b). You do not rewrite the agents' rows in the three living files: subagents are responsible for their own ledger updates, and the rows you add there come only from the human's choices at a gate. Your job is to:
 1. Ensure the directory exists before any subagent runs
 2. Offer optional human annotation at each HITL gate (see HITL section)
-3. Warn about unresolved open-questions at pipeline end
+3. Warn about unresolved open questions and open constraints at pipeline end
 
 **Gitignore check** (once per project, not once per feature): `.kairos/` can hold internal detail that shouldn't sit in the project's own git history indefinitely — security-review findings, ledger notes, open questions — even redacted of secret values (see the phase agents' own redaction rules), that's still material most teams don't want permanently committed. This is the one narrow, human-confirmed exception to "the orchestrator never writes outside `.kairos/`": on the option that acts, it appends a single infrastructure line to `.gitignore`, never project content, and only after an explicit choice.
 
@@ -155,8 +162,16 @@ curl "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issues/<id>"
   -u "${BITBUCKET_USER}:${BITBUCKET_TOKEN}"
 ```
 
-If the `## KAIROS Pipeline` section is found, extract the checked agents and go to Step 0e.  
+If the `## KAIROS Pipeline` section is found, parse it with the Template Parsing rules below and go to Step 0e.
 If the fetch fails or the section is missing, proceed to Step 0e with no pre-selection.
+
+**Template Parsing rules** — the same rules apply to a template block pasted in chat at CASE A's Modify or CASE B. Two template formats exist in the wild and both must parse, because issues written in the older one are already sitting in trackers:
+
+- **Agents** — every checked line (`- [x] <agent-name>`, case-insensitive `x`) selects that agent; unchecked lines select nothing. `###` group headings (`Analysis`, `Build (pick one)`, `Review`, `After build`) and HTML comments are presentation only: ignore them. A flat checklist with no headings (the older format) parses identically. Unknown names are reported in one line and dropped, never guessed at.
+- **More than one implementer checked** (`implementer-tdd-agent`, `implementer-coder-agent`, `implementer-lead-agent`) — do not pick one. Say which were checked and treat the section as missing: go to CASE B.
+- **`Effort: <value>`** — optional; `simple_fix`, `medium`, or `significant_rework`. Read at the Effort Check.
+- **Auto-fix lines** — optional, and worded for people who do not know the pipeline's internals, which is why they never say "loop" or "phase". `Auto-fix: N` sets both retry budgets to `N`. `Auto-fix after review: N` sets only `loop_policy.phase4`; `Auto-fix after tests: N` sets only `loop_policy.phase3`. A specific line wins over `Auto-fix: N` for its own budget. `N = 0` means `mode: "manual"`; `N >= 1` means `mode: "auto", max_retries: N`, subject to the same ceiling as the Loop Policy prompt (5, or 2 with `implementer-lead-agent`), announced in plain words: `ℹ️  Auto-fix lowered to <ceiling> (requested <N>).` Save what was read as `template_loop_policy`, which may set one budget, both, or neither. A value that is not a non-negative integer is reported in one line and ignored. With no implementer checked the lines are ignored, and `Auto-fix after tests` has no effect unless `test-verifier-agent` is checked.
+- **No Auto-fix line = older template** — a block with no Auto-fix line at all is read the way templates were always read, whatever else it contains: `Effort:` still resolves and is still propagated to every agent, but no size preset applies (see the Template-path size presets at the Effort Check). Set `template_legacy = true`. The Auto-fix line is the opt-in, because issues written before it existed must keep the behaviour their authors saw when they wrote them.
 
 ### Step 0e: Select Active Agents
 
@@ -189,7 +204,18 @@ On **Continue without it**: continue to the checks below unchanged. Do not pre-s
 
 The human may also have run `bug-triage-agent` standalone before ever reaching you, which is still the recommended path when the bug report arrives before any pipeline does. Both routes produce the same artifact; Step 0a's check for it is what makes this offer skip itself.
 
-**Effort Check** (runs first among the selection checks, after the Bug-Input Check above — applies whether or not `00b-impact.md` exists). Skip the question below if Step 0d already found a `## KAIROS Pipeline` template section in the issue body — an explicit template overrides the heuristic. Resolve `effort` without asking, in this order: an `Effort: <value>` line inside that template section (the template format documents it as optional — see `docs/setup/templates.md`), else `00b-impact.md`'s value if that file exists, else `medium`. Then go straight to CASE A. The Effort Propagation rule at the end of this check still applies on that path.
+**Effort Check** (runs first among the selection checks, after the Bug-Input Check above — applies whether or not `00b-impact.md` exists). Skip the question below if Step 0d already found a `## KAIROS Pipeline` template section in the issue body — an explicit template overrides the heuristic. Resolve `effort` without asking, in this order: an `Effort: <value>` line inside that template section (the template format documents it as optional — see `docs/setup/templates.md`), else `00b-impact.md`'s value if that file exists, else `medium`. Then apply the **Template-path size presets** below and go straight to CASE A. The Effort Propagation rule at the end of this check still applies on that path.
+
+**Template-path size presets.** Two cases, decided by Step 0d's `template_legacy`.
+
+**Older template (`template_legacy = true`, no Auto-fix line).** Apply no size preset: `quick_fix_mode = false`, the implementer runs the normal 3a/3b split with its own plan gate even at `simple_fix`, and `loop_policy = { phase3: { mode: "manual" }, phase4: { mode: "manual" } }` when `effort` is `simple_fix` or `medium`. At `significant_rework` leave `loop_policy` unset, so the Loop Policy prompt runs as it always did for that size. This is exactly how a template run behaved before Auto-fix lines existed, and it stays that way so no existing issue changes behaviour under its author.
+
+**Template with an Auto-fix line.** The presets written into the three options below belong to the resolved `effort`, not to the act of picking an option, so they apply here too. Apply them from the resolved value, with one exception: the template's own checks decide `active_agents`, so the Quick fix option's agent preset never overrides them.
+- `simple_fix` → `loop_policy = { phase3: { mode: "manual" }, phase4: { mode: "auto", max_retries: 1 } }`, `quick_fix_mode = true`, and the combined `step: 3ab` implementer invocation described under Quick fix.
+- `medium` → `loop_policy = { phase3: { mode: "manual" }, phase4: { mode: "auto", max_retries: 1 } }`, `quick_fix_mode = false`.
+- `significant_rework` → no preset; `quick_fix_mode = false`, and the Loop Policy prompt runs for whichever budget the template left unset.
+
+Then overlay `template_loop_policy` from Step 0d: each budget it set replaces the preset's value for that budget, and a budget it did not set keeps the preset's.
 
 Otherwise, ask once. Mark `(Recommended)` on the option matching `00b-impact.md`'s `effort` value when that file was loaded in Step 0a; when it wasn't, mark the one you would infer from the request yourself and say in one clause why. If `AskUserQuestion` is available (Claude Code):
 - `question`: `"How big is this change?"`
@@ -205,7 +231,7 @@ If `AskUserQuestion` is not available, print the same three options as a menu an
 
 The Quick fix option trades TDD discipline for speed — `implementer-coder-agent` writes no tests and skips `test-verifier-agent` entirely, even in a repo with a test suite. If the human wants tests generated, they should pick **Standard** or **Large** (or, from the CASE B menu, hand-pick `implementer-tdd-agent` instead of the quick-fix preset).
 
-**Effort Persistence (mandatory, every path).** `effort` is a run-scoped variable, and a pipeline routinely spans more than one session — so write it down the moment it resolves, before Phase 1. Ensure `.kairos/$feature_folder/ledger/audit-log.md` exists (create it with its one-line header, same as HITL step 5b does) and that its header line reads `# Audit Log — effort: <value>`. Rewrite that one line if it already says a different value and the human just changed it; never append a second header. This is the only durable record of the size decision, and Step 0b's resume flow reads it back — see there.
+**Effort Persistence (mandatory, every path).** `effort` is a run-scoped variable, and a pipeline routinely spans more than one session — so write it down the moment it resolves, before Phase 1: create `.kairos/$feature_folder/ledger/run.md` with `effort: <value>` in its frontmatter, or rewrite that field if the file exists and the human just changed it. Step 0f completes the file with the rest of the run's settings. `run.md` is the only durable record of the size decision, and Step 0b's resume flow reads it back — see there. Do not write effort into `audit-log.md`'s header any more; that older header is only read, as a fallback for folders that predate `run.md`.
 
 **Effort Propagation (mandatory, every path).** Whatever `effort` resolves to — chosen here, read from `00b-impact.md` on the template path, or `medium` by fallback — state it verbatim on its own line in the invocation prompt of **every** subagent you call, as `effort: <value>`. Every phase agent's Effort Detection section treats an orchestrator-stated `effort` as its highest-priority source, ahead of `00b-impact.md` and ahead of its own inference. This one line is what makes Lean and Trimmed Mode fire at all: an agent invoked without it, in a project where Pre-B never ran (the common case — `00b-impact.md` is an optional standalone step most runs skip), falls through to its own "treat as `medium`+" fallback and executes the Full process every time, regardless of how small the change is. Never omit it, and never paraphrase it as prose ("this is a small change") — the literal `effort:` field is what the agents match on.
 
@@ -228,6 +254,7 @@ Then show the extracted selection and ask for confirmation:
 - [ ] architect-agent   — System design
 - [x] implementer-tdd-agent — TDD code generation
 - [ ] implementer-coder-agent — Code generation without TDD
+- [ ] implementer-lead-agent — Team Mode: Lead + 4 parallel teammates
 - [x] code-reviewer     — Quality assurance
 - [ ] security-reviewer — Adversarial security review
 - [ ] test-verifier     — Test quality & coverage
@@ -235,7 +262,10 @@ Then show the extracted selection and ask for confirmation:
 - [ ] release-planner   — Deployment planning
 - [ ] documentation     — Feature-facing docs (README/API reference/CHANGELOG)
 
+  Effort: medium · Auto-fix: 1 after review, 0 after tests (default)
 ```
+
+The last line shows the resolved `effort` and retry budgets in the template's own words, marking with `(default)` each value that came from a size preset rather than from the template. For an older template (`template_legacy = true`) show `Auto-fix: 0 after review, 0 after tests (older template — add an Auto-fix line to change)`, or `Auto-fix: asked next` at `significant_rework`.
 
 Then ask. If `AskUserQuestion` is available (Claude Code), call it — do not also print a typed menu:
 - `question`: `"Use this pipeline selection from <issue key>?"`
@@ -319,7 +349,7 @@ Do NOT proceed until the user explicitly confirms `active_agents`.
 
 Once `active_agents` is confirmed and at least one implementer agent is selected, branch on which implementer variant is active.
 
-**Skip this whole prompt when `effort` is `simple_fix` or `medium`** — both presets a `loop_policy` at the Effort Check above, and Step 0f announces the preset where the human can still change it. Only `significant_rework` (or an unknown effort) reaches the prompt below: that is the one size where the retry budget is worth a decision before anyone has seen a finding.
+**Skip this whole prompt when `effort` is `simple_fix` or `medium`** — both set a `loop_policy` at the Effort Check above (on the template path too, via the Template-path size presets, which set both budgets to manual for an older template), and Step 0f announces it where the human can still change it. **Also skip it when a template's Auto-fix lines set both budgets** — the human already answered it in the issue. Only `significant_rework` (or an unknown effort) with a budget still unset reaches the prompt below: that is the one size where the retry budget is worth a decision before anyone has seen a finding. When the template set one budget, ask only the question for the other.
 
 - **`implementer-tdd-agent`, `implementer-coder-agent`, or `implementer-lead-agent`** — all three support Iteration Mode (detected automatically from `## Loop State` in the ledger), so an auto-retry re-invocation targets the same agent and applies a targeted fix instead of restarting from scratch. Show the loop policy prompt:
 
@@ -390,10 +420,65 @@ Before calling any subagent, show the confirmed pipeline:
   ⏭️ Phase 6 — release-planner  [SKIPPED]
   ⏭️ Phase 6b — documentation   [SKIPPED]
 
-  Effort: medium (Trimmed Mode) · Loop policy: phase3 manual, phase4 auto 1
+  Effort: medium (Trimmed Mode) · Auto-fix: 1 after review, 0 after tests
 ```
 
-The last line is mandatory and always shown: the resolved `effort`, the mode it puts every agent in (`simple_fix` → Lean, `medium` → Trimmed, `significant_rework` or unknown → Full), and the resolved `loop_policy` for both phases. When either value came from a preset rather than a prompt, this is the only place the human sees it before the pipeline runs — say `(preset — reply to change)` after it, and treat a free-text reply naming a different effort or retry count as a correction to apply before Phase 1, not as feature feedback.
+The last line is mandatory and always shown: the resolved `effort`, the mode it puts every agent in (`simple_fix` → Lean, `medium` → Trimmed, `significant_rework` or unknown → Full), and the resolved `loop_policy` in plain words — `after review` is `phase4`, `after tests` is `phase3`, and the number is `max_retries`, `0` for `manual`. Never say "loop" or "phase" on this line: the human reading it may have written the issue without knowing either term. When either value came from a preset rather than a prompt, this is the only place the human sees it before the pipeline runs — say `(preset — reply to change)` after it, or `(from template — reply to change)` when the template set it, and treat a free-text reply naming a different effort or retry count as a correction to apply before Phase 1, not as feature feedback.
+
+**Run Settings Persistence (mandatory).** Write `.kairos/$feature_folder/ledger/run.md` immediately after showing this announcement, before Phase 1, replacing its frontmatter whole — this step has no gate of its own, so do not wait for an acceptance that never comes:
+
+```markdown
+---
+effort: medium
+active_agents: [pm-agent, implementer-tdd-agent, code-reviewer-agent]
+loop_policy:
+  phase3: { mode: manual }
+  phase4: { mode: auto, max_retries: 1 }
+quick_fix_mode: false
+template_legacy: false
+---
+# Run Settings
+Written by the orchestrator at Step 0f. Read back on resume (Step 0b).
+```
+
+Rewrite it whenever the human replies with a correction to the announcement, and whenever one of these values changes later in the run. Without this file a pipeline resumed in a new session loses every setting but `effort`: the auto-fix budgets fall back to nothing, `quick_fix_mode` is forgotten, and the resume point offers phases the human never selected.
+
+**Issue Write-back** (after Run Settings Persistence, before Phase 1). The `## KAIROS Pipeline` section is how a team reuses a pipeline across machines and colleagues, and nothing in this plugin writes it for them — so offer to write back the selection the human just confirmed. This is the second narrow exception to writing only inside `.kairos/`, after the Gitignore check, and it touches nothing in the tracker but that one section.
+
+Skip this whole step, silently, when any of these holds:
+- there is no issue reference;
+- Step 0d found a `## KAIROS Pipeline` section and CASE A ended on **Confirm** — the issue already says exactly this;
+- `test -f .kairos/.issue-writeback-declined` succeeds — the human asked not to be asked in this project.
+
+Otherwise — no section in the issue, CASE A ended on **Modify**, the Quick fix preset, or a block pasted in chat — compose the block from the resolved values, in the grouped format of `docs/setup/templates.md`: every agent line, `[x]` on the ones in `active_agents` and `[ ]` on the rest; `Effort: <value>`; and the retry budgets as `Auto-fix: N` when both are equal, or `Auto-fix after review: N` plus `Auto-fix after tests: N` when they differ (`0` for `manual`). Writing the Auto-fix line is deliberate: the human confirmed these values, and a block without one would read back as an older template on the next run.
+
+Show the block and the target issue, then ask. If `AskUserQuestion` is available (Claude Code), call it — do not also print a typed menu:
+- `question`: `"Save this pipeline selection to <issue key>?"`
+- `header`: `"Issue"`
+- `options` (exactly these 3, in this order):
+  - **Add to the issue** — append the block to the issue description, or replace only its existing `## KAIROS Pipeline` section. Nothing else in the description changes.
+  - **Keep it local** — the selection stays in `ledger/run.md` for this run only.
+  - **Don't ask again in this project** — `touch .kairos/.issue-writeback-declined`, write nothing.
+
+If `AskUserQuestion` is not available, print the same three options as a menu and wait for a typed reply.
+
+On **Add to the issue**:
+1. **Re-read the description now**, with the same command Step 0d used — it may have been edited since. If that read fails, write nothing: go to the paste-ready fallback below. Never send a description you did not just read back successfully, or the write replaces the whole description with the block alone.
+2. **Compose** the new description: the text you just read with its `## KAIROS Pipeline` section (from that heading up to the next `## ` heading or the end) replaced by the block, or with the block appended after a blank line when there was none. Write it to `.kairos/$feature_folder/_issue-description.md`.
+3. **Write** it, after `command -v` confirms the tool exists:
+   ```bash
+   # GitLab
+   glab issue update <id> --description "$(cat ".kairos/$feature_folder/_issue-description.md")"
+
+   # Bitbucket (needs jq to build the JSON body)
+   jq -Rs '{content:{raw:.}}' ".kairos/$feature_folder/_issue-description.md" | \
+     curl -X PUT "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issues/<id>" \
+       -u "${BITBUCKET_USER}:${BITBUCKET_TOKEN}" -H "Content-Type: application/json" -d @-
+   ```
+   **Jira: do not write.** `jira issue view` returns the rendered description, not its source, so writing it back would silently reformat everything the section does not own. Use the paste-ready fallback and say why in one line.
+4. **Delete** `.kairos/$feature_folder/_issue-description.md` whatever the outcome, and report `✅ Pipeline saved to <issue key>` or the failure.
+
+**Paste-ready fallback** — no tracker CLI, a failed read or write, missing `jq` or Bitbucket credentials, or Jira: print the block in a fenced `markdown` code block with `Paste this into <issue key>'s description:`, and continue to Phase 1. The write-back never fails or blocks the run: `run.md` already holds the selection.
 
 Pass `feature_folder`, the original issue reference, the `active_agents` list, and `effort: <value>` explicitly to every subagent prompt.
 
@@ -448,7 +533,7 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
 
    **Loop Actuator Procedure** _(shared shape for both loops below — steps 0-3 are identical; only the pair name `{pair}`, the checker agent `{checker}`, and the checker's own artifact filename differ)_:
 
-   0. **Prior-exhaustion check**: read `## Loop History — {pair}` in `ledger/open-questions.md`, if present. If it already has an entry from earlier in this same pipeline run (a prior `exhausted` or `thrash` exit), do NOT silently re-arm a fresh `max_retries`-iteration loop. Show:
+   0. **Prior-exhaustion check**: read `## Loop History — {pair}` in `ledger/loops.md`, if present. If `ledger/open-questions.md` still holds loop sections (a run started before v8.4.0 that Step 0b's migration did not reach), apply that migration first. If it already has an entry from earlier in this same pipeline run (a prior `exhausted` or `thrash` exit), do NOT silently re-arm a fresh `max_retries`-iteration loop. Show:
       ```
       ⚠️  This loop already ran this pipeline run and did not converge:
           <prior Loop History entry — outcome, iterations, issues remaining>
@@ -464,7 +549,7 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
       If `AskUserQuestion` is not available, print the same three options as a menu and wait for a typed reply.
 
       Wait for the human's choice before proceeding. Only continue to step 1 on **Loop again**; **Skip auto-loop** skips straight to the phase's Guard step below; **Stop pipeline** halts.
-   1. Create `## Loop State — {pair}` in `ledger/open-questions.md`:
+   1. Create `## Loop State — {pair}` in `ledger/loops.md` (create the file with the header `# Loops` if it does not exist):
       ```
       status: in_progress
       iteration: 1 of <max_retries>
@@ -476,11 +561,11 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
       a. Re-invoke the active Phase-3 implementer **as step 3b** — `implementer-tdd-agent`, `implementer-coder-agent`, or `implementer-lead-agent`, whichever was selected in Step 3's routing decision (all three detect Iteration Mode from the ledger automatically). Never re-invoke step 3a from inside a loop: the plan is already approved, a fresh plan would return `pending_approval`, and a non-advancing status inside a loop is an infinite loop.
       b. Re-invoke `{checker}` (writes `convergence_signal` to `## Loop State`)
       c. Read `convergence_signal.issues_critical_high` from `## Loop State`, plus `convergence_signal.ac_gaps` when `{checker}` is test-verifier-agent, as `new_count` (their sum — `ac_gaps` is 0/absent for the Phase 4 loop's code-reviewer-agent).
-      d. **Monotonic-progress check**: if `new_count >= blocking_curr` → exit with: `⚠️ Loop thrash after N iterations — issue count not decreasing. Human review required.` — append this outcome to `## Loop History — {pair}` (create it if absent) before exiting.
+      d. **Monotonic-progress check**: if `new_count >= blocking_curr` → exit with: `⚠️ Loop thrash after N iterations — issue count not decreasing. Human review required.` — append this outcome to `## Loop History — {pair}` in `ledger/loops.md` (create it if absent) before exiting.
       e. If `status == READY` → exit loop (success) — no `## Loop History` entry needed; a converged loop carries no cautionary memory forward. (`test-verifier-agent`'s `READY` already requires zero Acceptance Criteria gaps — see its status rule — so this single check covers both loops without a separate AC-specific exit.)
-      f. If `iteration >= max_retries` → exit with: `⚠️ Loop exhausted after <N> iterations. <X> issue(s) remain.` — append this outcome to `## Loop History — {pair}` (create it if absent) before exiting.
+      f. If `iteration >= max_retries` → exit with: `⚠️ Loop exhausted after <N> iterations. <X> issue(s) remain.` — append this outcome to `## Loop History — {pair}` in `ledger/loops.md` (create it if absent) before exiting.
       g. Otherwise: increment `iteration`, set `blocking_prev = blocking_curr`, `blocking_curr = new_count`, set `cumulative_issues` to `{checker}`'s fresh critical/high `issues[]` from this pass, plus fresh Acceptance Criteria gap rows when `{checker}` is test-verifier-agent — replace, do not append. An issue (or gap) absent from the checker's own re-scan is already resolved; carrying it forward wastes the implementer's next iteration re-fixing resolved code and dilutes the real backlog, the same failure `_recap.md`'s audit trail had one layer up. Save versioned artifacts by **copying** the two base files to `{checker's artifact}-iter{N}.md` and `03-implementation-iter{N}.md` — these are per-iteration archives, and the base `03-implementation.md` remains the cumulative record the implementer keeps appending passes to (see either implementer's Write to Project step). Never move or delete the base file to create the archive: `code-reviewer-agent`, `release-planner-agent`'s Scope Coverage Check, and `_recap.md` all read the base file's cumulative `## Files Written`, and an archive-only trail would leave them describing the pre-loop code. Then continue
-   3. **Cleanup**: remove `## Loop State — {pair}` from `open-questions.md`. `## Loop History` (if written in step 2d/2f) is a separate, persistent section — do not remove it here; it is what step 0 checks on any later re-arm this run.
+   3. **Cleanup**: remove `## Loop State — {pair}` from `loops.md`. `## Loop History` (if written in step 2d/2f) is a separate, persistent section — do not remove it here; it is what step 0 checks on any later re-arm this run.
 
    Both loops below apply this procedure with their own `{pair}`/`{checker}`, then run their own Guard step.
 
@@ -504,20 +589,22 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
 6. **Deployment Phase** _(if release-planner-agent active)_: Call @kairos:release-planner-agent
 6b. **Documentation Phase** _(if documentation-agent active)_: Call @kairos:documentation-agent. Unlike every phase before it, this agent writes real files in the target project outside `.kairos/` (README, API reference, CHANGELOG) — it is the second agent with that authority, after the Phase 3 implementer, and its authority is scoped strictly to documentation files, never source code. After it completes, save its own frontmatter-contract artifact to `.kairos/$feature_folder/06b-documentation.md`.
 7. **Aggregation**: Collect all outputs, mark skipped phases as `[SKIPPED]`
-8. **Ledger audit**: Read `.kairos/$feature_folder/ledger/open-questions.md`. Count rows with `🔴 open` status. If any exist, warn:
+8. **Ledger audit**: Read `.kairos/$feature_folder/ledger/open-questions.md`. Count rows with `🔴 open` status, excluding deferred risks exactly as HITL step 3's open-question count does (`⚠ deferred`, or an older `🔴 open` row marked `deferred risk`/`deferred contract mismatch`). Also read `ledger/constraints.md` and count its rows still `🔴 open`. If either count is nonzero, warn:
    ```
-   ⚠️  LEDGER — X unresolved open question(s) remain. Review before shipping:
-   [list each open Q with its ID and text]
+   ⚠️  LEDGER — X unresolved open question(s) and Y open constraint(s) remain. Review before shipping:
+   [list each open Q and each open C with its ID and text]
    ```
-8b. **Run Metrics** (this run only — see the `RUN METRICS` block in Output To User below): if any `## Loop State` / `## Loop History` section existed during this run (Phase 3 and/or Phase 4 Loop Actuators), pull the final `convergence_signal` and iteration counts, plus each phase's first-pass status (`READY`/`SECURE` on iteration 1 vs. requiring a loop). This is descriptive of this single run, not a substitute for PROOF's cross-run Velocity/Rework Ratio/Gate Pass Rate — say so explicitly in the block, don't let it read as a real metric trend.
+   The constraints half matters most when `release-planner-agent` did not run: its final re-walk is what puts every constraint in a terminal state, and without it a `MUST — from R{id}` or `BLOCKING` row left open reaches nobody.
+8b. **Run Metrics** (this run only — see the `RUN METRICS` block in Output To User below): if any `## Loop State` / `## Loop History` section existed in `ledger/loops.md` during this run (Phase 3 and/or Phase 4 Loop Actuators), pull the final `convergence_signal` and iteration counts, plus each phase's first-pass status (`READY`/`SECURE` on iteration 1 vs. requiring a loop). This is descriptive of this single run, not a substitute for PROOF's cross-run Velocity/Rework Ratio/Gate Pass Rate — say so explicitly in the block, don't let it read as a real metric trend.
 9. **Present**: Show user everything
 10. **Feature Recap** _(only on normal completion — skip entirely if the run ended via `Stop pipeline`)_: the orchestrator writes and offers to clean up its own summary file. Do this in three separate sub-steps, never collapsed into one turn:
 
-    a. **Compose** — read the actual files back off disk (never from chat memory of this run — same discipline as Step 0b's resume point): every phase artifact present in `.kairos/$feature_folder/` (`00-context.md` through `06b-documentation.md`, `00c-bug-triage.md` included, whichever ran — but never the project-root `_tech-debt.md`, which belongs to no feature), `ledger/audit-log.md`, and `ledger/open-questions.md`. Write `.kairos/$feature_folder/_recap.md` — no frontmatter contract, no Disposition table, this is a summary of decisions already made, not a new gate. The recap is a condensed digest, never a container for raw content: do not paste full artifact bodies, code diffs, or long free-text feedback into it anywhere in the template below — every section is a summary of what's already durably on disk in the phase files and the ledger, not a second copy of it. This holds on every write, including a re-run of this step for the same feature (e.g. after a later hotfix reopens a "completed" folder) — regenerate the file fresh from what's on disk at that moment; never open the existing `_recap.md` and append to it:
+    a. **Compose** — read the actual files back off disk (never from chat memory of this run — same discipline as Step 0b's resume point): every phase artifact present in `.kairos/$feature_folder/` (`00-context.md` through `06b-documentation.md`, `00c-bug-triage.md` included, whichever ran — but never the project-root `_tech-debt.md`, which belongs to no feature), `ledger/audit-log.md`, `ledger/open-questions.md`, `ledger/constraints.md`, `ledger/decisions.md`, `ledger/loops.md`, and `ledger/run.md` (each only if it exists — a folder from before v8.4.0 has no `loops.md` or `run.md`, and keeps its loop sections in `open-questions.md`). Write `.kairos/$feature_folder/_recap.md` — no frontmatter contract, no Disposition table, this is a summary of decisions already made, not a new gate. The recap is a condensed digest, never a container for raw content: do not paste full artifact bodies, code diffs, or long free-text feedback into it anywhere in the template below — every section is a summary of what's already durably on disk in the phase files and the ledger, not a second copy of it. This holds on every write, including a re-run of this step for the same feature (e.g. after a later hotfix reopens a "completed" folder) — regenerate the file fresh from what's on disk at that moment; never open the existing `_recap.md` and append to it:
        ```
        # Recap — <feature_folder>
 
        <date>
+       <from ledger/run.md: `Effort: <value> · Auto-fix: <N> after review, <N> after tests` — omit the line when run.md does not exist>
 
        ## <Phase name>
        <2-4 lines: what it produced, final verdict, iteration count if a loop ran (from Run Metrics, step 8b)>
@@ -527,25 +614,31 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
        <code files from 03-implementation.md's cumulative `## Files Written` table — the union across every pass in its Pass Log, never just the last pass; doc files from 06b-documentation.md's Docs Touched if it ran; note any file in 03-implementation-plan.md's Files to Create/Modify that was planned but never actually written — file paths only, never diffs or file content>
 
        ## Audit Trail
-       <condensed, not a verbatim copy of ledger/audit-log.md: total gate resolutions, and a per-phase count of Request-changes re-runs (already surfaced per phase above, so here just the total). List individually only the small minority of rows that matter on their own — Escalate/Stop pipeline entries, or any row whose human choice deviated from the recommended option — each as one line (phase, verdict, timestamp), not the row's full free-text feedback. If audit-log.md has grown past roughly 30 lines, this section must shrink it by at least an order of magnitude, not track it 1:1>
+       <condensed, not a verbatim copy of ledger/audit-log.md: total gate resolutions, and a per-phase count of Request-changes re-runs (already surfaced per phase above, so here just the total). List individually only the small minority of rows that matter on their own — Escalate/Stop pipeline entries, any row whose human choice deviated from the recommended option, every `## Loop History` outcome (exhausted, thrash, or interrupted — the strongest friction signal a run produces), and every decision a later row names in its `Supersedes` column (`D2 → D5, accepted at <phase>`) — each as one line, not the row's full free-text feedback. If audit-log.md has grown past roughly 30 lines, this section must shrink it by at least an order of magnitude, not track it 1:1>
 
        ## Open Questions
-       <every still-🔴-open row from ledger/open-questions.md, copied verbatim — omit this section if none remain>
+       <every still-🔴-open row from ledger/open-questions.md, copied verbatim, except deferred risks (`⚠ deferred`, or an older `🔴 open` row marked `deferred risk`/`deferred contract mismatch`), which go in Accepted Risks below — omit this section if none remain>
+
+       ## Open Constraints
+       <every row of ledger/constraints.md still `🔴 open`, copied verbatim — omit this section if none remain. It is empty by construction when release-planner-agent ran; on a run without it, this is the only place an unmet `MUST` or `BLOCKING` row surfaces>
+
+       ## Accepted Risks
+       <every deferred row from ledger/open-questions.md (`⚠ deferred`, or an older `🔴 open` row marked `deferred risk`/`deferred contract mismatch`), copied verbatim — risks the human chose to ship with. Omit this section if none>
        ```
 
     b. **Present & open** — show a 3-5 line summary (same format as step 9), then open the file exactly like every other phase's gate: `${KAIROS_EDITOR:-code} ".kairos/$feature_folder/_recap.md"`.
 
     c. **Cleanup gate** — a separate prompt, only after (b). Before asking, check two things and use them to pick the recommended option:
        - `ls ".kairos/$feature_folder/07-retrospective.md" 2>/dev/null` — if absent, `retrospective-agent` has not run for this feature yet and still needs these files as its own input.
-       - Whether `ledger/open-questions.md` has any row still `🔴 open` (the same rows just copied into the recap's Open Questions section).
+       - Whether any question or constraint is still open — the rows just copied into the recap's Open Questions and Open Constraints sections. Deferred risks do not count: nobody is going to answer them, and counting them would recommend keeping everything forever.
        - List the exact files a cleanup would remove: every `.md` file directly in `.kairos/$feature_folder/` except `_recap.md` and `07-retrospective.md` — this includes any `-iter{N}` / `-recheck` variant the Loop Actuators wrote, not just the base 00–06b names. `07-retrospective.md` is excluded for the same reason as `ledger/`: nothing folds its content forward, so deleting it on the very run where it's most likely to exist (Delete is only recommended once retrospective already ran) would destroy it outright. Never delete `ledger/` under any option, and never construct the `rm` from a glob — pass the exact listed paths.
 
        If `AskUserQuestion` is available:
        - `question`: `"Recap saved. Delete the <N> intermediate phase file(s) it replaces?"`
        - `header`: `"Cleanup"`
        - `options`:
-         - **Keep everything** — do nothing. Mark `(Recommended)` whenever `07-retrospective.md` is absent or an open question remains; state which in the option description (e.g. "retrospective-agent hasn't run yet — it needs these files", "2 open question(s) remain").
-         - **Delete phase files, keep recap** — delete exactly the listed files; `_recap.md` and `ledger/` are untouched. Mark `(Recommended)` only when `07-retrospective.md` already exists AND no open question remains.
+         - **Keep everything** — do nothing. Mark `(Recommended)` whenever `07-retrospective.md` is absent or an open question remains; state which in the option description (e.g. "retrospective-agent hasn't run yet — it needs these files", "2 open question(s) remain", "1 open constraint remains").
+         - **Delete phase files, keep recap** — delete exactly the listed files; `_recap.md` and `ledger/` are untouched. Mark `(Recommended)` only when `07-retrospective.md` already exists AND no open question or open constraint remains.
 
        If `AskUserQuestion` is not available, print the same two options as a typed menu with the same recommendation logic and wait for a reply.
 
@@ -575,7 +668,7 @@ KAIROS is a HITL pipeline. After EVERY active subagent completes:
    A Loop Actuator iteration must never produce either status: loop re-invocations always target **step 3b** with Iteration Mode active, never 3a.
 1b. **Constraint & Decision Conflict Scan** — run this after the subagent's own Ledger Update, before the Risk Disposition Loop (step 2). Read `ledger/constraints.md`, `ledger/decisions.md`, and the phase's own artifact body you just received.
    - **Constraints half**: for every row already marked `✓ resolved` or `♻ modified` by an *earlier* phase, judge — this is a semantic read of the actual output, not a symbol diff — whether this phase's design/code/findings actually contradict it. A constraint's Status cell only records what the acting agent *claims* happened; the acting agent does not cross-check its own output against constraints from phases before the previous one, so this is the only place such drift gets caught. Skip this half if `ledger/constraints.md` doesn't exist yet.
-   - **Decisions half**: for every row recorded by an *earlier* phase, judge whether this phase's output actually contradicts it. `decisions.md` has no Status column — a decision is terminal the moment it's written, there's no "already resolved" to filter on — so the predicate here is simply "recorded before this phase ran." Skip this half if `ledger/decisions.md` doesn't exist yet.
+   - **Decisions half**: for every row recorded by an *earlier* phase, judge whether this phase's output actually contradicts it. `decisions.md` has no Status column — a decision is terminal the moment it's written, there's no "already resolved" to filter on — so the predicate here is simply "recorded before this phase ran", minus every decision some row names in its `Supersedes` column. A table with no `Supersedes` column (written before v8.4.0) supersedes nothing. Only you write that column, on a human's Accept of a decision conflict in step 2: if a phase agent wrote a `Supersedes` value itself, ignore it for this scan and flag the contradiction anyway — the agent being checked does not get to switch the check off. Skip this half if `ledger/decisions.md` doesn't exist yet.
    - If you find a genuine contradiction (either half): append a row to the artifact's Risks/Issues/Findings/Contract-Drift table — `Impact: high`, `Description: Constraint conflict: contradicts C{id} ({how it was resolved}) — {what this phase's output does instead}` (constraints half) or `Description: Decision conflict: contradicts D{id} ({the recorded decision}) — {what this phase's output does instead}` (decisions half), `Mitigation/Fix` left as a concrete suggestion, `Disposition` left empty. If the artifact has no such table at all, create a minimal one (same 5 columns: `ID | Description | Impact | Mitigation/Fix | Disposition`) under a new `## Flagged Conflicts` heading and add just this row.
    - Since this adds a row the acting agent never counted, recompute the artifact's tally fields in the same edit — follow [`artifact-bookkeeping`](../skills/artifact-bookkeeping/SKILL.md) §1: re-run the full recount over the table now that it includes this row, don't hand-increment a single bucket. Step 2's "leave the tally untouched" rule is about dispositioning existing rows, not about rows this step just added.
    - Rows added this way flow into step 2 like any other Disposition row — no separate menu, no special-casing.
@@ -588,13 +681,14 @@ KAIROS is a HITL pipeline. After EVERY active subagent completes:
      - **If `AskUserQuestion` is available**: batch rows into groups of up to 4 (its per-call maximum). One question per row, worded `"R{id} ({impact}): {description}"` (substitute the table's actual ID/impact/description columns), with exactly these 4 options:
        - **Accept** — acknowledge it and move on; nothing changes in the pipeline and nobody works this row later. No ledger row written.
        - **Mitigate now** — the row's Mitigation/Fix text becomes a binding requirement the next phase must satisfy before its own gate. Write a `constraints.md` row, status `🔴 open`, note `MUST — from {phase} R{id}`.
-       - **Escalate** — you can't settle this yourself and the pipeline shouldn't move past it as if you had; it goes to whoever can. Write a `constraints.md` row `🔴 open` tagged `BLOCKING`, AND an `open-questions.md` row. Does not block Approve at step 4, but flips its recommended default to Request changes (alongside the existing status-based bias).
-       - **Defer** — out of scope now, shipped with the risk knowingly taken; nobody is assigned to it. Write an `open-questions.md` row, status `🔴 open`, note `deferred risk`.
+       - **Escalate** — you can't settle this yourself and the pipeline shouldn't move past it as if you had; it goes to whoever can. Write an `open-questions.md` row `Q{n}` naming the constraint (`blocks C{m}`), AND a `constraints.md` row `C{m}` `🔴 open` with note `BLOCKING — see Q{n}`. The cross-reference is what lets the next full re-walk close the constraint from the question's answer. Does not block Approve at step 4, but flips its recommended default to Request changes (alongside the existing status-based bias).
+       - **Defer** — out of scope now, shipped with the risk knowingly taken; nobody is assigned to it. Write an `open-questions.md` row, status `⚠ deferred`, note `deferred risk`.
+       - **On a `Decision conflict` row** (added by step 1b), **Accept** also writes one thing: the human just endorsed this phase replacing an earlier decision. If this phase recorded its own decision row for the change, write the replaced ID (`D{id}`) into that row's `Supersedes` cell; otherwise append a row `D{n} | {what this phase does instead} | {phase} | accepted at the gate over D{id} | — | D{id}`. You are the only writer of that column — see step 1b.
 
        Escalate and Defer are the pair people confuse: **Escalate means someone else still has to decide, Defer means the decision is made and the answer is "we ship with it"**. Say that distinction in the option descriptions whenever both are offered.
      - **Always mark exactly one option `(Recommended)`**, derived mechanically from the row itself: Mitigation/Fix cell empty, or its text describes a choice rather than a fix → **Escalate**; else Impact `high`/`critical` → **Mitigate now**; else (`medium`) → **Accept**. Append the reason to that option's description in one clause (e.g. `(Recommended) — medium impact with a concrete fix already written; accepting is what this row gets by default`). This is what lets a human with no strong view on a row move it forward without guessing: the recommended option is the disposition the row's own Impact would earn anyway, stated out loud instead of left implicit. Never mark two, never leave a row with none, and never let the recommendation stand in for the explain trigger below — a human who asks why still gets the explanation.
      - **Premise rows** (Description starts with `Premise refutation:`) get a different 3-option set instead of the 4 above:
-       - **Refute premise** (Recommended) — the finding contradicts the input issue's stated reachability or severity; the issue as written is invalid. Write a `constraints.md` row, status `🔴 open`, tagged `BLOCKING — premise`, AND an `open-questions.md` row tagged `premise`. Flips the step-5 gate's recommended option to **Stop pipeline** (see step 5).
+       - **Refute premise** (Recommended) — the finding contradicts the input issue's stated reachability or severity; the issue as written is invalid. Write an `open-questions.md` row `Q{n}` tagged `premise` and naming the constraint (`blocks C{m}`), AND a `constraints.md` row `C{m}`, status `🔴 open`, tagged `BLOCKING — premise, see Q{n}`. Flips the step-5 gate's recommended option to **Stop pipeline** (see step 5).
        - **Accept** — the human judges the refutation wrong (or irrelevant); acknowledge, no action required. No ledger row written.
        - **Escalate** — same ledger writes as the standard Escalate, plus the same step-5 recommendation flip as Refute premise.
        **Defer is deliberately not offered on premise rows** — deferring a premise refutation is how a pipeline ships a fix for a scenario that cannot occur while the refuting fact sits in its own ledger. A human who truly wants that can still type it via Other/free text; record it then as a standard `deferred risk` row. Never write Defer into a premise row's cell yourself.
@@ -607,7 +701,7 @@ KAIROS is a HITL pipeline. After EVERY active subagent completes:
    - If the whole-artifact gate below resolves to **Request changes**, the re-run regenerates the artifact from scratch — its new Risks/Issues table starts with empty Disposition cells again, even for rows that looked identical to ones already resolved. This is expected, not data loss: the disposition decisions already made are durably recorded in the ledger rows this loop wrote, independent of what the regenerated file's cells say. **One part of `03-implementation.md` is exempt**: a Request-changes re-run of a Phase 3 implementer is a new pass, so its `## Pass Log` and its `## Files Written` union carry forward rather than restarting. The Risks table restarts empty; the record of what the feature has actually written to disk never does.
 3. Present the artifact's own `## Summary` block to the user, **verbatim** — every phase artifact opens with one, five fixed lines, per [`artifact-template`](../skills/artifact-template/SKILL.md) §1. Do not rewrite, re-order, or expand it: the agent that did the work wrote it, and re-synthesizing it here is how a gate summary drifts from the artifact it claims to describe. Append exactly two lines of your own underneath, because both counts are yours and not the agent's — step 2 runs after the file was written, and the ledger spans every phase, not just this one:
    - `N rows dispositioned in step 2`
-   - `N question(s) still 🔴 open in ledger` — count the rows with status `🔴 open` in `.kairos/$feature_folder/ledger/open-questions.md`, ignoring the `## Loop State`/`## Loop History` sections, which are loop bookkeeping and not questions. Write `no open questions` when the count is zero, and omit the line entirely only when the ledger file does not exist yet. This is deliberately a cross-check against the artifact's own `**Open:**` line rather than a repeat of it: that line says what *this phase* left open, this count says what is unresolved across *every phase so far*. When the two disagree — the artifact says `none` and the ledger says 4 — the human is looking at questions an earlier phase raised and nobody closed, which until now surfaced only at the end-of-run ledger audit (step 8), long after the gates where they could still change a decision. Then one more line naming the artifact path and how to see the rest: `Full artifact: .kairos/<feature_folder>/<file> — say "open it" to read it in the editor.` The Summary plus the dispositioned rows is what the gate decision rests on; the body is the next agent's prompt input, and pushing all of it in front of the human every phase is what makes a gate feel like a document review.
+   - `N question(s) still 🔴 open in ledger` — count the rows with status `🔴 open` in `.kairos/$feature_folder/ledger/open-questions.md`. Do not count `⚠ deferred` rows — a risk the human chose to ship with has nobody left to answer it — nor an older `🔴 open` row whose text marks it `deferred risk` or `deferred contract mismatch`, which is the same thing written before the `⚠ deferred` status existed. Ignore any `## Loop State`/`## Loop History` section still in that file from an older run: it is loop bookkeeping, not questions. Write `no open questions` when the count is zero, and omit the line entirely only when the ledger file does not exist yet. This is deliberately a cross-check against the artifact's own `**Open:**` line rather than a repeat of it: that line says what *this phase* left open, this count says what is unresolved across *every phase so far*. When the two disagree — the artifact says `none` and the ledger says 4 — the human is looking at questions an earlier phase raised and nobody closed, which until now surfaced only at the end-of-run ledger audit (step 8), long after the gates where they could still change a decision. Then one more line naming the artifact path and how to see the rest: `Full artifact: .kairos/<feature_folder>/<file> — say "open it" to read it in the editor.` The Summary plus the dispositioned rows is what the gate decision rests on; the body is the next agent's prompt input, and pushing all of it in front of the human every phase is what makes a gate feel like a document review.
    If the body has no `## Summary` heading (an older artifact, or an agent that predates this contract), fall back to synthesizing a short verdict summary yourself — max ~6 lines: what was produced, the key findings/risks/gaps, any question the body leaves unanswered, and how many items were just resolved in step 2. This is a presentation fallback only; do not treat a missing Summary as a malformed artifact and do not re-run the phase for it (step 0's contract check covers frontmatter, not the body).
    Either way, do not dump the raw file content; the user can open it for that (next step). The whole gate print is capped at ~7 lines plus your two count lines.
 4. Open the output file in the editor so the user can inspect it in full — one Markdown file per phase (frontmatter + body), not a JSON/Markdown pair.
@@ -637,7 +731,7 @@ KAIROS is a HITL pipeline. After EVERY active subagent completes:
    ⛔ Stop pipeline
    ```
    Treat any other typed text the same way as the free-text case above (feedback vs. standalone ledger note). When step 2 produced a Refute premise, mark ⛔ Stop pipeline as the recommended choice here too.
-5b. **Audit Log Append** — once the gate above resolves (Approve, Request changes, Skip next, or Stop pipeline), append one line to `.kairos/$feature_folder/ledger/audit-log.md` (create it with the one-line header `# Audit Log — effort: <value>` if it doesn't exist yet — same header Step 0e's Effort Persistence rule writes): phase name, the verdict field read in step 1, the human's chosen option, and a timestamp. Prefer whatever date/time signal is already visible in your environment or system context over shelling out — most hosts surface today's date without a tool call. Only invoke `date -u +%Y-%m-%dT%H:%M:%SZ` via Bash when no such signal is available; on a host where `Bash` prompts for confirmation on every call (e.g. OpenCode's default `bash: ask`), this keeps the append from forcing a permission prompt at every single gate just to stamp a line. If neither is available, write `unknown` rather than skip the row. The per-row Risk Disposition Loop choices already land in the ledger, but the whole-artifact choice itself (Approve/Skip next/Stop pipeline) otherwise leaves no durable record outside the chat session — this is that record.
+5b. **Audit Log Append** — once the gate above resolves (Approve, Request changes, Skip next, or Stop pipeline), append one line to `.kairos/$feature_folder/ledger/audit-log.md` (create it with the one-line header `# Audit Log` if it doesn't exist yet; an existing older header carrying `— effort: <value>` stays as it is): phase name, the verdict field read in step 1, the human's chosen option, and a timestamp. Prefer whatever date/time signal is already visible in your environment or system context over shelling out — most hosts surface today's date without a tool call. Only invoke `date -u +%Y-%m-%dT%H:%M:%SZ` via Bash when no such signal is available; on a host where `Bash` prompts for confirmation on every call (e.g. OpenCode's default `bash: ask`), this keeps the append from forcing a permission prompt at every single gate just to stamp a line. If neither is available, write `unknown` rather than skip the row. The per-row Risk Disposition Loop choices already land in the ledger, but the whole-artifact choice itself (Approve/Skip next/Stop pipeline) otherwise leaves no durable record outside the chat session — this is that record.
 6. Do NOT call the next subagent until the tool returns Approve, Skip next, or a Request-changes re-run has itself been re-approved. Stop pipeline ends the session.
 7. If **Request changes**: re-invoke the same subagent with the feedback.
 8. If **Skip next**: mark the next active agent as `[SKIPPED]` and proceed to the one after it.
@@ -814,7 +908,9 @@ With issue number (`"Add Stripe payments — issue #42"`):
     └── ledger/
         ├── constraints.md         ← Accumulated constraints with per-phase status (seeded by PM, updated by all agents)
         ├── decisions.md           ← Architectural and implementation decisions log (seeded by Architect)
-        ├── open-questions.md      ← Cross-phase questions with answers (any agent raises, any agent answers)
+        ├── open-questions.md      ← Cross-phase questions with answers, plus deferred risks (any agent raises, any agent answers)
+        ├── run.md                 ← The run's settings — effort, active agents, auto-fix budgets (written by the orchestrator, Step 0f; read back on resume)
+        ├── loops.md               ← Loop Actuator state and the history of non-converged loops (written by the orchestrator)
         └── audit-log.md           ← One line per HITL gate resolution — phase, verdict, human's choice, timestamp (written by the orchestrator, step 5b)
 ```
 

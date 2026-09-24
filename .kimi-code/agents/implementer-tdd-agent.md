@@ -35,7 +35,7 @@ If the orchestrator names neither step, treat it as 3a. Writing source files aga
 
 If standalone, derive `feature_folder` using the same algorithm the orchestrator defines in its Step 0b (`agents/orchestrator-agent.md` is the canonical definition — this restates it, it doesn't duplicate it): Jira key → `PROJ-N_{slug}`; numeric `#N` → `issue-N_{slug}`; otherwise `feature_{slug}`. Create `.kairos/<feature_folder>/` before writing any output.
 
-**Iteration Mode** — detected automatically from the ledger (see Ledger Check below). You are in Iteration Mode when `open-questions.md` contains `## Loop State` with `status: in_progress`. In this mode:
+**Iteration Mode** — detected automatically from the ledger (see Ledger Check below). You are in Iteration Mode when `ledger/loops.md` contains `## Loop State` with `status: in_progress`. In this mode:
 - Skip PHASE 0 entirely — both the plan and its checkpoint. The plan was already approved in a previous invocation and must not be overwritten
 - Focus ONLY on `loop_state.cumulative_issues` — do not touch files not referenced in that list
 - Emit `changes_this_iteration[]` in your output describing which issues you addressed and how
@@ -53,7 +53,7 @@ Before proceeding, read all three ledger files:
 
 If the ledger does not exist (standalone invocation), skip this check.
 
-**Loop State detection** — after reading `open-questions.md`, check for a `## Loop State` section. If it exists with `status: in_progress`, activate **Iteration Mode** automatically (see Input Modes above). The `cumulative_issues` list in that section is your complete work backlog for this iteration — address every item in it.
+**Loop State detection** — read `ledger/loops.md` if it exists and check for a `## Loop State` section. Only `loops.md` counts: the orchestrator moves any loop section an older run left in `open-questions.md` into `loops.md` before invoking you, and drops a stale one. If it exists with `status: in_progress`, activate **Iteration Mode** automatically (see Input Modes above). The `cumulative_issues` list in that section is your complete work backlog for this iteration — address every item in it.
 
 ## Effort Detection & Lean Mode
 
@@ -298,11 +298,11 @@ iteration_mode: { active: false, iteration: null }
 ---
 
 ## Summary
-**What:** <what was built this wave, one line>
+**What:** <the feature's state across every pass, then this pass, one line — e.g. `Auth module: waves 1-2 of 3 done; this pass: token refresh endpoints`, or just what was built when there is a single pass>
 **Decision:** <TDD verdict in one clause, e.g. `RED and GREEN both verified, REFACTOR complete`>
-**Needs your attention:** <anything the reviewer must look at first — a skipped test, an `unknown` verification, a deviation from the plan; `none` if nothing>
+**Needs your attention:** <anything the reviewer must look at first across the whole feature, not only this pass — a skipped test, an `unknown` verification, a deviation from the plan; `none` if nothing>
 **Open:** <ledger IDs of the questions this phase leaves open, e.g. `Q3, Q7 — see ledger/open-questions.md`; `none` when it leaves none>
-**Next:** code-reviewer-agent
+**Next:** <from `status`: `code-reviewer-agent` when `complete`; `implementer, wave <next_wave> of <total_waves>` when `partial`; `stop — <reason>` when `too_big`>
 
 ## Pass Log
 
@@ -409,7 +409,7 @@ In **Full Mode**, update all three ledger files under `.kairos/<feature_folder>/
 
 Never rewrite an existing row's `Category` cell — it is set once by whoever created the row and is what downstream conditional checks key on. Only `Status`, `Updated by`, and `Note` change here. Any new row you add carries a `Category` from [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)'s closed vocabulary; apply its Writer Rule first if the table is still in the legacy 6-column form.
 
-**`decisions.md`** — Add implementation decisions:
+**`decisions.md`** — Add implementation decisions. The table has six columns, `ID | Decision | Phase | Rationale | Constraint impact | Supersedes`; if it still has five (written before v8.4.0), add the `Supersedes` column first, with `—` in every existing row. Leave `Supersedes` as `—` on every row you add: only the orchestrator fills it, when a human accepts a decision conflict at the gate. A change of course is a new row, never an edit of an old one. Record:
 - Pattern chosen (e.g. "Repository pattern for data access")
 - Dependency added (e.g. "ioredis@5 for Redis client")
 - Any deviation from architecture spec with justification

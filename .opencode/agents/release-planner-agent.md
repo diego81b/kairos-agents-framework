@@ -182,13 +182,14 @@ Update all three ledger files under `.kairos/<feature_folder>/ledger/`:
 **`constraints.md`** — Final accounting, and the pipeline's second and last full re-walk (the first was `architect-agent`'s). Update the Status of EVERY remaining row — the phases in between touched only their own rows, so this pass is what puts the rest in a terminal state:
 - Deployment constraints met → mark `✓ resolved`
 - Constraints deferred to post-release monitoring → mark `⚠ deferred` with monitoring plan reference
+- Constraint whose Note reads `BLOCKING — see Q{n}` (an Escalate from a gate) → read `Q{n}` in `open-questions.md`. If it is `✓ answered`, set this row's Status from the answer — `✓ resolved` when it settles the constraint, `⚠ deferred` when it accepts the risk, `♻ modified` when it changes it, `❌ dropped` when it removes it — and cite `Q{n}` in the Note. If `Q{n}` is still `🔴 open`, leave the row `🔴 open`. An older `BLOCKING` row with no `see Q{n}` is walked like any other row.
 - Any constraint still `🔴 open` → this is a release blocker; list it in your deployment plan risks section and set this artifact's frontmatter `status` to `blocked`
 
 Never rewrite an existing row's `Category` cell — it is set once by whoever created the row and is what downstream conditional checks key on. Only `Status`, `Updated by`, and `Note` change here. This agent adds no new constraint rows.
 
-**`decisions.md`** — Add deployment decisions (rollback strategy, canary percentage, feature flag choices).
+**`decisions.md`** — Add deployment decisions (rollback strategy, canary percentage, feature flag choices). The table has six columns, `ID | Decision | Phase | Rationale | Constraint impact | Supersedes`; if it still has five (written before v8.4.0), add the `Supersedes` column first, with `—` in every existing row. Leave `Supersedes` as `—` on every row you add: only the orchestrator fills it, when a human accepts a decision conflict at the gate. A change of course is a new row, never an edit of an old one.
 
-**`open-questions.md`** — Final answer pass. Any question still `🔴 open` after this phase must appear in the deployment plan as a known risk.
+**`open-questions.md`** — Final answer pass. Any question still `🔴 open` after this phase must appear in the deployment plan as a known risk. A `⚠ deferred` row — or an older `🔴 open` row marked `deferred risk` or `deferred contract mismatch` — is a risk the human chose to ship with: list it in the plan's risks as accepted, never as a release blocker, and leave its status as it is.
 
 Freshly-surfaced Risk table rows are written by the orchestrator's Risk Disposition Loop when orchestrator-invoked (sourced from the human's per-row choice) — do not also write them here in that case. When running standalone, write them yourself as before.
 
@@ -197,7 +198,7 @@ After writing, report the ledger summary in your output:
 📊 Ledger Summary:
   Constraints: N total — X resolved, Y deferred, Z open (release blockers if Z > 0)
   Decisions: N recorded across all phases
-  Questions: N total — X answered, Y open
+  Questions: N total — X answered, Y deferred, Z open
 ```
 
 ### 3. Open in Editor

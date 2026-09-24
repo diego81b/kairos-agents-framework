@@ -58,7 +58,7 @@ Whichever way it exits, the normal phase gate still runs — the loop never repl
 
 ## Where the State Lives
 
-Loop progress (iteration count, cumulative issue list) is written to `ledger/open-questions.md` under `## Loop State` — not passed around in prompts. The orchestrator deletes that section before moving to the next phase, so later agents (security-reviewer, release-planner) never see stale retry data.
+Loop progress (iteration count, cumulative issue list) is written to `ledger/loops.md` under `## Loop State` — not passed around in prompts. The orchestrator deletes that section before moving to the next phase, so later agents (security-reviewer, release-planner) never see stale retry data. A loop that did not converge leaves a `## Loop History` entry in the same file, which the retrospective reads as a friction signal. Runs started before v8.4.0 kept both sections in `ledger/open-questions.md`; the orchestrator moves them into `loops.md` when it resumes such a run, and records a loop that was interrupted mid-run as `interrupted` instead of resuming it.
 
 ## One Extra Safety Check
 

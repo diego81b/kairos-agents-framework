@@ -237,11 +237,11 @@ Never rewrite an existing row's `Category` cell — it is set once by whoever cr
 
 Freshly-surfaced Issues table rows are written by the orchestrator's Risk Disposition Loop when orchestrator-invoked (sourced from the human's per-row choice) — do not also write them here in that case. When running standalone, write them yourself as before. The constraint-row re-open/status-pass logic above and the Loop State `convergence_signal` write below are separate, existing mechanisms — leave them unchanged.
 
-**`decisions.md`** — Add any review-phase decisions (patterns enforced, deviations rejected and why).
+**`decisions.md`** — Add any review-phase decisions (patterns enforced, deviations rejected and why). The table has six columns, `ID | Decision | Phase | Rationale | Constraint impact | Supersedes`; if it still has five (written before v8.4.0), add the `Supersedes` column first, with `—` in every existing row. Leave `Supersedes` as `—` on every row you add: only the orchestrator fills it, when a human accepts a decision conflict at the gate. A change of course is a new row, never an edit of an old one.
 
 **`open-questions.md`** — Answer questions visible from code. Add questions raised during review.
 
-**Loop State (conditional)** — If `## Loop State` already exists in `open-questions.md` (created by the orchestrator before this invocation), update it with the `convergence_signal` before returning:
+**Loop State (conditional)** — If `## Loop State` already exists in `ledger/loops.md` (created by the orchestrator before this invocation), update it with the `convergence_signal` before returning:
 
 ```markdown
 convergence_signal:

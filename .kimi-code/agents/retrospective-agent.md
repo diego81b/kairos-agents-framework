@@ -34,11 +34,12 @@ Deliberately does **not** require `06-deployment-plan.md` — hard-requiring it 
 
 ## Ledger Check (read-only — no ledger writes from this agent)
 
-Read all three ledger files under `.kairos/<feature_folder>/ledger/` if they exist:
+Read the three living ledger files under `.kairos/<feature_folder>/ledger/`, plus `loops.md`, if they exist:
 
 - `ledger/constraints.md` — note which constraints stayed `🔴 open` longest, or were `♻ modified` more than once (both are friction signals)
-- `ledger/decisions.md` — note decisions that had to be revisited across phases
-- `ledger/open-questions.md` — note any `Escalate`/`Defer` dispositions and any `## Loop History` entries (thrash or exhausted loop exits) still present from an earlier phase run
+- `ledger/decisions.md` — note decisions that had to be revisited across phases; a row naming an earlier ID in its `Supersedes` column is one a human accepted replacing at a gate
+- `ledger/open-questions.md` — note any `Escalate`/`Defer` dispositions (a Defer is a `⚠ deferred` row, or an older `🔴 open` row marked `deferred risk`)
+- `ledger/loops.md` — any `## Loop History` entries (thrash, exhausted, or interrupted loop exits). A feature folder from before v8.4.0 kept these in `ledger/open-questions.md` instead; read them there when `loops.md` does not exist
 
 This agent never writes to any ledger file. `release-planner-agent`'s §2b is already the pipeline's final accounting pass — by the time a retrospective runs, the ledger's job is done. Do not add a "Ledger Update" step here by analogy with other phase agents; there is deliberately none.
 
@@ -49,7 +50,7 @@ List which phase artifacts exist in the folder, and for each, its final `status`
 
 ### 2. Mine for Friction
 Specifically look for:
-- `## Loop History` entries in `ledger/open-questions.md` (thrash or exhausted exits — these are the strongest friction signal in the whole framework, since they mean an automated retry budget ran out without convergence)
+- `## Loop History` entries in `ledger/loops.md`, or in `ledger/open-questions.md` for a folder from before v8.4.0 (thrash or exhausted exits — these are the strongest friction signal in the whole framework, since they mean an automated retry budget ran out without convergence)
 - `Escalate` or `Defer` dispositions from any Risk Disposition Loop
 - Constraints marked `♻ modified` more than once
 - Any `Request changes` re-run visible from versioned artifact filenames
@@ -94,7 +95,7 @@ log_entry_appended: true
 
 | ID | Description | Phase | Evidence |
 |----|-------------|-------|----------|
-| F1 | Phase 4 loop thrashed twice before converging | code-reviewer / implementer | `ledger/open-questions.md` — Loop History: Code Reviewer ↔ Implementer |
+| F1 | Phase 4 loop thrashed twice before converging | code-reviewer / implementer | `ledger/loops.md` — Loop History: Code Reviewer ↔ Implementer |
 
 ## Why This Happened
 - **L1**: root-cause sentence, grounded in evidence above. `#architecture`
