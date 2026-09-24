@@ -127,7 +127,7 @@ mkdir -p ".kairos/$feature_folder/ledger"
 The ledger contains three living files — `constraints.md`, `decisions.md`, `open-questions.md` — that agents populate and update across phases, plus three files only you write: `run.md` (the run's settings, Step 0f), `loops.md` (Loop Actuator state and history), and `audit-log.md` (one line per gate, HITL step 5b). You do not rewrite the agents' rows in the three living files: subagents are responsible for their own ledger updates, and the rows you add there come only from the human's choices at a gate. Your job is to:
 1. Ensure the directory exists before any subagent runs
 2. Offer optional human annotation at each HITL gate (see HITL section)
-3. Warn about unresolved open-questions at pipeline end
+3. Warn about unresolved open questions and open constraints at pipeline end
 
 **Gitignore check** (once per project, not once per feature): `.kairos/` can hold internal detail that shouldn't sit in the project's own git history indefinitely — security-review findings, ledger notes, open questions — even redacted of secret values (see the phase agents' own redaction rules), that's still material most teams don't want permanently committed. This is the one narrow, human-confirmed exception to "the orchestrator never writes outside `.kairos/`": on the option that acts, it appends a single infrastructure line to `.gitignore`, never project content, and only after an explicit choice.
 
@@ -589,20 +589,22 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
 6. **Deployment Phase** _(if release-planner-agent active)_: Call @kairos:release-planner-agent
 6b. **Documentation Phase** _(if documentation-agent active)_: Call @kairos:documentation-agent. Unlike every phase before it, this agent writes real files in the target project outside `.kairos/` (README, API reference, CHANGELOG) — it is the second agent with that authority, after the Phase 3 implementer, and its authority is scoped strictly to documentation files, never source code. After it completes, save its own frontmatter-contract artifact to `.kairos/$feature_folder/06b-documentation.md`.
 7. **Aggregation**: Collect all outputs, mark skipped phases as `[SKIPPED]`
-8. **Ledger audit**: Read `.kairos/$feature_folder/ledger/open-questions.md`. Count rows with `🔴 open` status, excluding deferred risks exactly as HITL step 3's open-question count does (`⚠ deferred`, or an older `🔴 open` row marked `deferred risk`/`deferred contract mismatch`). If any exist, warn:
+8. **Ledger audit**: Read `.kairos/$feature_folder/ledger/open-questions.md`. Count rows with `🔴 open` status, excluding deferred risks exactly as HITL step 3's open-question count does (`⚠ deferred`, or an older `🔴 open` row marked `deferred risk`/`deferred contract mismatch`). Also read `ledger/constraints.md` and count its rows still `🔴 open`. If either count is nonzero, warn:
    ```
-   ⚠️  LEDGER — X unresolved open question(s) remain. Review before shipping:
-   [list each open Q with its ID and text]
+   ⚠️  LEDGER — X unresolved open question(s) and Y open constraint(s) remain. Review before shipping:
+   [list each open Q and each open C with its ID and text]
    ```
+   The constraints half matters most when `release-planner-agent` did not run: its final re-walk is what puts every constraint in a terminal state, and without it a `MUST — from R{id}` or `BLOCKING` row left open reaches nobody.
 8b. **Run Metrics** (this run only — see the `RUN METRICS` block in Output To User below): if any `## Loop State` / `## Loop History` section existed in `ledger/loops.md` during this run (Phase 3 and/or Phase 4 Loop Actuators), pull the final `convergence_signal` and iteration counts, plus each phase's first-pass status (`READY`/`SECURE` on iteration 1 vs. requiring a loop). This is descriptive of this single run, not a substitute for PROOF's cross-run Velocity/Rework Ratio/Gate Pass Rate — say so explicitly in the block, don't let it read as a real metric trend.
 9. **Present**: Show user everything
 10. **Feature Recap** _(only on normal completion — skip entirely if the run ended via `Stop pipeline`)_: the orchestrator writes and offers to clean up its own summary file. Do this in three separate sub-steps, never collapsed into one turn:
 
-    a. **Compose** — read the actual files back off disk (never from chat memory of this run — same discipline as Step 0b's resume point): every phase artifact present in `.kairos/$feature_folder/` (`00-context.md` through `06b-documentation.md`, `00c-bug-triage.md` included, whichever ran — but never the project-root `_tech-debt.md`, which belongs to no feature), `ledger/audit-log.md`, and `ledger/open-questions.md`. Write `.kairos/$feature_folder/_recap.md` — no frontmatter contract, no Disposition table, this is a summary of decisions already made, not a new gate. The recap is a condensed digest, never a container for raw content: do not paste full artifact bodies, code diffs, or long free-text feedback into it anywhere in the template below — every section is a summary of what's already durably on disk in the phase files and the ledger, not a second copy of it. This holds on every write, including a re-run of this step for the same feature (e.g. after a later hotfix reopens a "completed" folder) — regenerate the file fresh from what's on disk at that moment; never open the existing `_recap.md` and append to it:
+    a. **Compose** — read the actual files back off disk (never from chat memory of this run — same discipline as Step 0b's resume point): every phase artifact present in `.kairos/$feature_folder/` (`00-context.md` through `06b-documentation.md`, `00c-bug-triage.md` included, whichever ran — but never the project-root `_tech-debt.md`, which belongs to no feature), `ledger/audit-log.md`, `ledger/open-questions.md`, `ledger/constraints.md`, `ledger/decisions.md`, `ledger/loops.md`, and `ledger/run.md` (each only if it exists — a folder from before v8.4.0 has no `loops.md` or `run.md`, and keeps its loop sections in `open-questions.md`). Write `.kairos/$feature_folder/_recap.md` — no frontmatter contract, no Disposition table, this is a summary of decisions already made, not a new gate. The recap is a condensed digest, never a container for raw content: do not paste full artifact bodies, code diffs, or long free-text feedback into it anywhere in the template below — every section is a summary of what's already durably on disk in the phase files and the ledger, not a second copy of it. This holds on every write, including a re-run of this step for the same feature (e.g. after a later hotfix reopens a "completed" folder) — regenerate the file fresh from what's on disk at that moment; never open the existing `_recap.md` and append to it:
        ```
        # Recap — <feature_folder>
 
        <date>
+       <from ledger/run.md: `Effort: <value> · Auto-fix: <N> after review, <N> after tests` — omit the line when run.md does not exist>
 
        ## <Phase name>
        <2-4 lines: what it produced, final verdict, iteration count if a loop ran (from Run Metrics, step 8b)>
@@ -612,25 +614,31 @@ Execute ONLY phases whose agent is in `active_agents`. Skip the rest.
        <code files from 03-implementation.md's cumulative `## Files Written` table — the union across every pass in its Pass Log, never just the last pass; doc files from 06b-documentation.md's Docs Touched if it ran; note any file in 03-implementation-plan.md's Files to Create/Modify that was planned but never actually written — file paths only, never diffs or file content>
 
        ## Audit Trail
-       <condensed, not a verbatim copy of ledger/audit-log.md: total gate resolutions, and a per-phase count of Request-changes re-runs (already surfaced per phase above, so here just the total). List individually only the small minority of rows that matter on their own — Escalate/Stop pipeline entries, or any row whose human choice deviated from the recommended option — each as one line (phase, verdict, timestamp), not the row's full free-text feedback. If audit-log.md has grown past roughly 30 lines, this section must shrink it by at least an order of magnitude, not track it 1:1>
+       <condensed, not a verbatim copy of ledger/audit-log.md: total gate resolutions, and a per-phase count of Request-changes re-runs (already surfaced per phase above, so here just the total). List individually only the small minority of rows that matter on their own — Escalate/Stop pipeline entries, any row whose human choice deviated from the recommended option, every `## Loop History` outcome (exhausted, thrash, or interrupted — the strongest friction signal a run produces), and every decision a later row names in its `Supersedes` column (`D2 → D5, accepted at <phase>`) — each as one line, not the row's full free-text feedback. If audit-log.md has grown past roughly 30 lines, this section must shrink it by at least an order of magnitude, not track it 1:1>
 
        ## Open Questions
-       <every still-🔴-open row from ledger/open-questions.md, copied verbatim — omit this section if none remain>
+       <every still-🔴-open row from ledger/open-questions.md, copied verbatim, except deferred risks (`⚠ deferred`, or an older `🔴 open` row marked `deferred risk`/`deferred contract mismatch`), which go in Accepted Risks below — omit this section if none remain>
+
+       ## Open Constraints
+       <every row of ledger/constraints.md still `🔴 open`, copied verbatim — omit this section if none remain. It is empty by construction when release-planner-agent ran; on a run without it, this is the only place an unmet `MUST` or `BLOCKING` row surfaces>
+
+       ## Accepted Risks
+       <every deferred row from ledger/open-questions.md (`⚠ deferred`, or an older `🔴 open` row marked `deferred risk`/`deferred contract mismatch`), copied verbatim — risks the human chose to ship with. Omit this section if none>
        ```
 
     b. **Present & open** — show a 3-5 line summary (same format as step 9), then open the file exactly like every other phase's gate: `${KAIROS_EDITOR:-code} ".kairos/$feature_folder/_recap.md"`.
 
     c. **Cleanup gate** — a separate prompt, only after (b). Before asking, check two things and use them to pick the recommended option:
        - `ls ".kairos/$feature_folder/07-retrospective.md" 2>/dev/null` — if absent, `retrospective-agent` has not run for this feature yet and still needs these files as its own input.
-       - Whether `ledger/open-questions.md` has any row still `🔴 open` (the same rows just copied into the recap's Open Questions section).
+       - Whether any question or constraint is still open — the rows just copied into the recap's Open Questions and Open Constraints sections. Deferred risks do not count: nobody is going to answer them, and counting them would recommend keeping everything forever.
        - List the exact files a cleanup would remove: every `.md` file directly in `.kairos/$feature_folder/` except `_recap.md` and `07-retrospective.md` — this includes any `-iter{N}` / `-recheck` variant the Loop Actuators wrote, not just the base 00–06b names. `07-retrospective.md` is excluded for the same reason as `ledger/`: nothing folds its content forward, so deleting it on the very run where it's most likely to exist (Delete is only recommended once retrospective already ran) would destroy it outright. Never delete `ledger/` under any option, and never construct the `rm` from a glob — pass the exact listed paths.
 
        If `AskUserQuestion` is available:
        - `question`: `"Recap saved. Delete the <N> intermediate phase file(s) it replaces?"`
        - `header`: `"Cleanup"`
        - `options`:
-         - **Keep everything** — do nothing. Mark `(Recommended)` whenever `07-retrospective.md` is absent or an open question remains; state which in the option description (e.g. "retrospective-agent hasn't run yet — it needs these files", "2 open question(s) remain").
-         - **Delete phase files, keep recap** — delete exactly the listed files; `_recap.md` and `ledger/` are untouched. Mark `(Recommended)` only when `07-retrospective.md` already exists AND no open question remains.
+         - **Keep everything** — do nothing. Mark `(Recommended)` whenever `07-retrospective.md` is absent or an open question remains; state which in the option description (e.g. "retrospective-agent hasn't run yet — it needs these files", "2 open question(s) remain", "1 open constraint remains").
+         - **Delete phase files, keep recap** — delete exactly the listed files; `_recap.md` and `ledger/` are untouched. Mark `(Recommended)` only when `07-retrospective.md` already exists AND no open question or open constraint remains.
 
        If `AskUserQuestion` is not available, print the same two options as a typed menu with the same recommendation logic and wait for a reply.
 

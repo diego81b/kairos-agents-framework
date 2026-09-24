@@ -149,8 +149,11 @@ file outside `.kairos/`, and no other tracker content.
 
 Once the last active phase's gate resolves — not on a mid-run `Stop pipeline` — the
 orchestrator writes one more file itself, no subagent involved: `_recap.md` in the feature
-folder. It condenses every phase artifact plus the ledger's audit trail and any still-open
-question into one read, then offers to delete the phase artifacts it replaces (never the
+folder. It condenses every phase artifact plus the ledger's audit trail, every still-open
+question, every constraint still `🔴 open`, and every risk the human deferred into one
+read. The open constraints matter most on runs without `release-planner-agent`, whose
+final re-walk is otherwise the only thing that surfaces them — the Bug Fix, Hotfix and
+Refactor presets never run it. It then offers to delete the phase artifacts it replaces (never the
 ledger, never itself). The underscore prefix keeps it out of both the numbered-phase glob
 `orchestrator-agent.md` uses for its Resume-existing flow and the frontmatter-contract
 discipline described below — recap carries no `status`, no Disposition table. Unlike the
