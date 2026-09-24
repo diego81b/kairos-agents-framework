@@ -155,8 +155,16 @@ curl "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issues/<id>"
   -u "${BITBUCKET_USER}:${BITBUCKET_TOKEN}"
 ```
 
-If the `## KAIROS Pipeline` section is found, extract the checked agents and go to Step 0e.  
+If the `## KAIROS Pipeline` section is found, parse it with the Template Parsing rules below and go to Step 0e.
 If the fetch fails or the section is missing, proceed to Step 0e with no pre-selection.
+
+**Template Parsing rules** — the same rules apply to a template block pasted in chat at CASE A's Modify or CASE B. Two template formats exist in the wild and both must parse, because issues written in the older one are already sitting in trackers:
+
+- **Agents** — every checked line (`- [x] <agent-name>`, case-insensitive `x`) selects that agent; unchecked lines select nothing. `###` group headings (`Analysis`, `Build (pick one)`, `Review`, `After build`) and HTML comments are presentation only: ignore them. A flat checklist with no headings (the older format) parses identically. Unknown names are reported in one line and dropped, never guessed at.
+- **More than one implementer checked** (`implementer-tdd-agent`, `implementer-coder-agent`, `implementer-lead-agent`) — do not pick one. Say which were checked and treat the section as missing: go to CASE B.
+- **`Effort: <value>`** — optional; `simple_fix`, `medium`, or `significant_rework`. Read at the Effort Check.
+- **Auto-fix lines** — optional, and worded for people who do not know the pipeline's internals, which is why they never say "loop" or "phase". `Auto-fix: N` sets both retry budgets to `N`. `Auto-fix after review: N` sets only `loop_policy.phase4`; `Auto-fix after tests: N` sets only `loop_policy.phase3`. A specific line wins over `Auto-fix: N` for its own budget. `N = 0` means `mode: "manual"`; `N >= 1` means `mode: "auto", max_retries: N`, subject to the same ceiling as the Loop Policy prompt (5, or 2 with `implementer-lead-agent`), announced in plain words: `ℹ️  Auto-fix lowered to <ceiling> (requested <N>).` Save what was read as `template_loop_policy`, which may set one budget, both, or neither. A value that is not a non-negative integer is reported in one line and ignored. With no implementer checked the lines are ignored, and `Auto-fix after tests` has no effect unless `test-verifier-agent` is checked.
+- **No Auto-fix line = older template** — a block with no Auto-fix line at all is read the way templates were always read, whatever else it contains: `Effort:` still resolves and is still propagated to every agent, but no size preset applies (see the Template-path size presets at the Effort Check). Set `template_legacy = true`. The Auto-fix line is the opt-in, because issues written before it existed must keep the behaviour their authors saw when they wrote them.
 
 ### Step 0e: Select Active Agents
 
@@ -189,7 +197,18 @@ On **Continue without it**: continue to the checks below unchanged. Do not pre-s
 
 The human may also have run `bug-triage-agent` standalone before ever reaching you, which is still the recommended path when the bug report arrives before any pipeline does. Both routes produce the same artifact; Step 0a's check for it is what makes this offer skip itself.
 
-**Effort Check** (runs first among the selection checks, after the Bug-Input Check above — applies whether or not `00b-impact.md` exists). Skip the question below if Step 0d already found a `## KAIROS Pipeline` template section in the issue body — an explicit template overrides the heuristic. Resolve `effort` without asking, in this order: an `Effort: <value>` line inside that template section (the template format documents it as optional — see `docs/setup/templates.md`), else `00b-impact.md`'s value if that file exists, else `medium`. Then go straight to CASE A. The Effort Propagation rule at the end of this check still applies on that path.
+**Effort Check** (runs first among the selection checks, after the Bug-Input Check above — applies whether or not `00b-impact.md` exists). Skip the question below if Step 0d already found a `## KAIROS Pipeline` template section in the issue body — an explicit template overrides the heuristic. Resolve `effort` without asking, in this order: an `Effort: <value>` line inside that template section (the template format documents it as optional — see `docs/setup/templates.md`), else `00b-impact.md`'s value if that file exists, else `medium`. Then apply the **Template-path size presets** below and go straight to CASE A. The Effort Propagation rule at the end of this check still applies on that path.
+
+**Template-path size presets.** Two cases, decided by Step 0d's `template_legacy`.
+
+**Older template (`template_legacy = true`, no Auto-fix line).** Apply no size preset: `quick_fix_mode = false`, the implementer runs the normal 3a/3b split with its own plan gate even at `simple_fix`, and `loop_policy = { phase3: { mode: "manual" }, phase4: { mode: "manual" } }` when `effort` is `simple_fix` or `medium`. At `significant_rework` leave `loop_policy` unset, so the Loop Policy prompt runs as it always did for that size. This is exactly how a template run behaved before Auto-fix lines existed, and it stays that way so no existing issue changes behaviour under its author.
+
+**Template with an Auto-fix line.** The presets written into the three options below belong to the resolved `effort`, not to the act of picking an option, so they apply here too. Apply them from the resolved value, with one exception: the template's own checks decide `active_agents`, so the Quick fix option's agent preset never overrides them.
+- `simple_fix` → `loop_policy = { phase3: { mode: "manual" }, phase4: { mode: "auto", max_retries: 1 } }`, `quick_fix_mode = true`, and the combined `step: 3ab` implementer invocation described under Quick fix.
+- `medium` → `loop_policy = { phase3: { mode: "manual" }, phase4: { mode: "auto", max_retries: 1 } }`, `quick_fix_mode = false`.
+- `significant_rework` → no preset; `quick_fix_mode = false`, and the Loop Policy prompt runs for whichever budget the template left unset.
+
+Then overlay `template_loop_policy` from Step 0d: each budget it set replaces the preset's value for that budget, and a budget it did not set keeps the preset's.
 
 Otherwise, ask once. Mark `(Recommended)` on the option matching `00b-impact.md`'s `effort` value when that file was loaded in Step 0a; when it wasn't, mark the one you would infer from the request yourself and say in one clause why. If `AskUserQuestion` is available (Claude Code):
 - `question`: `"How big is this change?"`
@@ -228,6 +247,7 @@ Then show the extracted selection and ask for confirmation:
 - [ ] architect-agent   — System design
 - [x] implementer-tdd-agent — TDD code generation
 - [ ] implementer-coder-agent — Code generation without TDD
+- [ ] implementer-lead-agent — Team Mode: Lead + 4 parallel teammates
 - [x] code-reviewer     — Quality assurance
 - [ ] security-reviewer — Adversarial security review
 - [ ] test-verifier     — Test quality & coverage
@@ -235,7 +255,10 @@ Then show the extracted selection and ask for confirmation:
 - [ ] release-planner   — Deployment planning
 - [ ] documentation     — Feature-facing docs (README/API reference/CHANGELOG)
 
+  Effort: medium · Auto-fix: 1 after review, 0 after tests (default)
 ```
+
+The last line shows the resolved `effort` and retry budgets in the template's own words, marking with `(default)` each value that came from a size preset rather than from the template. For an older template (`template_legacy = true`) show `Auto-fix: 0 after review, 0 after tests (older template — add an Auto-fix line to change)`, or `Auto-fix: asked next` at `significant_rework`.
 
 Then ask. If `AskUserQuestion` is available (Claude Code), call it — do not also print a typed menu:
 - `question`: `"Use this pipeline selection from <issue key>?"`
@@ -319,7 +342,7 @@ Do NOT proceed until the user explicitly confirms `active_agents`.
 
 Once `active_agents` is confirmed and at least one implementer agent is selected, branch on which implementer variant is active.
 
-**Skip this whole prompt when `effort` is `simple_fix` or `medium`** — both presets a `loop_policy` at the Effort Check above, and Step 0f announces the preset where the human can still change it. Only `significant_rework` (or an unknown effort) reaches the prompt below: that is the one size where the retry budget is worth a decision before anyone has seen a finding.
+**Skip this whole prompt when `effort` is `simple_fix` or `medium`** — both set a `loop_policy` at the Effort Check above (on the template path too, via the Template-path size presets, which set both budgets to manual for an older template), and Step 0f announces it where the human can still change it. **Also skip it when a template's Auto-fix lines set both budgets** — the human already answered it in the issue. Only `significant_rework` (or an unknown effort) with a budget still unset reaches the prompt below: that is the one size where the retry budget is worth a decision before anyone has seen a finding. When the template set one budget, ask only the question for the other.
 
 - **`implementer-tdd-agent`, `implementer-coder-agent`, or `implementer-lead-agent`** — all three support Iteration Mode (detected automatically from `## Loop State` in the ledger), so an auto-retry re-invocation targets the same agent and applies a targeted fix instead of restarting from scratch. Show the loop policy prompt:
 
@@ -390,10 +413,10 @@ Before calling any subagent, show the confirmed pipeline:
   ⏭️ Phase 6 — release-planner  [SKIPPED]
   ⏭️ Phase 6b — documentation   [SKIPPED]
 
-  Effort: medium (Trimmed Mode) · Loop policy: phase3 manual, phase4 auto 1
+  Effort: medium (Trimmed Mode) · Auto-fix: 1 after review, 0 after tests
 ```
 
-The last line is mandatory and always shown: the resolved `effort`, the mode it puts every agent in (`simple_fix` → Lean, `medium` → Trimmed, `significant_rework` or unknown → Full), and the resolved `loop_policy` for both phases. When either value came from a preset rather than a prompt, this is the only place the human sees it before the pipeline runs — say `(preset — reply to change)` after it, and treat a free-text reply naming a different effort or retry count as a correction to apply before Phase 1, not as feature feedback.
+The last line is mandatory and always shown: the resolved `effort`, the mode it puts every agent in (`simple_fix` → Lean, `medium` → Trimmed, `significant_rework` or unknown → Full), and the resolved `loop_policy` in plain words — `after review` is `phase4`, `after tests` is `phase3`, and the number is `max_retries`, `0` for `manual`. Never say "loop" or "phase" on this line: the human reading it may have written the issue without knowing either term. When either value came from a preset rather than a prompt, this is the only place the human sees it before the pipeline runs — say `(preset — reply to change)` after it, or `(from template — reply to change)` when the template set it, and treat a free-text reply naming a different effort or retry count as a correction to apply before Phase 1, not as feature feedback.
 
 Pass `feature_folder`, the original issue reference, the `active_agents` list, and `effort: <value>` explicitly to every subagent prompt.
 

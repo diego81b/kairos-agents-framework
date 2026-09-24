@@ -4,6 +4,30 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v8.4.0 — September 24, 2026
+
+The `## KAIROS Pipeline` block in an issue could not say everything the orchestrator's own menu asks. Team Mode was missing from it, the optional agents looked like every other line, and there was no way to set how many times the agents may fix their own problems, so a large change driven from an issue still stopped to ask. The block now covers all of it in words an issue author understands. Issues written in the old format select the same agents and run exactly as they did: the new `Auto-fix:` line is the only switch to the new behaviour.
+
+### Added
+
+- **`docs/setup/templates.md`** — `Auto-fix: N` line, or the pair `Auto-fix after review: N` / `Auto-fix after tests: N`: how many times the agents may fix their own problems before stopping to ask. `0` means always ask. The line also turns on the defaults that come with the chosen effort; a block without it is an older template and keeps every problem for you.
+- **`docs/setup/templates.md`** — `implementer-lead-agent` (Team Mode) joins the checklist, and the list is grouped into Analysis, Build (pick one), Review and After build, with a table saying when each optional agent is worth adding.
+- **`agents/orchestrator-agent.md`** — Template Parsing rules at Step 0d: group headings are ignored, the older flat checklist parses identically, more than one checked implementer falls back to the selection menu instead of picking one, and the Auto-fix lines are read and capped at the same ceiling as the retry prompt. A block with no Auto-fix line runs as before: both retry budgets manual, the plan gate kept at `simple_fix`, and the retry question asked only at `significant_rework`.
+
+### Changed
+
+- **`agents/orchestrator-agent.md`** — a template that sets both auto-fix values skips the retry question even for `significant_rework`; one that sets a single value is asked only about the other. The pipeline announcement and the issue-selection preview state the retry budget as "Auto-fix: N after review, N after tests" instead of loop and phase names.
+- **`docs/setup/templates.md`** — every preset carries an `Effort:` line and, where a build agent is checked, an `Auto-fix:` line; Hotfix is `simple_fix`, and Refactor / Rework shows the two-line auto-fix form.
+- **`.opencode/agents/`**, **`.kimi-code/agents/`** — both mirrors carry the same body changes.
+- **`docs/workflow.md`** — documents the Auto-fix lines and the size presets on the template path.
+
+### Fixed
+
+- **`agents/orchestrator-agent.md`** — on the template path the retry budget was left unset while the retry question was still skipped, so what happened on a failed review depended on how the model read an undefined value. An older template now sets both budgets to manual explicitly, matching how those runs actually behaved, and a template with an Auto-fix line gets the effort's size presets, with the template's own checks still deciding which agents run.
+- **`docs/setup/templates.md`** — the Documentation preset checked only `pm-agent`, so it never ran `documentation-agent`.
+
+---
+
 ## v8.3.0 — September 23, 2026
 
 A real Phase 5b plan for a concurrency fix ran to sixteen manual cases, four charters and eight risks, and its steps told the tester to hold SQL application locks in a database console, derive lock resource names by hand, and build raw request bodies. It was written for a developer. The plan now writes for two readers in two languages, opens with the change's core, and keeps code evidence where only the gate reads it.
