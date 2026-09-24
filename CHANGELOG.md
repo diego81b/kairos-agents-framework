@@ -4,6 +4,38 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v8.3.0 — September 23, 2026
+
+A real Phase 5b plan for a concurrency fix ran to sixteen manual cases, four charters and eight risks, and its steps told the tester to hold SQL application locks in a database console, derive lock resource names by hand, and build raw request bodies. It was written for a developer. The plan now writes for two readers in two languages, opens with the change's core, and keeps code evidence where only the gate reads it.
+
+A review found a format defect on one field of a validator, the fix for it touched the same method, and the identical defect on the field beside it survived both code review and test verification. Nothing in the reviewing agents asked them to look for a finding's siblings, and nothing said that unchanged lines inside a touched function are part of the review. Both gaps are closed.
+
+### Added
+
+- **`agents/qa-plan-agent.md`** — new step 0 **Name the Core** and `## Core` block: one sentence on what the change fixes, the one to three behaviours that mean it failed, and the cases that prove them. For a bug, the reported scenario comes first. Core cases lead the Manual Test Cases table, and the step runs in Lean Mode too.
+- **`agents/qa-plan-agent.md`** — reads `00c-bug-triage.md` when present: its observed-vs-expected and reproduction steps become the plan's core.
+- **`agents/qa-plan-agent.md`** — new optional `## Expected Behaviour Changes` section (step 2a): at most five rows telling the tester which visible differences are intended, including out-of-scope behaviour a tester might mistake for a defect of this change, so none of it gets filed as a bug or turned into a test case.
+
+### Changed
+
+- **`agents/qa-plan-agent.md`** — tester-facing sections are written in product language only: screens, actions, visible outcomes, never a class, file, SQL object, key format or pipeline ID. Code evidence stays in Coverage Complement and Risks. Complement rows get `CCn` IDs, so a case's Source cites `AC-n`, `bug` or `CCn` instead of a `file:line`.
+- **`agents/qa-plan-agent.md`** — a manual case checks an outcome a person observes through the product, never the mechanism behind it. A check that only a database console or a hand-built request can perform becomes one gate risk instead of a tester's step. UAT Sign-off gains the matching answer, **not verifiable by hand**, rated `high` like **not verifiable as written**. An uncovered line that no user action reaches produces no case. One case per behaviour, with screens and modes listed as variants; at most two cases per uncovered `AC-n` in Full Mode; at most four steps and a one-sentence expected result per case. Field-data questions go to open questions, not to test cases.
+- **`agents/qa-plan-agent.md`** — `## Risks` admits four row kinds only: a regression retest citing a caller, an `AC-n` that cannot be checked by hand, an uncovered `VERIFICATION` row, and an open question the release depends on. Automated-suite gaps stay `test-verifier-agent`'s, and code defects get a one-sentence pointer to code review instead of a trace. A regression row's `Mitigation/Fix` is the tester's instruction in product language.
+- **`agents/qa-plan-agent.md`** — the issue comment leads with the Core and drops every empty or `N/A` section, the cases' Source column, the retests' code-level Description, the evidence columns, and the UAT rows already accepted by automation. Test Data & Environment lists only what the manual cases need.
+- **`skills/artifact-template/SKILL.md`** — Expected Behaviour Changes joins qa-plan's Disposition-exempt tables.
+- **`.opencode/agents/`**, **`.kimi-code/agents/`** — both mirrors carry the same body changes.
+- **`CLAUDE.md`**, **`docs/workflow.md`**, **`docs/agents.md`** — document the two-reader split, the Core block and the narrowed Risks table.
+
+### Fixed
+
+- **`skills/analysis-discipline/SKILL.md`** — new principle 6, **Sweep the Defect Class Before Recording a Finding**: before writing a finding's row, check the enclosing function or class and every other use of the same pattern in the reviewed files for the same defect, and record every occurrence. An occurrence the diff did not introduce is reported with a `Pre-existing:` prefix so the gate can fix it now or defer it, never omitted. Principle 3 (scope-bounded investigation) now says that a found defect bounds this sweep rather than conflicting with it.
+- **`agents/code-reviewer-agent.md`** — a function the diff touches is reviewed whole, unchanged lines included, and on a loop iteration every unit the fix touched is re-reviewed in full, not only checked for the closed issue. Correctness gains an explicit malformed-input check: a presence check such as `[Required]` guarantees non-empty, never well-formed, and the resulting exception must reach a handler that maps it to the documented error instead of escaping as a 500.
+- **`agents/test-verifier-agent.md`** — for a validator, parser, or converter, every input field it accepts needs at least one malformed-value test, with the fields enumerated from the code under test rather than from the tests. A field covered only by a presence check is an issue even when no `AC-n` names it, and in Lean Mode too, since a malformed value is an error path.
+- **`.opencode/agents/`**, **`.kimi-code/agents/`** — both mirrors carry the same body changes.
+- **`docs/skills-mcp.md`**, **`docs/agent-files.md`** — the `analysis-discipline` summaries name the new sweep.
+
+---
+
 ## v8.2.0 — September 21, 2026
 
 Separates what the developer must satisfy from what a tester must stage. Acceptance criteria were absorbing both, and a criterion that needs two applications, a particular configuration, or two concurrent sessions on two machines to be checked stops being readable as a requirement — so the setup now travels in Phase 5b's QA comment on the issue, while the `AC-n` stays exactly where it was.
