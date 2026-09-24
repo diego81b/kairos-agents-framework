@@ -318,14 +318,20 @@ User approves the deployment runbook (`06-deployment-plan.md`). This is the fina
 
 ## Shared Ledger — Cross-Phase Project Memory
 
-Each KAIROS run maintains three living files under `.kairos/<feature_folder>/ledger/` that accumulate shared state across all phases:
+Each KAIROS run maintains three living files under `.kairos/<feature_folder>/ledger/` that accumulate shared state across all phases, plus three files the Orchestrator alone keeps there:
 
 | File | Purpose | Seeded by | Updated by |
 |------|---------|-----------|-----------|
 | `constraints.md` | All constraints with per-phase accounting | PM Agent (or Context Extractor if run first) | Every agent |
-| `decisions.md` | Architectural and implementation decisions log | Architect Agent | Any agent |
-| `open-questions.md` | Cross-phase questions with answers | Any agent or human (via HITL gate) | Any agent |
+| `decisions.md` | Architectural and implementation decisions log | Architect Agent | Any agent; the `Supersedes` cell only by the Orchestrator |
+| `open-questions.md` | Cross-phase questions with answers, and deferred risks | Any agent or human (via HITL gate) | Any agent |
+| `run.md` | The run's settings: effort, active agents, auto-fix budgets | Orchestrator, before Phase 1 | Orchestrator |
+| `loops.md` | Auto-fix state while a retry is running, and the history of retries that did not converge | Orchestrator | Orchestrator; the checker adds its convergence signal |
+| `audit-log.md` | One line per gate resolution | Orchestrator | Orchestrator |
 
+`run.md` is what lets a pipeline resume in a later session with the same settings: the resumed run restores the effort, skips the agents that were never selected, and keeps the auto-fix budgets the human chose. `loops.md` keeps retry bookkeeping out of `open-questions.md`, so that file holds only what a person has to read.
+
+Feature folders written before v8.4.0 keep working. A folder with no `run.md` falls back to the effort stored in the audit log's header and asks once for anything else; loop sections found in `open-questions.md` are moved into `loops.md` the first time the Orchestrator touches them; a `decisions.md` table without a `Supersedes` column gains it on its next write.
 ### How the ledger works
 
 **Forced accounting model** — at the end of every phase, each agent must update the Status column of every existing constraint row before adding new ones. An unaddressed constraint stays `🔴 open` and is visible to every downstream agent.
@@ -337,6 +343,12 @@ Each KAIROS run maintains three living files under `.kairos/<feature_folder>/led
 | `⚠ deferred` | Acknowledged but deferred (tracked in risk) |
 | `♻ modified` | Constraint was changed — note new version |
 | `❌ dropped` | Explicitly removed — note justification |
+
+`open-questions.md` uses `🔴 open`, `✓ answered`, and `⚠ deferred`. A risk the human chose to **Defer** at a gate is written `⚠ deferred`, not `🔴 open`: nobody will answer it, so it is left out of the open-question count every gate shows, and the release plan lists it as a risk knowingly taken. A deferred row written by an older version, still `🔴 open` but marked `deferred risk`, is counted the same way.
+
+An **Escalate** writes two rows that point at each other: the `BLOCKING` constraint names its question (`BLOCKING — see Q7`), and the question names the constraint. The two full re-walks (architect and release planner) close the constraint from the question's answer, so answering the question is enough.
+
+When a phase contradicts an earlier decision and the human **Accepts** that conflict at the gate, the Orchestrator records the change in `decisions.md`'s `Supersedes` column. Later conflict scans skip the replaced decision instead of flagging it again. No phase agent writes that column: the agent being checked cannot switch off the check on itself.
 
 ### Why this matters
 

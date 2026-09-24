@@ -48,7 +48,7 @@ Your job is to orchestrate the full TDD cycle across specialized teammates using
 
 ## Iteration Mode
 
-Detected automatically from the ledger (see Ledger Check below) — active when `ledger/open-questions.md` contains a `## Loop State` section with `status: in_progress`. This means a prior full RED→GREEN→REFACTOR pass already completed and a checker (code-reviewer or test-verifier) found issues in the resulting code. You are being re-invoked for a targeted fix, not a fresh build.
+Detected automatically from the ledger (see Ledger Check below) — active when `ledger/loops.md` contains a `## Loop State` section with `status: in_progress`. This means a prior full RED→GREEN→REFACTOR pass already completed and a checker (code-reviewer or test-verifier) found issues in the resulting code. You are being re-invoked for a targeted fix, not a fresh build.
 
 In Iteration Mode:
 - Skip Step 3 (RED phase) entirely — tests already exist and already passed once. Never spawn `teammate-tests-agent` again this loop.
@@ -94,7 +94,7 @@ Before proceeding, read all three ledger files. **You are the only agent in Team
 
 Include relevant constraints in the contracts you define for teammates (TEST, API, DB, PATTERN). This is how constraints flow to teammates — through the contracts, not through direct ledger access.
 
-**Loop State detection** — while reading `open-questions.md`, check for a `## Loop State` section. If it exists with `status: in_progress`, activate **Iteration Mode** (see above). Its `cumulative_issues` list is your complete work backlog for this invocation.
+**Loop State detection** — read `ledger/loops.md` if it exists and check for a `## Loop State` section. Only `loops.md` counts: the orchestrator moves any loop section an older run left in `open-questions.md` into `loops.md` before invoking you, and drops a stale one. If it exists with `status: in_progress`, activate **Iteration Mode** (see above). Its `cumulative_issues` list is your complete work backlog for this invocation.
 
 ## Your Process
 
@@ -295,8 +295,8 @@ If a mismatch's reasoning doesn't fit one row, keep a one-line Description with 
 If `AskUserQuestion` is available, batch rows into groups of up to 4 (its per-call max). One question per row, worded `"M{id} ({impact}): {description}"`, with exactly these 4 options:
   - **Accept** — this specific divergence is fine as-is, Lead contract wins for this field. No ledger row.
   - **Mitigate now** — apply the row's proposed resolution now, before implementation proceeds. Write a `constraints.md` row, status `🔴 open`, note `MUST — from implementer-lead M{id}`.
-  - **Escalate** — needs Architect redesign for this field specifically. Write a `constraints.md` row `🔴 open` tagged `BLOCKING` AND an `open-questions.md` row. Flips the following gate's recommended default to "Stop — flag to Architect for redesign" instead of "Accept divergence".
-  - **Defer** — proceed with the divergence documented as a known gap. Write an `open-questions.md` row, status `🔴 open`, note `deferred contract mismatch`.
+  - **Escalate** — needs Architect redesign for this field specifically. Write an `open-questions.md` row `Q{n}` naming the constraint (`blocks C{m}`) AND a `constraints.md` row `C{m}` `🔴 open` with note `BLOCKING — see Q{n}`. Flips the following gate's recommended default to "Stop — flag to Architect for redesign" instead of "Accept divergence".
+  - **Defer** — proceed with the divergence documented as a known gap. Write an `open-questions.md` row, status `⚠ deferred`, note `deferred contract mismatch`.
 
 Every `constraints.md` row this loop writes carries a `Category` from [`constraint-taxonomy`](../../skills/constraint-taxonomy/SKILL.md)'s closed vocabulary, chosen to match the row's own Description and `OTHER` when none fits — never `ACCESSIBILITY`, `PRIVACY`, or `COMPLIANCE` unless the human already declared that obligation. Apply the skill's Writer Rule first if the table is still in the legacy 6-column form.
 
@@ -739,7 +739,7 @@ After Step 6 (REFACTOR complete, contracts verified) — or after Step 5's compl
 
 Never rewrite an existing row's `Category` cell — it is set once by whoever created the row and is what downstream conditional checks key on. Only `Status`, `Updated by`, and `Note` change here. Any new row you add carries a `Category` from [`constraint-taxonomy`](../../skills/constraint-taxonomy/SKILL.md)'s closed vocabulary; apply its Writer Rule first if the table is still in the legacy 6-column form.
 
-**`decisions.md`** — Add lead-phase decisions:
+**`decisions.md`** — Add lead-phase decisions. The table has six columns, `ID | Decision | Phase | Rationale | Constraint impact | Supersedes`; if it still has five (written before v8.4.0), add the `Supersedes` column first, with `—` in every existing row. Leave `Supersedes` as `—` on every row you add: only the orchestrator fills it, when a human accepts a decision conflict at the gate. A change of course is a new row, never an edit of an old one. Record:
 - Contract choices made during Step 2 (why you chose specific API shapes, error codes)
 - Any contract drift resolutions from Step 2b
 - Coverage targets agreed with teammate-tests

@@ -229,8 +229,8 @@ If invoked by the orchestrator, skip this — it runs the same loop itself, cent
 > - If `AskUserQuestion` is available: batch the remaining rows into groups of up to 4 (its per-call maximum), in table order. One question per row, worded `"R{id} ({impact}): {description}"`, with exactly these 4 options:
 >   - **Accept** — acknowledge it and move on; nothing changes downstream and nobody works this row later. No ledger row written.
 >   - **Mitigate now** — the row's Mitigation/Fix text becomes a binding requirement `architect-agent` must satisfy before its own gate. Write a `constraints.md` row, status `🔴 open`, note `MUST — from pm-agent R{id}`.
->   - **Escalate** — you can't settle this yourself and the pipeline shouldn't move past it as if you had; it goes to whoever can. Write a `constraints.md` row `🔴 open` tagged `BLOCKING`, AND an `open-questions.md` row. Does not block Approve at the gate below, but flips its recommended default to Request changes.
->   - **Defer** — out of scope now, shipped with the risk knowingly taken; nobody is assigned to it. Write an `open-questions.md` row, status `🔴 open`, note `deferred risk`.
+>   - **Escalate** — you can't settle this yourself and the pipeline shouldn't move past it as if you had; it goes to whoever can. Write an `open-questions.md` row `Q{n}` naming the constraint (`blocks C{m}`), AND a `constraints.md` row `C{m}` `🔴 open` with note `BLOCKING — see Q{n}`. Does not block Approve at the gate below, but flips its recommended default to Request changes.
+>   - **Defer** — out of scope now, shipped with the risk knowingly taken; nobody is assigned to it. Write an `open-questions.md` row, status `⚠ deferred`, note `deferred risk`.
 >
 >   Escalate and Defer are the pair people confuse: **Escalate means someone else still has to decide, Defer means the decision is made and the answer is "we ship with it"**. Say that distinction in the option descriptions.
 > - **Always mark exactly one option `(Recommended)`**, derived mechanically from the row itself: Mitigation/Fix cell empty, or its text describes a choice rather than a fix → **Escalate**; else Impact `high`/`critical` → **Mitigate now**; else (`medium`) → **Accept**. Append the reason to that option's description in one clause. Never mark two, never leave a row with none, and never let the recommendation stand in for the explain trigger below.
@@ -306,6 +306,8 @@ Freshly-surfaced Risks table rows are a separate case: when orchestrator-invoked
 | Q1 | (existing row — update if you can answer) | ... | ✓ answered | pm-agent | (answer) |
 | QN | (your new question) | pm-agent | 🔴 open | — | — |
 ```
+
+Status is one of `🔴 open`, `✓ answered`, or `⚠ deferred` — the last only for a risk the human chose to Defer, which nobody is expected to answer.
 
 If `constraints.md` does not exist, create it from scratch. Do not skip this step.
 
