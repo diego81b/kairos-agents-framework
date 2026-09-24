@@ -445,6 +445,43 @@ Written by the orchestrator at Step 0f. Read back on resume (Step 0b).
 
 Rewrite it whenever the human replies with a correction to the announcement, and whenever one of these values changes later in the run. Without this file a pipeline resumed in a new session loses every setting but `effort`: the auto-fix budgets fall back to nothing, `quick_fix_mode` is forgotten, and the resume point offers phases the human never selected.
 
+**Issue Write-back** (after Run Settings Persistence, before Phase 1). The `## KAIROS Pipeline` section is how a team reuses a pipeline across machines and colleagues, and nothing in this plugin writes it for them — so offer to write back the selection the human just confirmed. This is the second narrow exception to writing only inside `.kairos/`, after the Gitignore check, and it touches nothing in the tracker but that one section.
+
+Skip this whole step, silently, when any of these holds:
+- there is no issue reference;
+- Step 0d found a `## KAIROS Pipeline` section and CASE A ended on **Confirm** — the issue already says exactly this;
+- `test -f .kairos/.issue-writeback-declined` succeeds — the human asked not to be asked in this project.
+
+Otherwise — no section in the issue, CASE A ended on **Modify**, the Quick fix preset, or a block pasted in chat — compose the block from the resolved values, in the grouped format of `docs/setup/templates.md`: every agent line, `[x]` on the ones in `active_agents` and `[ ]` on the rest; `Effort: <value>`; and the retry budgets as `Auto-fix: N` when both are equal, or `Auto-fix after review: N` plus `Auto-fix after tests: N` when they differ (`0` for `manual`). Writing the Auto-fix line is deliberate: the human confirmed these values, and a block without one would read back as an older template on the next run.
+
+Show the block and the target issue, then ask. If `AskUserQuestion` is available (Claude Code), call it — do not also print a typed menu:
+- `question`: `"Save this pipeline selection to <issue key>?"`
+- `header`: `"Issue"`
+- `options` (exactly these 3, in this order):
+  - **Add to the issue** — append the block to the issue description, or replace only its existing `## KAIROS Pipeline` section. Nothing else in the description changes.
+  - **Keep it local** — the selection stays in `ledger/run.md` for this run only.
+  - **Don't ask again in this project** — `touch .kairos/.issue-writeback-declined`, write nothing.
+
+If `AskUserQuestion` is not available, print the same three options as a menu and wait for a typed reply.
+
+On **Add to the issue**:
+1. **Re-read the description now**, with the same command Step 0d used — it may have been edited since. If that read fails, write nothing: go to the paste-ready fallback below. Never send a description you did not just read back successfully, or the write replaces the whole description with the block alone.
+2. **Compose** the new description: the text you just read with its `## KAIROS Pipeline` section (from that heading up to the next `## ` heading or the end) replaced by the block, or with the block appended after a blank line when there was none. Write it to `.kairos/$feature_folder/_issue-description.md`.
+3. **Write** it, after `command -v` confirms the tool exists:
+   ```bash
+   # GitLab
+   glab issue update <id> --description "$(cat ".kairos/$feature_folder/_issue-description.md")"
+
+   # Bitbucket (needs jq to build the JSON body)
+   jq -Rs '{content:{raw:.}}' ".kairos/$feature_folder/_issue-description.md" | \
+     curl -X PUT "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issues/<id>" \
+       -u "${BITBUCKET_USER}:${BITBUCKET_TOKEN}" -H "Content-Type: application/json" -d @-
+   ```
+   **Jira: do not write.** `jira issue view` returns the rendered description, not its source, so writing it back would silently reformat everything the section does not own. Use the paste-ready fallback and say why in one line.
+4. **Delete** `.kairos/$feature_folder/_issue-description.md` whatever the outcome, and report `✅ Pipeline saved to <issue key>` or the failure.
+
+**Paste-ready fallback** — no tracker CLI, a failed read or write, missing `jq` or Bitbucket credentials, or Jira: print the block in a fenced `markdown` code block with `Paste this into <issue key>'s description:`, and continue to Phase 1. The write-back never fails or blocks the run: `run.md` already holds the selection.
+
 Pass `feature_folder`, the original issue reference, the `active_agents` list, and `effort: <value>` explicitly to every subagent prompt.
 
 ### Phase Execution (conditional)

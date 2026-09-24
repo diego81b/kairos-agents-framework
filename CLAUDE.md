@@ -134,10 +134,18 @@ plan; 3b reads the contracts back and resumes at Step 3.
 write real files outside `.kairos/` in the target project — scoped strictly to
 documentation (README/CHANGELOG/`docs/**`), never source code.
 
-The orchestrator itself has one narrow exception to writing only inside `.kairos/`:
-Step 0c's Gitignore check, which — once per project, only after an explicit human
-choice — appends a single `.kairos/` line to the target project's `.gitignore`. It
-never touches any other file outside `.kairos/`.
+The orchestrator itself has two narrow exceptions to writing only inside `.kairos/`.
+Step 0c's Gitignore check — once per project, only after an explicit human
+choice — appends a single `.kairos/` line to the target project's `.gitignore`.
+Step 0f's Issue Write-back — only when the run started from an issue reference, the
+selection came from the menu rather than from an unchanged `## KAIROS Pipeline`
+section, and the human picks **Add to the issue** — writes the confirmed selection into
+the issue description, appending the section or replacing only that section, never the
+rest of the description. It exists because the section is how a team reuses a pipeline
+across machines, and the plugin ships no skill that authors issues: the orchestrator
+writing back what a human just confirmed is the one source every host gets, and it
+writes a decision rather than a guess from the issue text. It never touches any other
+file outside `.kairos/`, and no other tracker content.
 
 Once the last active phase's gate resolves — not on a mid-run `Stop pipeline` — the
 orchestrator writes one more file itself, no subagent involved: `_recap.md` in the feature

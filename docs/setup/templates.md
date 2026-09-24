@@ -2,10 +2,21 @@
 
 KAIROS supports **explicit agent selection** so you decide which phases run — the orchestrator never infers a default pipeline.
 
-There are two ways to declare the pipeline:
+There are three ways to declare the pipeline:
 
 1. **In the issue body** — add a `## KAIROS Pipeline` section to the Jira/GitLab/Bitbucket issue. The orchestrator reads it automatically before asking for confirmation.
 2. **In-chat** — paste the template block when the orchestrator displays the interactive list (Case B — no issue reference or section missing).
+3. **Let the orchestrator write it** — pick the agents from its menu, and when the run started from an issue it offers to save that selection into the issue as a `## KAIROS Pipeline` section. Nobody has to write the block by hand.
+
+### Saving the selection to the issue
+
+When the run started from an issue reference and the selection came from the orchestrator's menu — the issue had no `## KAIROS Pipeline` section, or you changed it with **Modify** — the orchestrator shows the exact block it would write and asks:
+
+- **Add to the issue** — appends the block to the end of the issue description, or replaces only the existing `## KAIROS Pipeline` section. Nothing else in the description changes.
+- **Keep it local** — the selection lives only in `.kairos/<feature_folder>/ledger/run.md` for this run.
+- **Don't ask again in this project** — stops the question for every later run in this project.
+
+The block it writes carries the agents you picked plus the `Effort:` and `Auto-fix:` values the run resolved, so a colleague, or you on another machine, starts from the same settings. A section that was already in the issue and confirmed unchanged is never rewritten. The write works on GitLab (`glab`) and Bitbucket (credentials plus `jq`). On Jira the orchestrator prints the block ready to paste instead, because `jira-cli` returns the rendered description rather than its source, and writing it back would reformat the rest of the issue. The same paste-ready block appears whenever a tool or credential is missing, and the run always continues.
 
 ---
 
