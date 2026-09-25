@@ -23,6 +23,7 @@ Work through [`analysis-discipline`](../skills/analysis-discipline/SKILL.md) thr
 - Acceptance criteria — the Success Criteria list from `01-requirements.md` (pm-agent), optional. Each criterion carries an explicit leading ID (`AC-1 — …`) assigned by pm-agent and stable across re-runs; use those IDs verbatim in the mapping below, gaps in the sequence included. **Fallback for legacy artifacts only**: if the list has no leading IDs (written before pm-agent assigned them), number them `AC-1`, `AC-2`, ... in list order and say so in the Acceptance Criteria Mapping section, since those positional IDs are not stable against a later edit of the requirements.
 - TDD verification block from `03-implementation.md` (optional)
 - Test Cases table (with its `Intent` column) from `03-implementation-plan.md` (the implementer's approved Phase 0 plan), optional — used for the Assertion Strength intent-consistency check below
+- `## Behaviour Delta` from `02-architecture.md`, optional — the user-visible changes on already-shipped flows, used by the Test Comprehensiveness check below. Absent or `N/A` means there is nothing extra to check.
 
 ## Input Validation
 
@@ -41,6 +42,10 @@ If any item below is missing from both sources, **stop immediately** and emit th
 | Test Cases Intent column | `03-implementation-plan.md`'s Test Cases table | ⚠️ **WARNING — test-verifier-agent: no declared test intent found**. The intent-consistency sub-check (part of Assertion Strength) is skipped, not fabricated; all other checks proceed. |
 
 Follow [`agent-contract`](../skills/agent-contract/SKILL.md)'s Missing-Input Error Format — `{agent-name}: test-verifier-agent`.
+
+## Review Wave Mode
+
+When the orchestrator's invocation prompt states `review_wave: true`, you are running at the same time as `code-reviewer-agent` (and `security-reviewer-agent`, when active), on the same code. You are the only reviewer in the wave that executes the test suite: `code-reviewer-agent` leaves execution to you, so PHASE 0 below runs exactly as it always does. One thing changes: **do not write `## Loop State`** in `ledger/loops.md` (Ledger Update below). The orchestrator reads `convergence_signal` from your frontmatter instead, so that two reviewers never edit the same file at once. Still read `iteration` from `## Loop State` when it exists, to fill `convergence_signal.iteration`.
 
 ## Ledger Check (required)
 
@@ -82,7 +87,7 @@ Any other effort value, or Full Mode implementer output (categories beyond happy
 
 **Reuse-fresh-execution check** (do this before running anything): skip re-execution and reuse the implementer's own results instead when ALL of these hold:
 - Orchestrator-invoked (pipeline mode — `feature_folder` and the ledger are present; standalone invocations always re-execute, see below).
-- No `.kairos/<feature_folder>/05-test-verification*.md` exists yet (check with `ls`) — its absence means this is the first test-verifier invocation for this feature. Nothing writes to source between the implementer's GREEN run and here on a first pass (`code-reviewer-agent` is read-only). Its presence means test-verifier already ran once before, so this invocation is a loop re-check, a Phase 4 Guard regression check, or a manual re-run — code may have changed since; always re-execute in that case, no exceptions.
+- No `.kairos/<feature_folder>/05-test-verification*.md` exists yet (check with `ls`) — its absence means this is the first test-verifier invocation for this feature. Nothing writes to source between the implementer's GREEN run and here on a first pass (`code-reviewer-agent` is read-only). Its presence means test-verifier already ran once before, so this invocation is a review loop re-check, the loop's final pass, a recheck after a fix pass, or a manual re-run — code may have changed since; always re-execute in that case, no exceptions.
 - `03-implementation.md`'s frontmatter has a `coverage_summary` block and its `## Test Execution — GREEN` section shows a clean pass with real numbers (not `unknown`, not missing) — this only exists on the TDD path.
 
 When all three hold: populate your own `execution` and `coverage_summary` frontmatter directly from `03-implementation.md`'s GREEN section and `coverage_summary` field — do not shell out. State in the report body that execution was reused, not re-run, and why: `## Test Execution` → "reused implementer's GREEN-phase run from `03-implementation.md` — first pass, nothing has touched the code since." This changes nothing about PHASE 1's static audit below — it still runs in full; only the redundant re-run of a command the implementer already executed twice (RED and GREEN) is skipped.
@@ -119,6 +124,7 @@ Run the checks below. Each check produces zero or more issues.
 - Acceptance criteria from `01-requirements.md`'s Success Criteria list (by their own `AC-n` IDs) each accounted for — mapped to ≥1 test at whatever level verifies it, or verified outside the suite (see the three states below)?
 - For a validator, parser, or converter: is every input field it accepts exercised by at least one test with a malformed value — wrong format, not only empty or missing? Enumerate the fields from the SUT itself, never from the tests: a field no test names is exactly the gap this check exists for. A field covered only by a presence check (`[Required]`, non-null) is an issue even when no `AC-n` mentions it, and in Lean Mode too — a malformed value is an error path, not an edge case.
 - For a pure function with a well-defined input domain (parser, validator, calculator), are there tests over generated/randomized or systematically-varied inputs, not only a handful of hand-picked examples?
+- When `02-architecture.md` has a `## Behaviour Delta` that is not `N/A`: is every row's new outcome exercised by at least one test, at whatever level reaches it, including what the caller receives on a new rejection or limit (the status, the payload, the message the client shows)? A limit is tested at the unit the constraint row names, one past the limit, not at a value chosen in another unit. A row no automated test can reach, because what it describes is only visible on screen, is not a gap here: say so in the issue's Description and leave it to `qa-plan-agent`. Every other untested row is an issue.
 
 **The Acceptance Criteria Mapping table has three states, not two.** A unit test proves the code does what it was meant to do; it does not prove a use case works end to end, and stretching one to cover a use case is how a suite becomes slow, mocked, and dishonest. So each `AC-n` lands in exactly one of:
 
@@ -126,7 +132,7 @@ Run the checks below. Each check produces zero or more issues.
 2. **Verified outside the suite** — write `manual — <Cn> → 5b` in the `Tests` cell, where `<Cn>` is the `constraints.md` row whose `Category` is `VERIFICATION` and whose text names this `AC-n`. Leave the `Gap` cell `—`. This is an integration-level check a person performs: it needs configuration, more than one application, sessions on separate machines, or a role nobody in the pipeline holds.
 3. **Gap** — nothing verifies it anywhere. The `Tests` cell is `—` and the `Gap` cell says what is missing.
 
-Only state 3 is a gap. It is the only one that counts in `gapIds`, the only one that reaches `convergence_signal.ac_gaps`, and therefore the only one that can drive the Phase 3 loop. Sending an implementer round the loop for a criterion that needs two machines produces one of two things: a mocked test that fakes the second actor and lies about coverage, or a loop that cannot converge and exits on the thrash check.
+Only state 3 is a gap. It is the only one that counts in `gapIds`, the only one that reaches `convergence_signal.ac_gaps`, and therefore the only one that can drive the review loop. Sending an implementer round the loop for a criterion that needs two machines produces one of two things: a mocked test that fakes the second actor and lies about coverage, or a loop that cannot converge and exits on the thrash check.
 
 State 2 is **never your judgment call**. It requires a `VERIFICATION` row that a human declared upstream, naming that `AC-n`; apply [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)'s §3 predicate (`Status` not `❌ dropped`) and §4 Reader Rule. No such row, or a row that does not name this `AC-n`, means state 3 — you never decide on your own that something is not automatable. If you believe a criterion belongs in state 2 and no row declares it, say so in one line under the table and still count it as a gap.
 
@@ -212,7 +218,7 @@ coverage_summary:
   function: 92
   uncovered_count: 1
 issues_summary: { critical: 0, high: 1, medium: 1, low: 1, total: 3 }
-convergence_signal: { ac_gaps: 1, iteration: 1 }
+convergence_signal: { issues_critical_high: 1, ac_gaps: 1, iteration: 1 }
 ---
 
 # Test Verification — <feature title>
@@ -319,11 +325,12 @@ Never rewrite an existing row's `Category` cell — it is set once by whoever cr
 
 **`open-questions.md`** — Answer test-related questions. Add questions raised by coverage gaps.
 
-**Loop State (conditional)** — If `## Loop State` already exists in `ledger/loops.md` (created by the orchestrator before this invocation), update it with the `convergence_signal` before returning:
+**Loop State (conditional)** — If `## Loop State` already exists in `ledger/loops.md` (created by the orchestrator before this invocation), and you are **not** in Review Wave Mode, update it with the `convergence_signal` before returning (in Review Wave Mode skip this write: the same values are in your frontmatter's `convergence_signal`, which is where the orchestrator reads them):
 
 ```markdown
 convergence_signal:
   ac_gaps: <count of gapIds from the Acceptance Criteria Mapping table — state-3 rows only, never a criterion routed to manual verification by a declared `VERIFICATION` row; 0 if the Success Criteria list was unavailable>
+  issues_critical_high: <critical + high Issues rows>
   iteration: <iteration number from Loop State>
 ```
 

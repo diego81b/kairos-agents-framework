@@ -296,6 +296,8 @@ Every constraint this phase elicited is written here and only here — the body'
 
 Freshly-surfaced Risks table rows are a separate case: when orchestrator-invoked, the orchestrator's Risk Disposition Loop writes their constraint/open-question rows itself, sourced from the human's per-item choice — do not also write them here, or they'll be duplicated. When running standalone, the Risk Disposition Loop above already wrote them from the human's per-row choice — don't write them a second time here either.
 
+**`decisions.md`** — Write here only when your scope differs from what the issue asked: an item the issue named that step 4 puts under Explicitly Excluded, an item or flow step 4 includes that the issue never named, or an acceptance criterion dropped or deferred. Add one row per such difference, with a Decision cell opening `Scope:` (e.g. `Scope: bulk export excluded, issue listed it, moved to a follow-up issue`) and Phase `pm`. The orchestrator lists exactly those rows as the run's scope changes in `_tracking.md`; a scope boundary that only lives in the body's `## Scope` section never reaches that list. The table has six columns, `ID | Decision | Phase | Rationale | Constraint impact | Supersedes`; create the file with that header if it does not exist, add the `Supersedes` column first (with `—` in every existing row) if it still has five, and leave `Supersedes` as `—` on your rows: only the orchestrator fills it. When the scope matches the issue, leave this file untouched.
+
 **`open-questions.md`** — Add any unresolved questions from your analysis:
 
 ```markdown

@@ -26,7 +26,7 @@ Work through [`analysis-discipline`](../skills/analysis-discipline/SKILL.md) thr
 - `03-implementation.md` (implementer) — its `## Files Written` section; this is the change surface you reason about.
 - `00c-bug-triage.md` (bug-triage-agent), optional — present when this run fixes a bug. Its `## Summary` **What** line (observed vs expected) and its `## Reproduction` steps are the core of this plan: the reported scenario is the first thing a person re-runs.
 - `00b-impact.md` (impact-assessment-agent), optional — `effort` and the `§3b Work Breakdown` domain map, used to scope exploratory charters.
-- `02-architecture.md` (architect-agent), optional — external integrations and data model changes, used for the Test Data & Environment section.
+- `02-architecture.md` (architect-agent), optional — external integrations and data model changes, used for the Test Data & Environment section, and its `## Behaviour Delta`, used by steps 1 and 2a. Absent or `N/A` means no already-shipped flow changes what its users see.
 - The ledger under `.kairos/<feature_folder>/ledger/`.
 - `.kairos/_qa-regression.md` at the **project root**, optional — the cumulative catalogue of manual cases written by earlier features. You are its only writer and its main reader: it is where the existing `QA-n` cases live that this change may have broken. Absent on the first feature that runs 5b; you create it then.
 - An issue reference (`PROJ-42`, `#42`), optional — see the Issue Tracker Comment step.
@@ -102,6 +102,7 @@ Read `05-test-verification.md` and build the set of what automation does **not**
 - Every `AC-n` with a non-empty `Gap` cell in its `## Acceptance Criteria Mapping` table.
 - Every `AC-n` absent from that table entirely.
 - Any row in its `## Checks` table that is `FAIL` — a failing Determinism check means the automated result for that area is not trustworthy, so it re-enters the manual set even when the lines are "covered".
+- Every `## Behaviour Delta` row of `02-architecture.md` whose new outcome is visible only on screen (what the user sees, not what the server returns), and every row `test-verifier-agent` reported as untested. A new rejection that no one has watched arrive in the product is the defect class this list exists for: the server can return it correctly while the client shows nothing.
 
 With no test-verifier artifact at all, the complement is every `AC-n` in `01-requirements.md`.
 
@@ -133,7 +134,7 @@ Cover, where the complement contains them: happy path per uncovered `AC-n`, the 
 
 ### 2a. Expected Behaviour Changes
 
-A tester who sees the system behave differently files a bug unless told otherwise. When this change deliberately alters something a person will notice (a new rejection, a wait where there was none, two actions that used to block each other and no longer do), list it in `## Expected Behaviour Changes`: what the tester will see, why it is intended, in one clause, and the case that shows it. At most five rows, product language, no IDs except the case's. Also list here any behaviour a tester might mistake for a defect of this change but that is deliberately out of its scope; such a behaviour is a row here with `—` in its Case cell, never a test case. No deliberate visible change → omit the section.
+A tester who sees the system behave differently files a bug unless told otherwise. When this change deliberately alters something a person will notice (a new rejection, a wait where there was none, two actions that used to block each other and no longer do), list it in `## Expected Behaviour Changes`: what the tester will see, why it is intended, in one clause, and the case that shows it. Start from `02-architecture.md`'s `## Behaviour Delta` when it has rows, since each one is a behaviour change the design already declared, and a limit there carries the unit it is enforced in, which is the unit the case must use; then add what the code shows beyond it. At most five rows, product language, no IDs except the case's. Also list here any behaviour a tester might mistake for a defect of this change but that is deliberately out of its scope; such a behaviour is a row here with `—` in its Case cell, never a test case. No deliberate visible change → omit the section.
 
 ### 2b. Cross-Environment Verification (conditional)
 
@@ -288,7 +289,7 @@ Follow [`artifact-bookkeeping`](../skills/artifact-bookkeeping/SKILL.md) for the
 
 An `AC-n` you marked **not verifiable as written** (or **not verifiable by hand**) is not a separate status condition. Write it as a `## Risks` row with `Impact: high` (e.g. Description: `AC-4 not verifiable as written — "fast enough" carries no stated threshold`), so the human resolves it through the same Risk Disposition Loop as every other row and the resulting constraint is written for them. One mechanism, nothing special for the orchestrator to know. Still write the `open-questions.md` row from step 6 as well — that is the durable record; the Risks row is what forces the decision at the gate.
 
-`NEEDS_ATTENTION` is not a loop trigger. Nothing re-invokes an implementer from this phase: the Phase 3 loop has already exited and the code is settled. It means a human must resolve something — accept the risk, schedule the retest, or answer the open question — before release planning, and the orchestrator's own gate is where that happens.
+`NEEDS_ATTENTION` is not a loop trigger. Nothing re-invokes an implementer from this phase by itself: the review loop has already exited and the code is settled. It means a human must resolve something — accept the risk, schedule the retest, or answer the open question — before release planning, and the orchestrator's own gate is where that happens.
 
 ## After Generating Output
 

@@ -33,6 +33,15 @@ If any item below is missing from both sources, **stop immediately** and emit th
 
 Follow [`agent-contract`](../skills/agent-contract/SKILL.md)'s Missing-Input Error Format — `{agent-name}: code-reviewer-agent`.
 
+## Review Wave Mode
+
+When the orchestrator's invocation prompt states `review_wave: true`, you are running at the same time as `test-verifier-agent` (and `security-reviewer-agent`, when active), on the same code. Two things change:
+
+- **Do not build the project or run the test suite.** `test-verifier-agent` owns test execution inside a wave, and two agents building into the same output directory at the same moment corrupt each other's results. Lint and static analysis that write no build output are fine. Your Testing check (check 7) reads the results `03-implementation.md` reports and the test code itself; say `execution left to test-verifier (review wave)` in that row instead of re-running anything.
+- **Do not write `## Loop State`** in `ledger/loops.md` (Ledger Update below). The orchestrator reads `convergence_signal` from your frontmatter instead, so that two reviewers never edit the same file at once. Still read `iteration` from `## Loop State` when it exists, to fill `convergence_signal.iteration`.
+
+Everything else, including every check below, runs exactly as it does outside a wave.
+
 ## Ledger Check (required)
 
 Before proceeding, read all three ledger files:
@@ -144,7 +153,7 @@ One file: `04-review.md`. YAML frontmatter carries only what the orchestrator br
 phase: code-review
 status: READY   # or NEEDS_FIXES
 issues_summary: { critical: 0, high: 2, medium: 1, low: 3, total: 6 }
-convergence_signal: { iteration: 1 }
+convergence_signal: { issues_critical_high: 2, iteration: 1 }
 ---
 
 # Code Review — <feature title>
@@ -241,14 +250,17 @@ Freshly-surfaced Issues table rows are written by the orchestrator's Risk Dispos
 
 **`open-questions.md`** — Answer questions visible from code. Add questions raised during review.
 
-**Loop State (conditional)** — If `## Loop State` already exists in `ledger/loops.md` (created by the orchestrator before this invocation), update it with the `convergence_signal` before returning:
+**Loop State (conditional)** — If `## Loop State` already exists in `ledger/loops.md` (created by the orchestrator before this invocation), and you are **not** in Review Wave Mode, update it with the `convergence_signal` before returning:
 
 ```markdown
 convergence_signal:
+  issues_critical_high: <critical + high Issues rows, excluding every row whose Description starts with `Pre-existing:`>
   iteration: <iteration number from Loop State>
 ```
 
-Do NOT create `## Loop State` yourself — only update it if the orchestrator already placed it there.
+Do NOT create `## Loop State` yourself — only update it if the orchestrator already placed it there. In Review Wave Mode skip this write entirely: the same two values are in your frontmatter's `convergence_signal`, which is where the orchestrator reads them.
+
+**`issues_critical_high` never counts a `Pre-existing:` row**, in the frontmatter or here. That count is what drives the orchestrator's automatic review loop, and a defect the change did not introduce is not something the retry budget exists to fix: it still reaches the human at the gate, with its own Impact, where it can be fixed now or deferred. `issues_summary` and `status` still count every row, `Pre-existing:` ones included, so the gate shows the unit's real state.
 
 ### 3. Open in Editor
 When the orchestrator invoked you, skip this step — its gate prints the `## Summary` block and offers the full file on request, so force-opening it here puts the whole document in front of a human who only needed four lines. Open it on a standalone run, where no gate does that for you.

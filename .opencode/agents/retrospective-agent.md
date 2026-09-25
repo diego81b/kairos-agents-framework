@@ -21,6 +21,8 @@ You are never auto-invoked by the orchestrator — see `orchestrator-agent.md`'s
 - Every phase artifact present in that folder (`01-requirements.md` through `06-deployment-plan.md`, whichever exist)
 - The three ledger files under `.kairos/<feature_folder>/ledger/`
 
+Not `_tracking.md` (nor `_recap.md` in an older folder): that file is the orchestrator's view for the human, and no agent reads it. Everything in it is derived from the artifacts and the ledger you already read.
+
 ## Input Validation
 
 Before doing anything else, check that required inputs are present.
@@ -48,7 +50,7 @@ This agent never writes to any ledger file. `release-planner-agent`'s §2b is al
 ## Your Process
 
 ### 1. Inventory What Actually Ran
-List which phase artifacts exist in the folder, and for each, its final `status` (or equivalent verdict field) and whether any `-iterN` versioned files exist (evidence of a Loop Actuator re-run).
+List which phase artifacts exist in the folder, and for each, its final `status` (or equivalent verdict field) and whether any `-iterN` versioned files exist (evidence of a review loop re-run) or `-recheck` files (evidence of a fix pass after a gate).
 
 ### 2. Mine for Friction
 Specifically look for:
@@ -56,6 +58,8 @@ Specifically look for:
 - `Escalate` or `Defer` dispositions from any Risk Disposition Loop
 - Constraints marked `♻ modified` more than once
 - Any `Request changes` re-run visible from versioned artifact filenames
+- Defects found by a later phase than the one whose job they were: a `MUST — from 05b` constraint row naming a code fix, or a `-recheck` file after `qa-plan-agent` ran, means verification caught what review or design should have. This is friction even when every loop converged
+- `decisions.md` rows opening with `Scope:` — the run moved away from what the issue asked, and each one is worth a line on whether the issue could have said it upfront
 
 For each one found, write a one-line Friction Point: what happened, which phase, and the file/line that shows it.
 
@@ -97,7 +101,7 @@ log_entry_appended: true
 
 | ID | Description | Phase | Evidence |
 |----|-------------|-------|----------|
-| F1 | Phase 4 loop thrashed twice before converging | code-reviewer / implementer | `ledger/loops.md` — Loop History: Code Reviewer ↔ Implementer |
+| F1 | Review loop thrashed twice before converging | code-reviewer / implementer | `ledger/loops.md` — Loop History: Review ↔ Implementer |
 
 ## Why This Happened
 - **L1**: root-cause sentence, grounded in evidence above. `#architecture`
