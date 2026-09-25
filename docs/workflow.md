@@ -14,11 +14,13 @@ Every gate below is an interactive `AskUserQuestion` prompt — **but only when 
 | 1 | PM Agent | `01-requirements.md` | ✅ / ✏️ / ⏭️ / ⛔ |
 | 2 | Architect Agent | `02-architecture.md` | ✅ / ✏️ / ⏭️ / ⛔ |
 | 3 | Implementer (TDD or code-only, or Team Mode) | Code + `03-implementation.md` | Plan gate, then ✅ / ✏️ / ⏭️ / ⛔ |
-| 4 | Code Reviewer | `04-review.md` | ✅ / ✏️ / ⏭️ / ⛔ |
-| 4b | Security Reviewer *(optional)* | `04b-security-review.md` | ✅ / ✏️ / ⏭️ / ⛔ |
-| 5 | Test Verifier | `05-test-verification.md` | ✅ / ✏️ / ⏭️ / ⛔ |
+| 4 | Code Reviewer (review wave) | `04-review.md` | one combined review gate ✅ / ✏️ / ⏭️ / ⛔ |
+| 4b | Security Reviewer *(optional, review wave)* | `04b-security-review.md` | same gate |
+| 5 | Test Verifier (review wave) | `05-test-verification.md` | same gate |
 | 5b | QA Plan Agent *(optional)* | `05b-qa-plan.md` | ✅ / ✏️ / ⏭️ / ⛔ |
 | 6 | Release Planner | `06-deployment-plan.md` | ✅ / ✏️ / ⛔ |
+
+Phases 4, 4b and 5 run together as one **review wave**: the active reviewers read the same code, in parallel where the host allows it, and you answer one gate for all three (see [Review Wave](#review-wave-phases-4-4b-and-5)).
 
 Phase 3 routes to one of two paths: the single Implementer Agent (default, works everywhere — plan gate, then RED → GREEN → REFACTOR), or Team Mode (Claude Code only, explicit request required) where an Implementer Lead defines binding contracts and spawns Tests / Backend / Frontend / Database teammates in parallel before aggregating their output.
 
@@ -47,11 +49,11 @@ Every phase writes a single Markdown file: a small YAML frontmatter header carry
 - Developer provides a natural-language feature request (with optional issue reference)
 - Orchestrator loads `00-context.md`, `00b-impact.md`, and `00c-bug-triage.md` if present. A triage on disk is attached to every later subagent prompt, not just read by the Quick fix path
 - **Bug-Input Check** (before the Effort Check): if the input reads as a bug report — a symptom against an expectation, a stack trace, reproduction steps, "this used to work" — and no `00c-bug-triage.md` exists, the Orchestrator offers to run `bug-triage-agent` first. On accept it dispatches it with `mode: orchestrated`: the agent reproduces, finds the root cause, writes `00c-bug-triage.md`, and returns without a gate of its own, which the Orchestrator then presents as it would any phase artifact. Approve and `recommended_entry` becomes an advisory at the Effort Check below. This is the single exception to the Orchestrator never dispatching a standalone agent, and it holds only because `bug-triage-agent` asks nothing mid-work — every other standalone agent does, and would lose those questions as a subagent
-- **Effort Check** (skipped only when a `## KAIROS Pipeline` template section was found in the issue body): one question — "How big is this change?" — answered as `simple_fix`, `medium`, or `significant_rework`. When `00b-impact.md` exists, its `effort` value is the pre-selected default; otherwise the orchestrator proposes one from the request itself. **The chosen value is stamped into the invocation prompt of every subagent that runs**, so each agent enters Lean, Trimmed, or Full mode from a value a human confirmed instead of re-deriving the size itself (or silently defaulting to `medium`+ and running Full). `simple_fix` additionally presets `active_agents` to `implementer-coder-agent` + `code-reviewer-agent`, sets `loop_policy` to `auto 1`, and widens the Risk Disposition Loop's auto-accept threshold to `medium` — skipping the selection menu and the loop-policy prompt below entirely. `medium` presets `loop_policy.phase4` to `auto 1` (announced at Step 0f, overridable there) and still shows the selection menu. `significant_rework` asks everything, as before. When the question is skipped because a template was found, `effort` comes from the template's `Effort:` line (else `00b-impact.md`, else `medium`) and is propagated as usual. The size presets — retry budget, auto-accept threshold, combined plan step for `simple_fix` — apply only when the template has an `Auto-fix:` line, and never override the template's agent list. A template without one is an older template and keeps the behaviour it always had: both retry budgets manual, the plan gate kept, and the retry question asked only at `significant_rework`.
+- **Effort Check** (skipped only when a `## KAIROS Pipeline` template section was found in the issue body): one question — "How big is this change?" — answered as `simple_fix`, `medium`, or `significant_rework`. When `00b-impact.md` exists, its `effort` value is the pre-selected default; otherwise the orchestrator proposes one from the request itself. **The chosen value is stamped into the invocation prompt of every subagent that runs**, so each agent enters Lean, Trimmed, or Full mode from a value a human confirmed instead of re-deriving the size itself (or silently defaulting to `medium`+ and running Full). `simple_fix` additionally presets `active_agents` to `implementer-coder-agent` + `code-reviewer-agent`, sets `loop_policy` to `auto 1`, and widens the Risk Disposition Loop's auto-accept threshold to `medium` — skipping the selection menu and the loop-policy prompt below entirely. `medium` presets the review loop's budget to `auto 1` (announced at Step 0f, overridable there) and still shows the selection menu. `significant_rework` asks everything, as before. When the question is skipped because a template was found, `effort` comes from the template's `Effort:` line (else `00b-impact.md`, else `medium`) and is propagated as usual. The size presets — retry budget, auto-accept threshold, combined plan step for `simple_fix` — apply only when the template has an `Auto-fix:` line, and never override the template's agent list. A template without one is an older template and keeps the behaviour it always had: the retry budget manual, the plan gate kept, and the retry question asked only at `significant_rework`.
 - If `00b-impact.md` found, displays a `💡 Impact Assessment` advisory block before the selection menu (effort, domains, recommended agents). The agent list stays advisory — nothing is pre-selected — but its `effort` value is pre-selected as the recommended answer at the Effort Check above.
 - If the invocation prompt already dictates an agent list, the orchestrator treats it as an unconfirmed proposal and still requires explicit confirmation through the selection menu
-- Orchestrator reads the `## KAIROS Pipeline` section from the issue body (if present), or shows an interactive numbered list. A template's optional `Auto-fix:` line (or its `Auto-fix after review:` / `Auto-fix after tests:` pair) sets how many times the agents may fix their own problems before stopping at a gate, overriding the size preset and skipping the retry question. The line is also the opt-in to the size presets, so templates written before it existed run exactly as they did. When no `00b-impact.md` advisory exists, the orchestrator adds its own `💡 Suggested selection` line derived from the feature request — advisory only, never auto-applied
-- User confirms or adjusts the agent selection; orchestrator announces the active pipeline before Phase 1 and saves the run's settings to `ledger/run.md`
+- Orchestrator reads the `## KAIROS Pipeline` section from the issue body (if present), or shows an interactive numbered list. A template's optional `Auto-fix:` line (or the older `Auto-fix after review:` / `Auto-fix after tests:` pair, which resolves to the larger of the two) sets how many times the agents may fix their own problems before stopping at a gate, overriding the size preset and skipping the retry question. The line is also the opt-in to the size presets, so templates written before it existed run exactly as they did. When no `00b-impact.md` advisory exists, the orchestrator adds its own `💡 Suggested selection` line derived from the feature request — advisory only, never auto-applied
+- User confirms or adjusts the agent selection; orchestrator announces the active pipeline before Phase 1, saves the run's settings to `ledger/run.md`, and creates `_tracking.md`, the one file it keeps open in your editor for the rest of the run (see [Tracking File](#tracking-file))
 - **Issue write-back** (only when the run started from an issue and the selection came from the menu): the orchestrator shows the `## KAIROS Pipeline` block it would write and asks before appending it to the issue description — never touching the rest of the description. On Jira, or with no tracker CLI, it prints a paste-ready block instead. See [Pipeline Templates](/setup/templates#saving-the-selection-to-the-issue)
 
 _Input: free-text feature request + optional issue reference + optional pre-pipeline Markdown files (`00-context.md` / `00b-impact.md`)_
@@ -90,6 +92,7 @@ User reviews requirements, constraints and risks before any design work begins. 
 - Propose 3 design options, recommend one
 - Design database schema and API contracts
 - Define error handling and integration patterns
+- **Behaviour Delta** — only when the change alters what a user of an already-shipped flow can observe (`N/A` otherwise): for each affected flow, what the user sees before and after, including on any new rejection or limit, and every new limit recorded as a constraint with its unit named ("400 lock keys per request, about 200 rows at 2 keys per row"). Test Verifier and QA Plan read it as input. It exists because the late findings in real runs were all of this kind: a rejection the operator never saw, a cap answered in rows but enforced in keys
 
 _Input: `01-requirements.md`_
 _Output: a single Markdown file — frontmatter (selected option, table/error-code counts) + design doc body (full data model, API contracts, tech choices) — see "Artifact Format" above_
@@ -129,17 +132,21 @@ _Output: implementation plan → (approval) → code files + test files + covera
 _Saved to: `.kairos/<feature_folder>/03-implementation-plan.md`, then project paths + `.kairos/<feature_folder>/03-implementation.md`_
 
 ::: tip One artifact per feature, not per pass
-The implementer is re-invoked on the same implementation for three different reasons: a planned wave from a multi-wave plan, a Loop Actuator iteration driven by code-reviewer or test-verifier findings, and a manual re-run after you chose Request changes at the gate. All three append to the **same** `03-implementation.md`: a `## Pass Log` records why each pass ran, and `## Files Written` is the union across all of them, each row naming the pass that last touched it. Loop iterations are additionally archived as `03-implementation-iter{N}.md`, but those are a per-iteration trail — the base file stays the cumulative record.
+The implementer is re-invoked on the same implementation for three different reasons: a planned wave from a multi-wave plan, a review loop iteration driven by code-reviewer or test-verifier findings, and a fix pass or manual re-run after you answered a gate. All three append to the **same** `03-implementation.md`: a `## Pass Log` records why each pass ran, and `## Files Written` is the union across all of them, each row naming the pass that last touched it. Loop iterations are additionally archived as `03-implementation-iter{N}.md`, but those are a per-iteration trail — the base file stays the cumulative record.
 
-This matters because three readers treat that table as everything the feature shipped: `code-reviewer-agent` picks what to review from it, `release-planner-agent`'s Scope Coverage Check traces each in-scope item to it, and `_recap.md` publishes it as Files Changed. A per-pass table made all three under-report with no error anywhere.
+This matters because three readers treat that table as everything the feature shipped: `code-reviewer-agent` picks what to review from it, `release-planner-agent`'s Scope Coverage Check traces each in-scope item to it, and `_tracking.md` publishes it as Files Changed. A per-pass table made all three under-report with no error anywhere.
 :::
 
 ::: info HITL checkpoint — Plan gate
 User reviews the implementation plan (files, test cases, approach) **before any code is written**. Reject at zero cost.
 
-The plan is a first-class artifact like every other phase output: written to disk unconditionally, opened in the editor, and gated by the Orchestrator — never buried in the implementer's own transcript. Its `Risks` table goes through the same row-by-row Risk Disposition Loop as any other phase. Presented via `AskUserQuestion`, not a printed menu.
+The plan is a first-class artifact like every other phase output: written to disk unconditionally, opened in the editor (the one gate that still opens its artifact automatically, because it is the last one before source files change), and gated by the Orchestrator — never buried in the implementer's own transcript. Its `Risks` table goes through the same row-by-row Risk Disposition Loop as any other phase. Presented via `AskUserQuestion`, not a printed menu.
 
 `✅ Approve plan` · `✏️ Revise plan` · `⏭️ Skip next` · `⛔ Stop`
+:::
+
+::: tip Waves continue on their own unless something needs you
+A large plan is split into waves, and each wave ends with `status: partial`. The Orchestrator still checks every wave the way it checks a gate: the artifact contract, the ledger, and the files the wave touched against the plan's file lists. It stops and asks you only when one of those checks turns something up: a new risk rated `medium` or above, a new constraint, a failing test, a file outside the plan, an Escalate, or a malformed artifact. Otherwise it writes one line to `_tracking.md`'s log and starts the next wave. Setting `wave_gates: every_wave` in `ledger/run.md`, or saying so at the pipeline announcement, restores a gate after every wave.
 :::
 
 ::: info HITL checkpoint — Code gate
@@ -190,6 +197,19 @@ Team Mode eliminates frontend/backend contract mismatches through binding contra
 
 ---
 
+## Review Wave (Phases 4, 4b and 5)
+
+Code review, security review and test verification all read the same finished code, and none of them writes source. So once the code gate is approved, the Orchestrator starts every active reviewer at once, in parallel where the host supports it, one after another where it does not. Each still writes its own report (`04-review.md`, `04b-security-review.md`, `05-test-verification.md`); what changes is how you answer them.
+
+- **One gate for the wave.** You see the three `## Summary` blocks together, the Risk Disposition Loop walks the rows of all three tables, and one decision closes the wave.
+- **One fix pass.** Every row you mark **Mitigate now**, across all three reports, plus any change you ask for, goes to the implementer as a single pass, followed by one recheck of the reviewers scoped to that fix. Older versions ran a fix pass and a recheck after each review phase.
+- **One loop.** If you gave the run an auto-fix budget, the Orchestrator retries on its own while code review or test verification reports a `critical`/`high` issue or an acceptance-criteria gap, then runs every reviewer one last time before the gate. Security findings never trigger an automatic retry; they wait for you. See [Agentic Loop](/agentic-loop).
+- **Who runs the tests.** Inside a wave only Test Verifier executes the test suite; Code Reviewer keeps its static checks and lint, so the two never build into the same output at the same moment. Findings both reviewers raise on the same line are merged by the Orchestrator.
+
+`qa-plan-agent` (5b) is not part of the wave. It runs after the wave's gate, on settled code, and can still lead to one more fix pass of its own.
+
+---
+
 ## Phase 4: Code Review (Code Reviewer)
 
 - Check standards, naming, file structure
@@ -202,7 +222,7 @@ _Output: a single Markdown file — frontmatter (status, pass/fail checks, issue
 _Saved to: `.kairos/<feature_folder>/04-review.md`_
 
 ::: info HITL checkpoint
-User reviews the quality report (`04-review.md`). NEEDS\_FIXES sends the issues table back to the Implementer. Presented via `AskUserQuestion`, not a printed menu.
+Answered at the combined review gate, together with 4b and 5. `NEEDS_FIXES` issues you mark **Mitigate now** join the wave's single fix pass. Presented via `AskUserQuestion`, not a printed menu.
 
 `✅ Approve` · `✏️ Request changes` · `⏭️ Skip next` · `⛔ Stop`
 :::
@@ -237,7 +257,7 @@ _Output: a single Markdown file — frontmatter (status, finding counts) + repor
 _Saved to: `.kairos/<feature_folder>/04b-security-review.md`_ (written by the Orchestrator — the agent itself is read-only)
 
 ::: info HITL checkpoint
-User reviews findings in `04b-security-review.md`. "Request fixes" forwards the Findings section to the Implementer. Presented via `AskUserQuestion`, not a printed menu.
+Answered at the combined review gate. Findings you mark **Mitigate now** join the wave's single fix pass; none of them is ever retried automatically. Presented via `AskUserQuestion`, not a printed menu.
 
 `✅ Approve` · `✏️ Request fixes` · `⏭️ Skip next` · `⛔ Stop`
 :::
@@ -259,13 +279,13 @@ _Output: a single Markdown file — frontmatter (status, execution/coverage summ
 _Saved to: `.kairos/<feature_folder>/05-test-verification.md`_
 
 ::: info HITL checkpoint
-User confirms coverage is adequate from `05-test-verification.md`. FAIL sends the gap/issues table back to the Implementer. Presented via `AskUserQuestion`, not a printed menu.
+Answered at the combined review gate. Gaps and issues you mark **Mitigate now** join the wave's single fix pass. Presented via `AskUserQuestion`, not a printed menu.
 
 `✅ Approve` · `✏️ Request changes` · `⏭️ Skip next` · `⛔ Stop`
 :::
 
 ::: tip Skips re-running tests on a clean first pass
-`implementer-tdd-agent` already executes the test suite twice (RED and GREEN) and reports coverage in `03-implementation.md`. On the first test-verifier invocation for a feature — no prior `05-test-verification.md`, and GREEN shows a clean pass — Test Verifier reuses those results instead of re-running the suite. The static audit (comprehensiveness, assertion strength, determinism, hygiene, mocking, TDD reality check) always runs in full regardless; only the redundant command re-run is skipped. Any loop re-check, Guard regression check, or standalone invocation always re-executes.
+`implementer-tdd-agent` already executes the test suite twice (RED and GREEN) and reports coverage in `03-implementation.md`. On the first test-verifier invocation for a feature — no prior `05-test-verification.md`, and GREEN shows a clean pass — Test Verifier reuses those results instead of re-running the suite. The static audit (comprehensiveness, assertion strength, determinism, hygiene, mocking, TDD reality check) always runs in full regardless; only the redundant command re-run is skipped. Any loop re-check, recheck after a fix pass, or standalone invocation always re-executes.
 :::
 
 ---
@@ -294,7 +314,7 @@ User reviews the plan before it goes to whoever will execute it. `NEEDS_ATTENTIO
 :::
 
 ::: tip Runs after the loop, and posts to the issue
-Phase 5b runs only once the Phase 3 loop has exited and its regression Guard has resolved — a QA plan written mid-loop describes code that is about to change again. It is also the one artifact whose reader sits outside the pipeline, so it posts itself to the issue tracker when an issue reference was given. No `jira`/`glab` on the machine is fine: it prints a paste-ready comment instead of failing the phase. That comment is the acceptance/QA split in practice: the issue's `AC-n` list stays developer-verifiable, and the setup a check really needs — two applications, a specific configuration, two sessions on two machines — travels in the comment instead of bloating the criteria. What gets posted is an extract, not the file: core, cases, setup, expected behaviour changes, retests, test data and the manual part of the sign-off, without the Summary, Coverage Complement and code evidence the gate reads and a tester cannot act on. Empty sections are left out.
+Phase 5b runs only once the review loop has exited and the review gate has resolved — a QA plan written mid-loop describes code that is about to change again. It is also the one artifact whose reader sits outside the pipeline, so it posts itself to the issue tracker when an issue reference was given. No `jira`/`glab` on the machine is fine: it prints a paste-ready comment instead of failing the phase. That comment is the acceptance/QA split in practice: the issue's `AC-n` list stays developer-verifiable, and the setup a check really needs — two applications, a specific configuration, two sessions on two machines — travels in the comment instead of bloating the criteria. What gets posted is an extract, not the file: core, cases, setup, expected behaviour changes, retests, test data and the manual part of the sign-off, without the Summary, Coverage Complement and code evidence the gate reads and a tester cannot act on. Empty sections are left out.
 :::
 
 ---
@@ -319,20 +339,22 @@ User approves the deployment runbook (`06-deployment-plan.md`). This is the fina
 
 ## Shared Ledger — Cross-Phase Project Memory
 
-Each KAIROS run maintains three living files under `.kairos/<feature_folder>/ledger/` that accumulate shared state across all phases, plus three files the Orchestrator alone keeps there:
+Each KAIROS run maintains three living files under `.kairos/<feature_folder>/ledger/` that accumulate shared state across all phases, plus two files the Orchestrator alone keeps there:
 
 | File | Purpose | Seeded by | Updated by |
 |------|---------|-----------|-----------|
 | `constraints.md` | All constraints with per-phase accounting | PM Agent (or Context Extractor if run first) | Every agent |
 | `decisions.md` | Architectural and implementation decisions log | Architect Agent | Any agent; the `Supersedes` cell only by the Orchestrator |
 | `open-questions.md` | Cross-phase questions with answers, and deferred risks | Any agent or human (via HITL gate) | Any agent |
-| `run.md` | The run's settings: effort, active agents, auto-fix budgets | Orchestrator, before Phase 1 | Orchestrator |
+| `run.md` | The run's settings: effort, active agents, auto-fix budget, wave gates | Orchestrator, before Phase 1 | Orchestrator |
 | `loops.md` | Auto-fix state while a retry is running, and the history of retries that did not converge | Orchestrator | Orchestrator; the checker adds its convergence signal |
-| `audit-log.md` | One line per gate resolution | Orchestrator | Orchestrator |
 
 `run.md` is what lets a pipeline resume in a later session with the same settings: the resumed run restores the effort, skips the agents that were never selected, and keeps the auto-fix budgets the human chose. `loops.md` keeps retry bookkeeping out of `open-questions.md`, so that file holds only what a person has to read.
 
+Before v8.5.0 a third file, `audit-log.md`, kept one line per gate. That log now lives in `_tracking.md` (below); an existing `audit-log.md` is read, never written.
+
 Feature folders written before v8.4.0 keep working. A folder with no `run.md` falls back to the effort stored in the audit log's header and asks once for anything else; loop sections found in `open-questions.md` are moved into `loops.md` the first time the Orchestrator touches them; a `decisions.md` table without a `Supersedes` column gains it on its next write.
+
 ### How the ledger works
 
 **Forced accounting model** — at the end of every phase, each agent must update the Status column of every existing constraint row before adding new ones. An unaddressed constraint stays `🔴 open` and is visible to every downstream agent.
@@ -360,6 +382,25 @@ Without the ledger, information can be silently dropped between phases: a SOC2 c
 At pipeline end, the Orchestrator counts `🔴 open` items in `open-questions.md` and warns if any remain unresolved before shipping.
 
 > **Team Mode**: only `implementer-lead-agent` reads and writes the ledger. Teammates receive constraints through their binding contracts, not by direct ledger access.
+
+---
+
+## Tracking File
+
+The ledger is written for the agents. `.kairos/<feature_folder>/_tracking.md` is written for you: the Orchestrator creates it before Phase 1, opens it in your editor once, and rewrites it after every event, so the same tab stays current for the whole run. No agent writes it and no agent reads it: every value in it comes from the ledger and the phase reports, and nothing the pipeline does, a resume included, depends on its content. That is also why the rename from `_recap.md` breaks nothing.
+
+| Section | Rewritten or appended | What it tells you |
+|---|---|---|
+| `## Status` | rewritten every event | current phase, next step, what blocks the run, the questions and constraints still `🔴 open` |
+| `## Issue Alignment` | rewritten every event | every `AC-n` as `pending`, `covered`, `manual`, `gap`, `changed` or `dropped`, and every scope change made along the way |
+| `## Log` | appended, never rewritten | one line per event: each gate and your answer, each wave continued automatically, each fix pass, loop exit, resume and stop |
+| `## Phases` | one section replaced per gate | a few lines per phase, taken from that report's `## Summary` |
+
+A scope change is listed when a decision in `ledger/decisions.md` opens with `Scope:`. PM Agent, Architect Agent and the Orchestrator write that prefix when a decision widens or narrows what the issue asked, so the alignment section never has to guess.
+
+Gates no longer open each report in the editor. The gate prints the report's path; reply `open` (or `apri`) and the Orchestrator opens it and shows the same gate again. The implementation plan is the one exception and still opens automatically.
+
+At the end of the run the Orchestrator finalizes the file: Files Changed, the risks you chose to ship with, and the constraints still open. It then offers to delete the phase reports it now summarizes; the ledger and `_tracking.md` are never deleted. Folders from before v8.5.0 have a `_recap.md` written only at the end: a finished one is left as it is, and a resumed one gets a `_tracking.md` on first touch, with the old audit-log lines copied into its log.
 
 ---
 
@@ -403,7 +444,7 @@ If any agent reports issues during its phase, the Orchestrator:
 
 ## Final Output
 
-After all phases complete, the Orchestrator presents a consolidated summary:
+After all phases complete, the Orchestrator finalizes `_tracking.md` (see [Tracking File](#tracking-file)) and presents a consolidated summary:
 
 ```
 ANALYSIS (from PM Agent):

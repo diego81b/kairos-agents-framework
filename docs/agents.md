@@ -56,6 +56,8 @@ Never fixes anything. It has `Bash` to reproduce — run a test, read a log, `gi
 
 Master coordinator — initiates workflow, routes tasks to specialist agents, manages phase transitions, and ensures quality gates are passed before moving forward.
 
+It also keeps `_tracking.md`, the one file written for you rather than for the agents: current status, blockers, open points, how far the work has moved from the issue's acceptance criteria and scope, and a log of every gate, wave, fix pass and resume. It opens that file once and keeps it current; phase reports open only when you ask, except the implementation plan. It runs Code Reviewer, Security Reviewer and Test Verifier as one review wave with a single gate and a single fix pass.
+
 ---
 
 ## [PM Agent](/agents/pm-agent)
@@ -75,6 +77,8 @@ Designs system architecture, plans database schema, designs API contracts, consi
 Writes a single `02-architecture.md`: a YAML frontmatter header (selected option, table/error-code counts) followed by the design doc body — the full data model and API contracts as Markdown tables.
 
 For bug-type inputs that state a reachability or severity claim, it also runs a **Premise Check** before designing: the claim is verified against the actual code, and a refutation surfaces as a `Premise refutation:` risk row — never as a deferrable scope question. The Orchestrator's Risk Disposition Loop gives such rows a dedicated disposition (**Refute premise**) and flips the gate's recommendation to **Stop pipeline**, so a pipeline cannot silently ship a fix for a scenario that cannot occur.
+
+When the change alters what a user of an already-shipped flow can observe, it adds a **Behaviour Delta**: for each affected flow, what the user sees before and after, including on any new rejection or limit, with every new limit recorded as a constraint that names its unit. `N/A` otherwise.
 
 ::: tip Optional enhancements
 **Skills:** `deep-research` (built-in)  
@@ -168,7 +172,7 @@ Note: No generic database MCP available — all database MCPs are vendor-specifi
 
 ## [Code Reviewer](/agents/code-reviewer-agent)
 
-Checks code quality against standards, verifies pattern compliance, reviews architecture alignment, and suggests improvements before the code reaches test verification.
+Checks code quality against standards, verifies pattern compliance, reviews architecture alignment, and suggests improvements. Runs in the review wave alongside Security Reviewer and Test Verifier; inside the wave it leaves test execution to Test Verifier. A defect it finds on lines the change did not introduce is marked `Pre-existing:`: it still reaches you at the gate, but never drives an automatic retry.
 
 ::: tip Optional enhancements
 **Skills:** `code-review` (built-in), `security-review` (built-in), `coding-discipline` (internal, backs the Simplicity check)
@@ -178,13 +182,13 @@ Checks code quality against standards, verifies pattern compliance, reviews arch
 
 ## [Security Reviewer](/agents/security-reviewer-agent)
 
-Adversarial security review — posture is "how do I break this", not "looks okay". Optional; runs after Code Reviewer when selected. Read-only agent (`tools: Read, Grep, Glob, AskUserQuestion`, `model: opus`).
+Adversarial security review — posture is "how do I break this", not "looks okay". Optional; runs in the review wave, alongside Code Reviewer and Test Verifier, when selected. Its findings never trigger an automatic retry: they reach the implementer only through your decision at the gate. Read-only agent (`tools: Read, Grep, Glob, AskUserQuestion`, `model: opus`).
 
 Covers seven categories: authorization and IDOR (including writes through nested payloads where a PUT on a parent can mutate a child belonging to a different parent), authentication on sensitive endpoints, injection (SQL, command, template, NoSQL), secret handling, data over-exposure in responses, input validation at the server boundary, and dependency risks.
 
 Also includes a mandatory **contract enforcement check**: reads `02-architecture.md` and verifies that ownership constraints defined by the Architect are actually present in the implementation code. Gaps are flagged regardless of direct exploitability.
 
-Output is a single `04b-security-review.md`: frontmatter (status, finding counts) plus the full findings table — each ranked by exploitable severity, with a concrete attack scenario and remediation. Because this agent is read-only, the Orchestrator writes and opens the file on its behalf.
+Output is a single `04b-security-review.md`: frontmatter (status, finding counts) plus the full findings table — each ranked by exploitable severity, with a concrete attack scenario and remediation. Because this agent is read-only, the Orchestrator writes the file on its behalf.
 
 ::: tip Optional enhancements
 **Skills:** `security-review` (built-in)
@@ -194,7 +198,7 @@ Output is a single `04b-security-review.md`: frontmatter (status, finding counts
 
 ## [Test Verifier](/agents/test-verifier-agent)
 
-Verifies test quality, checks that coverage is >80%, validates assertion quality, and ensures edge cases are covered. Blocks progression if test quality is insufficient.
+Verifies test quality, checks that coverage is >80%, validates assertion quality, and ensures edge cases are covered. Blocks progression if test quality is insufficient. Runs in the review wave and is the only reviewer there that executes the test suite. Reads the architecture's Behaviour Delta, when there is one, to check that the new user-visible behaviour on shipped flows is actually tested.
 
 ::: tip Optional enhancements
 **Skills:** `verify` / `run` (built-in)  
