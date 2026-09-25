@@ -229,6 +229,26 @@ and the single loop are unchanged, only the elapsed time differs. A `run.md` or 
 template written before v8.5.0 with separate `phase3`/`phase4` budgets (or
 `Auto-fix after review`/`after tests` lines) resolves to the larger of the two.
 
+The recheck after a fix pass runs only the reviewers the fix pass's diff calls for, since
+v8.6.0. In a real run, a manual correction after review removed an interceptor, added one test
+and extracted one method, and the orchestrator had to improvise which reviewers to re-run,
+because the rule re-ran every active reviewer and a correction outside the review gate had no
+rule at all. The selection reads two signals the orchestrator already holds, never a judgement:
+the `## Files Written` rows of `03-implementation.md` written by that pass, with their `Kind`,
+and the origin of the `MUST — from` rows in its scope. `code-reviewer-agent` runs when the diff
+has a non-test file, `test-verifier-agent` when it has a test file or a row came from `05`, and
+`security-reviewer-agent` when a row came from `04b` or the diff touches a file `04b` cites. A
+skipped reviewer is logged with the condition that did not hold, and an unreadable diff runs them
+all. The issue's `effort` was rejected as the signal: a large feature can end on a three-line fix
+and a small one can touch the code that matters most. An agent that checks coherence on simple
+fixes was rejected too: it would repeat `code-reviewer-agent`'s job and fire on every run, and
+the Quick fix preset already pairs the code-only implementer with the code reviewer. The
+implementer's own claim that its new test fails without the fix is never grounds to skip
+`test-verifier-agent`, because checking that claim is its job. The same fix pass, with the same
+selection, is now the only way code changes after the review wave: code changes asked at a recheck
+gate or at the QA plan gate go through it too, and a recheck that turns up nothing continues
+under the wave rule instead of stopping at a gate.
+
 `architect-agent` gains a **Behaviour Delta** section for the same epic's other finding:
 every defect `qa-plan-agent` found late in those two issues was an observable change on a flow
 that had already shipped. A cap rejection the operator never saw, a cap counted in keys

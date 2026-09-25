@@ -66,7 +66,7 @@ Loop progress (iteration count, current issue list) is written to `ledger/loops.
 
 ## After the Gate: One Fix Pass
 
-What you choose at the review gate also goes out as a unit. Every row you mark **Mitigate now**, across all three reports, plus any change you ask for, reaches the implementer as one fix pass, followed by one recheck of the reviewers scoped to that fix. Older versions ran a separate fix pass and recheck after each review phase.
+What you choose at the review gate also goes out as a unit. Every row you mark **Mitigate now**, across all three reports, plus any change you ask for, reaches the implementer as one fix pass, followed by one recheck scoped to that fix. Only the reviewers the fix calls for run again, chosen from the files the pass wrote and the reports its rows came from, never from how large the issue looked, and a recheck that finds nothing new continues without stopping. A code change you ask for later, at a recheck gate or at the QA plan gate, goes through the same fix pass. Older versions ran a separate fix pass and recheck after each review phase.
 
 `qa-plan-agent` (Phase 5b) sits deliberately **outside** the loop: it runs only once the loop has exited and the review gate has resolved. Its own `NEEDS_ATTENTION` never re-invokes an implementer by itself. By that point the code is settled, and the status means you have a regression risk or an unverifiable acceptance criterion to decide on.
 
