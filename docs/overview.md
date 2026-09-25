@@ -99,6 +99,8 @@ This gives you:
 - **Course correction at any point** — steer direction without restarting
 - **Full audit trail** — every artifact is saved locally and optionally posted as a comment to the issue (Jira, GitLab, Bitbucket)
 
+Two places ask less often than one gate per agent, because the gate there carries no decision of its own. Code review, security review and test verification run together as one review wave and share **one** gate, with one fix pass for everything you choose to fix. And the waves of a large implementation plan continue on their own unless one of them raises a new risk, a new constraint, a failing test or a file outside the plan. Throughout the run, `_tracking.md` in the feature folder shows where the run is, what blocks it, what is still open and how far the work has moved from the issue, with a log of every step.
+
 ---
 
 ## Selective Pipeline

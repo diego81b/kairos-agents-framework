@@ -58,7 +58,7 @@ In Iteration Mode:
 - Spawn only those narrowed-scope teammates, each with the **Iteration Mode fix prompt** (Step 4), not the full GREEN implementation prompt.
 - Skip Step 6 (REFACTOR) — it already ran once on the initiating pass; re-running it every fix iteration fights the checker's specific requests instead of addressing them.
 - Emit `changes_this_iteration[]` in the Step 7 output — one line per cumulative issue addressed and which teammate/file resolved it.
-- Do NOT re-invoke the checker yourself and do NOT create or modify `## Loop State` — the orchestrator's Loop Actuator owns re-invoking the checker and updating loop state between iterations.
+- Do NOT re-invoke the checker yourself and do NOT create or modify `## Loop State` — the orchestrator's review loop owns re-invoking the reviewers and updating loop state between iterations.
 - You still create a fresh Agent Team and clean it up at the end (Step 7) — the previous iteration's team was already shut down when it finished; there is no live team to resume.
 
 ---
@@ -651,7 +651,7 @@ Then clean up the team:
 
 ## Output Format
 
-**`03-implementation.md` is cumulative per feature, never per pass** — the same rule the solo implementers apply, and it matters here for the same reason: both Loop Actuators can re-invoke you in Iteration Mode, and a multi-wave plan re-invokes you per wave. Before writing, read the existing `03-implementation.md` if it is there and carry it forward. `## Pass Log` gains one row for this pass and keeps every earlier row verbatim. `## Files Generated` is the **union** across every pass, each row naming the pass that last touched it — `code-reviewer-agent` picks what to review from that table, `release-planner-agent`'s Scope Coverage Check traces every in-scope item to it, and the orchestrator's `_recap.md` publishes it as Files Changed, so a table scoped to this pass alone makes all three under-report with no error anywhere. `## Test Results`, `## Contract Compliance`, and the `changes_this_iteration` frontmatter field describe this pass only and are replaced, not accumulated; the orchestrator separately archives the whole file as `03-implementation-iter{N}.md` on each loop iteration.
+**`03-implementation.md` is cumulative per feature, never per pass** — the same rule the solo implementers apply, and it matters here for the same reason: the orchestrator's review loop can re-invoke you in Iteration Mode, a fix pass after the review gate re-invokes you with the `MUST — from 04/04b/05` constraint rows as its only scope (address exactly those, mark each `✓ resolved`), and a multi-wave plan re-invokes you per wave. Before writing, read the existing `03-implementation.md` if it is there and carry it forward. `## Pass Log` gains one row for this pass and keeps every earlier row verbatim. `## Files Generated` is the **union** across every pass, each row naming the pass that last touched it — `code-reviewer-agent` picks what to review from that table, `release-planner-agent`'s Scope Coverage Check traces every in-scope item to it, and the orchestrator's `_tracking.md` publishes it as Files Changed, so a table scoped to this pass alone makes all three under-report with no error anywhere. `## Test Results`, `## Contract Compliance`, and the `changes_this_iteration` frontmatter field describe this pass only and are replaced, not accumulated; the orchestrator separately archives the whole file as `03-implementation-iter{N}.md` on each loop iteration.
 
 Write to `.kairos/<feature_folder>/03-implementation.md` — YAML frontmatter as the lean machine contract, Markdown body as the human-readable report:
 
@@ -695,7 +695,7 @@ changes_this_iteration:            # Iteration Mode only — omit this field ent
 | P1 | wave 1 of 2 | initial team implementation of the payments module |
 | P2 | loop iteration 1 — code-reviewer findings | backend teammate fixed 2 high-severity issues |
 
-*(One row per invocation of this agent against this implementation — planned wave, Loop Actuator iteration, or manual re-run after Request changes. Earlier rows are carried forward verbatim, never rewritten.)*
+*(One row per invocation of this agent against this implementation — planned wave, review loop iteration, fix pass after the review gate, or manual re-run after Request changes. Earlier rows are carried forward verbatim, never rewritten.)*
 
 ## Files Generated
 

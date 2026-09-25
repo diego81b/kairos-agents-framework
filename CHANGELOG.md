@@ -4,6 +4,45 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v8.5.0 — September 25, 2026
+
+Measured on a real epic (three issues, 8, 23 and 29 gates), the time a large change took was not spent in automatic retries: the Loop Actuator never fired once. It went into gates with no decision in them (fourteen waves answered "Continue"), fix passes run one review phase at a time (four after review on one issue, each with its own recheck), defects on already-shipped flows found only by the QA plan, and phase reports of up to 81KB opened in the editor at every gate while the only consolidated view arrived at the end of the run.
+
+### Added
+
+- **`agents/orchestrator-agent.md`** — `_tracking.md` in the feature folder, created before Phase 1, opened once and kept current for the whole run: status, blockers, open questions and constraints, issue alignment (every `AC-n` as `pending`, `covered`, `manual`, `gap`, `changed` or `dropped`, plus every scope change) and an append-only log of every gate, wave, fix pass, loop exit, resume and stop. It replaces `_recap.md`, which was written only at the end, and absorbs `ledger/audit-log.md`.
+- **`agents/orchestrator-agent.md`** — review wave: code review, security review and test verification start together on the same code, in parallel where the host supports it, and share one gate, one Risk Disposition Loop and one fix pass for every row marked **Mitigate now**, followed by one recheck.
+- **`agents/architect-agent.md`** — Behaviour Delta section, only when the change alters what a user of an already-shipped flow can observe: what the user sees before and after, including on a new rejection or limit, and every new limit recorded as a constraint that names its unit.
+- **`agents/pm-agent.md`**, **`agents/architect-agent.md`**, **`agents/orchestrator-agent.md`** — a decision that widens or narrows what the issue asked opens with `Scope:` in `decisions.md`, which is what `_tracking.md`'s issue alignment reads.
+
+### Changed
+
+- **`agents/orchestrator-agent.md`** — a wave that ends `partial` continues on its own after the usual checks, and stops at a gate only on a new `medium`+ risk, a new constraint, a failing test, a file outside the plan, an Escalate or a malformed artifact. `wave_gates: every_wave` in `ledger/run.md` restores a gate per wave.
+- **`agents/orchestrator-agent.md`** — gates no longer open the phase report in the editor: they print its path, and replying `open` or `apri` opens it and shows the same gate again. The implementation plan still opens automatically.
+- **`agents/orchestrator-agent.md`**, **`docs/agentic-loop.md`** — the two Loop Actuators become one review loop with one auto-fix budget, driven by code review's and test verification's critical/high findings plus acceptance-criteria gaps; security findings still wait for the gate. A final pass of every active reviewer replaces both regression Guards. A `run.md` or an issue with the older two budgets uses the larger one.
+- **`agents/code-reviewer-agent.md`** — in a review wave it keeps its static checks but leaves test execution to test verification, so the two never build into the same output at once. `Pre-existing:` rows no longer count toward the loop's convergence signal: they reach the gate, where they can be fixed or deferred, instead of making the implementer loop on code the change did not write.
+- **`agents/orchestrator-agent.md`**, **`docs/agentic-loop.md`** — test verification's coverage figure no longer restarts the implementer on its own: only critical/high findings and acceptance-criteria gaps count. A coverage below target, or one that could not be measured, reaches the gate as a finding.
+- **`agents/orchestrator-agent.md`** — at the review gate, Approve is recommended once every row is dispositioned, because approving is what sends the `Mitigate now` rows to the fix pass; free text asking for a code change joins the fix pass instead of re-running the reviewers. Skip next at the Phase 3 gate skips the whole review wave.
+- **`agents/security-reviewer-agent.md`** — runs without `04-review.md` in a review wave, without the missing-input warning; the orchestrator de-duplicates what both reviewers raise.
+- **`agents/test-verifier-agent.md`**, **`agents/qa-plan-agent.md`** — read the architecture's Behaviour Delta, when present, as input.
+- **`docs/setup/templates.md`** — `Auto-fix: N` covers the whole review wave; the Refactor / Rework preset uses the single line. The older `Auto-fix after review` / `Auto-fix after tests` pair still parses.
+- **`agents/documentation-agent.md`**, **`skills/artifact-template/SKILL.md`**, **`commands/view.md`** — name `_tracking.md`, and `_recap.md` in folders from before v8.5.0. Like `_recap.md` before it, `_tracking.md` is read by the human only: no agent takes it as input.
+- **`agents/implementer-tdd-agent.md`**, **`agents/implementer-coder-agent.md`**, **`agents/team/implementer-lead-agent.md`** — a fix pass after the review gate arrives with the human's `Mitigate now` rows as its only scope; the implementer addresses exactly those, marks each resolved and logs the pass as a fix pass.
+- **`agents/retrospective-agent.md`** — counts as friction a defect found by a later phase than the one whose job it was (a code fix bound by the QA plan, a recheck after it) and every `Scope:` decision.
+- **`agents/orchestrator-agent.md`** — whether a run finished is recorded as `run_status` in `ledger/run.md`, so resuming a folder never depends on the human-facing file.
+- **`.opencode/agents/`**, **`.kimi-code/agents/`** — both mirrors carry the same body changes.
+- **`CLAUDE.md`**, **`docs/workflow.md`**, **`docs/agents.md`**, **`docs/overview.md`**, **`docs/setup/claude-code.md`** — describe the review wave, the wave rule, the Behaviour Delta and the tracking file.
+
+### Fixed
+
+- **`agents/code-reviewer-agent.md`**, **`agents/test-verifier-agent.md`** — both now write `convergence_signal.issues_critical_high` in their frontmatter. The orchestrator's loop read that value to decide whether a retry made progress, but neither reviewer ever wrote it, so the progress check had no number to compare.
+
+### Removed
+
+- **`agents/orchestrator-agent.md`** — `ledger/audit-log.md` is no longer written; an existing one is read for the pre-v8.4.0 effort fallback and copied into `_tracking.md`'s log on first touch. A finished folder's `_recap.md` is left as it is.
+
+---
+
 ## v8.4.0 — September 24, 2026
 
 The `## KAIROS Pipeline` block in an issue could not say everything the orchestrator's own menu asks. Team Mode was missing from it, the optional agents looked like every other line, and there was no way to set how many times the agents may fix their own problems, so a large change driven from an issue still stopped to ask. The block now covers all of it in words an issue author understands. Issues written in the old format select the same agents and run exactly as they did: the new `Auto-fix:` line is the only switch to the new behaviour.

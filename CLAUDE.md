@@ -67,15 +67,18 @@ standalone agents around it:
 | 2 | `architect-agent.md` | `02-architecture.md` |
 | 3a | `implementer-tdd-agent.md` or `implementer-coder-agent.md` (PHASE 0 only) | `03-implementation-plan.md` |
 | 3b | same agent, re-invoked with the approved plan | code + `03-implementation.md` |
-| 4 | `code-reviewer-agent.md` | `04-review.md` |
-| 4.5 | `security-reviewer-agent.md` *(optional)* | `04b-security-review.md` |
-| 5 | `test-verifier-agent.md` | `05-test-verification.md` |
+| 4 | `code-reviewer-agent.md` (review wave) | `04-review.md` |
+| 4.5 | `security-reviewer-agent.md` *(optional, review wave)* | `04b-security-review.md` |
+| 5 | `test-verifier-agent.md` (review wave) | `05-test-verification.md` |
 | 5b | `qa-plan-agent.md` *(optional)* | `05b-qa-plan.md` |
 | 6 | `release-planner-agent.md` | `06-deployment-plan.md` |
 | 6b | `documentation-agent.md` *(optional)* | `06b-documentation.md` |
 
-Phase 5b (`qa-plan-agent`) is optional and deliberately sits **after** the Phase 3 Loop
-Actuator has exited, not before implementation. `test-verifier-agent` judges the automated
+Phases 4, 4.5 and 5 keep their numbers and artifact names, but since v8.5.0 they run as one
+review wave with one combined gate (see below), not as three gates in sequence.
+
+Phase 5b (`qa-plan-agent`) is optional and deliberately sits **after** the review loop
+has exited, not before implementation. `test-verifier-agent` judges the automated
 tests that exist; 5b plans the verification those tests cannot give — manual and exploratory
 cases, regression retest selection, test data and environment needs, and UAT sign-off against
 the `AC-n` list and pm-agent's Outcome Criterion. Its inputs are another agent's real gap set
@@ -85,7 +88,7 @@ rejected: the implementer's PHASE 0 already derives test cases from `AC-n` and a
 into `03-implementation-plan.md`, so a pre-code QA design would create a second plan gate on
 the same content — the argument that already killed a dedicated `planner-agent` in v7.5.0.
 Folding it into `test-verifier-agent` was rejected for a mechanical reason: test-verifier runs
-inside the Loop Actuator, so a QA plan written there regenerates on every iteration from
+inside the review loop, so a QA plan written there regenerates on every iteration from
 non-final code. 5b runs once, on settled code. Its output is also the one artifact whose
 reader is outside the pipeline, so its Issue Tracker Comment step is recommended rather than
 merely offered — and degrades to a paste-ready block when no tracker CLI is installed.
@@ -147,18 +150,95 @@ writing back what a human just confirmed is the one source every host gets, and 
 writes a decision rather than a guess from the issue text. It never touches any other
 file outside `.kairos/`, and no other tracker content.
 
-Once the last active phase's gate resolves — not on a mid-run `Stop pipeline` — the
-orchestrator writes one more file itself, no subagent involved: `_recap.md` in the feature
-folder. It condenses every phase artifact plus the ledger's audit trail, every still-open
-question, every constraint still `🔴 open`, and every risk the human deferred into one
-read. The open constraints matter most on runs without `release-planner-agent`, whose
-final re-walk is otherwise the only thing that surfaces them — the Bug Fix, Hotfix and
-Refactor presets never run it. It then offers to delete the phase artifacts it replaces (never the
-ledger, never itself). The underscore prefix keeps it out of both the numbered-phase glob
-`orchestrator-agent.md` uses for its Resume-existing flow and the frontmatter-contract
-discipline described below — recap carries no `status`, no Disposition table. Unlike the
-two agents below, recap is auto-invoked by the orchestrator, not something the user calls
-separately.
+The orchestrator also keeps one file for the human across the whole lifecycle, no subagent
+involved: `_tracking.md` in the feature folder. It is created at Step 0f, right after
+`ledger/run.md`, opened in the editor once, and rewritten by the orchestrator at every
+event after that, so the one open tab is always current. It is written for the human and
+read by nobody else: no agent receives it as input, the orchestrator never reads it to decide
+anything (whether a run finished lives in `run.md`'s `run_status`), and every value in it is
+derived from the ledger, `run.md` or the artifacts. `_recap.md` had the same status, which is
+why renaming it breaks no agent; keeping it that way is what lets the file change shape for
+its reader without breaking a resume or another agent's input. It has four parts. `## Status`
+and `## Issue Alignment` are rewritten on every event: where the run is, what blocks it,
+which questions and constraints are still `🔴 open`, and how far the work has drifted from
+the issue, with every `AC-n` marked `pending`, `covered`, `manual`, `gap`, `changed` or
+`dropped` and every scope change listed. `## Log` is append-only, one line per event:
+every gate, every wave the orchestrator continued on its own, every fix pass, loop exit,
+resume and stop. It replaces `ledger/audit-log.md`, whose only reader was the orchestrator
+itself, so the human-readable log and the audit trail are one record instead of two that
+drift. `## Phases` holds one short section per phase, replaced when that phase's gate
+resolves and built from that artifact's `## Summary` block, never from a re-read of every
+artifact. Once the last active phase's gate resolves (not on a mid-run `Stop pipeline`),
+Step 10 finalizes the file instead of composing a new one: it adds Files Changed, the
+risks the human deferred and the constraints still `🔴 open`, which matter most on runs
+without `release-planner-agent`, whose final re-walk is otherwise the only thing that
+surfaces them (the Bug Fix, Hotfix and Refactor presets never run it). It then offers to
+delete the phase artifacts it replaces, never the ledger and never itself. The underscore
+prefix keeps it out of both the numbered-phase glob `orchestrator-agent.md` uses for its
+Resume-existing flow and the frontmatter-contract discipline described below: it carries
+no `status` and no Disposition table.
+
+It replaced `_recap.md` in v8.5.0 because a real three-issue epic showed the human's real problem
+was during the run, not after it. Its two large issues went through 23 and 29 gates, each one
+opening its own artifact (78KB for one architecture, 81KB for its plan), and the only
+consolidated view arrived at the end. Two rules follow from that. Gates no longer open the
+phase artifact: the gate prints its path, and replying `open`/`apri` opens it and shows the
+same gate again, like the existing explain trigger. The one exception is
+`03-implementation-plan.md`, still opened automatically, because it is the last gate before
+source files change and the gate where that issue's corrections came from reading the plan in
+full. And "scope change" has a deterministic source: a `decisions.md` row that widens or
+narrows what the issue asked opens its Decision cell with `Scope:`, written by `pm-agent`,
+`architect-agent`, or the orchestrator when a human's answer at a gate changes scope.
+Without that prefix the orchestrator cannot tell a scope change from any other decision, and
+`## Issue Alignment` would be guessed. Folders written before v8.5.0 keep resuming: a folder
+with `ledger/audit-log.md` and no `_tracking.md` gets one on first touch, with the old lines
+copied into `## Log`; `audit-log.md` itself is left as it is and still supplies the effort
+fallback for pre-v8.4.0 folders; a finished folder's `_recap.md` is never rewritten.
+
+Waves no longer stop at a gate by default. After a `partial` wave the orchestrator still
+runs every check it runs at a gate (artifact contract, ledger, the files the wave touched
+against the plan's file lists), and stops for the human only when one of them turns
+something up: a new risk row rated `medium` or above, a new constraint row, a failing
+test, a file outside the plan, an Escalate, or a contract failure. Otherwise it logs the
+wave as continued, prints one line, and invokes the next one. In the same two issues fourteen
+wave gates resolved as a bare "Continue", and the ones that carried real content (a
+temporary interface bridge, two test gaps) were exactly the ones a new constraint row would have
+stopped. `run.md`'s `wave_gates: every_wave` restores the old behaviour.
+
+Code review, security review and test verification run as one **review wave**. All three
+read the same settled code and none writes source (`security-reviewer-agent` is read-only),
+so the orchestrator dispatches the active ones in parallel and presents one combined gate:
+their three Summary blocks, one Risk Disposition Loop over the three tables, one decision.
+Every `Mitigate now` row from all three, plus any Request changes feedback, goes to the
+implementer as **one** fix pass, followed by one recheck wave scoped to that fix. The two
+Loop Actuators become one review loop with a single auto-fix budget, driven by
+`code-reviewer-agent`'s and `test-verifier-agent`'s critical/high findings plus AC gaps.
+Security findings never enter the automatic loop, as before; they reach the implementer
+only through the gate. When at least one loop iteration ran, the loop exits with a final
+pass of every active reviewer, which replaces both regression Guards. The gain here is the
+number of fix passes, not wall-clock time: one issue ran four post-gate fix passes,
+each followed by its own recheck. `qa-plan-agent` still runs afterwards on settled code and
+can still produce one more, so the honest figure is three or four passes down to two. Two
+constraints come with running in parallel. Only `test-verifier-agent` executes the test
+suite in a review wave; `code-reviewer-agent` keeps its static checks and lint but does not
+rebuild or rerun the suite, so the two never write the same build output concurrently.
+And `security-reviewer-agent` no longer sees `04-review.md` in a wave, so de-duplication of
+findings the two reviewers share moves to the orchestrator's merge. A host without parallel
+subagent dispatch runs the three one after another; the combined gate, the single fix pass
+and the single loop are unchanged, only the elapsed time differs. A `run.md` or an issue
+template written before v8.5.0 with separate `phase3`/`phase4` budgets (or
+`Auto-fix after review`/`after tests` lines) resolves to the larger of the two.
+
+`architect-agent` gains a **Behaviour Delta** section for the same epic's other finding:
+every defect `qa-plan-agent` found late in those two issues was an observable change on a flow
+that had already shipped. A cap rejection the operator never saw, a cap counted in keys
+while the human had answered in rows, a new limit reaching flows nobody had listed. The
+section runs only when the change alters what a user of an already-shipped flow can observe,
+and says `N/A` otherwise, so it does not fire on every run. For each affected flow it states
+what the user sees before and after, including on the new failure path, and every limit it
+introduces becomes a constraint row whose text names its unit. It is not a QA design before
+code, which stays rejected (see Phase 5b above): it names what changes for the user, not how
+to test it, and `test-verifier-agent` and `qa-plan-agent` read it as input.
 
 Four agents sit outside the orchestrated sequence entirely, all invoked directly by the user
 and never auto-invoked by the orchestrator (its Hard Constraint 4) — with one scoped exception,
@@ -182,7 +262,7 @@ human applies an accepted proposal by hand.
 
 Every phase (Pre-A through 6b) writes a single Markdown file: a YAML frontmatter header carrying only what the orchestrator branches on — a verdict field, the tallies its status rules threshold, and a loop signal where a loop exists; a field nothing branches on belongs in the body, not here — followed by a plain-Markdown body (data model, issues tables, findings, runbook) — see each agent file's "Output Format" section. No phase output is JSON: nothing in this repo parses these files programmatically, every consumer is either another agent reading the file as prompt text or a human at a HITL gate, so Markdown serves both better than escaped JSON strings. Any Risks/Issues/Findings table in the body carries a `Disposition` column, resolved row-by-row by the orchestrator's Risk Disposition Loop (see `orchestrator-agent.md`'s HITL section) before the whole-artifact gate is shown — or, for the two agents that also run standalone with a Risks table (`pm-agent`, `impact-assessment-agent`), by their own copy of that loop, since a standalone run never reaches the orchestrator.
 
-All artifacts land in `.kairos/<feature_folder>/` inside the target project (not this repo). Each feature folder also contains a `ledger/` subdirectory with three living files — `constraints.md`, `decisions.md`, `open-questions.md` — that agents read at phase start and update at phase end (forced accounting model), plus three the orchestrator alone keeps: `run.md` (the run's settings — effort, active agents, auto-fix budgets — so a resumed session restores them), `loops.md` (Loop Actuator state and the history of non-converged loops, kept out of `open-questions.md`), and `audit-log.md` (one line per gate). Folders written before v8.4.0 must keep resuming: every reader of these files falls back to the older location or format, and the orchestrator migrates on first touch rather than any agent assuming the new file exists. In `decisions.md`, only the orchestrator writes the `Supersedes` column, on a human's Accept of a decision conflict — never the agent the conflict scan is checking. Each phase updates only the rows its own work touched; the full re-walk of every row runs twice, at `architect-agent` (first accounting pass) and `release-planner-agent` (final accounting), which is what puts every row in a terminal state before release. `constraints.md` carries a `Category` column from `constraint-taxonomy`'s closed vocabulary, written once at row creation and never rewritten afterwards, because three checks are gated on it: `code-reviewer-agent`'s Accessibility check runs only when an `ACCESSIBILITY` row was declared, `security-reviewer-agent`'s Compliance & Privacy check only when a `PRIVACY` or `COMPLIANCE` row was, and `qa-plan-agent`'s Cross-Environment Verification step only when a `VERIFICATION` row was — the category that records a check no developer environment can stage alone, declared at requirement time instead of discovered after the code is written. A `VERIFICATION` row names the `AC-n` it covers, and that naming is what lets `test-verifier-agent` classify those criteria as verified elsewhere rather than as coverage gaps. Undeclared means `N/A`, which is the normal case — an obligation is never inferred from the code, and a legacy 6-column table reads as undeclared until a writer migrates it. The exceptions to the feature-folder rule: `.kairos/_lessons.md`, `.kairos/decisions/`, `.kairos/_tech-debt.md`, and `.kairos/_qa-regression.md` sit at the project root, not inside any feature folder, because they persist across feature runs — only `retrospective-agent`, `improvement-advisor-agent`, `dependency-audit-agent`, and `qa-plan-agent` ever touch them, one path each.
+All artifacts land in `.kairos/<feature_folder>/` inside the target project (not this repo). Each feature folder also contains a `ledger/` subdirectory with three living files — `constraints.md`, `decisions.md`, `open-questions.md` — that agents read at phase start and update at phase end (forced accounting model), plus two the orchestrator alone keeps: `run.md` (the run's settings — effort, active agents, auto-fix budget, wave gates — so a resumed session restores them) and `loops.md` (review loop state and the history of non-converged loops, kept out of `open-questions.md`). Before v8.5.0 a third, `audit-log.md`, held one line per gate; that log now lives in the feature folder's `_tracking.md`, and an existing `audit-log.md` is only read, never written. Folders written before v8.4.0 must keep resuming: every reader of these files falls back to the older location or format, and the orchestrator migrates on first touch rather than any agent assuming the new file exists. In `decisions.md`, only the orchestrator writes the `Supersedes` column, on a human's Accept of a decision conflict — never the agent the conflict scan is checking. Each phase updates only the rows its own work touched; the full re-walk of every row runs twice, at `architect-agent` (first accounting pass) and `release-planner-agent` (final accounting), which is what puts every row in a terminal state before release. `constraints.md` carries a `Category` column from `constraint-taxonomy`'s closed vocabulary, written once at row creation and never rewritten afterwards, because three checks are gated on it: `code-reviewer-agent`'s Accessibility check runs only when an `ACCESSIBILITY` row was declared, `security-reviewer-agent`'s Compliance & Privacy check only when a `PRIVACY` or `COMPLIANCE` row was, and `qa-plan-agent`'s Cross-Environment Verification step only when a `VERIFICATION` row was — the category that records a check no developer environment can stage alone, declared at requirement time instead of discovered after the code is written. A `VERIFICATION` row names the `AC-n` it covers, and that naming is what lets `test-verifier-agent` classify those criteria as verified elsewhere rather than as coverage gaps. Undeclared means `N/A`, which is the normal case — an obligation is never inferred from the code, and a legacy 6-column table reads as undeclared until a writer migrates it. The exceptions to the feature-folder rule: `.kairos/_lessons.md`, `.kairos/decisions/`, `.kairos/_tech-debt.md`, and `.kairos/_qa-regression.md` sit at the project root, not inside any feature folder, because they persist across feature runs — only `retrospective-agent`, `improvement-advisor-agent`, `dependency-audit-agent`, and `qa-plan-agent` ever touch them, one path each.
 
 `_qa-regression.md` is the manual counterpart of the automated suite: the cumulative catalogue of manual cases, each with a stable `QA-n` ID, the `Area` it belongs to, and its own `Setup`. `qa-plan-agent` is its only writer — it appends the cases it wrote this run, and retires a case when the current change automated the behavior it verified or removed it. It is also its own reader at the next feature: 5b's regression selection has two sources, the callers it greps in the code and the existing `QA-n` cases whose `Area` the change touched, each selected only with the changed file that justifies it. Without the catalogue a manual case dies with its feature folder, and the retest a QA person actually performs — re-running old manual cases to see whether this change broke them — has nothing to draw from.
 

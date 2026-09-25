@@ -137,6 +137,16 @@ This is design-time reasoning: trust boundaries, reachable surface, who holds au
 
 In **Lean Mode** (`simple_fix`) this step collapses: state `✓ N/A — lean mode` and move on. A change already classified as small does not earn a threat model.
 
+### 5c. Behaviour Delta (runs in Lean Mode too)
+
+Run this when the selected design changes what a user of an **already-shipped** flow can observe: a screen, a response, a message, an error, a limit, the order or timing of something they already use. Find those flows the same way a regression search would: grep the callers of every function, endpoint and component the design changes, and keep the ones reachable from something already in production. A flow that is new in this change is not a delta, it is the feature. When nothing shipped changes for its users, write `✓ N/A — no already-shipped flow changes what its users observe` under `## Behaviour Delta` and move on. That is the normal case, and the section stays `N/A` rather than inventing a delta.
+
+When it runs, write one row per affected flow: the flow as a user would name it, what the user observes today, what they will observe after this change, and, whenever the change adds a new failure path (a rejection, a conflict, a timeout, a cap), exactly what the user sees on it: which status or message reaches them, and through which part of the client. "The request is rejected" is not an answer; "the batch is refused with a 409 and the page shows the conflict banner" is. A failure path whose outcome you cannot trace to what the user sees is a `high` row in `## Risks`, because a rejection the user never sees is a silent failure.
+
+Every limit the design introduces (a cap, a batch size, a timeout, a quota) also becomes a `constraints.md` row whose text **names its unit** and, when the unit is not the one a user counts in, the conversion: `400 lock keys per request — up to 2 keys per row, so 200 rows in the worst case`, never `cap 400`. A limit stated without its unit is how a question answered in rows ends up enforced in keys. Use the `constraint-taxonomy` category the limit belongs to (`SCALE`, `PERFORMANCE`, `COMPATIBILITY`), never a new one.
+
+This section says what changes for the user, not how to test it: `test-verifier-agent` checks that each row's new outcome is tested, and `qa-plan-agent` turns the rows no automated test can reach into manual cases. It is gated on a shipped flow actually changing, never on the change's size, which is why Lean Mode does not skip it.
+
 ### 6. Detailed Design
 For selected option:
 - Technology choices (and why)
@@ -219,6 +229,13 @@ One table per entity — every column, type, constraint, and FK goes here. Say w
 
 <latency/throughput targets, each traced to the constraint row it comes from, and how it was derived>
 
+## Behaviour Delta
+*(Step 5c. `✓ N/A — no already-shipped flow changes what its users observe` when that is the case, and nothing else.)*
+
+| Flow | Today | After this change | On the new failure path, the user sees |
+|------|-------|-------------------|-----------------------------------------|
+| e.g. Orders — bulk status update | any batch size accepted | batches over 200 rows are refused (C18) | 409; the list page shows the conflict banner with the server's message |
+
 ## Promptable Gaps
 *(Only include this section when `promptable: no`. Omit entirely when `promptable: yes` — an empty section is not a finding.)*
 
@@ -288,7 +305,7 @@ Never rewrite an existing row's `Category` cell — it is set once by whoever cr
 
 Then add any new architectural constraints (e.g. "Redis required in infrastructure", "JWT must use RS256").
 
-**`decisions.md`** — Seed this file with your phase's decisions. Add a row for each significant choice. The table has six columns, `ID | Decision | Phase | Rationale | Constraint impact | Supersedes`; if it still has five (written before v8.4.0), add the `Supersedes` column first, with `—` in every existing row. Leave `Supersedes` as `—` on every row you add: only the orchestrator fills it, when a human accepts a decision conflict at the gate. A change of course is a new row, never an edit of an old one.
+**`decisions.md`** — Seed this file with your phase's decisions. Add a row for each significant choice. The table has six columns, `ID | Decision | Phase | Rationale | Constraint impact | Supersedes`; if it still has five (written before v8.4.0), add the `Supersedes` column first, with `—` in every existing row. Leave `Supersedes` as `—` on every row you add: only the orchestrator fills it, when a human accepts a decision conflict at the gate. A decision that widens or narrows what the issue asked (more flows than it named, a criterion dropped or deferred, part of the work moved to another issue) opens its Decision cell with `Scope:`, e.g. `Scope: extends the lock to the 8 flows already shipped, issue named 6`. The orchestrator lists exactly those rows as the run's scope changes in `_tracking.md`, so a scope change without the prefix is invisible there, and a prefix on a decision that changes no scope is noise. A change of course is a new row, never an edit of an old one.
 
 ```markdown
 # Decisions

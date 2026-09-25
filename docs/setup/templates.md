@@ -64,18 +64,20 @@ Check (`[x]`) only the agents you want to activate. The group headings are there
 
 **`Effort:`** is optional and takes `simple_fix`, `medium`, or `significant_rework`. It says how big the change is: the orchestrator passes it to every agent, and that value decides whether they run a short, trimmed, or full process. Leave it out and the run uses `medium`, so a small fix driven entirely from a template is worth marking `simple_fix`.
 
-**`Auto-fix:`** takes a number: how many times the agents may fix their own problems before stopping to ask you. It covers two moments, after code review finds a serious problem and after test verification finds a gap. `0` means always ask.
+**`Auto-fix:`** takes a number: how many times the agents may fix their own problems before stopping to ask you. It covers the review wave: code review, security review and test verification run together, and the agents may retry while code review reports a serious problem or test verification a gap. Security findings always wait for you. `0` means always ask.
 
 The line also switches on the defaults that come with the effort. With an `Auto-fix:` line, `simple_fix` gets its short path: a wider automatic acceptance of low and medium risks, and no separate gate on the implementation plan. Without one, the block is read as an older template (see below): nothing is fixed automatically, every problem stops for you, and with `significant_rework` you are asked at the start of the run.
 
-To set the two moments apart, write two lines instead of one; a moment with no line of its own falls back to the effort default (1 after review and 0 after tests for `simple_fix` and `medium`, asked at the start for `significant_rework`):
+Issues written before v8.5.0 may carry two lines instead of one, because review and tests used to have separate retries:
 
 ```markdown
 Auto-fix after review: 1
 Auto-fix after tests: 2
 ```
 
-The ceiling is 5, or 2 with `implementer-lead-agent`, because each Team Mode fix is a whole team run. A higher number is lowered to the ceiling and the orchestrator tells you. With no build agent checked there is nothing to fix and the line is ignored. Auto-fix after tests needs `test-verifier-agent` checked; without it, that number has no effect.
+They still work: the run uses the larger of the two numbers, here 2. New blocks, including the ones the orchestrator writes back to the issue, use the single `Auto-fix:` line.
+
+The ceiling is 5, or 2 with `implementer-lead-agent`, because each Team Mode fix is a whole team run. A higher number is lowered to the ceiling and the orchestrator tells you. With no build agent checked there is nothing to fix and the line is ignored. With neither `code-reviewer-agent` nor `test-verifier-agent` checked, nothing can trigger a retry and the number has no effect.
 
 Before the first agent runs, the orchestrator repeats the effort and auto-fix values it will use, so a wrong value can still be corrected there.
 
@@ -199,8 +201,7 @@ All phases except deployment — improving existing code without a new release.
 ## KAIROS Pipeline
 
 Effort: significant_rework
-Auto-fix after review: 1
-Auto-fix after tests: 2
+Auto-fix: 2
 
 ### Analysis
 - [x] pm-agent
