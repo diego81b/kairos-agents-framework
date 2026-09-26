@@ -4,6 +4,20 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v8.6.0 — September 25, 2026
+
+A real run showed the recheck after review re-running every reviewer on a correction of a few lines, and a correction asked outside the review gate following no rule at all, so the orchestrator improvised which reviewers to run again.
+
+### Changed
+
+- **`agents/orchestrator-agent.md`** — the recheck after a fix pass runs only the reviewers the fix calls for, read from the files the pass wrote and the reports its rows came from: code review when it touched non-test code, test verification when it touched tests or fixed a test-verification finding, security review when it fixed a security finding or touched a file that review cited. Every skip is logged in `_tracking.md`, and a fix whose files cannot be read still gets every reviewer. A recheck that turns up nothing continues without a gate, under the same rule as implementation waves.
+- **`agents/orchestrator-agent.md`** — a code change asked at a recheck gate or at the QA plan gate goes through the same fix pass and the same recheck, instead of an unruled re-run of the implementer.
+- **`agents/implementer-tdd-agent.md`**, **`agents/implementer-coder-agent.md`** — a fix pass can also carry rows bound at a recheck gate or at the QA plan gate (`MUST — from 05b`).
+- **`.opencode/agents/`**, **`.kimi-code/agents/`** — both mirrors carry the same body changes.
+- **`CLAUDE.md`**, **`docs/workflow.md`**, **`docs/agentic-loop.md`** — describe the recheck selection and why it reads the fix's files rather than the issue's size.
+
+---
+
 ## v8.5.0 — September 25, 2026
 
 Measured on a real epic (three issues, 8, 23 and 29 gates), the time a large change took was not spent in automatic retries: the Loop Actuator never fired once. It went into gates with no decision in them (fourteen waves answered "Continue"), fix passes run one review phase at a time (four after review on one issue, each with its own recheck), defects on already-shipped flows found only by the QA plan, and phase reports of up to 81KB opened in the editor at every gate while the only consolidated view arrived at the end of the run.

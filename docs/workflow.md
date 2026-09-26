@@ -202,11 +202,11 @@ Team Mode eliminates frontend/backend contract mismatches through binding contra
 Code review, security review and test verification all read the same finished code, and none of them writes source. So once the code gate is approved, the Orchestrator starts every active reviewer at once, in parallel where the host supports it, one after another where it does not. Each still writes its own report (`04-review.md`, `04b-security-review.md`, `05-test-verification.md`); what changes is how you answer them.
 
 - **One gate for the wave.** You see the three `## Summary` blocks together, the Risk Disposition Loop walks the rows of all three tables, and one decision closes the wave.
-- **One fix pass.** Every row you mark **Mitigate now**, across all three reports, plus any change you ask for, goes to the implementer as a single pass, followed by one recheck of the reviewers scoped to that fix. Older versions ran a fix pass and a recheck after each review phase.
+- **One fix pass.** Every row you mark **Mitigate now**, across all three reports, plus any change you ask for, goes to the implementer as a single pass, followed by one recheck scoped to that fix. The recheck runs only the reviewers the fix calls for: Code Reviewer when it touched non-test code, Test Verifier when it touched tests or fixed a test-verification finding, Security Reviewer when it fixed a security finding or touched a file that review cited. Each skip is logged in `_tracking.md`, and a clean recheck continues without a gate. Older versions ran a fix pass and a recheck after each review phase.
 - **One loop.** If you gave the run an auto-fix budget, the Orchestrator retries on its own while code review or test verification reports a `critical`/`high` issue or an acceptance-criteria gap, then runs every reviewer one last time before the gate. Security findings never trigger an automatic retry; they wait for you. See [Agentic Loop](/agentic-loop).
 - **Who runs the tests.** Inside a wave only Test Verifier executes the test suite; Code Reviewer keeps its static checks and lint, so the two never build into the same output at the same moment. Findings both reviewers raise on the same line are merged by the Orchestrator.
 
-`qa-plan-agent` (5b) is not part of the wave. It runs after the wave's gate, on settled code, and can still lead to one more fix pass of its own.
+`qa-plan-agent` (5b) is not part of the wave. It runs after the wave's gate, on settled code, and can still lead to one more fix pass of its own, with the same recheck rule.
 
 ---
 
