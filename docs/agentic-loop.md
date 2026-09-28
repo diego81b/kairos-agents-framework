@@ -16,7 +16,7 @@ Since v8.5.0 code review, security review and test verification run together as 
 | **test-verifier-agent** | every `critical` or `high` issue, plus every acceptance-criteria gap |
 | **security-reviewer-agent** | nothing: its findings always wait for you at the gate |
 
-The loop fires when that count is above zero and you gave it a budget. `simple_fix` and `medium` both preset one automatic retry, announced at Step 0f where you can still change it; the orchestrator does not ask. Only `significant_rework` gets the loop-policy question at agent selection time, because that is the one size where the retry budget is worth deciding before anyone has seen a finding.
+The loop fires when that count is above zero and you gave it a budget. `simple_fix` and `medium` both preset one automatic retry, announced at the Step 0f Start Gate where you can still change it; the orchestrator does not ask. Only `significant_rework` gets the loop-policy question, asked at Step 0e once the pipeline is derived, because that is the one size where the retry budget is worth deciding before anyone has seen a finding.
 
 Coverage below target is not in the count either. Before v8.5.0 any `NEEDS_FIXES` from test verification restarted the implementer, including a coverage figure that could not be measured, which the implementer cannot fix and which only ends in a thrash. It still reaches you at the gate as a finding.
 
@@ -38,13 +38,13 @@ That's the whole mechanism: the loop only skips the *retry-approval* step, never
 
 ## How to Enable
 
-For `significant_rework`, the orchestrator asks at agent selection time, right after you pick the agents. It prints the cost estimate, then asks one question with four fixed choices: `Manual` *(recommended)* · `Auto — 1 retry` · `Auto — 2 retries` · `Auto — 3 retries`.
+For `significant_rework`, the orchestrator asks at Step 0e, right after it derives the pipeline and before the Start Gate. It prints the cost estimate, then asks one question with four fixed choices: `Manual` *(recommended)* · `Auto — 1 retry` · `Auto — 2 retries` · `Auto — 3 retries`.
 
 No number to type. In IDEs without the checkbox prompt the orchestrator prints the same options as a typed menu and you reply `auto 2` (an empty reply keeps `manual`).
 
-For `simple_fix` and `medium` the question is skipped. The preset appears on the Step 0f pipeline announcement marked `(preset — reply to change)`; replying there with a different budget applies it before Phase 1. An issue can set it too, with an `Auto-fix: N` line in its `## KAIROS Pipeline` section.
+For `simple_fix` and `medium` the question is skipped. The preset appears on the Step 0f Start Gate marked `(preset — reply to change)`; replying there with a different budget applies it before Phase 1. An issue can set it too, with an `Auto-fix: N` line in its `## KAIROS Pipeline` section.
 
-Works with any Phase-3 implementer: TDD, code-only, or Team Mode's lead agent. Under Team Mode the `Auto — 3 retries` option disappears: each retry there spawns a full team, so the ceiling is 2.
+Works with any Phase-3 implementer: TDD, code-first, or Team Mode's lead agent. If Team Mode is confirmed later, right before the plan, a budget of 3 is lowered to 2: each retry there spawns a full team, so the ceiling is 2.
 
 Settings written before v8.5.0 had two budgets, one after review and one after tests (`phase4`/`phase3` in `ledger/run.md`, `Auto-fix after review`/`Auto-fix after tests` in an issue). They still work: the single loop takes the larger of the two.
 

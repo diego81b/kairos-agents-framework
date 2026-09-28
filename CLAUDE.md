@@ -133,6 +133,50 @@ being buried inside the implementer's own transcript. `implementer-lead-agent` (
 splits at the same boundary: 3a runs its Steps 1-2b and writes `03-contracts.md` plus the
 plan; 3b reads the contracts back and resumes at Step 3.
 
+Since v9.0.0 the human no longer picks agents from a menu: every agent is derived from facts, at
+the point in the run where those facts exist, and the human confirms or corrects at a gate. The
+four-question selection menu, the "How big is this change?" question and the "Which implementer?"
+question are gone. They asked the human to decide, before any code had been read, things another
+agent was about to establish with evidence: the effort, which domains the change touches, whether
+the project has a test suite, whether the design changes a contract. The derivation has one rule
+table, in `orchestrator-agent.md`; `impact-assessment-agent` and `architect-agent` report facts in
+their frontmatter (`domains`, `test_suite`, `contract_change`, `test_first`, `behaviour_delta`,
+`threat_rows`) and never name an agent, so no decision has two sources. Facts are read in priority
+order: `02-architecture.md`, then `00b-impact.md`, then the orchestrator's own filesystem checks.
+Decisions bind at three points. At Step 0e: `pm-agent`, `architect-agent`, whether code is written
+at all (no, only for a spike or an analysis-only issue) and `code-reviewer-agent`. Right before 3a:
+which implementer. At the Phase 3 gate: `test-verifier-agent` (the diff has a test file) and
+`security-reviewer-agent`. At the review gate: `qa-plan-agent`, `release-planner-agent` and
+`documentation-agent`. Each late decision is printed at the gate before it with the rule that
+fired, and the human corrects it there; a correction is stored in `run.md` as an override and
+logged in `_tracking.md`.
+
+That made `impact-assessment-agent` mandatory rather than optional: a fact source the derivation
+depends on cannot be skipped. The orchestrator dispatches it at Step 0e with `mode: orchestrated`,
+the same shape as `bug-triage-agent`, and folds its gate into the Step 0f announcement, which is
+now a real gate: one question per run replaces the menu and the effort question. The choice of
+implementer moved to `architect-agent`'s facts because the implementer is not needed until 3a,
+and by then the design exists. Without an architecture (a `simple_fix`, or architect skipped by an
+override) the rule falls back to `00b-impact.md` and the filesystem, and the announcement says what
+is lost: the Behaviour Delta, the threat-model rows and the first ledger re-walk. Team Mode is
+offered when the TDD path was chosen, two or more of backend/frontend/db are touched,
+`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is set and the host is Claude Code; the cost question
+remains, because it is a cost decision, not a technical one. Two decisions are not code facts and
+stay with the human: whether a person verifies features by hand is a project setting
+(`.kairos/.manual-qa`, asked once per project), and a `## KAIROS Pipeline` checklist already in an
+issue is a saved human confirmation, so it still wins over the derivation, exactly as issues written
+before v9.0.0 expect. A new template carries only `Effort:`, `Auto-fix:` and explicit `Skip:`/`Add:`
+overrides.
+
+`implementer-coder-agent` changed meaning in the same release. It was "code only, no tests"; it is
+now code-first: it writes the code, then decides test by test whether to add or update tests, from
+facts it states in the plan's `## Test Decision` (does the project have a suite, do the touched
+modules already have tests). Where the touched code already has tests it must extend them, and
+skipping tests is allowed only with a written reason visible at the plan gate. Without that rule an
+agent left to "decide each time" skips tests every time. `implementer-tdd-agent` keeps test-first as
+its principle. A `simple_fix` routes to the coder, so the short path no longer drops tests on a
+repo that has them, and `test-verifier-agent` runs whenever the coder wrote a test.
+
 `documentation-agent` is the second agent, after the Phase 3 implementer, permitted to
 write real files outside `.kairos/` in the target project — scoped strictly to
 documentation (README/CHANGELOG/`docs/**`), never source code.
@@ -141,9 +185,9 @@ The orchestrator itself has two narrow exceptions to writing only inside `.kairo
 Step 0c's Gitignore check — once per project, only after an explicit human
 choice — appends a single `.kairos/` line to the target project's `.gitignore`.
 Step 0f's Issue Write-back — only when the run started from an issue reference, the
-selection came from the menu rather than from an unchanged `## KAIROS Pipeline`
-section, and the human picks **Add to the issue** — writes the confirmed selection into
-the issue description, appending the section or replacing only that section, never the
+human corrected the derived pipeline at the Start Gate (or replaced an older checklist with
+**Derive instead**), and the human picks **Add to the issue** — writes that correction as an
+override block into the issue description, appending the section or replacing only that section, never the
 rest of the description. It exists because the section is how a team reuses a pipeline
 across machines, and the plugin ships no skill that authors issues: the orchestrator
 writing back what a human just confirmed is the one source every host gets, and it
@@ -242,7 +286,7 @@ skipped reviewer is logged with the condition that did not hold, and an unreadab
 all. The issue's `effort` was rejected as the signal: a large feature can end on a three-line fix
 and a small one can touch the code that matters most. An agent that checks coherence on simple
 fixes was rejected too: it would repeat `code-reviewer-agent`'s job and fire on every run, and
-the Quick fix preset already pairs the code-only implementer with the code reviewer. The
+a `simple_fix` already derives the code-first implementer plus the code reviewer. The
 implementer's own claim that its new test fails without the fix is never grounds to skip
 `test-verifier-agent`, because checking that claim is its job. The same fix pass, with the same
 selection, is now the only way code changes after the review wave: code changes asked at a recheck
@@ -261,15 +305,16 @@ code, which stays rejected (see Phase 5b above): it names what changes for the u
 to test it, and `test-verifier-agent` and `qa-plan-agent` read it as input.
 
 Four agents sit outside the orchestrated sequence entirely, all invoked directly by the user
-and never auto-invoked by the orchestrator (its Hard Constraint 4) — with one scoped exception,
-`bug-triage-agent`, which the orchestrator may also dispatch from its Step 0e Bug-Input Check
-with `mode: orchestrated`, where the agent skips its own gate and the orchestrator presents the
-artifact instead. That exception exists because `bug-triage-agent` is the only standalone agent
-that never calls `AskUserQuestion` mid-work; the other five do, and a subagent loses those
+and never auto-invoked by the orchestrator (its Hard Constraint 4) — with two scoped exceptions,
+both dispatched from Step 0e with `mode: orchestrated`, where the agent skips its own gate and the
+orchestrator presents the artifact instead: `bug-triage-agent`, from the Bug-Input Check, and
+`impact-assessment-agent`, which every derived run needs (see above). Those two are the only
+standalone agents that never call `AskUserQuestion` mid-work (impact's only questions are its own
+disposition loop and gate, both skipped in that mode); the others do, and a subagent loses those
 questions. `bug-triage-agent` is the
 entry point for a bug report rather than a feature request: it reproduces a reported defect, isolates it, finds the
 root cause with evidence, rates severity, and recommends where the fix re-enters the pipeline
-(its `recommended_entry` feeds the orchestrator's Quick fix path) — it never fixes anything
+(its `recommended_entry` feeds the orchestrator's effort resolution) — it never fixes anything
 itself. `dependency-audit-agent` runs every few months outside any feature, auditing the whole
 project's dependencies and debt into a prioritized backlog at the project-root
 `.kairos/_tech-debt.md` — it never applies an upgrade. `retrospective-agent.md`

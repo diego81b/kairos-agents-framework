@@ -16,7 +16,7 @@ hero:
 features:
   - icon: 🤖
     title: 17 Core Agents + Team Mode
-    details: "Standalone entry points (Context Extractor, Impact Assessment, Bug Triage) plus the Orchestrator, PM Agent, Architect, two Implementers (TDD and code-only), Code Reviewer, Security Reviewer, Test Verifier, QA Plan Agent, Release Planner, and an optional Documentation Agent — plus three standalone agents outside the sequence (Retrospective, Improvement Advisor, Dependency Audit). Optional Team Mode adds 5 parallel specialists (Claude Code only)."
+    details: "Entry points (Context Extractor, Impact Assessment, Bug Triage) plus the Orchestrator, PM Agent, Architect, two Implementers (TDD and code-first), Code Reviewer, Security Reviewer, Test Verifier, QA Plan Agent, Release Planner, and an optional Documentation Agent — plus three standalone agents outside the sequence (Retrospective, Improvement Advisor, Dependency Audit). Optional Team Mode adds 5 parallel specialists (Claude Code only)."
   - icon: ⚡
     title: A Gate After Every Phase
     details: "Nothing advances until you approve it. Every risk and finding is dispositioned one row at a time, and real TDD is enforced — tests first, RED observed, coverage and assertion strength re-checked afterwards by a separate agent."
@@ -25,7 +25,7 @@ features:
     details: Works with Claude Code, Cursor IDE, GitHub Copilot, Amazon CodeWhisperer, JetBrains, VS Code, OpenCode, and Kimi Code.
   - icon: ✅
     title: Reviewable Output, Not a Black Box
-    details: "Every run produces code plus a written trail of what was checked, on disk in .kairos/ and reviewable like any other file. With the TDD implementer: tests above 80% coverage and a deployment plan. With the code-only implementer: code for projects that have no test suite."
+    details: "Every run produces code plus a written trail of what was checked, on disk in .kairos/ and reviewable like any other file. With the TDD implementer: tests above 80% coverage and a deployment plan. With the code-first implementer: code, plus the tests the project already calls for."
   - icon: 🌍
     title: Open Source (AGPL-3.0)
     details: Fork it, customize agents for your team's patterns and standards.

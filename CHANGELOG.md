@@ -4,6 +4,37 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v9.0.0 — September 28, 2026
+
+The start of a run asked the human to decide, before any code had been read, things an agent was about to establish with evidence: how big the change was, which agents should run, which implementer. The pipeline is now derived from facts, at the point in the run where each fact exists, and the human confirms or corrects it at a gate. Major version because `implementer-coder-agent` changes meaning: an issue that checked it to avoid tests now gets the tests its touched modules call for.
+
+### Added
+
+- **`agents/orchestrator-agent.md`** — one rule table derives every agent from facts: `pm-agent`, `architect-agent`, whether code is written and `code-reviewer-agent` at the start; the implementer right before the plan; `test-verifier-agent` and `security-reviewer-agent` at the implementation gate; `qa-plan-agent`, `release-planner-agent` and `documentation-agent` at the review gate. Each decision is printed at the gate before it with the rule that fired, and a correction there holds for the rest of the run and is logged in `_tracking.md`.
+- **`agents/orchestrator-agent.md`** — the start gate: one question per run showing the derived pipeline, effort and auto-fix budget, replacing the four-question agent menu and the "How big is this change?" question. Free text corrects any of them.
+- **`agents/orchestrator-agent.md`** — a project setting, asked once and stored in `.kairos/.manual-qa`, says whether a person verifies features by hand; it is the input to the QA plan rule no code can supply.
+- **`agents/implementer-coder-agent.md`** — `## Test Decision` in the plan: whether the project has a suite, which touched modules already have tests, and what the coder will add or update. Skipping tests needs a written reason, visible at the plan gate.
+- **`agents/architect-agent.md`** — facts in the frontmatter (`domains`, `test_first`, `contract_change`, `behaviour_delta`, `threat_rows`) that choose the implementer, Team Mode, the security review and the documentation phase.
+- **`agents/impact-assessment-agent.md`** — orchestrated mode: started by the orchestrator on every derived run, it skips its own disposition loop and gate, which the orchestrator presents at the start gate.
+
+### Changed
+
+- **`agents/implementer-coder-agent.md`** — code-first instead of code-only: it writes the code, then extends the tests of the modules it touched when the project has them. A `simple_fix` routes here, so the quick path no longer drops tests on a repo that has them, and `test-verifier-agent` runs whenever it wrote a test.
+- **`agents/impact-assessment-agent.md`** — reports facts (`domains`, `test_suite`, `contract_change`, `change_kind`) instead of a `recommended_agents` list, so no decision has two sources.
+- **`agents/orchestrator-agent.md`** — Team Mode is offered on the TDD path when two or more of backend/frontend/db are touched (was three), Agent Teams is enabled and the host is Claude Code. The cost confirmation stays.
+- **`agents/orchestrator-agent.md`**, **`docs/setup/templates.md`** — a `## KAIROS Pipeline` section now carries corrections: `Effort:`, `Auto-fix:`, `Skip:`, `Add:`. An older checklist still wins over the derivation and runs exactly as before, with a one-time **Derive instead** option. The issue write-back is offered only when you corrected something, and its options no longer mention internal files.
+- **`agents/code-reviewer-agent.md`**, **`agents/test-verifier-agent.md`**, **`agents/qa-plan-agent.md`**, **`agents/bug-triage-agent.md`**, **`agents/implementer-tdd-agent.md`** — read whether the coder wrote tests from its own report instead of assuming it never does.
+- **`skills/artifact-bookkeeping/SKILL.md`**, **`skills/code-simplification/SKILL.md`** — required frontmatter fields for the new facts; the no-test refactor rule applies when no test covers the code, not whenever the coder ran.
+- **`.opencode/agents/`**, **`.kimi-code/agents/`** — both mirrors carry the same changes.
+- **`CLAUDE.md`**, **`README.md`**, **`docs/workflow.md`**, **`docs/agents.md`**, **`docs/overview.md`**, **`docs/agent-files.md`**, **`docs/agent-files-team.md`**, **`docs/agentic-loop.md`**, **`docs/faq.md`**, **`docs/index.md`**, **`docs/setup/`** — describe the derived pipeline and the code-first coder.
+- **`docs/.vitepress/config.js`** — Impact Assessment moves from the "Standalone — you run these" sidebar group to the pipeline group, and "Code Only" becomes "Code First".
+
+### Removed
+
+- **`agents/orchestrator-agent.md`** — the agent selection menu, the effort question, the "Which implementer?" question and the fixed Quick fix agent list.
+
+---
+
 ## v8.6.0 — September 25, 2026
 
 A real run showed the recheck after review re-running every reviewer on a correction of a few lines, and a correction asked outside the review gate following no rule at all, so the orchestrator improvised which reviewers to run again.

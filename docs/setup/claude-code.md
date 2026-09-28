@@ -56,12 +56,12 @@ your-project/
 │   └── agents/
 │       ├── orchestrator-agent.md
 │       ├── context-extractor-agent.md     ← Pre-pipeline: full-repo context (standalone)
-│       ├── impact-assessment-agent.md     ← Pre-pipeline: issue grounding + agent recommendations (standalone)
+│       ├── impact-assessment-agent.md     ← Pre-pipeline: issue grounding, facts for the derivation (dispatched by the orchestrator)
 │       ├── bug-triage-agent.md            ← Bug reproduction + root cause (standalone)
 │       ├── pm-agent.md
 │       ├── architect-agent.md
-│       ├── implementer-tdd-agent.md       ← TDD implementer (default — use when project has a test suite)
-│       ├── implementer-coder-agent.md     ← Code-only implementer (no TDD — use when project has NO test suite)
+│       ├── implementer-tdd-agent.md       ← TDD implementer (default when the project has a test suite)
+│       ├── implementer-coder-agent.md     ← Code-first implementer (code, then the tests the project calls for)
 │       ├── code-reviewer-agent.md
 │       ├── security-reviewer-agent.md     ← Adversarial security review (optional, read-only)
 │       ├── test-verifier-agent.md
@@ -88,11 +88,11 @@ A manual copy is a local fork: after a KAIROS update, re-copy the files and re-a
 :::
 
 ::: info Choosing an implementer
-Copy **both** `implementer-tdd-agent.md` and `implementer-coder-agent.md`. During a KAIROS run the orchestrator asks which to use.
-- `implementer-tdd-agent` — **default**. Full TDD cycle (RED → GREEN → REFACTOR). Use when the project has a test suite.
-- `implementer-coder-agent` — **code-only**. No TDD, no test files, no coverage. Use only when the project has no test suite or tests are explicitly out of scope.
+Copy **both** `implementer-tdd-agent.md` and `implementer-coder-agent.md`. During a KAIROS run the orchestrator chooses one from facts, right before the implementation plan, and prints the rule that chose it; you can switch at the plan gate.
+- `implementer-tdd-agent` — **default** when the project has a test suite. Full TDD cycle (RED → GREEN → REFACTOR).
+- `implementer-coder-agent` — **code-first**. Writes the code, then the tests its plan's Test Decision calls for: it extends existing tests of the modules it touches and adds a regression test for a bug fix. Chosen for `simple_fix`, for projects with no test suite, and when the architecture says `test_first: no`.
 
-The `team/` folder (`implementer-lead-agent.md` + teammates) is only needed if you plan to use Team Mode.
+The `team/` folder (`implementer-lead-agent.md` + teammates) is only needed if you want Team Mode to be offered.
 :::
 
 ## Step 2 — Understand how subagents are loaded
@@ -127,7 +127,7 @@ claude --agent orchestrator-agent
 ::: warning Don't invoke it by name mid-conversation
 Typing `@orchestrator-agent` (or `@kairos:orchestrator-agent`) or "use the orchestrator agent" inside an already-open Claude Code session dispatches it through the `Agent` tool as a **subagent**, not as the session's primary driver. Subagents unconditionally lose access to `AskUserQuestion`, so every HITL gate degrades to the text-menu fallback — and if the parent session ends or resets mid-pipeline, the orchestrator is orphaned and dies with it, mid-phase.
 
-The same applies to every agent that asks you something while it works, not just the orchestrator: `context-extractor-agent`, `impact-assessment-agent`, `retrospective-agent`, and `improvement-advisor-agent` are all launched directly by you, all ask mid-run, and all degrade the same way when `@`-mentioned instead of started with `--agent kairos:<name>`. `bug-triage-agent` and `dependency-audit-agent` are the two exceptions — neither calls `AskUserQuestion` at all, their gates are plain prose — but starting them as the primary agent costs nothing either.
+The same applies to every agent that asks you something while it works, not just the orchestrator: `context-extractor-agent`, `retrospective-agent`, `improvement-advisor-agent`, and `impact-assessment-agent` when you run it yourself rather than letting the orchestrator dispatch it are all launched directly by you, all ask mid-run, and all degrade the same way when `@`-mentioned instead of started with `--agent kairos:<name>`. `bug-triage-agent` and `dependency-audit-agent` are the two exceptions — neither calls `AskUserQuestion` at all, their gates are plain prose — but starting them as the primary agent costs nothing either.
 
 `--agent` is a startup flag only — to switch mid-session, exit (`Ctrl+D` or `/exit`) and relaunch with it. To make this the project default without retyping the flag, add it to `.claude/settings.local.json` (not the shared `settings.json`, or every teammate's plain `claude` session in this repo defaults to the orchestrator too):
 ```json
@@ -300,18 +300,19 @@ With Agent Teams, each teammate runs in its **own Claude Code session** with its
 
 ### How to activate Team Mode
 
-Team Mode is never activated automatically. When you select `implementer-lead-agent` in Phase 0 agent selection, the Orchestrator shows a cost warning and asks for confirmation:
+Team Mode is never activated automatically. Right before the implementation plan, when the TDD path was chosen, two or more of backend/frontend/db are touched, Agent Teams is enabled and the host is Claude Code, the Orchestrator offers it: it shows a cost warning and asks for confirmation (the same happens when an issue checklist or an `Add:` override names `implementer-lead-agent`):
 
 ```
 ⚠️  TEAM MODE — COST WARNING
 
-Single Agent:  ~$0.068/feature  ✅ Recommended
-Team Mode:     ~$0.242/feature  (3.5× more — experimental, Claude Code only)
+Single Agent:  ~$0.068/feature  (implementer-tdd-agent)
+Team Mode:     ~$0.242/feature  (3.5× more — Claude Code only, experimental)
 
-Requires: CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 in .claude/settings.json
+Why offered:   <layers in domains>, Agent Teams enabled
+Team spawns:   Lead + Tests + one teammate per layer in scope (Agent Teams)
 ```
 
-then a three-option prompt: **Switch to Single Agent** (recommended), **Confirm Team Mode**, **Cancel pipeline**.
+then a three-option prompt: **Confirm Team Mode**, **Single agent**, **Cancel pipeline**.
 
 ### What the Lead spawns and when
 
@@ -327,8 +328,8 @@ Implementer Lead
 │   [HITL: test plan gate — you review the test suite here]
 │
 ├── GREEN phase ─► teammate-backend-agent    ┌
-│                  teammate-frontend-agent   ├── spawned in parallel
-│                  teammate-database-agent   ┘
+│                  teammate-frontend-agent   ├── spawned in parallel,
+│                  teammate-database-agent   ┘   only for layers in scope
 │                  Goal: make the pre-existing tests pass.
 │
 └── REFACTOR ───► all three teammates        (quality improvements,
@@ -366,7 +367,7 @@ You ──► Orchestrator
          ├─[HITL]─► Architect Agent       → .kairos/02-architecture.md + .md
          ├─[HITL]─► implementer-tdd-agent    → .kairos/03-implementation.md
          │           or
-         │          implementer-coder-agent (code-only, no TDD)
+         │          implementer-coder-agent (code-first)
          │           or
          │          Implementer Lead-agent (Team Mode)
          │           ├── teammate-tests-agent    [HITL: test plan gate]
@@ -420,13 +421,13 @@ These are the tiers `agents/*.md` actually ships with — same split as "Customi
 | `orchestrator-agent` | `opus` | Never downgrade — coordination requires full reasoning |
 | `architect-agent` | `opus` | Never downgrade — system design requires full reasoning |
 | `context-extractor-agent` | `opus` | Rarely needs downgrading — full-repo scans benefit from stronger reasoning |
-| `impact-assessment-agent` | `opus` | Never downgrade — its recommendation drives every downstream agent's scope |
+| `impact-assessment-agent` | `opus` | Never downgrade — its facts drive the orchestrator's derivation of every downstream agent |
 | `security-reviewer-agent` | `opus` | Never downgrade — adversarial security analysis requires full reasoning |
 | `improvement-advisor-agent` | `opus` | Rarely invoked; keep on `opus` for cross-feature pattern recognition |
 | `bug-triage-agent` | `opus` | Never downgrade — root-cause reasoning from partial evidence |
 | `pm-agent` | `sonnet` | Upgrade to `opus` for enterprise features with competing constraints (compliance, multi-region, strict SLAs) |
 | `implementer-tdd-agent` | `sonnet` | Upgrade to `opus` for complex TDD cycles spanning many files |
-| `implementer-coder-agent` | `sonnet` | Upgrade to `opus` for complex codebases; no TDD overhead |
+| `implementer-coder-agent` | `sonnet` | Upgrade to `opus` for complex codebases; no test-first overhead |
 | `code-reviewer-agent` | `sonnet` | Upgrade to `opus` for deep security audits |
 | `test-verifier-agent` | `sonnet` | Sufficient for coverage analysis |
 | `release-planner-agent` | `sonnet` | Sufficient for deployment planning |

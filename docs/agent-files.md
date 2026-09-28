@@ -24,13 +24,13 @@ No exceptions. A pull request that modifies an agent without a matching changelo
 | Agent | File | Started by |
 |---|---|---|
 | [Context Extractor](#context-extractor) | `agents/context-extractor-agent.md` | **You** |
-| [Impact Assessment](#impact-assessment) | `agents/impact-assessment-agent.md` | **You** |
+| [Impact Assessment](#impact-assessment) | `agents/impact-assessment-agent.md` | Orchestrator at Step 0e, or **you** beforehand (its output is then reused) |
 | [Bug Triage](#bug-triage) | `agents/bug-triage-agent.md` | **You**, or the Orchestrator at its Bug-Input Check |
 | [Orchestrator](#orchestrator) | `agents/orchestrator-agent.md` | **You** (drives the pipeline rows) |
 | [PM Agent](#pm-agent) | `agents/pm-agent.md` | Orchestrator |
 | [Architect Agent](#architect-agent) | `agents/architect-agent.md` | Orchestrator |
 | [Implementer Agent — TDD](#implementer-tdd-agent) | `agents/implementer-tdd-agent.md` | Orchestrator |
-| [Implementer Agent — Code Only](#implementer-coder-agent) | `agents/implementer-coder-agent.md` | Orchestrator |
+| [Implementer Agent — Code First](#implementer-coder-agent) | `agents/implementer-coder-agent.md` | Orchestrator |
 | [Code Reviewer](#code-reviewer) | `agents/code-reviewer-agent.md` | Orchestrator |
 | [Security Reviewer](#security-reviewer) | `agents/security-reviewer-agent.md` | Orchestrator |
 | [Test Verifier](#test-verifier) | `agents/test-verifier-agent.md` | Orchestrator |
@@ -53,7 +53,7 @@ No exceptions. A pull request that modifies an agent without a matching changelo
 >
 > The shared [Analysis Discipline](skills/analysis-discipline/SKILL.md) checklist — evidence-backed findings, restraint on low-value nitpicks, scope-bounded investigation, and a defect-class sweep of the enclosing unit before any finding is recorded, applied by every agent that reads, judges, or reports on someone else's requirement, design, or code — is in `skills/analysis-discipline/SKILL.md`.
 >
-> The shared [Code Simplification](skills/code-simplification/SKILL.md) checklist used by the Implementer Agent (TDD and Code Only) REFACTOR step is in `skills/code-simplification/SKILL.md`.
+> The shared [Code Simplification](skills/code-simplification/SKILL.md) checklist used by the Implementer Agent (TDD and Code First) REFACTOR step is in `skills/code-simplification/SKILL.md`.
 >
 > The shared [Artifact Bookkeeping](skills/artifact-bookkeeping/SKILL.md) reference — the recount and status-derivation rules used by PM, Architect, Impact Assessment, both Implementers, Code Reviewer, Security Reviewer, Test Verifier, Release Planner, and Documentation Agent, plus the per-phase required-frontmatter-fields table the Orchestrator's Artifact Contract Check validates against — is in `skills/artifact-bookkeeping/SKILL.md`.
 >
@@ -71,7 +71,7 @@ Standalone pre-pipeline agent. Run this before the Orchestrator to produce `00-c
 
 ## Impact Assessment
 
-Standalone pre-pipeline agent. Run after Context Extractor (optional) to produce `00b-impact.md` — effort estimate, domains, and an advisory `recommended_agents` list shown by the Orchestrator before agent selection.
+Pre-pipeline grounding agent, dispatched by the Orchestrator at Step 0e in Orchestrated mode unless you already ran it yourself (then its `00b-impact.md` is reused). Produces `00b-impact.md` — effort, domains, test suite, contract change and change kind: facts the Orchestrator derives the pipeline from. It never names an agent; its gate is folded into the Orchestrator's Start Gate.
 
 <<< @/agents/impact-assessment-agent.md{md}
 
@@ -79,7 +79,7 @@ Standalone pre-pipeline agent. Run after Context Extractor (optional) to produce
 
 ## Bug Triage
 
-Standalone entry point for a bug report rather than a feature request. Reproduces the defect, isolates it, finds the root cause with evidence, rates severity, and recommends where the fix re-enters the pipeline — its `recommended_entry` feeds the Orchestrator's Quick fix path. Never fixes anything itself. Produces `00c-bug-triage.md`. Runs either directly from you or dispatched by the Orchestrator's Bug-Input Check in Orchestrated mode, where it skips its own gate and the Orchestrator presents the artifact instead.
+Standalone entry point for a bug report rather than a feature request. Reproduces the defect, isolates it, finds the root cause with evidence, rates severity, and recommends where the fix re-enters the pipeline — its `recommended_entry` feeds the Orchestrator's effort resolution (`quick-fix` → `simple_fix`). Never fixes anything itself. Produces `00c-bug-triage.md`. Runs either directly from you or dispatched by the Orchestrator's Bug-Input Check in Orchestrated mode, where it skips its own gate and the Orchestrator presents the artifact instead.
 
 <<< @/agents/bug-triage-agent.md{md}
 
@@ -111,15 +111,15 @@ System design — architecture options, database schema, API contracts.
 
 ## Implementer Agent — TDD
 
-Code generation with real TDD. **Default implementer — works on every platform.**
+Code generation with real TDD. **Default implementer when the project has a test suite — works on every platform.**
 
 <<< @/agents/implementer-tdd-agent.md{md}
 
 ---
 
-## Implementer Agent — Code Only
+## Implementer Agent — Code First
 
-Code generation without TDD. **Use when the project has no test suite or tests are out of scope.**
+Code first, then the tests its plan's Test Decision calls for — extending the tests of touched modules, a regression test for a bug fix, none (with a stated verification) when the project has no suite. **Chosen by the Orchestrator for `simple_fix`, for projects without a test suite, and when the design says `test_first: no`.**
 
 <<< @/agents/implementer-coder-agent.md{md}
 
@@ -135,7 +135,7 @@ Quality assurance — standards, security, performance, architecture compliance.
 
 ## Security Reviewer
 
-Adversarial security review — IDOR, auth, injection, secrets, data exposure, input validation, dependencies. Optional; runs after Code Reviewer. Read-only agent.
+Adversarial security review — IDOR, auth, injection, secrets, data exposure, input validation, dependencies. Optional; runs in the review wave alongside Code Reviewer when derived at the implementation gate. Read-only agent.
 
 <<< @/agents/security-reviewer-agent.md{md}
 

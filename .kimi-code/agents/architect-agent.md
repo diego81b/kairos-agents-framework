@@ -147,6 +147,20 @@ Every limit the design introduces (a cap, a batch size, a timeout, a quota) also
 
 This section says what changes for the user, not how to test it: `test-verifier-agent` checks that each row's new outcome is tested, and `qa-plan-agent` turns the rows no automated test can reach into manual cases. It is gated on a shipped flow actually changing, never on the change's size, which is why Lean Mode does not skip it.
 
+### 5d. Build Facts (runs in Lean Mode too)
+
+Report the facts the orchestrator uses, right before the implementation plan, to choose the implementer and to decide the security review and the documentation phase. You report facts, never an agent name: the rule table that turns them into agents lives in `orchestrator-agent.md` alone. Each value goes in the frontmatter and, with its evidence, in the `## Build Facts` table.
+
+| Fact | Values | What decides it |
+|------|--------|-----------------|
+| `domains` | list of `backend`, `frontend`, `db`, `auth`, `integrations` | the domains the selected design actually changes — not the ones it reads from. This list replaces the impact assessment's, which was an estimate made before the design existed |
+| `test_first` | `yes` / `no` | `yes` when the project has a test suite and the design's behaviour can be written down as tests before the code: a contract, a business rule, an `AC-n` with an observable output. `no` when the change is mostly layout or styling, configuration, glue between libraries, or legacy code with no tests around the modules it touches, or when the project has no suite. Cite the test files that already cover the touched modules, or say that none do |
+| `contract_change` | `yes` / `no` | `yes` when `## API Contracts` adds or changes an endpoint, or the design changes a public interface, an event or message schema, or a database schema |
+| `behaviour_delta` | `yes` / `no` | `yes` when step 5c wrote at least one row, `no` when it wrote `N/A` |
+| `threat_rows` | a number | the `## Risks` rows step 5b added, `0` when it wrote `N/A` |
+
+A fact you cannot establish from the design or the code is reported as the value that runs more of the pipeline (`test_first: yes` when a suite exists, `contract_change: yes`) and marked `unknown` in the table with what you could not read.
+
 ### 6. Detailed Design
 For selected option:
 - Technology choices (and why)
@@ -160,7 +174,7 @@ For selected option:
 
 One file, `02-architecture.md`: a YAML frontmatter block holding the handful of machine-checkable fields the orchestrator branches on, then the design doc itself as the Markdown body. Everything tabular or narrative (the full data model, every API contract, the option comparison) lives in the body, as Markdown tables and prose, not as nested data. A schema with 40 columns across 12 tables renders as a readable set of Markdown tables in seconds; the same data as nested JSON is what makes review unreadable — which is exactly why the body is Markdown and the frontmatter stays minimal.
 
-Keep the frontmatter to the three fields the orchestrator branches on: `status`, `promptable` (a blocking signal), and `risk_counts` (thresholded by the gate). Everything else — which option you selected, the database change counts, the error-code count, every table's columns, performance targets, rationale — lives in the body sections below, where the `## Summary` block already puts the selected option in front of the reader.
+Keep the frontmatter to the fields the orchestrator branches on: `status`, `promptable` (a blocking signal), `risk_counts` (thresholded by the gate), and the five Build Facts from step 5d (they drive the implementer choice and the later agent decisions). Everything else — which option you selected, the database change counts, the error-code count, every table's columns, performance targets, rationale — lives in the body sections below, where the `## Summary` block already puts the selected option in front of the reader.
 
 ````markdown
 ---
@@ -168,6 +182,11 @@ phase: architect
 status: ready
 promptable: yes   # or no — see Promptable Signal in step 5
 risk_counts: { critical: 0, high: N, medium: N, low: N }
+domains: [backend, db]
+test_first: yes
+contract_change: yes
+behaviour_delta: no
+threat_rows: 0
 ---
 
 # Architecture — <feature title>
@@ -177,7 +196,7 @@ risk_counts: { critical: 0, high: N, medium: N, low: N }
 **Decision:** <the selected option, one clause>
 **Needs your attention:** <IDs of `critical`/`high` Risks rows, e.g. `R1, R3 — see Risks`; `nothing above medium` if none; name the Promptable Gaps table here too when `promptable: no`>
 **Open:** <ledger IDs of the questions this phase leaves open, e.g. `Q3, Q7 — see ledger/open-questions.md`; `none` when it leaves none>
-**Next:** implementer-tdd-agent
+**Next:** orchestrator — implementer decision
 
 ## Selected Option
 <Option A/B/C comparison — approach + tradeoffs for each, then which was picked and why (the rationale, 1-3 sentences)>
@@ -236,6 +255,13 @@ One table per entity — every column, type, constraint, and FK goes here. Say w
 |------|-------|-------------------|-----------------------------------------|
 | e.g. Orders — bulk status update | any batch size accepted | batches over 200 rows are refused (C18) | 409; the list page shows the conflict banner with the server's message |
 
+## Build Facts
+*(Step 5d. One row per fact, matching the frontmatter.)*
+
+| Fact | Value | Evidence |
+|------|-------|----------|
+| test_first | yes | vitest suite; `src/orders/orders.service.test.js` covers the status transitions this design changes |
+
 ## Promptable Gaps
 *(Only include this section when `promptable: no`. Omit entirely when `promptable: yes` — an empty section is not a finding.)*
 
@@ -266,14 +292,14 @@ If the `AskUserQuestion` tool is available (Claude Code), call it:
 - `question`: `"Architecture ready — how do you want to proceed?"`
 - `header`: `"Architect Gate"`
 - `options`:
-  - **Approve** (Recommended by default when `promptable: yes` — this agent otherwise has no pass/fail status) — continue to Implementer Agent.
+  - **Approve** (Recommended by default when `promptable: yes` — this agent otherwise has no pass/fail status) — continue to the implementation plan (the orchestrator chooses the implementer from the Build Facts).
   - **Request changes** (Recommended instead when `promptable: no`) — the Promptable Gaps table lists exactly what's missing; specify what to adjust or resolve those gaps, then re-run this agent.
   - **Stop** (Recommended instead when the Risks table contains a `Premise refutation:` row from step 2b) — halt here. Say why in one line: the issue's stated reachability/severity doesn't hold, so the right move is to rescope or close the issue — Approve remains available if the human judges the refutation wrong, but Request changes is not the answer (re-running this agent against a false premise just regenerates a design for a scenario that cannot occur).
 Free text via "Other" is treated as change feedback; if it reads as a standalone note instead, append it to `.kairos/<feature_folder>/ledger/open-questions.md` (source `human`, status `🔴 open`) rather than re-running.
 
 If `AskUserQuestion` is not available (Cursor, JetBrains/Copilot, Codex CLI, OpenCode), fall back to printing this menu and waiting for a typed reply:
 ```
-✅ Approve — continue to Implementer Agent
+✅ Approve — continue to the implementation plan
 ✏️  Request changes — specify what to adjust
 ⛔ Stop
 ```

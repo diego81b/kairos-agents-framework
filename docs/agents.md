@@ -1,6 +1,6 @@
 # The KAIROS Agents
 
-KAIROS orchestrates a core pipeline of 17 specialized AI agents, plus an optional team of 5 specialists for Team Mode. Two agents run standalone before the main pipeline (Context Extractor and Impact Assessment), plus Bug Triage as the entry point when what you have is a defect rather than a feature — run directly by you, or offered by the Orchestrator at its Bug-Input Check and dispatched from there; the numbered core agents run in sequence coordinated by the Orchestrator, including an optional Phase 6b (Documentation Agent). Three more agents — Retrospective, Improvement Advisor, and Dependency Audit — are standalone and run after work stops or outside any feature entirely, never invoked by the Orchestrator. Team Mode agents are Claude Code only and activated on explicit request.
+KAIROS orchestrates a core pipeline of 17 specialized AI agents, plus an optional team of 5 specialists for Team Mode. Two agents run before the main pipeline: Context Extractor, standalone and launched by you, and Impact Assessment, which the Orchestrator dispatches at every run (or reuses when you already ran it yourself). Bug Triage is the entry point when what you have is a defect rather than a feature — run directly by you, or offered by the Orchestrator at its Bug-Input Check and dispatched from there; the numbered core agents run in sequence coordinated by the Orchestrator, which derives which of them run from facts, including an optional Phase 6b (Documentation Agent). Three more agents — Retrospective, Improvement Advisor, and Dependency Audit — are standalone and run after work stops or outside any feature entirely, never invoked by the Orchestrator. Team Mode agents are Claude Code only, offered by the Orchestrator when a test-first change spans two or more layers, and activated only after you confirm the cost.
 
 ::: tip Copy agents directly from the documentation
 Need the raw agent definition to paste into your tool? Go to **[Agent Files](/agent-files)** — every agent is embedded as a ready-to-copy code block, auto-synced from the source files.
@@ -24,11 +24,11 @@ Standalone, pre-pipeline — you launch it, the Orchestrator never does. Scans t
 
 ## [Impact Assessment](/agents/impact-assessment-agent)
 
-Standalone, pre-pipeline — you launch it, the Orchestrator never does. Issue-scoped grounding agent. Run this before the Orchestrator (optionally, after Context Extractor) to answer three questions before you select agents: How big is this? What already exists and what is missing? Which pipeline agents does this issue actually need?
+Pre-pipeline, issue-scoped grounding agent, and a required fact source for the Orchestrator's pipeline derivation. The Orchestrator dispatches it at Step 0e in **Orchestrated mode** (the same shape as Bug Triage) at every run, unless `00b-impact.md` already exists because you ran it yourself — then that file is reused. It answers two questions before any agent is chosen: How big is this? What already exists and what is missing?
 
-Unlike the Context Extractor, which scans the full repository, this agent reads only the code the issue directly touches. It consumes `00-context.md` if already present rather than rescanning. Output is `00b-impact.md` with effort estimate (`simple_fix / medium / significant_rework`), domains touched (backend / frontend / db / auth / integrations), reusable assets with real file paths, gaps, risks, and a `recommended_agents` list with per-agent justification.
+Unlike the Context Extractor, which scans the full repository, this agent reads only the code the issue directly touches. It consumes `00-context.md` if already present rather than rescanning. Output is `00b-impact.md` with effort estimate (`simple_fix / medium / significant_rework`), domains touched (backend / frontend / db / auth / integrations), whether the project has a test suite, whether a contract changes, what kind of change the issue asks for, reusable assets with real file paths, gaps, and risks.
 
-The recommendation is advisory only. When the Orchestrator detects `00b-impact.md`, it displays the recommendation as a `💡 Impact Assessment` block above the agent selection menu — the human confirms or ignores it. Nothing is pre-selected.
+It reports facts and never names an agent. The Orchestrator applies its selection rules to those facts and folds this agent's gate into the Start Gate, where you see the derived pipeline and confirm or correct it.
 
 ::: tip Optional enhancements
 **Skills:** `deep-research` (built-in)
@@ -40,9 +40,9 @@ The recommendation is advisory only. When the Orchestrator detects `00b-impact.m
 
 Standalone entry point from the other direction: a bug report rather than a feature request. Reproduces the defect first — a root cause for a symptom nobody observed is a guess with a citation — then isolates it, states the root cause at `file:line` with an evidence trail, separates it from the contributing factors that let it reach production, and rates severity on observed impact rather than on how hard the fix looks.
 
-Finishes by recommending where the fix re-enters the pipeline: `quick-fix` (local cause, contained fix) feeds the Orchestrator's Quick fix path directly, `full-pipeline` says the cause is structural and names the phase to start from, `not-a-defect` says the code behaves as designed and the expectation was wrong. Output is `00c-bug-triage.md`.
+Finishes by recommending where the fix re-enters the pipeline: `quick-fix` (local cause, contained fix) sets the run's effort to `simple_fix`, which derives the short path with the code-first implementer, `full-pipeline` says the cause is structural and names the phase to start from, `not-a-defect` says the code behaves as designed and the expectation was wrong. Output is `00c-bug-triage.md`.
 
-Two ways in, same artifact. Run it yourself when the bug report arrives before any pipeline does. Or start the Orchestrator with the report: at its Bug-Input Check it recognises a bug report with no triage on disk and offers to run this agent first — accept, and it dispatches it in **Orchestrated mode**, where the agent writes `00c-bug-triage.md` and returns without a gate of its own, and the Orchestrator presents that artifact at its own gate. This is the only standalone agent the Orchestrator may dispatch, and only from that one check: it is also the only one that never asks a question mid-work, so nothing is lost by running it as a subagent.
+Two ways in, same artifact. Run it yourself when the bug report arrives before any pipeline does. Or start the Orchestrator with the report: at its Bug-Input Check it recognises a bug report with no triage on disk and offers to run this agent first — accept, and it dispatches it in **Orchestrated mode**, where the agent writes `00c-bug-triage.md` and returns without a gate of its own, and the Orchestrator presents that artifact at its own gate. Alongside Impact Assessment, this is one of the two agents the Orchestrator may dispatch outside the numbered phases, and only from Step 0e: in that mode both skip every gate and question of their own and return the artifact, and the Orchestrator runs the Risk Disposition Loop and presents it, so nothing is lost by running them as subagents.
 
 Never fixes anything. It has `Bash` to reproduce — run a test, read a log, `git blame` — and writes only its own artifact under `.kairos/`.
 
@@ -89,7 +89,7 @@ Note: `trailmark/diagramming-code` skipped — plugin installs 10 skills, only 1
 
 ## [Implementer Agent — TDD](/agents/implementer-tdd-agent)
 
-Implements code using **real TDD** (tests written before code). Runs tests iteratively until they pass, applies team coding patterns, and handles error cases explicitly. This is the **default implementer for all features** — works with Claude Code, API, and local models.
+Implements code using **real TDD** (tests written before code). Runs tests iteratively until they pass, applies team coding patterns, and handles error cases explicitly. This is the **default implementer when the project has a test suite** and the change is not a `simple_fix` — the Orchestrator chooses it unless the architecture reports `test_first: no`. Works with Claude Code, API, and local models.
 
 It runs as two Orchestrator invocations. Step 3a produces the implementation plan — `03-implementation-plan.md`, listing files to create and modify, every test case with its declared intent, TDD order and risks — and writes no source file. Step 3b re-invokes the same agent with the approved plan and runs the TDD cycle. The plan is written to disk unconditionally and opened in the editor, so it is reviewable on its own instead of scrolling past RED/GREEN output.
 
@@ -99,11 +99,11 @@ It runs as two Orchestrator invocations. Step 3a produces the implementation pla
 
 ---
 
-## [Implementer Agent — Code Only](/agents/implementer-coder-agent)
+## [Implementer Agent — Code First](/agents/implementer-coder-agent)
 
-Generates production-ready code **without a TDD cycle**. Use this agent when the project has no test suite or when writing tests is explicitly out of scope for the task. Follows the same two-gate, two-invocation workflow as the TDD Implementer (step 3a plan approval, step 3b implementation approval) but skips all TDD phases, coverage measurement, and test-file generation. Compatible with all platforms.
+Generates production-ready code **first, then the tests the project calls for** — no RED → GREEN cycle. Its plan carries a `## Test Decision`: where the touched modules already have tests it must extend them, a bug fix gets a regression test that fails without the fix, and a project with no test suite gets no tests plus a stated way the change was verified. Skipping tests anywhere else needs a written reason visible at the plan gate, and it never adds a test framework. Follows the same two-gate, two-invocation workflow as the TDD Implementer (step 3a plan approval, step 3b implementation approval). Compatible with all platforms.
 
-> **Note:** If your project has a test suite, prefer `implementer-tdd-agent` — TDD catches design issues that pure code generation does not.
+The Orchestrator chooses it, right before the plan, for a `simple_fix`, for a project with no test suite, and when the architecture reports `test_first: no`; Test Verifier runs whenever it wrote a test.
 
 ::: tip Optional enhancements
 **Skills:** `coding-discipline` (internal), `verify` / `run` (built-in)
@@ -113,11 +113,11 @@ Generates production-ready code **without a TDD cycle**. Use this agent when the
 
 ## Implementer Team — Team Mode (Claude Code only, optional)
 
-For complex multi-layer features, the Orchestrator can activate a coordinated team of specialists instead of the single Implementer Agent. Team Mode must be **explicitly requested** — the Orchestrator will show a cost warning (~$0.242 vs ~$0.068) before proceeding.
+For complex multi-layer features, the Orchestrator can activate a coordinated team of specialists instead of the single Implementer Agent. It **offers** Team Mode when the TDD path was chosen, two or more of backend/frontend/db are touched, Agent Teams is enabled and the host is Claude Code — and shows a cost warning (~$0.242 vs ~$0.068) that you must confirm before proceeding.
 
 **Why Claude Code only?** Team Mode uses Claude Code's **experimental Agent Teams feature** (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`, requires v2.1.32+). Each teammate runs as a separate Claude Code session with its own context window; teammates communicate peer-to-peer via a shared mailbox and coordinate via a shared task list. Other tools (Cursor, VS Code, JetBrains, Codex CLI) have no equivalent inter-session coordination mechanism.
 
-The [Implementer Lead](/agents/team/implementer-lead-agent) acts as coordinator (not a coder). It creates binding contracts (API, database, test, pattern) and spawns four parallel teammates:
+The [Implementer Lead](/agents/team/implementer-lead-agent) acts as coordinator (not a coder). It creates binding contracts (API, database, test, pattern) and spawns parallel teammates — Tests always, plus Backend, Frontend and Database only for the layers in scope:
 
 ### [Implementer Lead](/agents/team/implementer-lead-agent)
 
@@ -182,7 +182,7 @@ Checks code quality against standards, verifies pattern compliance, reviews arch
 
 ## [Security Reviewer](/agents/security-reviewer-agent)
 
-Adversarial security review — posture is "how do I break this", not "looks okay". Optional; runs in the review wave, alongside Code Reviewer and Test Verifier, when selected. Its findings never trigger an automatic retry: they reach the implementer only through your decision at the gate. Read-only agent (`tools: Read, Grep, Glob, AskUserQuestion`, `model: opus`).
+Adversarial security review — posture is "how do I break this", not "looks okay". Optional; runs in the review wave, alongside Code Reviewer and Test Verifier, when the Orchestrator derives it at the implementation gate (or you add it there). Its findings never trigger an automatic retry: they reach the implementer only through your decision at the gate. Read-only agent (`tools: Read, Grep, Glob, AskUserQuestion`, `model: opus`).
 
 Covers seven categories: authorization and IDOR (including writes through nested payloads where a PUT on a parent can mutate a child belonging to a different parent), authentication on sensitive endpoints, injection (SQL, command, template, NoSQL), secret handling, data over-exposure in responses, input validation at the server boundary, and dependency risks.
 

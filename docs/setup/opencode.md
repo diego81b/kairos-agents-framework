@@ -138,7 +138,7 @@ This project uses the KAIROS multi-agent development framework.
 Agent definitions are in `agents/` (Markdown, canonical) and `.opencode/agents/` (OpenCode copies).
 
 Always follow the KAIROS workflow sequence:
-pm-agent → architect-agent → implementer-tdd-agent (TDD) OR implementer-coder-agent (no TDD) → code-reviewer-agent → test-verifier-agent → qa-plan-agent → release-planner-agent
+pm-agent → architect-agent → implementer-tdd-agent (TDD) OR implementer-coder-agent (code-first) → code-reviewer-agent → test-verifier-agent → qa-plan-agent → release-planner-agent
 
 After each phase, present the output and wait for explicit approval (✅ / ✏️ / ⛔) before proceeding.
 Save each approved output to `.kairos/<feature_folder>/0X-*.md`.

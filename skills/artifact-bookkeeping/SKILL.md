@@ -53,14 +53,14 @@ The orchestrator's Artifact Contract Check (`orchestrator-agent.md` HITL step 0)
 | Phase | Required fields (beyond `phase`) |
 |-------|-----------------------------------|
 | `pm-agent` | `status`, `risk_counts` |
-| `architect-agent` | `status`, `promptable`, `risk_counts` |
-| `impact-assessment-agent` | `risk_counts`, `effort`, `recommended_agents` |
+| `architect-agent` | `status`, `promptable`, `risk_counts`, `domains`, `test_first`, `contract_change`, `behaviour_delta`, `threat_rows` |
+| `impact-assessment-agent` | `risk_counts`, `effort`, `domains`, `test_suite`, `contract_change`, `change_kind` |
 | `context-extractor-agent` | `status` |
 | `bug-triage-agent` | `status`, `reproduced`, `severity`, `root_cause_found`, `recommended_entry` |
 | `dependency-audit-agent` | `status`, `audited_on`, `vulnerabilities`, `backlog_count` |
 | `implementer-plan` (Phase 3a — any implementer variant) | `status`, `risk_counts`, `total_waves` |
 | `implementer-tdd-agent` | `status`, `iteration_mode`, `wave`, `total_waves`, `next_wave`, `tdd_verification`, `coverage_summary` |
-| `implementer-coder-agent` | `status`, `iteration_mode`, `wave`, `total_waves`, `next_wave` |
+| `implementer-coder-agent` | `status`, `iteration_mode`, `wave`, `total_waves`, `next_wave`, `tests_written` |
 | `code-reviewer-agent` | `status`, `issues_summary`, `convergence_signal` |
 | `security-reviewer-agent` | `status`, `findings_summary` |
 | `test-verifier-agent` | `status`, `execution`, `coverage_summary`, `issues_summary`, `convergence_signal` |
@@ -69,3 +69,5 @@ The orchestrator's Artifact Contract Check (`orchestrator-agent.md` HITL step 0)
 | `documentation-agent` | `status`, `findings_summary` |
 
 `risk_counts` / `issues_summary` / `findings_summary` are the by-Impact tally from §1 (`{ critical, high, medium, low, total }`) regardless of which name a given phase uses for it. This table is a presence checklist derived from each agent's own Output Format block — if an agent file's frontmatter template changes, update its row here in the same edit. Look the row up by the artifact's own `phase:` value, not by which agent produced it: one agent can emit two artifacts with different contracts. The Phase 3a plan (`phase: implementer-plan`) is the case that forces this — it comes from an implementer but carries none of that implementer's execution fields, so checking it against the implementer's row would fail every run on fields that cannot exist before any code is written.
+
+The fact fields added in v9.0.0 (`domains`, `test_first`, `contract_change`, `behaviour_delta`, `threat_rows` on the architecture; `domains`, `test_suite`, `contract_change`, `change_kind` on the impact assessment; `tests_written` on the coder's implementation) are required only on artifacts written from then on. A resumed folder's older artifact that lacks them is not malformed and is never re-run for it: the orchestrator reads each missing fact as unknown, which its Selection Rules resolve toward running the agent that fact gates. An older impact assessment's `recommended_agents` is ignored.

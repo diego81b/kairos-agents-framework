@@ -2,7 +2,7 @@
 
 **Q: Do I have to learn all 17 agents?**
 
-A: No. You start the Orchestrator and describe what you want; it asks which phases should run and invokes the rest. The agents you may end up calling yourself are the six standalone ones, all optional: Context Extractor, Impact Assessment, and Bug Triage before a run; Retrospective, Improvement Advisor, and Dependency Audit after one or outside any feature. See [All Agents](./agents).
+A: No. You start the Orchestrator and describe what you want; it works out which phases should run from facts about the change, shows you that pipeline at its Start Gate for you to confirm or correct, and invokes the rest. The agents you may end up calling yourself are the standalone ones, all optional: Context Extractor and Bug Triage before a run (Impact Assessment too, though the Orchestrator runs it for you anyway); Retrospective, Improvement Advisor, and Dependency Audit after one or outside any feature. See [All Agents](./agents).
 
 ---
 
@@ -14,13 +14,13 @@ A: Launch the Orchestrator as the session's primary agent — in Claude Code, `c
 
 **Q: What if what I have is a bug, not a feature?**
 
-A: Start with Bug Triage. It reproduces the defect, isolates it, states the root cause at `file:line` with an evidence trail, and recommends whether the fix belongs on the Quick fix path or the full pipeline. You can run it yourself before the pipeline, or hand the report straight to the Orchestrator — it recognises a bug report, offers to run triage first, and gates the result for you.
+A: Start with Bug Triage. It reproduces the defect, isolates it, states the root cause at `file:line` with an evidence trail, and recommends whether the fix belongs on the short `simple_fix` path or the full pipeline. You can run it yourself before the pipeline, or hand the report straight to the Orchestrator — it recognises a bug report, offers to run triage first, and gates the result for you.
 
 ---
 
 **Q: Does every feature pay for the whole pipeline?**
 
-A: No. The Orchestrator asks one question up front — how big is this change — and the answer drives everything downstream. `simple_fix` runs a code-only implementer plus a review, in Lean Mode. `medium` runs the ordinary pipeline in Trimmed Mode. `significant_rework` runs everything in full and asks you to choose the loop policy yourself. See [Workflow](./workflow).
+A: No. The Impact Assessment measures how big the change is, and the Orchestrator derives the pipeline from that and the other facts it reports; you confirm or correct the effort at the Start Gate. `simple_fix` runs the code-first implementer (which still extends the tests of the code it touches) plus a review, in Lean Mode. `medium` runs the ordinary pipeline in Trimmed Mode. `significant_rework` runs everything in full and asks you to choose the loop policy yourself. See [Workflow](./workflow).
 
 ---
 

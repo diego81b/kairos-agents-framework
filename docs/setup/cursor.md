@@ -30,12 +30,12 @@ your-project/
 │   └── agents/
 │       ├── orchestrator-agent.md
 │       ├── context-extractor-agent.md     ← Pre-pipeline: full-repo context (standalone)
-│       ├── impact-assessment-agent.md     ← Pre-pipeline: issue grounding + recommendations (standalone)
+│       ├── impact-assessment-agent.md     ← Pre-pipeline: issue grounding, facts for the derivation (dispatched by the orchestrator)
 │       ├── bug-triage-agent.md            ← Bug reproduction + root cause (standalone)
 │       ├── pm-agent.md
 │       ├── architect-agent.md
 │       ├── implementer-tdd-agent.md       ← TDD implementer (default)
-│       ├── implementer-coder-agent.md     ← Code-only implementer (no test suite)
+│       ├── implementer-coder-agent.md     ← Code-first implementer (code, then the tests the project calls for)
 │       ├── code-reviewer-agent.md
 │       ├── security-reviewer-agent.md     ← Adversarial security review (optional, read-only)
 │       ├── test-verifier-agent.md
@@ -84,7 +84,7 @@ In Cursor Agent mode, type:
 Help me implement [your feature] using the KAIROS framework
 ```
 
-The orchestrator's `description` signals Cursor to delegate to it, which then coordinates the remaining subagents in sequence (PM → Architect → Implementer → Reviewer → Test Verifier → Release Planner).
+The orchestrator's `description` signals Cursor to delegate to it, which then coordinates the subagents it derives for the change, in sequence (PM → Architect → Implementer → Reviewer → Test Verifier → Release Planner).
 
 ### Explicit invocation
 
@@ -164,13 +164,13 @@ Same reasoning/execution split as the shipped `agents/*.md` frontmatter — see 
 | `orchestrator-agent` | `opus` | Never use `inherit` or `fast` — coordination requires full reasoning |
 | `architect-agent` | `opus` | Never use `inherit` or `fast` — system design requires full reasoning |
 | `context-extractor-agent` | `opus` | `fast` not recommended even for small codebases — full-repo scans benefit from stronger reasoning |
-| `impact-assessment-agent` | `opus` | Never use `inherit` or `fast` — its recommendation drives every downstream agent's scope |
+| `impact-assessment-agent` | `opus` | Never use `inherit` or `fast` — its facts drive the orchestrator's derivation of every downstream agent |
 | `security-reviewer-agent` | `opus` | Never use `inherit` or `fast` — adversarial security analysis requires full reasoning |
 | `improvement-advisor-agent` | `opus` | Rarely invoked; keep on `opus` for cross-feature pattern recognition |
 | `bug-triage-agent` | `opus` | Never downgrade — root-cause reasoning from partial evidence |
 | `pm-agent` | `sonnet` | `fast` acceptable for quick requirement sketches |
 | `implementer-tdd-agent` | `sonnet` | Upgrade to `opus` for complex TDD cycles spanning many files |
-| `implementer-coder-agent` | `sonnet` | `fast` not recommended; no TDD overhead but still needs solid reasoning |
+| `implementer-coder-agent` | `sonnet` | `fast` not recommended; no test-first overhead but still needs solid reasoning |
 | `code-reviewer-agent` | `sonnet` | Upgrade to `opus` for deep security audits |
 | `test-verifier-agent` | `sonnet` | Sufficient for coverage analysis |
 | `release-planner-agent` | `sonnet` | Sufficient for deployment planning |

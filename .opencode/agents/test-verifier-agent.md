@@ -239,7 +239,7 @@ convergence_signal: { issues_critical_high: 1, ac_gaps: 1, iteration: 1 }
 | Determinism | PASS |
 | Hygiene | PASS |
 | Mocking | PASS |
-| TDD reality | PASS |   <!-- PASS|FAIL|UNKNOWN — UNKNOWN on the no-TDD path -->
+| TDD reality | PASS |   <!-- PASS|FAIL|UNKNOWN — UNKNOWN on the code-first path (implementer-coder-agent writes tests after the code by design; never flag that order) -->
 
 ## Uncovered
 | File | Lines | Reason |

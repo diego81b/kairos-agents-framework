@@ -10,10 +10,10 @@ Every gate below is an interactive `AskUserQuestion` prompt — **but only when 
 
 | Phase | Agent | Produces | Gate |
 |---|---|---|---|
-| 0 | Orchestrator (+ optional Context Extractor / Impact Assessment) | Confirmed agent selection | Confirm pipeline |
+| 0 | Orchestrator + Impact Assessment (+ optional Context Extractor) | `00b-impact.md` + derived pipeline | Start gate |
 | 1 | PM Agent | `01-requirements.md` | ✅ / ✏️ / ⏭️ / ⛔ |
 | 2 | Architect Agent | `02-architecture.md` | ✅ / ✏️ / ⏭️ / ⛔ |
-| 3 | Implementer (TDD or code-only, or Team Mode) | Code + `03-implementation.md` | Plan gate, then ✅ / ✏️ / ⏭️ / ⛔ |
+| 3 | Implementer (test-first, code-first, or Team Mode) | Code + `03-implementation.md` | Plan gate, then ✅ / ✏️ / ⏭️ / ⛔ |
 | 4 | Code Reviewer (review wave) | `04-review.md` | one combined review gate ✅ / ✏️ / ⏭️ / ⛔ |
 | 4b | Security Reviewer *(optional, review wave)* | `04b-security-review.md` | same gate |
 | 5 | Test Verifier (review wave) | `05-test-verification.md` | same gate |
@@ -22,7 +22,7 @@ Every gate below is an interactive `AskUserQuestion` prompt — **but only when 
 
 Phases 4, 4b and 5 run together as one **review wave**: the active reviewers read the same code, in parallel where the host allows it, and you answer one gate for all three (see [Review Wave](#review-wave-phases-4-4b-and-5)).
 
-Phase 3 routes to one of two paths: the single Implementer Agent (default, works everywhere — plan gate, then RED → GREEN → REFACTOR), or Team Mode (Claude Code only, explicit request required) where an Implementer Lead defines binding contracts and spawns Tests / Backend / Frontend / Database teammates in parallel before aggregating their output.
+Phase 3 routes to one of three paths, chosen from the design's facts right before the plan: the TDD Implementer (plan gate, then RED → GREEN → REFACTOR), the code-first Implementer (plan gate, then code and the tests the project calls for), or Team Mode (Claude Code only, offered with its cost when the TDD path spans two or more layers) where an Implementer Lead defines binding contracts and spawns Tests / Backend / Frontend / Database teammates in parallel before aggregating their output.
 
 Each HITL checkpoint is an interactive prompt (Claude Code's `AskUserQuestion` tool), not a text menu to reply to. Before it, if the phase's output has a Risks/Issues/Findings table with any row left undispositioned, the **Risk Disposition Loop** walks through those rows first — one at a time (or up to 4 per prompt), with **Accept / Mitigate now / Escalate / Defer** — instead of forcing an approve-or-reject on the whole table at once. Only once every row has a disposition does the whole-artifact gate below appear; it marks one option as recommended based on the phase's own status (an unresolved Escalate biases it toward Request changes), and always leaves a free-text option for detailed feedback:
 - ✅ **Approve** — continue to the next active agent
@@ -30,7 +30,7 @@ Each HITL checkpoint is an interactive prompt (Claude Code's `AskUserQuestion` t
 - ⏭️ **Skip next** — approve this output, jump past the next active agent
 - ⛔ **Stop** — abort the pipeline
 
-Only selected agents run. Order is never changed.
+Only derived (or explicitly added) agents run. Order is never changed.
 
 ### Artifact Format — Markdown + Frontmatter
 
@@ -38,33 +38,33 @@ Every phase writes a single Markdown file: a small YAML frontmatter header carry
 
 ---
 
-## Phase 0: Prep & Agent Selection
+## Phase 0: Prep & Pipeline Derivation
 
-**Pre-pipeline (optional, both standalone — you launch them yourself; the Orchestrator never runs them for you, it only reads what they left on disk):**
-- Run `context-extractor-agent` first to produce `00-context.md` (full-repo scan — stack, patterns, conventions)
-- Run `impact-assessment-agent` to produce `00b-impact.md` (issue-scoped grounding — effort, domains, recommended agents). Consumes `00-context.md` if present; does not rescan what it already covers. `test-verifier-agent` is only recommended when a TDD implementer is selected AND effort is `medium` or `significant_rework` — a `simple_fix` on the TDD path relies on `code-reviewer-agent`'s own Testing check instead of a dedicated verification phase.
-- Launch each of them as the session's **primary agent**, the same way you launch the Orchestrator — see your host's [setup page](/setup/). Naming one with `@` inside an already-open chat dispatches it as a subagent, and a subagent has no `AskUserQuestion`: the context extractor's confirmation gate and the impact assessment's row-by-row Risk Disposition Loop both degrade to the text-menu fallback.
+**Pre-pipeline (optional, standalone — you launch it yourself):**
+- Run `context-extractor-agent` first to produce `00-context.md` (full-repo scan — stack, patterns, conventions). Launch it as the session's **primary agent**, the same way you launch the Orchestrator — see your host's [setup page](/setup/). Naming it with `@` inside an already-open chat dispatches it as a subagent, and a subagent has no `AskUserQuestion`: its confirmation gate degrades to the text-menu fallback.
 
 **Pipeline start:**
 - Developer provides a natural-language feature request (with optional issue reference)
-- Orchestrator loads `00-context.md`, `00b-impact.md`, and `00c-bug-triage.md` if present. A triage on disk is attached to every later subagent prompt, not just read by the Quick fix path
-- **Bug-Input Check** (before the Effort Check): if the input reads as a bug report — a symptom against an expectation, a stack trace, reproduction steps, "this used to work" — and no `00c-bug-triage.md` exists, the Orchestrator offers to run `bug-triage-agent` first. On accept it dispatches it with `mode: orchestrated`: the agent reproduces, finds the root cause, writes `00c-bug-triage.md`, and returns without a gate of its own, which the Orchestrator then presents as it would any phase artifact. Approve and `recommended_entry` becomes an advisory at the Effort Check below. This is the single exception to the Orchestrator never dispatching a standalone agent, and it holds only because `bug-triage-agent` asks nothing mid-work — every other standalone agent does, and would lose those questions as a subagent
-- **Effort Check** (skipped only when a `## KAIROS Pipeline` template section was found in the issue body): one question — "How big is this change?" — answered as `simple_fix`, `medium`, or `significant_rework`. When `00b-impact.md` exists, its `effort` value is the pre-selected default; otherwise the orchestrator proposes one from the request itself. **The chosen value is stamped into the invocation prompt of every subagent that runs**, so each agent enters Lean, Trimmed, or Full mode from a value a human confirmed instead of re-deriving the size itself (or silently defaulting to `medium`+ and running Full). `simple_fix` additionally presets `active_agents` to `implementer-coder-agent` + `code-reviewer-agent`, sets `loop_policy` to `auto 1`, and widens the Risk Disposition Loop's auto-accept threshold to `medium` — skipping the selection menu and the loop-policy prompt below entirely. `medium` presets the review loop's budget to `auto 1` (announced at Step 0f, overridable there) and still shows the selection menu. `significant_rework` asks everything, as before. When the question is skipped because a template was found, `effort` comes from the template's `Effort:` line (else `00b-impact.md`, else `medium`) and is propagated as usual. The size presets — retry budget, auto-accept threshold, combined plan step for `simple_fix` — apply only when the template has an `Auto-fix:` line, and never override the template's agent list. A template without one is an older template and keeps the behaviour it always had: the retry budget manual, the plan gate kept, and the retry question asked only at `significant_rework`.
-- If `00b-impact.md` found, displays a `💡 Impact Assessment` advisory block before the selection menu (effort, domains, recommended agents). The agent list stays advisory — nothing is pre-selected — but its `effort` value is pre-selected as the recommended answer at the Effort Check above.
-- If the invocation prompt already dictates an agent list, the orchestrator treats it as an unconfirmed proposal and still requires explicit confirmation through the selection menu
-- Orchestrator reads the `## KAIROS Pipeline` section from the issue body (if present), or shows an interactive numbered list. A template's optional `Auto-fix:` line (or the older `Auto-fix after review:` / `Auto-fix after tests:` pair, which resolves to the larger of the two) sets how many times the agents may fix their own problems before stopping at a gate, overriding the size preset and skipping the retry question. The line is also the opt-in to the size presets, so templates written before it existed run exactly as they did. When no `00b-impact.md` advisory exists, the orchestrator adds its own `💡 Suggested selection` line derived from the feature request — advisory only, never auto-applied
-- User confirms or adjusts the agent selection; orchestrator announces the active pipeline before Phase 1, saves the run's settings to `ledger/run.md`, and creates `_tracking.md`, the one file it keeps open in your editor for the rest of the run (see [Tracking File](#tracking-file))
-- **Issue write-back** (only when the run started from an issue and the selection came from the menu): the orchestrator shows the `## KAIROS Pipeline` block it would write and asks before appending it to the issue description — never touching the rest of the description. On Jira, or with no tracker CLI, it prints a paste-ready block instead. See [Pipeline Templates](/setup/templates#saving-the-selection-to-the-issue)
+- Orchestrator loads `00-context.md`, `00b-impact.md`, and `00c-bug-triage.md` if present. A triage on disk is attached to every later subagent prompt
+- **Bug-Input Check**: if the input reads as a bug report — a symptom against an expectation, a stack trace, reproduction steps, "this used to work" — and no `00c-bug-triage.md` exists, the Orchestrator offers to run `bug-triage-agent` first. On accept it dispatches it with `mode: orchestrated`: the agent reproduces, finds the root cause, writes `00c-bug-triage.md`, and returns without a gate of its own, which the Orchestrator then presents as it would any phase artifact
+- **Impact Grounding**: unless `00b-impact.md` already exists or the issue carries a checklist template, the Orchestrator dispatches `impact-assessment-agent` with `mode: orchestrated`. It reads the issue and the code it touches and reports facts, never agent names: effort, domains touched, whether the project has a test suite, whether a contract changes, whether the issue asks for code at all. The Orchestrator writes `00b-impact.md` and resolves its Risks table row by row
+- **Derivation**: the Orchestrator applies one rule table to those facts (see [Pipeline Templates](/setup/templates#how-the-pipeline-is-derived)). At this point it decides `pm-agent`, `architect-agent`, whether an implementer runs and `code-reviewer-agent`. The implementer itself is chosen right before the plan; the review agents at the implementation gate; QA plan, release planning and documentation at the review gate. A triage's `recommended_entry` beats the impact assessment's effort, because it comes from a reproduction
+- **Manual QA setting** (once per project): the first run asks whether a person verifies features by hand in this project, and stores the answer in `.kairos/.manual-qa`. It is the one input to the QA plan rule that no code can supply
+- **Start gate**: the Orchestrator shows the derived pipeline, the rule behind each agent, the effort and auto-fix budget, and, when it ran this time, the impact assessment's `## Summary`. One question: start, re-run the impact assessment with your feedback, or stop. A free-text reply is a correction (`effort medium`, `skip release-planner`, `add security-reviewer`, `every wave`), applied and stored in `ledger/run.md` as an override. **Effort is stamped into every subagent's invocation prompt**, so each agent enters Lean, Trimmed, or Full mode from a value you saw. `simple_fix` also sets the auto-fix budget to 1, widens the Risk Disposition Loop's auto-accept threshold to `medium`, and merges the plan and implementation into one step; `medium` sets the budget to 1; `significant_rework` asks for it
+- A `## KAIROS Pipeline` section in the issue is read first. An override block (`Effort:`, `Auto-fix:`, `Skip:`, `Add:`) is applied on top of the derivation. An older checklist wins over it: the checked agents run, the impact assessment is not started, and the Orchestrator asks once whether to use the checklist or **Derive instead**
+- If the invocation prompt already dictates an agent list, the Orchestrator shows it at the start gate as a proposal and applies it only if you say so
+- The Orchestrator saves the run's settings to `ledger/run.md` and creates `_tracking.md`, the one file it keeps open in your editor for the rest of the run (see [Tracking File](#tracking-file))
+- **Issue write-back** (only when the run started from an issue and you corrected something at the start gate): the Orchestrator offers to save the correction to the issue as an override block, never touching the rest of the description. On Jira, or with no tracker CLI, it prints a paste-ready block instead. See [Pipeline Templates](/setup/templates#saving-corrections-to-the-issue)
 
-_Input: free-text feature request + optional issue reference + optional pre-pipeline Markdown files (`00-context.md` / `00b-impact.md`)_
-_Output: confirmed `active_agents` list + `feature_folder` path_
+_Input: free-text feature request + optional issue reference + optional `00-context.md`_
+_Output: `00b-impact.md`, the agents decided so far, `feature_folder` path_
 
-::: tip Selective pipeline
-Only agents explicitly selected in Phase 0 will run. Phases for inactive agents are skipped automatically. Use [Pipeline Templates](/setup/templates) to pre-configure agent selection in your issue tracker.
+::: tip Derived, then corrected
+No menu: each agent runs because a rule fired on a fact, and the gate before it says which. Correct any decision at that gate; the correction holds for the rest of the run. Use [Pipeline Templates](/setup/templates) to store corrections in your issue tracker.
 :::
 
-::: tip Quick fix trades TDD discipline for speed
-Answering `simple_fix` at the Effort Check routes to `implementer-coder-agent` (no TDD cycle, no `test-verifier-agent` phase) even in a repo with a test suite. If you want tests generated for a small change, pick `medium` or hand-pick `implementer-tdd-agent` from the selection menu instead.
+::: tip Quick fix keeps the tests the project has
+`simple_fix` routes to `implementer-coder-agent`, which is code-first: it writes the fix, then extends the tests of the modules it touched when the project has them, and `test-verifier-agent` runs whenever it wrote a test. Skipping tests needs a written reason in the plan.
 :::
 
 ---
@@ -108,7 +108,7 @@ User reviews the selected design option and API contracts (in `02-architecture.m
 
 ## Phase 3: Implementation
 
-At the start of this phase, the Orchestrator routes to one of two modes based on the agent selection confirmed in Phase 0.
+Right before the plan, the Orchestrator chooses the implementer from facts and prints the rule that chose it: no test suite or `simple_fix` → the code-first `implementer-coder-agent`; otherwise the architecture's `test_first` fact (`yes` → `implementer-tdd-agent`, `no` → the coder), and without an architecture a project with a test suite gets TDD. On the TDD path, Team Mode is offered when two or more of backend/frontend/db are touched, Agent Teams is enabled and the host is Claude Code.
 
 ### Default: Implementer Agent
 
@@ -146,7 +146,7 @@ The plan is a first-class artifact like every other phase output: written to dis
 :::
 
 ::: tip Waves continue on their own unless something needs you
-A large plan is split into waves, and each wave ends with `status: partial`. The Orchestrator still checks every wave the way it checks a gate: the artifact contract, the ledger, and the files the wave touched against the plan's file lists. It stops and asks you only when one of those checks turns something up: a new risk rated `medium` or above, a new constraint, a failing test, a file outside the plan, an Escalate, or a malformed artifact. Otherwise it writes one line to `_tracking.md`'s log and starts the next wave. Setting `wave_gates: every_wave` in `ledger/run.md`, or saying so at the pipeline announcement, restores a gate after every wave.
+A large plan is split into waves, and each wave ends with `status: partial`. The Orchestrator still checks every wave the way it checks a gate: the artifact contract, the ledger, and the files the wave touched against the plan's file lists. It stops and asks you only when one of those checks turns something up: a new risk rated `medium` or above, a new constraint, a failing test, a file outside the plan, an Escalate, or a malformed artifact. Otherwise it writes one line to `_tracking.md`'s log and starts the next wave. Setting `wave_gates: every_wave` in `ledger/run.md`, or saying so at the start gate, restores a gate after every wave.
 :::
 
 ::: info HITL checkpoint — Code gate
@@ -157,7 +157,7 @@ User reviews generated code and test coverage before the review phase. Presented
 
 ### Team Mode: Implementer Lead + 4 Teammates (Claude Code only, optional)
 
-Activated only when explicitly requested. The Orchestrator shows a cost warning (~$0.068 single vs ~$0.242 team) and waits for confirmation before proceeding.
+Offered only when its rule holds (TDD path, two or more of backend/frontend/db touched, Agent Teams enabled, Claude Code). The Orchestrator shows a cost warning (~$0.068 single vs ~$0.242 team) and waits for confirmation before proceeding.
 
 **How it works — TDD across a team:**
 
