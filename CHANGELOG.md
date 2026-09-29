@@ -29,6 +29,13 @@ The start of a run asked the human to decide, before any code had been read, thi
 - **`CLAUDE.md`**, **`README.md`**, **`docs/workflow.md`**, **`docs/agents.md`**, **`docs/overview.md`**, **`docs/agent-files.md`**, **`docs/agent-files-team.md`**, **`docs/agentic-loop.md`**, **`docs/faq.md`**, **`docs/index.md`**, **`docs/setup/`** — describe the derived pipeline and the code-first coder.
 - **`docs/.vitepress/config.js`** — Impact Assessment moves from the "Standalone — you run these" sidebar group to the pipeline group, and "Code Only" becomes "Code First".
 
+### Fixed
+
+- **`agents/orchestrator-agent.md`** — resuming a run whose implementer was interrupted near its end started the review wave before the implementer had reported back. The implementer writes `03-implementation.md` before its ledger update and before it returns, and the resume rule read that file as proof the phase was done. An agent now counts as complete only when its call returns: the orchestrator records every dispatch in `ledger/run.md` (`in_flight`), opens no gate and starts no other agent while one is running, and a resume that finds an agent still in flight re-invokes it in recovery mode instead of trusting the report on disk.
+- **`agents/implementer-tdd-agent.md`**, **`agents/implementer-coder-agent.md`**, **`agents/team/implementer-lead-agent.md`** — a recovery run (`recovery: true`) checks `git status`, the approved plan and the earlier report first, keeps the files that already match the plan and finishes only what is missing, instead of starting again on a half-written change. The report is now the last file an implementer writes, after the ledger update, so its presence means the pass is finished.
+- **`docs/workflow.md`**, **`CLAUDE.md`** — describe the in-flight record and the recovery run.
+- **`.opencode/agents/`**, **`.kimi-code/agents/`** — both mirrors carry the same changes.
+
 ### Removed
 
 - **`agents/orchestrator-agent.md`** — the agent selection menu, the effort question, the "Which implementer?" question and the fixed Quick fix agent list.

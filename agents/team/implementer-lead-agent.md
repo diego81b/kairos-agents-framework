@@ -82,6 +82,8 @@ The orchestrator invokes you in one of two steps, named explicitly in its prompt
 
 If the orchestrator names neither step, treat it as 3a. Iteration Mode (below) is always a 3b-shaped run: the plan was approved on the initiating pass.
 
+**Recovery run (`recovery: true` in the prompt, with `step: 3b`).** An earlier invocation of you was interrupted before it returned, and the Agent Team it created did not survive it. Do not start again, and do not read `03-implementation.md` as proof the pass finished. Read `03-contracts.md` instead of re-deriving the contracts, then run `git status --short` and `git diff --stat`, and read the approved plan, the ledger and `03-implementation.md` if it exists (its `## Pass Log` shows which passes really finished). Spawn a new team, and give each teammate only the files of its layer that are missing or incomplete; a file that already matches its contract stays. Skip the Test Plan gate if the test files it approved are already on disk. Add no ledger row that already exists, and name the pass `recovery — 3b` in the Pass Log.
+
 ---
 
 ## Ledger Check (required — lead only)
@@ -633,7 +635,7 @@ Re-verify coverage after everyone completes their refactor tasks. Apply the same
 
 ### Step 7: Aggregate Output and Clean Up
 
-Collect all files from teammates and produce the final summary, saved to `.kairos/<feature_folder>/03-implementation.md` (same path and filename as the solo TDD/coder implementer — the Team Mode Lead is the Phase 3 variant), using the Output Format below.
+Collect all files from teammates and produce the final summary, saved to `.kairos/<feature_folder>/03-implementation.md` (same path and filename as the solo TDD/coder implementer — the Team Mode Lead is the Phase 3 variant), using the Output Format below. Save it **last**, after the Ledger Update below: the orchestrator and a later resume read its presence as "this pass is finished", so a report written before the ledger update says `complete` about a pass that is still closing.
 
 Once all tasks are completed and results collected:
 

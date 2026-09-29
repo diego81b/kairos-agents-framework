@@ -346,10 +346,12 @@ Each KAIROS run maintains three living files under `.kairos/<feature_folder>/led
 | `constraints.md` | All constraints with per-phase accounting | PM Agent (or Context Extractor if run first) | Every agent |
 | `decisions.md` | Architectural and implementation decisions log | Architect Agent | Any agent; the `Supersedes` cell only by the Orchestrator |
 | `open-questions.md` | Cross-phase questions with answers, and deferred risks | Any agent or human (via HITL gate) | Any agent |
-| `run.md` | The run's settings: effort, active agents, auto-fix budget, wave gates | Orchestrator, before Phase 1 | Orchestrator |
+| `run.md` | The run's settings: effort, active agents, auto-fix budget, wave gates, and the agents dispatched but not yet returned (`in_flight`) | Orchestrator, before Phase 1 | Orchestrator |
 | `loops.md` | Auto-fix state while a retry is running, and the history of retries that did not converge | Orchestrator | Orchestrator; the checker adds its convergence signal |
 
 `run.md` is what lets a pipeline resume in a later session with the same settings: the resumed run restores the effort, skips the agents that were never selected, and keeps the auto-fix budgets the human chose. `loops.md` keeps retry bookkeeping out of `open-questions.md`, so that file holds only what a person has to read.
+
+`run.md` also records which agents were dispatched and have not returned. A report on disk never proves an agent finished: every agent writes its report before its ledger update and before it hands control back, so the file exists while the agent is still working. The Orchestrator therefore treats an agent as complete only when its call returns, and opens no gate and starts no other agent until then. If a session ends first (a closed laptop, a stopped run), the next session finds the agent still marked in flight and re-invokes it in recovery mode, whatever report it left behind. A recovering implementer reads `git status`, the approved plan and the earlier `03-implementation.md`, keeps the files that already match the plan, writes the ones that are missing and re-runs the tests before it reports.
 
 Before v8.5.0 a third file, `audit-log.md`, kept one line per gate. That log now lives in `_tracking.md` (below); an existing `audit-log.md` is read, never written.
 
