@@ -16,6 +16,7 @@ The start of a run asked the human to decide, before any code had been read, thi
 - **`agents/implementer-coder-agent.md`** — `## Test Decision` in the plan: whether the project has a suite, which touched modules already have tests, and what the coder will add or update. Skipping tests needs a written reason, visible at the plan gate.
 - **`agents/architect-agent.md`** — facts in the frontmatter (`domains`, `test_first`, `contract_change`, `behaviour_delta`, `threat_rows`) that choose the implementer, Team Mode, the security review and the documentation phase.
 - **`agents/impact-assessment-agent.md`** — orchestrated mode: started by the orchestrator on every derived run, it skips its own disposition loop and gate, which the orchestrator presents at the start gate.
+- **`agents/orchestrator-agent.md`** — a project file, `.kairos/.models`, sets the model of each agent the orchestrator dispatches: before every call it passes the listed alias as the call's model, which outranks the agent's own `model:`. With no file, or on a host whose Agent call takes no model parameter, every agent keeps its shipped model. The Start Gate shows the lines in effect.
 
 ### Changed
 
@@ -28,6 +29,10 @@ The start of a run asked the human to decide, before any code had been read, thi
 - **`.opencode/agents/`**, **`.kimi-code/agents/`** — both mirrors carry the same changes.
 - **`CLAUDE.md`**, **`README.md`**, **`docs/workflow.md`**, **`docs/agents.md`**, **`docs/overview.md`**, **`docs/agent-files.md`**, **`docs/agent-files-team.md`**, **`docs/agentic-loop.md`**, **`docs/faq.md`**, **`docs/index.md`**, **`docs/setup/`** — describe the derived pipeline and the code-first coder.
 - **`docs/.vitepress/config.js`** — Impact Assessment moves from the "Standalone — you run these" sidebar group to the pipeline group, and "Code Only" becomes "Code First".
+- **`commands/setup.md`** — writes `.kairos/.models` (Default, Economy or Custom, aliases only) instead of copying the agents into the project and editing their frontmatter, so it works on a plugin install and nothing needs re-applying after an update. `inherit`, full model IDs and models for agents the file does not cover stay on an Advanced path that edits frontmatter or `settings.json`.
+- **`docs/setup/claude-code.md`** — "Customizing models" describes the file and its limits (aliases only, dispatched agents only, Claude Code only). The tier counts match the 17 agents (7 reasoning, 10 execution), the QA plan agent is added to the per-agent defaults, and a note separates Claude Code's `effort:` frontmatter field from KAIROS's `effort`.
+- **`docs/workflow.md`**, **`docs/setup/opencode.md`**, **`docs/setup/kimi-code.md`**, **`CLAUDE.md`** — describe the file and say OpenCode and Kimi Code ignore it.
+- **`.opencode/agents/`**, **`.kimi-code/agents/`** — both orchestrator mirrors carry the same body change.
 
 ### Fixed
 
@@ -35,6 +40,7 @@ The start of a run asked the human to decide, before any code had been read, thi
 - **`agents/implementer-tdd-agent.md`**, **`agents/implementer-coder-agent.md`**, **`agents/team/implementer-lead-agent.md`** — a recovery run (`recovery: true`) checks `git status`, the approved plan and the earlier report first, keeps the files that already match the plan and finishes only what is missing, instead of starting again on a half-written change. The report is now the last file an implementer writes, after the ledger update, so its presence means the pass is finished.
 - **`docs/workflow.md`**, **`CLAUDE.md`** — describe the in-flight record and the recovery run.
 - **`.opencode/agents/`**, **`.kimi-code/agents/`** — both mirrors carry the same changes.
+- **`commands/setup.md`**, **`docs/setup/claude-code.md`** — the "global subagent model" option said `CLAUDE_CODE_SUBAGENT_MODEL` overrides every agent's frontmatter. Claude Code ranks the per-call parameter first, frontmatter second and the variable third, so with every KAIROS agent declaring `model:` the variable changed nothing. The option now also sets `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1`, and the docs give the real order.
 
 ### Removed
 

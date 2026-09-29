@@ -168,6 +168,34 @@ issue is a saved human confirmation, so it still wins over the derivation, exact
 before v9.0.0 expect. A new template carries only `Effort:`, `Auto-fix:` and explicit `Skip:`/`Add:`
 overrides.
 
+A third project setting sits beside `.kairos/.manual-qa`: `.kairos/.models`, one `<agent>: <alias>`
+line per agent, written by `/kairos:setup` or by hand and never asked by the orchestrator. Before
+each dispatch the orchestrator reads it and, on a host whose Agent call takes a `model` parameter
+(Claude Code), passes the alias for the agent it is about to call; with no line, or on a host
+without the parameter, the agent's own `model:` frontmatter applies, so the shipped opus/sonnet
+tiers stay the default and the file exists only to differ from them. Claude Code resolves a
+subagent's model as: per-call `model` parameter, then frontmatter `model:`, then
+`CLAUDE_CODE_SUBAGENT_MODEL`, then the session model. That is why the file works without editing any
+agent, and why the environment variable alone changes nothing on agents that declare `model:` (it
+needs `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1`, which also overrides the file). Three limits are
+deliberate. The file holds aliases only (`opus`, `sonnet`, `haiku`, `fable`), because the per-call
+parameter accepts no `inherit` and no full model ID; those still need frontmatter edits, which is
+why the copy-and-edit path stays in `/kairos:setup` as an advanced option. It reaches only agents
+the orchestrator dispatches, so the orchestrator, the standalone agents and Team Mode teammates keep
+their frontmatter. And it is per project, not per issue: an issue-level `Model:` line was rejected,
+because the model tier is a cost setting of the organisation and not a fact about one change, and
+the line would have added parsing, write-back composition and a `run.md` field for a decision nobody
+makes per issue. The orchestrator reads the file at each dispatch instead of copying it into
+`run.md`, so an edit mid-run applies from the next call and a resume needs nothing restored.
+
+Two fields called `effort` are unrelated. Claude Code's `effort:` agent-frontmatter field (`low` to
+`max`) sets how deeply that agent reasons; KAIROS's `effort` (`simple_fix`, `medium`,
+`significant_rework`) is the size of the change, measured by `impact-assessment-agent` and stamped
+into every agent's prompt. The two never share a file: the shipped agents set no `effort:` in
+frontmatter, and the Agent call has no per-call effort parameter, so reasoning depth could only ever
+be static per agent file. Renaming KAIROS's field to `size` was rejected for now, since `Effort:`
+lines in issue templates already sit in trackers and every legacy fallback would need a second name.
+
 `implementer-coder-agent` changed meaning in the same release. It was "code only, no tests"; it is
 now code-first: it writes the code, then decides test by test whether to add or update tests, from
 facts it states in the plan's `## Test Decision` (does the project have a suite, do the touched
@@ -368,7 +396,7 @@ VitePress `srcDir` is set to `..` (repo root), so the site sources Markdown from
 
 ### Commands (`commands/`)
 
-Claude Code plugin slash commands, auto-discovered since the plugin root is the repo root: `/kairos:setup` (guided per-tier model configuration) and `/kairos:view` (renders one `.kairos/<feature_folder>/` phase artifact as a synthetic HTML page via the Artifact tool — Claude Code only, one file per invocation, never the whole feature folder). Unlike `agents/*.md`, files here are not mirrored into `.opencode/agents/` or `.kimi-code/agents/` — they're a Claude-Code-native construct.
+Claude Code plugin slash commands, auto-discovered since the plugin root is the repo root: `/kairos:setup` (guided per-tier model configuration, written to `.kairos/.models`) and `/kairos:view` (renders one `.kairos/<feature_folder>/` phase artifact as a synthetic HTML page via the Artifact tool — Claude Code only, one file per invocation, never the whole feature folder). Unlike `agents/*.md`, files here are not mirrored into `.opencode/agents/` or `.kimi-code/agents/` — they're a Claude-Code-native construct.
 
 ### Plugin (`​.claude-plugin/`)
 
