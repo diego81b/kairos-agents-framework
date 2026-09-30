@@ -229,7 +229,7 @@ Note: No generic deploy MCP available — all deploy MCPs are vendor-specific (V
 
 Optional Phase 6b, runs after Release Planner. Writes feature-facing documentation in the **target project** — README updates, API reference entries, a CHANGELOG entry, migration notes for breaking changes — matching whatever doc conventions the project already has. The second agent in the framework, after the Phase 3 implementer, permitted to write real files outside `.kairos/`; scoped strictly to documentation, never source code. The Orchestrator also uses it for two verbatim writes, the project summary at the end of a run and the QA plan file: the Orchestrator runs the gate itself, and only an approved draft is handed over, so the agent checks the target is a documentation file and writes it.
 
-Output is `06b-documentation.md`: a Docs Touched table plus the drafted content, and a Documentation Gaps table (same 5-column shape as every other Risks/Findings table) for anything it can't confidently write without inventing details.
+Run by the Orchestrator it works in two calls, like the implementer: a draft that writes only `06b-documentation.md`, and, after you approve it at the Orchestrator's gate, a write that applies the approved text to the documentation files. Output is `06b-documentation.md`: a Docs Touched table plus the drafted content, and a Documentation Gaps table (same 5-column shape as every other Risks/Findings table) for anything it can't confidently write without inventing details.
 
 ---
 

@@ -19,6 +19,7 @@ Every gate below is an interactive `AskUserQuestion` prompt — **but only when 
 | 5 | Test Verifier (review wave) | `05-test-verification.md` | same gate |
 | 5b | QA Plan Agent *(optional)* | `05b-qa-plan.md` | ✅ / ✏️ / ⏭️ / ⛔ |
 | 6 | Release Planner | `06-deployment-plan.md` | ✅ / ✏️ / ⛔ |
+| 6b | Documentation Agent *(optional)* | `06b-documentation.md`, then the documentation files | ✅ / ✏️ / ⛔ |
 
 Phases 4, 4b and 5 run together as one **review wave**: the active reviewers read the same code, in parallel where the host allows it, and you answer one gate for all three (see [Review Wave](#review-wave-phases-4-4b-and-5)).
 
@@ -340,6 +341,25 @@ _Saved to: `.kairos/<feature_folder>/06-deployment-plan.md`_
 
 ::: info HITL checkpoint
 User approves the deployment runbook (`06-deployment-plan.md`). This is the final checkpoint of the numbered pipeline — approval closes this KAIROS run (Phases 1–6, or 1–6b if `documentation-agent` was also selected). It does not preclude running `retrospective-agent` afterward — a separate, standalone, non-orchestrated follow-up invoked directly by the user whenever they consider the feature done. Presented via `AskUserQuestion`, not a printed menu.
+
+`✅ Approve` · `✏️ Request changes` · `⛔ Stop`
+:::
+
+---
+
+## Phase 6b: Documentation (Documentation Agent) — optional
+
+- Read the project's existing documentation first (README, CHANGELOG format, docs directory) and match it
+- List the user-facing surfaces the change altered, from the architecture's contracts and what the implementer actually shipped
+- Draft the README, API reference, CHANGELOG entry and migration notes those surfaces need, as the exact text to be written; flag what it cannot write without inventing (a missing example, an undocumented error code) as a documentation gap
+- Once you approve the draft, write it into the project's documentation files
+
+_Input: `02-architecture.md`, `03-implementation.md`, `06-deployment-plan.md` (optional), the project's existing docs_
+_Output: `06b-documentation.md`, then the documentation files it lists_
+_Saved to: `.kairos/<feature_folder>/06b-documentation.md`, then README, CHANGELOG and `docs/**` in the project_
+
+::: info HITL checkpoint
+The Orchestrator runs this phase in two calls, like Phase 3, because the agent that writes real files outside `.kairos/` is a subagent and cannot ask you anything. The first call only drafts: `documentation-agent` writes `06b-documentation.md` and touches nothing else. The gate on it is the Orchestrator's. The second call runs only after you approve: the Orchestrator calls the agent again to write the files listed in `## Docs Touched`, exactly as the draft shows them, and the agent appends a `## Docs Written` table to the report. A file whose anchor text changed since the draft is left alone and reported, and nothing outside `.kairos/` is written before your approval. Resuming a run that stopped between the gate and the write shows the gate again.
 
 `✅ Approve` · `✏️ Request changes` · `⛔ Stop`
 :::

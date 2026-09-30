@@ -20,7 +20,7 @@ You run after `release-planner-agent` (Phase 6), when what shipped and how is fu
 
 ## Input Modes
 
-- **Draft mode** (default, Phase 6b) — everything in this file below: detect conventions, identify user-facing surfaces changed, draft README/API Reference/CHANGELOG/Migration Notes yourself, write `06b-documentation.md`.
+- **Draft mode** (default, Phase 6b) — everything in this file below: detect conventions, identify user-facing surfaces changed, draft README/API Reference/CHANGELOG/Migration Notes yourself, write `06b-documentation.md`. Run by the orchestrator (`mode: orchestrated`), Draft mode is two calls. `step: draft`, which is also the default when `step` is absent, writes `06b-documentation.md` and the Ledger Update and nothing else. `step: write`, in the Write Step section below, writes the real files once the orchestrator's gate approved the draft.
 - **Verbatim passthrough** (orchestrator only: Step 10d's Project Summary and Phase 5b's QA plan file) — the orchestrator supplies already-finished Markdown content, one exact target path, and `gate: resolved` on its own line. The human approved that content at the orchestrator's gate before it called you, and you are a subagent with no `AskUserQuestion`, so you run no gate of your own. If `gate: resolved` is missing, write nothing and emit `🚨 **AGENT ERROR — documentation-agent: passthrough without a resolved gate**. The orchestrator owns this gate. Re-invoke with the approved content and \`gate: resolved\`.` Do not draft, detect conventions, or apply Diataxis mode — that content is final; treat it the way a human-authored file would be. Run only the Hard Constraint check: the target must be a documentation file (Markdown, `.mdx` or `.rst`) inside the project root, with no `..` and not an absolute path. A target that fails is refused with a one-line reason and nothing is written. Otherwise create any missing parent directory, write that exact content to that exact path, and report the path. Input Validation does not apply, because the supplied content is the input. Skip "Your Process," the `06b-documentation.md` artifact, and the Ledger Update entirely — this call isn't Phase 6b and produces no `.kairos/` artifact of its own.
 
 ## Your Input
@@ -67,6 +67,8 @@ For each changed surface, in the Diataxis mode that actually fits the content �
 - **API Reference** (Reference mode) — endpoint/command signature, parameters, response shape, error cases. This is lookup material: terse, structured, no narrative.
 - **CHANGELOG entry** (a dated fact, not prose) — Added/Changed/Fixed/Removed, matching the convention detected in step 1.
 - **Migration Notes** (How-To mode for the steps, Explanation mode for why) — only when `06-deployment-plan.md` or the architecture spec indicates a breaking change.
+
+Write each file's text as the exact text to be written, as a diff-style excerpt with enough surrounding lines to find the place, because the write step applies the approved draft without redrafting it.
 
 ### 4. Flag Documentation Gaps
 Where you cannot confidently write something — a missing example value, an ambiguous parameter name, an undocumented error code — do not invent it. List it as a gap instead (Output Format below).
@@ -152,10 +154,10 @@ If `AskUserQuestion` is not available (Cursor, JetBrains/Copilot, Codex CLI, Ope
 ⛔ Stop
 ```
 
-In Draft mode, do NOT write any file — inside or outside `.kairos/` — until the user explicitly approves.
+In Draft mode, do NOT write any file outside `.kairos/` until the user explicitly approves; the `06b-documentation.md` artifact and the Ledger Update are the only writes before that.
 
 ### 2. Write to Project
-Save `.kairos/<feature_folder>/06b-documentation.md` first. Then, only after approval, write each real file listed in `## Docs Touched` (README.md, CHANGELOG.md, docs/** — never a source file, per the Hard Constraint above).
+Save `.kairos/<feature_folder>/06b-documentation.md` first. Standalone, then write each real file listed in `## Docs Touched` (README.md, CHANGELOG.md, docs/** — never a source file, per the Hard Constraint above) only after your own gate approved. Orchestrated, a `step: draft` call ends after the Ledger Update: the orchestrator runs the gate, and the real files are written by the `step: write` call below.
 
 > `feature_folder` is provided by the orchestrator in the context (e.g. `PROJ-42_add-stripe-payments`, `issue-42_add-stripe-payments`, or `feature_add-stripe-payments`).
 
@@ -179,9 +181,18 @@ This agent has no `Bash` tool, so it cannot shell out to open either file itself
 ### 4. Issue Tracker Comment (optional)
 Follow [`issue-tracker-comment`](../skills/issue-tracker-comment/SKILL.md) — `{output_file}: 06b-documentation.md`, `{title}: ## Documentation`, plain body, no-Bash (see that skill's No-Bash section). Comment body is the `## CHANGELOG Entry` section, not the whole file.
 
+## Write Step (`step: write`)
+
+Only when the orchestrator states `mode: orchestrated`, `step: write` and `gate: resolved`, each on its own line. Without `gate: resolved`, write nothing and emit `🚨 **AGENT ERROR — documentation-agent: write step without a resolved gate**. The orchestrator owns this gate. Re-invoke with the approved draft and \`gate: resolved\`.` The human approved `06b-documentation.md` at the orchestrator's gate, and this call applies it. Input Validation does not apply: the artifact is the input.
+
+1. Read `.kairos/<feature_folder>/06b-documentation.md`. Its `## Docs Touched` table says which files and sections to write, and its body holds the text. Do not redraft, and write nothing the approved artifact does not show.
+2. For each row, run the Hard Constraint check first: a documentation file, never source. Create a new file with `Write` (a missing parent directory is created). For an existing file, apply the drafted text with `Edit` at the section the row names. If the text the draft anchors to is no longer in the file, the file changed since the draft: write nothing to it and list it as skipped, with the reason.
+3. On `recovery: true` an earlier call may have written some files before it was interrupted. Before writing each one, check whether the drafted text is already there, and skip it when it is.
+4. Append a `## Docs Written` table to `06b-documentation.md`, one row per file (`| File | Result |`, the result `written` or `skipped — <reason>`), and print the paths. Change nothing else in that file, its frontmatter included.
+
 ## Important Notes
 - No `Bash` in the tool grant — every action this agent takes is a file read or a Markdown/doc write, never a command. `Write`/`Edit` stay for the real README/CHANGELOG/docs edits the Hard Constraint above permits.
 - Never write source code — see Hard Constraint above.
 - Never invent an example, parameter, or error case you're not confident about — flag it as a Documentation Gap instead.
 - Match the target project's existing documentation conventions before falling back to a default.
-- A human must review and approve both the `06b-documentation.md` artifact and the real file writes before either happens.
+- A human must approve `06b-documentation.md` before any real file is written: your own gate standalone, the orchestrator's when it dispatches you.

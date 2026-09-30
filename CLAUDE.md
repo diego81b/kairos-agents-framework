@@ -256,6 +256,16 @@ orchestrator improvising a gate for it, with the file already written under `doc
 anyone approved it. The orchestrator now owns that gate (draft in `.kairos/<feature_folder>/`,
 path printed, `open` trigger, Approve / Request changes / Stop) and dispatches the passthrough
 only with an approved draft, so the agent's whole job is the Hard Constraint check and the write.
+Phase 6b had the same defect in a quieter form: in an orchestrated run the agent skipped its own
+gate, the orchestrator ran the real one, and nothing then wrote the README or CHANGELOG, because
+the agent had already returned and its "write only after approval" step never came round. It now
+splits at that boundary exactly like Phase 3: `step: draft` writes `06b-documentation.md` and the
+ledger rows and nothing else, the orchestrator runs the gate, and on Approve the same agent is
+called again with `step: write` and `gate: resolved`, applies what the approved draft shows (the
+draft carries the exact text, so the write step never redrafts), and appends `## Docs Written`.
+A file whose anchor no longer matches is skipped and reported, and a resume that finds the draft
+without `## Docs Written` shows the gate again. Having the orchestrator write the files itself was
+rejected: it would be a third writer outside `.kairos/`, and Hard Constraint 1 forbids more.
 
 The orchestrator itself has two narrow exceptions to writing only inside `.kairos/`, plus one
 tracker write.
