@@ -32,6 +32,7 @@ Work through [`analysis-discipline`](../skills/analysis-discipline/SKILL.md) thr
 - The ledger under `.kairos/<feature_folder>/ledger/`.
 - `.kairos/_qa-regression.md` at the **project root**, optional — the cumulative catalogue of manual cases written by earlier features. You are its only writer and its main reader: it is where the existing `QA-n` cases live that this change may have broken. Absent on the first feature that runs 5b; you create it then.
 - An issue reference (`PROJ-42`, `#42`), optional — see the Issue Tracker Comment step.
+- `mode: orchestrated`, `size: <XS|S|M|L|XL>`, `epic: <key>` and `qa_file: <path>`, optional, stated by the orchestrator in the invocation prompt. `mode: orchestrated` means the orchestrator delivers your output after its own gate: you post nothing to the tracker and write nothing outside `.kairos/`. `epic` and `qa_file` come together, and mean this plan is one issue's part of a cumulative file for the whole epic (step 7 and Step 2d).
 
 ## Input Validation
 
@@ -122,6 +123,8 @@ Each case states its setup, its preconditions, the steps, and the observable exp
 
 **Outcome, never mechanism.** A case checks what a person observes through the product: the quantity on screen, the message shown, the row that appears once and not twice. It never checks the mechanism that produces it: a lock held in a database console, a query against internal tables, a request body built by hand that no screen can send. Contention is staged the way users cause it, two people pressing Confirm on the same item. When an `AC-n`'s outcome can only be observed through such internals, it is not a manual case: write one `## Risks` row saying so (`AC-4 outcome observable only in the database; automate or accept`) and leave the tester out of it.
 
+**Nothing that needs a developer's tools.** Setup, Preconditions and Steps stay inside the product. A tester is never asked to open the browser's developer tools, run a script or a command, edit a row in the database, or build a request by hand. Reach a precondition through the product: "an order in `pending`" is made by placing one. When the only way to stage it is technical (a record no screen can create, a date in the past, a payment failure only a provider stub produces), a developer prepares it: name it in `Setup` as `prepared by a developer: <what>`, list it in `## Test Data & Environment`, and let the Steps start from the prepared state. When even that cannot be done, it is not a case: write one `## Risks` row, as for an outcome only internals can show.
+
 **One case per behaviour.** When the same behaviour must hold on several screens or in several modes, write one case and list the variants in its Setup (`run on Return, Waste and Picking; once with stock mode GENERIC, once with OPERATION`), not one row per variant. In Full Mode, at most two cases per uncovered `AC-n`: the path it describes and the failure it names.
 
 **Cell budget.** Steps: at most four numbered actions. Expected result: one sentence, observable, with no explanation of why. Preconditions: the state to prepare, not how the code reaches it.
@@ -150,7 +153,7 @@ The constraint row stays `🔴 open` — you planned the case, you did not execu
 
 ### 3. Exploratory Charters
 
-A charter is a time-boxed mission, not a script: an area, a goal, and what would count as a finding. Write one only for an area where the change surface and the coverage complement overlap — that is, code that shipped and that automation does not cover. Two to four charters is a normal feature; more than that means you are scripting, not chartering.
+A charter is a time-boxed mission, not a script: an area, a goal, and what would count as a finding. Write one only for an area where the change surface and the coverage complement overlap — that is, code that shipped and that automation does not cover. Two to four charters is a normal feature; more than that means you are scripting, not chartering. A charter stays inside the product like a case: no developer tools, no scripts, no database edits.
 
 Skip in Lean Mode.
 
@@ -185,7 +188,7 @@ This selection runs in Lean Mode too, for the same reason the caller-based selec
 
 Only what the changed code actually demands, each with the evidence:
 - Environment variables the changed files read (`grep` for `process.env` / `os.environ` / equivalent in those files).
-- Fixtures, seeds, or migrations the change adds or depends on.
+- Fixtures, seeds, or migrations the change adds or depends on. A tester never runs them: the `Need` cell reads "prepared by a developer" and the case's `Setup` says the same.
 - External services that must be reachable or stubbed, taken from `02-architecture.md`'s integrations or from the client the code instantiates.
 - Accounts, roles, or permissions the cases in step 2 need in order to run.
 
@@ -201,14 +204,19 @@ A fourth answer, **not verifiable by hand — see Rn**, applies to an `AC-n` who
 
 Then carry pm-agent's `## Outcome Criterion` through verbatim as a separate line. It is deliberately not an `AC-n` and no test maps to it: it is checkable only after release, and it is the one statement that says whether the feature was worth building. If pm-agent recorded `not established — <reason>`, repeat that, do not supply one.
 
+### 7. Choose the Delivery
+
+The plan reaches its tester either as text posted to the issue or as a file in the repository. Count the checks a person will execute: the rows of `## Manual Test Cases`, the regression retest rows of `## Risks`, and the rows of `## Existing Manual Cases to Re-run`. Set `delivery: file` when that count is above 3 or when `epic` was given, otherwise `delivery: comment`. An epic always gets a file, because its plan is cumulative: every issue of the epic writes into the same one, and a comment cannot be that.
+
 ## Output Format
 
-One file: `05b-qa-plan.md`. YAML frontmatter carries the machine contract for orchestrator branching; the Markdown body carries the plan a human executes.
+The plan is one file, `05b-qa-plan.md`, with two delivery files beside it (Step 2d). YAML frontmatter carries the machine contract for orchestrator branching; the Markdown body carries the plan a human executes.
 
 ```markdown
 ---
 phase: qa-plan
 status: READY   # or NEEDS_ATTENTION
+delivery: comment   # or file — step 7
 risk_counts: { critical: 0, high: 1, medium: 2, low: 0, total: 3 }
 ---
 
@@ -251,7 +259,7 @@ risk_counts: { critical: 0, high: 1, medium: 2, low: 0, total: 3 }
 ## Exploratory Charters
 | ID | Area | Mission | What counts as a finding |
 |----|------|---------|--------------------------|
-| EC1 | checkout under slow network | throttle to 3G and drive the full purchase path | duplicate charge, stuck spinner, or a state the user cannot leave |
+| EC1 | checkout interrupted midway | press Pay, close the tab before the confirmation appears, then reopen the order list | duplicate charge, an order stuck in pending, or no way to retry |
 
 ## Risks
 | ID | Description | Impact | Mitigation/Fix | Disposition |
@@ -360,6 +368,24 @@ Three operations, in this order:
 
 In Lean Mode this step still runs, appends and stamps included. It is the cheapest part of the phase and the one that compounds.
 
+### 2d. Delivery Files (mandatory)
+
+Write beside `05b-qa-plan.md` the text its reader will receive. Both files are tester-facing: product language only, no `file:line`, no ledger ID, no pipeline ID.
+
+**`_qa-comment.md`** — always. The comment body, exactly as it will be posted. It opens with the heading and the framing line:
+
+```
+## QA Test Plan
+
+_Manual verification and its setup. Complements the acceptance criteria in this issue — it does not replace them: the `AC-n` list stays the developer's to satisfy._
+```
+
+With `delivery: comment`, the extract that step 4 describes follows. With `delivery: file`, only this issue's `## Core` block follows, then one line: `Full plan (in the repository once the merge request merges): {qa_file}`. Write the token `{qa_file}` literally: the orchestrator replaces it with the path it writes.
+
+**`_qa-file.md`** — only when `delivery: file`. The file exactly as it will be written into the repository.
+- One issue: `# QA Plan — <feature title>`, the framing line, then the extract's sections as `##` headings, in the order step 4 lists them.
+- An epic (`qa_file` given): one file for the whole epic. Read `qa_file` if it exists. The shape is `# QA Plan — <epic key>`, the framing line, an `## Issues` table (`| Issue | Size | Title |`, one row per issue, `—` where `size` is unknown), then one `## <issue ref> — <title>` section per issue with its extract sections demoted to `###`. Replace only this run's section and its row in the table, matched by issue ref (by `feature_folder` when there is none), or append them when absent, and copy every other line as it is. A file that does not have this shape is not yours to reshape: append your section at the end and leave the rest.
+
 ### 3. Open in Editor
 When the orchestrator invoked you, skip this step — its gate prints the `## Summary` block and offers the full file on request, so force-opening it here puts the whole document in front of a human who only needed four lines. Open it on a standalone run, where no gate does that for you.
 
@@ -372,7 +398,7 @@ ${KAIROS_EDITOR:-code} ".kairos/$feature_folder/05b-qa-plan.md"
 
 ### 4. Issue Tracker Comment (recommended)
 
-Unlike every other phase, this artifact's reader is outside the pipeline — a human tester who works in the issue tracker, not in `.kairos/`. A QA plan that stays on the author's disk has not been delivered. So when an issue reference was provided, post it; do not merely offer to.
+Unlike every other phase, this artifact's reader is outside the pipeline — a human tester who works in the issue tracker, not in `.kairos/`. A QA plan that stays on the author's disk has not been delivered. In an orchestrated run the orchestrator delivers it after its own gate, from `_qa-comment.md` and `_qa-file.md`: skip the rest of this step, since you post nothing and write nothing outside `.kairos/`. Standalone, when an issue reference was provided, post the comment after your own gate; do not merely offer to. A `delivery: file` plan is not in the repository yet: leave `_qa-file.md` in the feature folder, print `📄 Copy .kairos/<feature_folder>/_qa-file.md to <qa-dir>/<name>.md` (the directory is the content of `.kairos/.qa-dir` when it exists, else `docs/qa-plans/`; the name is `qa_file`'s, else `<feature_folder>.md`), and write that path where the comment says `{qa_file}`.
 
 This comment is the other half of the issue's acceptance criteria, not a duplicate of them: the `AC-n` list in the issue says what must be true and is the developer's to satisfy, and this comment says how a person stages and checks the part no developer environment reproduces alone. Say that in one line above the pasted content when you post, so the tester knows which of the two they are reading.
 
@@ -380,7 +406,7 @@ This comment is the other half of the issue's acceptance criteria, not a duplica
 
 **Expand the existing cases in the comment.** In the artifact you cite each `QA-n` by ID, because its reader can open the catalogue. The tester cannot: `.kairos/` is gitignored (the orchestrator's Step 0c puts it there), so the catalogue lives on a developer's machine and `re-run QA-12` tells the tester nothing. In the comment, every selected case carries its full row — `Setup`, `Preconditions`, `Steps`, `Expected` — copied from the catalogue, with its ID kept so the two can be matched later. Do not "simplify" this back to a list of IDs. Leave out `## Summary` and `## Coverage Complement` — they are pipeline bookkeeping, and a tester who reads "no test maps to AC-3" learns nothing they can act on. Render the regression retests as a `## Regression Retests` table with two columns, `What to re-run` (the row's `Mitigation/Fix`) and `Impact`, dropping `ID`, `Description` and `Disposition`: the Description is the gate's evidence, written in code terms, and the Disposition column is the orchestrator's gate record, not an instruction to anyone. Only the rows that cite a caller at a `file:line` belong there — `## Risks` also holds the `AC-n` marked not verifiable as written and any uncovered `VERIFICATION` row, and those reach the tester through UAT Sign-off and Cross-Environment Verification already. Filing them under "retest this" tells a tester to re-exercise something that was never exercised.
 
-Follow [`issue-tracker-comment`](../skills/issue-tracker-comment/SKILL.md)'s **Extract body** variant — `{output_file}: 05b-qa-plan.md`, `{title}: ## QA Test Plan`. Compose the body inline in the command; never `cat` the artifact for this comment, and never write the extract to a second file. The comment opens with what it is:
+Follow [`issue-tracker-comment`](../skills/issue-tracker-comment/SKILL.md)'s **Extract body** variant — `{output_file}: 05b-qa-plan.md`, `{title}: ## QA Test Plan`. The body is `_qa-comment.md` (Step 2d), composed there once and never by `cat` of `05b-qa-plan.md`. The comment opens with what it is:
 
 ```
 ## QA Test Plan
@@ -403,20 +429,13 @@ _Manual verification and its setup. Complements the acceptance criteria in this 
 
    _Manual verification and its setup. Complements the acceptance criteria in this issue — it does not replace them._
 
-   <the extract described above: manual cases, cross-environment line when not N/A, charters, regression retests, test data, UAT sign-off>
+   <the content of _qa-comment.md>
    ```
 
-   The command itself carries the same body — a heredoc keeps the Markdown tables intact:
+   The command reads the same body from the file, which keeps the Markdown tables intact:
 
    ```bash
-   glab issue note <issue-id> --message "$(cat <<'BODY'
-   ## QA Test Plan
-
-   _Manual verification and its setup. Complements the acceptance criteria in this issue — it does not replace them._
-
-   <extract>
-   BODY
-   )"
+   glab issue note <issue-id> --message "$(cat .kairos/<feature_folder>/_qa-comment.md)"
    ```
 
 ## Optional Enhancements
@@ -429,6 +448,8 @@ These skills and MCP tools enhance this agent when installed. KAIROS works fully
 ## Important Notes
 - You plan verification; you never execute it and never claim something was verified.
 - Every row in every table traces to an `AC-n`, the bug's reproduction, an uncovered range, or a file:line. No source, no row.
+- A tester is never sent to a developer's tools: no dev tools, scripts, commands, database edits or hand-built requests in Setup, Preconditions, Steps or a charter. What only those can stage is prepared by a developer and named as such, or it is a `## Risks` row.
+- When orchestrated you deliver nothing: the orchestrator posts the comment and hands the file to `documentation-agent` after the human approved the plan. You write `_qa-comment.md`, and `_qa-file.md` when the plan goes to a file.
 - The tester reads product language. Code evidence stays in Coverage Complement and Risks; it never reaches a case, a charter, or the comment.
 - A manual case checks an outcome a person sees, never the mechanism behind it. What only a database console or a hand-built request can show is a gate risk, not a tester's step.
 - You are the only writer of `.kairos/_qa-regression.md`. Append what is worth re-running, retire only in areas this change touched, and stamp `Last planned` — never `Last run`, because you plan and never execute.

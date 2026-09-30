@@ -127,16 +127,18 @@ Expected result; the old charter example that throttled the network in the brows
 And the tester's part goes where a person can execute from it. Up to three checks (manual
 cases, regression retests and existing cases to re-run, counted together) and no epic, the
 extract stays the issue comment. Above that, or whenever the issue has an epic, `qa-plan-agent`
-writes the tester's part as `05b-qa-file.md` inside `.kairos/`, and the comment shrinks to the
-framing line, the core and a pointer. The agent never writes into the repository itself: after
+writes the tester's part as `_qa-file.md` inside `.kairos/`, and the comment
+(`_qa-comment.md`, always written) shrinks to the framing line, the core and a pointer
+carrying a literal `{qa_file}` token the orchestrator fills in. The agent never writes into the repository itself: after
 the QA gate approves, the orchestrator hands the file to `documentation-agent` in passthrough
 mode, so the framework keeps two writers outside `.kairos/`. Letting `qa-plan-agent` write it
 was rejected for that reason, and because the agent used to post its comment before the gate,
 an outward action taken ahead of approval. In an orchestrated run the orchestrator now posts
 the comment after the gate; standalone, the agent has no orchestrator to hand the write to and
 leaves the file in the feature folder with the target path printed. The directory is a fourth
-project setting, `.kairos/.qa-dir`, asked once at the first QA gate that needs a file and
-proposed as `docs/qa-plans/`; like `.manual-qa` it is per machine, not shared. An epic gets one
+project setting, `.kairos/.qa-dir`, asked once and proposed as `docs/qa-plans/`: before the
+QA plan runs when the issue has an epic (the agent must read the epic's file), at the QA gate
+otherwise; like `.manual-qa` it is per machine, not shared. An epic gets one
 file, `<qa-dir>/<epic>.md`, and each child run rewrites only its own `## <issue>` section and
 its own row of the `## Issues` table (issue, size, section); the comment goes on the epic.
 Reading sibling feature folders to assemble that file was rejected: `.kairos/` is local and

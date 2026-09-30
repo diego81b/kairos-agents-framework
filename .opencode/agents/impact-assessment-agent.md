@@ -71,16 +71,20 @@ For each domain below, determine whether the issue touches it and, if yes, which
 | `auth` | authentication middleware, authorization checks, token handling, session management, ownership enforcement |
 | `integrations` | external API calls (Stripe, email, SMS, storage, etc.) |
 
-### 3. Assess Effort
-Classify as one of three levels and document your reasoning:
+### 3. Assess Size and Effort
+Classify the change in one pass: its T-shirt **size** first, and the **effort** that follows from it. Document your reasoning.
 
-| Level | Criteria |
-|-------|----------|
-| `simple_fix` | ≤ 2 files modified, no new endpoints, no schema changes, no auth impact |
-| `medium` | 3–10 files, 1–3 new/modified endpoints, possible schema changes, no auth redesign |
-| `significant_rework` | > 10 files, new subsystem or domain, auth changes, schema migrations, cross-domain impact |
+| Size | Criteria | Effort |
+|------|----------|--------|
+| `XS` | 1 file, no new or modified endpoint, no schema changes, no auth impact | `simple_fix` |
+| `S` | 2 files, same limits | `simple_fix` |
+| `M` | 3–6 files, at most 1 new or modified endpoint, possible schema changes, no auth redesign | `medium` |
+| `L` | 7–10 files, 2–3 new or modified endpoints, possible schema changes, no auth redesign | `medium` |
+| `XL` | > 10 files, new subsystem or domain, auth changes, schema migrations, cross-domain impact | `significant_rework` |
 
-All criteria in a row must hold for that row to apply. A change matching the file count for one level but a higher-impact criterion for another (e.g. 2 files but a new endpoint) classifies at the higher level — a new endpoint, schema change, or auth impact always escalates past `simple_fix` regardless of file count.
+All criteria in a row must hold for that row to apply. A change matching the file count for one row but a higher-impact criterion for another (e.g. 2 files but a new endpoint) classifies at the higher row — a new endpoint, schema change, or auth impact always escalates past `S` regardless of file count.
+
+The size measures how much of the codebase the change moves, not how long it takes. Never write it as hours or days, here or anywhere in this artifact: a label named like an estimate gets read as one. Only `effort` decides how thorough every later agent is; `size` is a label for people and the tracker. The map in the last column is the only way one becomes the other, so the two never disagree.
 
 Reasoning must be specific — list the files and changes that drove the classification, not just a label.
 
@@ -123,7 +127,7 @@ Report the facts the orchestrator derives the pipeline from. You never name an a
 | `contract_change` | `yes` / `no` | `yes` when the issue adds or changes an API endpoint, a public interface that other code or clients call, an event or message schema, or a database schema |
 | `change_kind` | `code` / `analysis` | `analysis` when the issue asks only for a spike, research, a design, an estimate, or documentation, with no production code change; `code` otherwise |
 
-`effort` (step 3) and `domains` (step 2) are facts too and go in the frontmatter with these. When a fact cannot be established from the code you read, say `unknown` in the table with what you could not read, and write the value that runs more of the pipeline in the frontmatter (`test_suite: yes`, `contract_change: yes`, `change_kind: code`): skipping an agent on a guess ships a change nobody reviewed, running one costs a phase.
+`size` and `effort` (step 3) and `domains` (step 2) are facts too and go in the frontmatter with these. When a fact cannot be established from the code you read, say `unknown` in the table with what you could not read, and write the value that runs more of the pipeline in the frontmatter (`test_suite: yes`, `contract_change: yes`, `change_kind: code`): skipping an agent on a guess ships a change nobody reviewed, running one costs a phase.
 
 ## Output Format
 
@@ -134,6 +138,7 @@ The frontmatter carries only a lean machine-readable contract; the body holds th
 ```markdown
 ---
 phase: impact-assessment
+size: XS | S | M | L | XL
 effort: simple_fix | medium | significant_rework
 risk_counts: { critical: 0, high: 1, medium: 0, low: 0 }
 open_dispositions: 2
@@ -145,14 +150,14 @@ change_kind: code
 
 ## Summary
 **What:** <what this issue touches, one line>
-**Decision:** <the effort classification — matches `effort` in frontmatter>
+**Decision:** <the size and effort classification — matches `size` and `effort` in frontmatter>
 **Needs your attention:** <IDs of `critical`/`high` Risks rows, e.g. `R1 — see Risks`; `nothing above medium` if none>
 **Open:** <IDs from this artifact's own `## Open Questions` table, e.g. `Q1, Q2 — see Open Questions`; `none` when it leaves none. This agent runs before the ledger exists, so its IDs are the table's own — every later phase names `ledger/open-questions.md` IDs instead>
 **Next:** orchestrator — Start Gate
 
 ## Effort
 
-`medium` — specific files and changes that drove the classification, written as prose.
+`M`, `medium` — specific files and changes that drove the classification, written as prose.
 
 ## Work Breakdown
 

@@ -75,8 +75,8 @@ Before the first agent runs, the orchestrator shows the pipeline it derived, wit
 |------|----------|--------|
 | `XS` | 1 file, no new endpoint, no schema change, no auth impact | `simple_fix` |
 | `S` | 2 files, same limits | `simple_fix` |
-| `M` | 3-6 files, at most 1 new or modified endpoint | `medium` |
-| `L` | 7-10 files, 2-3 new or modified endpoints, schema change possible | `medium` |
+| `M` | 3-6 files, at most 1 new or modified endpoint, schema change possible, no auth redesign | `medium` |
+| `L` | 7-10 files, 2-3 new or modified endpoints, schema change possible, no auth redesign | `medium` |
 | `XL` | more than 10 files, a new subsystem or domain, auth changes or schema migrations | `significant_rework` |
 
 As with the effort, a criterion of a higher level wins over the file count: a new endpoint, a schema change or an auth impact never leaves a change at `XS` or `S`. Only the effort decides how thorough each agent is; the size is a label for people, so nothing branches on it.

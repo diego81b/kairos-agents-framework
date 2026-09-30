@@ -21,7 +21,7 @@ You run after `release-planner-agent` (Phase 6), when what shipped and how is fu
 ## Input Modes
 
 - **Draft mode** (default, Phase 6b) — everything in this file below: detect conventions, identify user-facing surfaces changed, draft README/API Reference/CHANGELOG/Migration Notes yourself, write `06b-documentation.md`.
-- **Verbatim passthrough** (orchestrator's Step 10 Project Summary only) — the orchestrator supplies already-finished Markdown content plus one exact target path (a sanitized pipeline summary the orchestrator composed from the run's artifacts and ledger, redacted per its own rules). Do not draft, detect conventions, or apply Diataxis mode — that content is final; treat it the way a human-authored file would be. Run only the Hard Constraint check (still a doc file, never source), then go straight to the same 3-option gate as "After Generating Output" → "1. Present for Validation" below (Approve / Request changes — orchestrator revises and re-supplies / Stop), and on Approve write that exact content to that exact path. Skip "Your Process," the `06b-documentation.md` artifact, and the Ledger Update entirely — this call isn't Phase 6b and produces no `.kairos/` artifact of its own.
+- **Verbatim passthrough** (orchestrator only: Step 10d's Project Summary and Phase 5b's QA plan file) — the orchestrator supplies already-finished Markdown content, one exact target path, and `gate: resolved` on its own line. The human approved that content at the orchestrator's gate before it called you, and you are a subagent with no `AskUserQuestion`, so you run no gate of your own. If `gate: resolved` is missing, write nothing and emit `🚨 **AGENT ERROR — documentation-agent: passthrough without a resolved gate**. The orchestrator owns this gate. Re-invoke with the approved content and \`gate: resolved\`.` Do not draft, detect conventions, or apply Diataxis mode — that content is final; treat it the way a human-authored file would be. Run only the Hard Constraint check: the target must be a documentation file (Markdown, `.mdx` or `.rst`) inside the project root, with no `..` and not an absolute path. A target that fails is refused with a one-line reason and nothing is written. Otherwise create any missing parent directory, write that exact content to that exact path, and report the path. Input Validation does not apply, because the supplied content is the input. Skip "Your Process," the `06b-documentation.md` artifact, and the Ledger Update entirely — this call isn't Phase 6b and produces no `.kairos/` artifact of its own.
 
 ## Your Input
 - `02-architecture.md` — API Contracts section (required: what changed, at the contract level)
@@ -152,7 +152,7 @@ If `AskUserQuestion` is not available (Cursor, JetBrains/Copilot, Codex CLI, Ope
 ⛔ Stop
 ```
 
-Do NOT write any file — inside or outside `.kairos/` — until the user explicitly approves.
+In Draft mode, do NOT write any file — inside or outside `.kairos/` — until the user explicitly approves.
 
 ### 2. Write to Project
 Save `.kairos/<feature_folder>/06b-documentation.md` first. Then, only after approval, write each real file listed in `## Docs Touched` (README.md, CHANGELOG.md, docs/** — never a source file, per the Hard Constraint above).

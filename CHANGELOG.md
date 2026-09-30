@@ -37,10 +37,13 @@ The start of a run asked the human to decide, before any code had been read, thi
 - **`docs/workflow.md`**, **`docs/setup/opencode.md`**, **`docs/setup/kimi-code.md`**, **`CLAUDE.md`** — describe the file and say OpenCode and Kimi Code ignore it.
 - **`.opencode/agents/`**, **`.kimi-code/agents/`** — both orchestrator mirrors carry the same body change.
 - **`agents/qa-plan-agent.md`** — a tester is never sent to the developer's tools. A precondition is reached through the product, prepared by a developer and named as such in `Setup`, or written up as a risk; dev tools, scripts and hand edits to the database are no longer steps a plan can contain. The example charter that throttled the network in the browser is replaced.
-- **`agents/qa-plan-agent.md`**, **`agents/orchestrator-agent.md`** — the QA plan is delivered after you approve it, not before: in an orchestrated run the orchestrator posts the comment and hands the file to `documentation-agent` once the QA gate resolves. Standalone, the agent leaves the file in the feature folder and prints where to copy it.
+- **`agents/qa-plan-agent.md`**, **`agents/orchestrator-agent.md`** — the QA plan is delivered after you approve it, not before: in an orchestrated run the orchestrator posts the comment and hands the file to `documentation-agent` once the QA gate resolves. The agent leaves two files in the feature folder for that, `_qa-comment.md` and, above the threshold, `_qa-file.md`. Standalone, it prints where to copy the file.
 - **`agents/documentation-agent.md`** — in verbatim passthrough it no longer runs a gate of its own: it checks that the target is a documentation file and writes what the orchestrator hands over. The QA plan file uses the same path as the project summary.
+- **`skills/issue-tracker-comment/SKILL.md`** — the QA plan's extract body is posted by the orchestrator from `_qa-comment.md` in an orchestrated run.
+- **`skills/artifact-bookkeeping/SKILL.md`** — the required frontmatter table gains `size` for the impact assessment and `delivery` for the QA plan, on artifacts written from now on; older ones keep resuming without them.
+- **`agents/orchestrator-agent.md`**, **`agents/implementer-tdd-agent.md`**, **`agents/implementer-coder-agent.md`** — the presets that follow the effort are called effort presets (they were size presets), so the T-shirt size has one meaning in every file.
 - **`.opencode/agents/`**, **`.kimi-code/agents/`** — both mirrors carry the same changes.
-- **`CLAUDE.md`**, **`docs/workflow.md`**, **`docs/agents.md`**, **`docs/overview.md`**, **`docs/agent-files.md`**, **`docs/setup/templates.md`**, **`docs/setup/claude-code.md`** — describe the size, the QA plan file, the epic plan and the project summary gate.
+- **`CLAUDE.md`**, **`docs/workflow.md`**, **`docs/agents.md`**, **`docs/overview.md`**, **`docs/agent-files.md`**, **`docs/setup/templates.md`**, **`docs/setup/claude-code.md`**, **`docs/skills-mcp.md`** — describe the size, the QA plan file, the epic plan and the project summary gate.
 
 ### Fixed
 
@@ -50,6 +53,7 @@ The start of a run asked the human to decide, before any code had been read, thi
 - **`.opencode/agents/`**, **`.kimi-code/agents/`** — both mirrors carry the same changes.
 - **`commands/setup.md`**, **`docs/setup/claude-code.md`** — the "global subagent model" option said `CLAUDE_CODE_SUBAGENT_MODEL` overrides every agent's frontmatter. Claude Code ranks the per-call parameter first, frontmatter second and the variable third, so with every KAIROS agent declaring `model:` the variable changed nothing. The option now also sets `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1`, and the docs give the real order.
 - **`agents/orchestrator-agent.md`**, **`agents/documentation-agent.md`** — the project summary at the end of a run promised a second Approve / Request changes / Stop gate run by `documentation-agent`, which is a subagent and cannot ask you anything. The orchestrator improvised the gate, and the file was already written under `docs/` before you approved it. The orchestrator now owns the gate: it writes the draft inside `.kairos/`, prints the path, and hands it to `documentation-agent` only after you approve.
+- **`agents/orchestrator-agent.md`** — on GitLab the issue was read with `glab issue view <id> --json description`, but that command has no `--json` flag (JSON comes from `--output json`), so the read failed and a `## KAIROS Pipeline` section was silently ignored. It now reads `--output json`, which also carries the epic and the labels.
 
 ### Removed
 
