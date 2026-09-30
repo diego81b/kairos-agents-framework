@@ -17,6 +17,9 @@ The start of a run asked the human to decide, before any code had been read, thi
 - **`agents/architect-agent.md`** — facts in the frontmatter (`domains`, `test_first`, `contract_change`, `behaviour_delta`, `threat_rows`) that choose the implementer, Team Mode, the security review and the documentation phase.
 - **`agents/impact-assessment-agent.md`** — orchestrated mode: started by the orchestrator on every derived run, it skips its own disposition loop and gate, which the orchestrator presents at the start gate.
 - **`agents/orchestrator-agent.md`** — a project file, `.kairos/.models`, sets the model of each agent the orchestrator dispatches: before every call it passes the listed alias as the call's model, which outranks the agent's own `model:`. With no file, or on a host whose Agent call takes no model parameter, every agent keeps its shipped model. The Start Gate shows the lines in effect.
+- **`agents/impact-assessment-agent.md`**, **`agents/orchestrator-agent.md`**, **`docs/setup/templates.md`** — a T-shirt size (`XS` to `XL`) for every issue, measured before any code is written from the same facts as the effort, which now follows from it (`XS`/`S` are `simple_fix`, `M`/`L` `medium`, `XL` `significant_rework`). The start gate shows it and, when you confirm, sets a `size:` label on the issue so the tracker can group an epic's issues by size. A `Size:` line in the `## KAIROS Pipeline` block overrides it and the effort with it. It measures how much of the codebase moves, not hours.
+- **`agents/qa-plan-agent.md`**, **`agents/orchestrator-agent.md`**, **`docs/workflow.md`** — a QA plan above three checks is written as a Markdown file in the repository instead of a long issue comment, and the comment points to it. The directory is asked once per project and stored in `.kairos/.qa-dir`. Up to three checks and no epic, the comment carries the plan as before.
+- **`agents/qa-plan-agent.md`**, **`agents/orchestrator-agent.md`**, **`docs/setup/templates.md`** — an epic gets one cumulative QA plan: every issue of the epic writes its own section into the same file, next to a table of the epic's issues with their sizes, and the comment goes on the epic. The epic is read from the tracker when its CLI exposes one, or from an `Epic:` line in the `## KAIROS Pipeline` block.
 
 ### Changed
 
@@ -33,6 +36,11 @@ The start of a run asked the human to decide, before any code had been read, thi
 - **`docs/setup/claude-code.md`** — "Customizing models" describes the file and its limits (aliases only, dispatched agents only, Claude Code only). The tier counts match the 17 agents (7 reasoning, 10 execution), the QA plan agent is added to the per-agent defaults, and a note separates Claude Code's `effort:` frontmatter field from KAIROS's `effort`.
 - **`docs/workflow.md`**, **`docs/setup/opencode.md`**, **`docs/setup/kimi-code.md`**, **`CLAUDE.md`** — describe the file and say OpenCode and Kimi Code ignore it.
 - **`.opencode/agents/`**, **`.kimi-code/agents/`** — both orchestrator mirrors carry the same body change.
+- **`agents/qa-plan-agent.md`** — a tester is never sent to the developer's tools. A precondition is reached through the product, prepared by a developer and named as such in `Setup`, or written up as a risk; dev tools, scripts and hand edits to the database are no longer steps a plan can contain. The example charter that throttled the network in the browser is replaced.
+- **`agents/qa-plan-agent.md`**, **`agents/orchestrator-agent.md`** — the QA plan is delivered after you approve it, not before: in an orchestrated run the orchestrator posts the comment and hands the file to `documentation-agent` once the QA gate resolves. Standalone, the agent leaves the file in the feature folder and prints where to copy it.
+- **`agents/documentation-agent.md`** — in verbatim passthrough it no longer runs a gate of its own: it checks that the target is a documentation file and writes what the orchestrator hands over. The QA plan file uses the same path as the project summary.
+- **`.opencode/agents/`**, **`.kimi-code/agents/`** — both mirrors carry the same changes.
+- **`CLAUDE.md`**, **`docs/workflow.md`**, **`docs/agents.md`**, **`docs/overview.md`**, **`docs/agent-files.md`**, **`docs/setup/templates.md`**, **`docs/setup/claude-code.md`** — describe the size, the QA plan file, the epic plan and the project summary gate.
 
 ### Fixed
 
@@ -41,6 +49,7 @@ The start of a run asked the human to decide, before any code had been read, thi
 - **`docs/workflow.md`**, **`CLAUDE.md`** — describe the in-flight record and the recovery run.
 - **`.opencode/agents/`**, **`.kimi-code/agents/`** — both mirrors carry the same changes.
 - **`commands/setup.md`**, **`docs/setup/claude-code.md`** — the "global subagent model" option said `CLAUDE_CODE_SUBAGENT_MODEL` overrides every agent's frontmatter. Claude Code ranks the per-call parameter first, frontmatter second and the variable third, so with every KAIROS agent declaring `model:` the variable changed nothing. The option now also sets `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1`, and the docs give the real order.
+- **`agents/orchestrator-agent.md`**, **`agents/documentation-agent.md`** — the project summary at the end of a run promised a second Approve / Request changes / Stop gate run by `documentation-agent`, which is a subagent and cannot ask you anything. The orchestrator improvised the gate, and the file was already written under `docs/` before you approved it. The orchestrator now owns the gate: it writes the draft inside `.kairos/`, prints the path, and hands it to `documentation-agent` only after you approve.
 
 ### Removed
 

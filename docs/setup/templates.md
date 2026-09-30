@@ -4,7 +4,7 @@ Since v9.0.0 you don't pick agents from a menu. The orchestrator works out which
 
 Two formats are read:
 
-1. **The override block** (new): `Effort:`, `Auto-fix:`, `Skip:` and `Add:` lines, all optional. The orchestrator derives the pipeline and applies them on top.
+1. **The override block** (new): `Size:`, `Effort:`, `Epic:`, `Auto-fix:`, `Skip:` and `Add:` lines, all optional. The orchestrator derives the pipeline and applies them on top.
 2. **The checklist** (older): one checkbox per agent. A checklist is a selection a person already confirmed, so it still **wins over the derivation**. Issues written before v9.0.0 run exactly as they did.
 
 ---
@@ -48,19 +48,40 @@ Copy this block into any issue description, or paste it as your reply at the orc
 ```markdown
 ## KAIROS Pipeline
 
-Effort: medium
+Size: M
+Epic: PROJ-10
 Auto-fix: 1
 Skip: release-planner-agent
 Add: security-reviewer-agent
 ```
 
-**`Effort:`** takes `simple_fix`, `medium`, or `significant_rework` and replaces the effort `impact-assessment-agent` measured. It says how big the change is: the orchestrator passes it to every agent, and it decides whether they run a short, trimmed, or full process, as well as the derivation rules above.
+**`Size:`** takes `XS`, `S`, `M`, `L` or `XL` and replaces the size `impact-assessment-agent` measured. The effort follows from it (see [Size](#size)), so a `Size:` line sets both.
+
+**`Effort:`** takes `simple_fix`, `medium`, or `significant_rework` and replaces the effort `impact-assessment-agent` measured. It says how big the change is: the orchestrator passes it to every agent, and it decides whether they run a short, trimmed, or full process, as well as the derivation rules above. It does not change the size: the start gate shows the size as measured and the effort you forced, side by side.
+
+**`Epic:`** names the epic this issue belongs to (`PROJ-10`, `&5`). Without the line the orchestrator reads the epic from the tracker when the CLI exposes one (GitLab epics, Jira parent). It decides where the QA plan goes: with an epic, the plan is one cumulative file for the whole epic (see [Phase 5b](/workflow#phase-5b-qa-plan-qa-plan-agent-optional)). Bitbucket Issues has no epics, so there the line is the only source.
 
 **`Auto-fix:`** takes a number: how many times the agents may fix their own problems before stopping to ask you. It covers the review wave: code review, security review and test verification run together, and the agents may retry while code review reports a serious problem or test verification a gap. Security findings always wait for you. `0` means always ask. Without the line, `simple_fix` and `medium` get 1 and `significant_rework` asks you at the start. The ceiling is 5, or 2 when Team Mode runs, because each Team Mode fix is a whole team run.
 
 **`Skip:`** and **`Add:`** take a comma-separated list of agent names. A skipped agent never runs, whatever its rule says. An added agent runs in its normal place in the pipeline, even when its rule would not fire. Naming an implementer in `Add:` (for example `implementer-coder-agent`) forces that implementer.
 
 Before the first agent runs, the orchestrator shows the pipeline it derived, with these corrections applied, at its start gate. You can still change anything there.
+
+### Size
+
+`impact-assessment-agent` gives every issue a T-shirt size before any code is written. It measures the footprint of the change from the code the issue touches, not hours: read it as "how much of the codebase moves", never as a time estimate. The same criteria as the effort apply, split finer, and the effort follows from the size through a fixed map:
+
+| Size | Criteria | Effort |
+|------|----------|--------|
+| `XS` | 1 file, no new endpoint, no schema change, no auth impact | `simple_fix` |
+| `S` | 2 files, same limits | `simple_fix` |
+| `M` | 3-6 files, at most 1 new or modified endpoint | `medium` |
+| `L` | 7-10 files, 2-3 new or modified endpoints, schema change possible | `medium` |
+| `XL` | more than 10 files, a new subsystem or domain, auth changes or schema migrations | `significant_rework` |
+
+As with the effort, a criterion of a higher level wins over the file count: a new endpoint, a schema change or an auth impact never leaves a change at `XS` or `S`. Only the effort decides how thorough each agent is; the size is a label for people, so nothing branches on it.
+
+The start gate shows the size next to the effort. When you confirm it on a run that started from an issue, the orchestrator sets a `size:<value>` label on that issue, replacing any `size:` label already there, so the tracker can group an epic's issues by size. Where there is no tracker CLI, or the tracker has no labels (Bitbucket Issues), the label is skipped without a message and the run continues. A checklist written before v9.0.0 skips the impact assessment, so it gets no size and no label.
 
 ### Saving corrections to the issue
 

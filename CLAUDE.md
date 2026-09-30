@@ -119,6 +119,33 @@ risk, not a tester's step. That split is also why `## Risks` admits only four ro
 (regression retest, `AC-n` not verifiable by hand, uncovered `VERIFICATION` row, an open
 question the release depends on): 5b plans verification, it does not audit the code.
 
+Delivery of the plan changed in v9.0.0, for the same outside reader. Two rules moved into the
+agent: a precondition is reached through the product, prepared by a developer and named as such
+in `Setup`, or written up as a `## Risks` row, never a tester step in dev tools, scripts or
+hand edits to the database (it extends `Outcome, never mechanism`, which only covered Steps and
+Expected result; the old charter example that throttled the network in the browser broke it).
+And the tester's part goes where a person can execute from it. Up to three checks (manual
+cases, regression retests and existing cases to re-run, counted together) and no epic, the
+extract stays the issue comment. Above that, or whenever the issue has an epic, `qa-plan-agent`
+writes the tester's part as `05b-qa-file.md` inside `.kairos/`, and the comment shrinks to the
+framing line, the core and a pointer. The agent never writes into the repository itself: after
+the QA gate approves, the orchestrator hands the file to `documentation-agent` in passthrough
+mode, so the framework keeps two writers outside `.kairos/`. Letting `qa-plan-agent` write it
+was rejected for that reason, and because the agent used to post its comment before the gate,
+an outward action taken ahead of approval. In an orchestrated run the orchestrator now posts
+the comment after the gate; standalone, the agent has no orchestrator to hand the write to and
+leaves the file in the feature folder with the target path printed. The directory is a fourth
+project setting, `.kairos/.qa-dir`, asked once at the first QA gate that needs a file and
+proposed as `docs/qa-plans/`; like `.manual-qa` it is per machine, not shared. An epic gets one
+file, `<qa-dir>/<epic>.md`, and each child run rewrites only its own `## <issue>` section and
+its own row of the `## Issues` table (issue, size, section); the comment goes on the epic.
+Reading sibling feature folders to assemble that file was rejected: `.kairos/` is local and
+gitignored, so a colleague's run would not exist for it. The file is the accumulator. The epic
+reference is read from the tracker when its CLI exposes one (GitLab `epic`, Jira `parent`) and
+otherwise comes from an `Epic:` line in the `## KAIROS Pipeline` block; Bitbucket Issues has no
+epics. The file reaches the default branch only when the merge request that carries it merges,
+so the comment's link is dead until then, and the comment says so.
+
 Two more standalone agents sit off that table entirely: `bug-triage-agent.md`
 (`00c-bug-triage.md`) is the entry point for a bug report rather than a feature request, and
 `dependency-audit-agent.md` (`.kairos/_tech-debt.md`) runs outside any feature at all.
@@ -196,6 +223,18 @@ frontmatter, and the Agent call has no per-call effort parameter, so reasoning d
 be static per agent file. Renaming KAIROS's field to `size` was rejected for now, since `Effort:`
 lines in issue templates already sit in trackers and every legacy fallback would need a second name.
 
+KAIROS also carries a T-shirt `size` (`XS` to `XL`), measured by `impact-assessment-agent` from
+the same facts as `effort` and split finer: `XS`/`S` map to `simple_fix`, `M`/`L` to `medium`,
+`XL` to `significant_rework`. That map is the one place the two meet, so no decision has two
+sources: nothing branches on `size`, and `effort` keeps deciding Lean, Trimmed and Full mode.
+`size` exists for people, to group an epic's issues, and the orchestrator stamps it on the issue
+as a `size:` label at the Start Gate. It measures the footprint of the change, never hours, and
+the agent's text says so, because a label named like an estimate gets read as one. A `Size:` line
+in the override block sets both fields; an `Effort:` line sets only `effort`, and the gate shows
+the measured size beside it. A checklist issue skips the impact assessment and so gets no size.
+Sizing every issue of an epic before any run was rejected for now: it spends an impact assessment
+on issues that may never run, and nothing consumes the result. The agent stays runnable per issue.
+
 `implementer-coder-agent` changed meaning in the same release. It was "code only, no tests"; it is
 now code-first: it writes the code, then decides test by test whether to add or update tests, from
 facts it states in the plan's `## Test Decision` (does the project have a suite, do the touched
@@ -207,9 +246,17 @@ repo that has them, and `test-verifier-agent` runs whenever the coder wrote a te
 
 `documentation-agent` is the second agent, after the Phase 3 implementer, permitted to
 write real files outside `.kairos/` in the target project — scoped strictly to
-documentation (README/CHANGELOG/`docs/**`), never source code.
+documentation (README/CHANGELOG/`docs/**`), never source code. Besides its own Phase 6b it
+serves the orchestrator in Verbatim passthrough mode, for the Step 10d project summary and
+the Phase 5b QA plan file, and in that mode it never runs a gate of its own. It is a subagent
+and a subagent has no `AskUserQuestion`: the first v9.0.0 run of Step 10d showed the
+orchestrator improvising a gate for it, with the file already written under `docs/` before
+anyone approved it. The orchestrator now owns that gate (draft in `.kairos/<feature_folder>/`,
+path printed, `open` trigger, Approve / Request changes / Stop) and dispatches the passthrough
+only with an approved draft, so the agent's whole job is the Hard Constraint check and the write.
 
-The orchestrator itself has two narrow exceptions to writing only inside `.kairos/`.
+The orchestrator itself has two narrow exceptions to writing only inside `.kairos/`, plus one
+tracker write.
 Step 0c's Gitignore check — once per project, only after an explicit human
 choice — appends a single `.kairos/` line to the target project's `.gitignore`.
 Step 0f's Issue Write-back — only when the run started from an issue reference, the
@@ -220,7 +267,12 @@ rest of the description. It exists because the section is how a team reuses a pi
 across machines, and the plugin ships no skill that authors issues: the orchestrator
 writing back what a human just confirmed is the one source every host gets, and it
 writes a decision rather than a guess from the issue text. It never touches any other
-file outside `.kairos/`, and no other tracker content.
+file outside `.kairos/`, and no other tracker content except the size label. That label is the
+tracker write: when the run started from an issue reference and the human confirms the Start
+Gate, the orchestrator sets `size:<value>` on the issue, replacing an earlier `size:` label,
+and skips it silently without a tracker CLI or where the tracker has no labels. The
+confirmation is the Start Gate itself, which prints the label it will set; a free-text
+correction of the size changes the label and the derived effort together.
 
 The orchestrator also keeps one file for the human across the whole lifecycle, no subagent
 involved: `_tracking.md` in the feature folder. It is created at Step 0f, right after
