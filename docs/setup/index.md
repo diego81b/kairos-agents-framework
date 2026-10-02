@@ -65,9 +65,9 @@ Every agent that opens its own output file for you (either standalone or via the
 
 Regardless of the tool, three rules apply when **you** (the calling session) start a KAIROS run:
 
-1. **Invoke the orchestrator with the bare feature request only.** Never pre-select phases or agents in the invocation prompt — agent selection is a human decision made at the orchestrator's Step 0e gate. A caller-supplied list is treated as an unconfirmed proposal, never as authorization.
+1. **Invoke the orchestrator with the bare feature request only.** Never pre-select phases or agents in the invocation prompt — the orchestrator derives every agent from facts and you confirm or correct the result at its Start Gate. A caller-supplied list is shown there as an unconfirmed proposal and applied only if you say so, never treated as authorization.
 2. **Never launch the orchestrator backgrounded or detached — and never invoke it by name inside an existing conversation.** Every phase ends at a HITL gate that needs a live human. Where `AskUserQuestion` is unavailable (including Claude Code spawned subagents), gates degrade to the text-menu fallback — and a backgrounded run has nobody reading it, so the pipeline would hang or silently skip gates. In Claude Code specifically, `@agent-name`/"use the X agent" typed mid-chat degrades gates the same way an explicit background launch does — both dispatch through the `Agent` tool as a subagent, which unconditionally loses `AskUserQuestion`. Start the session with the orchestrator as its **primary** agent instead; see the [Claude Code setup guide](/setup/claude-code#step-3-start-a-kairos-session) for the exact command.
-3. **Run the standalone agents yourself, if you want them.** `context-extractor-agent` and `impact-assessment-agent` run before the pipeline; `retrospective-agent` and `improvement-advisor-agent` run after work stops. The orchestrator never auto-invokes any of the four.
+3. **Run the standalone agents yourself, if you want them.** `context-extractor-agent` runs before the pipeline; `retrospective-agent` and `improvement-advisor-agent` run after work stops. The orchestrator never auto-invokes any of the three. `impact-assessment-agent` is different: the orchestrator dispatches it at every run, and reuses its `00b-impact.md` if you already ran it yourself.
 
 ## Where the files come from
 
@@ -78,12 +78,12 @@ kairos-agents-framework/
 ├── agents/              ← KAIROS agent definitions (source of truth)
 │   ├── orchestrator-agent.md
 │   ├── context-extractor-agent.md  ← Pre-pipeline: full-repo context (standalone)
-│   ├── impact-assessment-agent.md  ← Pre-pipeline: issue grounding (standalone)
+│   ├── impact-assessment-agent.md  ← Pre-pipeline: issue grounding (dispatched by the orchestrator)
 │   ├── bug-triage-agent.md         ← Bug reproduction + root cause (standalone)
 │   ├── pm-agent.md
 │   ├── architect-agent.md
 │   ├── implementer-tdd-agent.md    ← TDD implementer (default)
-│   ├── implementer-coder-agent.md  ← Code-only implementer (no test suite)
+│   ├── implementer-coder-agent.md  ← Code-first implementer (code, then the tests the project calls for)
 │   ├── code-reviewer-agent.md
 │   ├── security-reviewer-agent.md  ← Adversarial security review (optional)
 │   ├── test-verifier-agent.md

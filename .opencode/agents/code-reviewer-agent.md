@@ -37,8 +37,9 @@ Follow [`agent-contract`](../skills/agent-contract/SKILL.md)'s Missing-Input Err
 
 ## Review Wave Mode
 
-When the orchestrator's invocation prompt states `review_wave: true`, you are running at the same time as `test-verifier-agent` (and `security-reviewer-agent`, when active), on the same code. Two things change:
+When the orchestrator's invocation prompt states `review_wave: true`, you are running at the same time as `test-verifier-agent` (and `security-reviewer-agent`, when active), on the same code. Three things change:
 
+- **Do not write the ledger.** Two reviewers that read the same ledger row and write it back in the same minute overwrite one another, and each would allocate the next `C`/`D`/`Q` id from the same snapshot. Do the whole Ledger Update section below as usual, but write its result as the `## Ledger Update` block of your artifact, in the format of [`artifact-template`](../skills/artifact-template/SKILL.md) §5, and touch none of `constraints.md`, `decisions.md` and `open-questions.md`. The orchestrator applies the block after every reviewer has returned. Still read all three files first: the block lists only what you changed or added.
 - **Do not build the project or run the test suite.** `test-verifier-agent` owns test execution inside a wave, and two agents building into the same output directory at the same moment corrupt each other's results. Lint and static analysis that write no build output are fine. Your Testing check (check 7) reads the results `03-implementation.md` reports and the test code itself; say `execution left to test-verifier (review wave)` in that row instead of re-running anything.
 - **Do not write `## Loop State`** in `ledger/loops.md` (Ledger Update below). The orchestrator reads `convergence_signal` from your frontmatter instead, so that two reviewers never edit the same file at once. Still read `iteration` from `## Loop State` when it exists, to fill `convergence_signal.iteration`.
 
@@ -130,7 +131,7 @@ Lean Mode does not change this rule in either direction: if an `ACCESSIBILITY` r
 
 ### 7. Testing
 
-First check whether tests are even in scope: read `03-implementation.md`'s frontmatter. If it has `tdd_verification`/`coverage_summary` fields, `implementer-tdd-agent` produced this code and tests exist — run the checks below. If those fields are absent (`implementer-coder-agent` ran, by design with "no test files, no coverage report" — see that agent's Important Notes), tests are out of scope for this implementation: mark this check `N/A — no-TDD path (implementer-coder-agent)` in the output, do not evaluate the sub-items below, and do not let it contribute to `status: NEEDS_FIXES`. This is a scope decision made upstream (project has no test suite, or tests explicitly out of scope), not a defect to flag here.
+First check whether tests are even in scope: read `03-implementation.md`'s frontmatter. If it has `tdd_verification`/`coverage_summary` fields, `implementer-tdd-agent` produced this code and tests exist — run the checks below. If it has `tests_written: yes`, `implementer-coder-agent` wrote tests after the code — run the checks below except anything about test-first order. If it has `tests_written: no` (or neither field, from an implementation written before v9.0.0), read the plan's `## Test Decision` in `03-implementation-plan.md`: when it gives a reason that holds (no suite in the project, or a stated reason a test is impractical here), mark this check `N/A — no tests by decision: <reason>` and do not let it contribute to `status: NEEDS_FIXES`; when the decision skipped tests on a module that already had tests, or gave no reason, that is an Issues row, because extending existing tests was not optional for the coder either.
 
 - Coverage >80%?
 - Happy path tested?
@@ -196,7 +197,7 @@ Ordered by severity: critical first, then high, then medium, then low.
 - **Mitigation/Fix** — a concrete fix suggestion for the issue. You already reason about what's wrong, so propose the remedy.
 - **Disposition** — leave empty (`*(filled by gate)*`). The orchestrator's Risk Disposition Loop fills it from the human's per-row choice.
 
-Follow [`artifact-template`](../skills/artifact-template/SKILL.md) for the `## Summary` head block and the fixed Disposition-table column sets — both are mandatory, not stylistic.
+Follow [`artifact-template`](../skills/artifact-template/SKILL.md) for the `## Summary` head block and the fixed Disposition-table column sets — both are mandatory, not stylistic. In Review Wave Mode, close the body with the `## Ledger Update` block from §5 of the same skill.
 
 Follow [`artifact-bookkeeping`](../skills/artifact-bookkeeping/SKILL.md) for the exact recount and `status` derivation rule.
 
@@ -236,7 +237,7 @@ Save the review to `.kairos/<feature_folder>/04-review.md` (frontmatter + body i
 
 In **Lean Mode**, skip the full re-walk below: touch each ledger file only if this review actually changed something it should record. If nothing changed in a file, leave it untouched.
 
-In **Full Mode**, update all three ledger files under `.kairos/<feature_folder>/ledger/`:
+In **Full Mode**, update all three ledger files under `.kairos/<feature_folder>/ledger/` (in Review Wave Mode, write the same updates as the `## Ledger Update` block instead, see above):
 
 **`constraints.md`** — Update the Status of the rows this phase acted on — one it satisfied, deferred, re-opened, or contradicted. That includes a row you did not create: a constraint the code no longer honours is a row this phase acted on, and re-opening it is the point. What you skip is the row you have nothing to say about. The full re-walk of every row belongs to `architect-agent` (first accounting pass) and `release-planner-agent` (final accounting); here, leave an untouched row exactly as you found it. Apply [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)'s Writer Rule to any row you do write:
 - Constraint verified as met by code → keep `✓ resolved` or mark it if the implementer left it `🔴 open` but code actually satisfies it

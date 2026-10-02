@@ -1,6 +1,6 @@
 # The KAIROS Agents
 
-KAIROS orchestrates a core pipeline of 17 specialized AI agents, plus an optional team of 5 specialists for Team Mode. Two agents run standalone before the main pipeline (Context Extractor and Impact Assessment), plus Bug Triage as the entry point when what you have is a defect rather than a feature — run directly by you, or offered by the Orchestrator at its Bug-Input Check and dispatched from there; the numbered core agents run in sequence coordinated by the Orchestrator, including an optional Phase 6b (Documentation Agent). Three more agents — Retrospective, Improvement Advisor, and Dependency Audit — are standalone and run after work stops or outside any feature entirely, never invoked by the Orchestrator. Team Mode agents are Claude Code only and activated on explicit request.
+KAIROS orchestrates a core pipeline of 17 specialized AI agents, plus an optional team of 5 specialists for Team Mode. Two agents run before the main pipeline: Context Extractor, standalone and launched by you, and Impact Assessment, which the Orchestrator dispatches at every run (or reuses when you already ran it yourself). Bug Triage is the entry point when what you have is a defect rather than a feature — run directly by you, or offered by the Orchestrator at its Bug-Input Check and dispatched from there; the numbered core agents run in sequence coordinated by the Orchestrator, which derives which of them run from facts, including an optional Phase 6b (Documentation Agent). Three more agents — Retrospective, Improvement Advisor, and Dependency Audit — are standalone and run after work stops or outside any feature entirely, never invoked by the Orchestrator. Team Mode agents are Claude Code only, offered by the Orchestrator when a test-first change spans two or more layers, and activated only after you confirm the cost.
 
 ::: tip Copy agents directly from the documentation
 Need the raw agent definition to paste into your tool? Go to **[Agent Files](/agent-files)** — every agent is embedded as a ready-to-copy code block, auto-synced from the source files.
@@ -24,11 +24,11 @@ Standalone, pre-pipeline — you launch it, the Orchestrator never does. Scans t
 
 ## [Impact Assessment](/agents/impact-assessment-agent)
 
-Standalone, pre-pipeline — you launch it, the Orchestrator never does. Issue-scoped grounding agent. Run this before the Orchestrator (optionally, after Context Extractor) to answer three questions before you select agents: How big is this? What already exists and what is missing? Which pipeline agents does this issue actually need?
+Pre-pipeline, issue-scoped grounding agent, and a required fact source for the Orchestrator's pipeline derivation. The Orchestrator dispatches it at Step 0e in **Orchestrated mode** (the same shape as Bug Triage) at every run, unless `00b-impact.md` already exists because you ran it yourself — then that file is reused. It answers two questions before any agent is chosen: How big is this? What already exists and what is missing?
 
-Unlike the Context Extractor, which scans the full repository, this agent reads only the code the issue directly touches. It consumes `00-context.md` if already present rather than rescanning. Output is `00b-impact.md` with effort estimate (`simple_fix / medium / significant_rework`), domains touched (backend / frontend / db / auth / integrations), reusable assets with real file paths, gaps, risks, and a `recommended_agents` list with per-agent justification.
+Unlike the Context Extractor, which scans the full repository, this agent reads only the code the issue directly touches. It consumes `00-context.md` if already present rather than rescanning. Output is `00b-impact.md` with a T-shirt size (`XS / S / M / L / XL`) and the effort estimate that follows from it (`simple_fix / medium / significant_rework`), domains touched (backend / frontend / db / auth / integrations), whether the project has a test suite, whether a contract changes, what kind of change the issue asks for, reusable assets with real file paths, gaps, and risks.
 
-The recommendation is advisory only. When the Orchestrator detects `00b-impact.md`, it displays the recommendation as a `💡 Impact Assessment` block above the agent selection menu — the human confirms or ignores it. Nothing is pre-selected.
+The size counts production files only (tests, docs, lockfiles and generated files follow a change, they do not size it) and takes the smaller of two adjacent sizes when nothing forces the larger. It measures how much of the codebase the change moves, not hours, and it is a label for people: only the effort decides how thorough each agent is. The Orchestrator puts the size on the issue as a `size:` label once you confirm the Start Gate. It reports facts and never names an agent. The Orchestrator applies its selection rules to those facts and folds this agent's gate into the Start Gate, where you see the derived pipeline and confirm or correct it.
 
 ::: tip Optional enhancements
 **Skills:** `deep-research` (built-in)
@@ -40,9 +40,9 @@ The recommendation is advisory only. When the Orchestrator detects `00b-impact.m
 
 Standalone entry point from the other direction: a bug report rather than a feature request. Reproduces the defect first — a root cause for a symptom nobody observed is a guess with a citation — then isolates it, states the root cause at `file:line` with an evidence trail, separates it from the contributing factors that let it reach production, and rates severity on observed impact rather than on how hard the fix looks.
 
-Finishes by recommending where the fix re-enters the pipeline: `quick-fix` (local cause, contained fix) feeds the Orchestrator's Quick fix path directly, `full-pipeline` says the cause is structural and names the phase to start from, `not-a-defect` says the code behaves as designed and the expectation was wrong. Output is `00c-bug-triage.md`.
+Finishes by recommending where the fix re-enters the pipeline: `quick-fix` (local cause, contained fix) sets the run's effort to `simple_fix`, which derives the short path with the code-first implementer, `full-pipeline` says the cause is structural and names the phase to start from, `not-a-defect` says the code behaves as designed and the expectation was wrong. Output is `00c-bug-triage.md`.
 
-Two ways in, same artifact. Run it yourself when the bug report arrives before any pipeline does. Or start the Orchestrator with the report: at its Bug-Input Check it recognises a bug report with no triage on disk and offers to run this agent first — accept, and it dispatches it in **Orchestrated mode**, where the agent writes `00c-bug-triage.md` and returns without a gate of its own, and the Orchestrator presents that artifact at its own gate. This is the only standalone agent the Orchestrator may dispatch, and only from that one check: it is also the only one that never asks a question mid-work, so nothing is lost by running it as a subagent.
+Two ways in, same artifact. Run it yourself when the bug report arrives before any pipeline does. Or start the Orchestrator with the report: at its Bug-Input Check it recognises a bug report with no triage on disk and offers to run this agent first — accept, and it dispatches it in **Orchestrated mode**, where the agent writes `00c-bug-triage.md` and returns without a gate of its own, and the Orchestrator presents that artifact at its own gate. Alongside Impact Assessment, this is one of the two agents the Orchestrator may dispatch outside the numbered phases, and only from Step 0e: in that mode both skip every gate and question of their own and return the artifact, and the Orchestrator runs the Risk Disposition Loop and presents it, so nothing is lost by running them as subagents.
 
 Never fixes anything. It has `Bash` to reproduce — run a test, read a log, `git blame` — and writes only its own artifact under `.kairos/`.
 
@@ -56,13 +56,15 @@ Never fixes anything. It has `Bash` to reproduce — run a test, read a log, `gi
 
 Master coordinator — initiates workflow, routes tasks to specialist agents, manages phase transitions, and ensures quality gates are passed before moving forward.
 
-It also keeps `_tracking.md`, the one file written for you rather than for the agents: current status, blockers, open points, how far the work has moved from the issue's acceptance criteria and scope, and a log of every gate, wave, fix pass and resume. It opens that file once and keeps it current; phase reports open only when you ask, except the implementation plan. It runs Code Reviewer, Security Reviewer and Test Verifier as one review wave with a single gate and a single fix pass.
+The review wave's three reviewers do not write the ledger themselves: it applies their `## Ledger Update` blocks one after another, so two reviewers never overwrite each other. In Claude Code it also keeps `_usage.md`, the model and tokens of every agent call, rewritten after each agent returns and measured from the transcripts. It also keeps `_tracking.md`, the one file written for you rather than for the agents: current status, blockers, open points, how far the work has moved from the issue's acceptance criteria and scope, and a log of every gate, wave, fix pass and resume. It opens that file once and keeps it current; phase reports open only when you ask, except the implementation plan. It runs Code Reviewer, Security Reviewer and Test Verifier as one review wave with a single gate and a single fix pass.
 
 ---
 
 ## [PM Agent](/agents/pm-agent)
 
 Analyzes requirements, creates detailed specifications, identifies edge cases, and documents acceptance criteria. Transforms a vague feature request into a precise implementation brief.
+
+When the issue says the work lands in several steps (parts that ship at different times, parts blocked on another branch) or is `XL` with independent parts, it also writes a `## Slices` table: every acceptance criterion belongs to exactly one slice, a later run of the same issue keeps the earlier slices and IDs, and the test verification and the tracking file use the table to show a criterion of an unbuilt slice as `later` instead of as a gap.
 
 ::: tip Optional enhancements
 **Skills:** `deep-research` (built-in), `issues-generator` (user-installed)
@@ -89,7 +91,7 @@ Note: `trailmark/diagramming-code` skipped — plugin installs 10 skills, only 1
 
 ## [Implementer Agent — TDD](/agents/implementer-tdd-agent)
 
-Implements code using **real TDD** (tests written before code). Runs tests iteratively until they pass, applies team coding patterns, and handles error cases explicitly. This is the **default implementer for all features** — works with Claude Code, API, and local models.
+Implements code using **real TDD** (tests written before code). Runs tests iteratively until they pass, applies team coding patterns, and handles error cases explicitly. This is the **default implementer when the project has a test suite** and the change is not a `simple_fix` — the Orchestrator chooses it unless the architecture reports `test_first: no`. Works with Claude Code, API, and local models.
 
 It runs as two Orchestrator invocations. Step 3a produces the implementation plan — `03-implementation-plan.md`, listing files to create and modify, every test case with its declared intent, TDD order and risks — and writes no source file. Step 3b re-invokes the same agent with the approved plan and runs the TDD cycle. The plan is written to disk unconditionally and opened in the editor, so it is reviewable on its own instead of scrolling past RED/GREEN output.
 
@@ -99,11 +101,11 @@ It runs as two Orchestrator invocations. Step 3a produces the implementation pla
 
 ---
 
-## [Implementer Agent — Code Only](/agents/implementer-coder-agent)
+## [Implementer Agent — Code First](/agents/implementer-coder-agent)
 
-Generates production-ready code **without a TDD cycle**. Use this agent when the project has no test suite or when writing tests is explicitly out of scope for the task. Follows the same two-gate, two-invocation workflow as the TDD Implementer (step 3a plan approval, step 3b implementation approval) but skips all TDD phases, coverage measurement, and test-file generation. Compatible with all platforms.
+Generates production-ready code **first, then the tests the project calls for** — no RED → GREEN cycle. Its plan carries a `## Test Decision`: where the touched modules already have tests it must extend them, a bug fix gets a regression test that fails without the fix, and a project with no test suite gets no tests plus a stated way the change was verified. Skipping tests anywhere else needs a written reason visible at the plan gate, and it never adds a test framework. Follows the same two-gate, two-invocation workflow as the TDD Implementer (step 3a plan approval, step 3b implementation approval). Compatible with all platforms.
 
-> **Note:** If your project has a test suite, prefer `implementer-tdd-agent` — TDD catches design issues that pure code generation does not.
+The Orchestrator chooses it, right before the plan, for a `simple_fix`, for a project with no test suite, and when the architecture reports `test_first: no`; Test Verifier runs whenever it wrote a test.
 
 ::: tip Optional enhancements
 **Skills:** `coding-discipline` (internal), `verify` / `run` (built-in)
@@ -113,11 +115,11 @@ Generates production-ready code **without a TDD cycle**. Use this agent when the
 
 ## Implementer Team — Team Mode (Claude Code only, optional)
 
-For complex multi-layer features, the Orchestrator can activate a coordinated team of specialists instead of the single Implementer Agent. Team Mode must be **explicitly requested** — the Orchestrator will show a cost warning (~$0.242 vs ~$0.068) before proceeding.
+For complex multi-layer features, the Orchestrator can activate a coordinated team of specialists instead of the single Implementer Agent. It **offers** Team Mode when the TDD path was chosen, two or more of backend/frontend/db are touched, Agent Teams is enabled and the host is Claude Code — and shows a cost warning (~$0.242 vs ~$0.068) that you must confirm before proceeding.
 
 **Why Claude Code only?** Team Mode uses Claude Code's **experimental Agent Teams feature** (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`, requires v2.1.32+). Each teammate runs as a separate Claude Code session with its own context window; teammates communicate peer-to-peer via a shared mailbox and coordinate via a shared task list. Other tools (Cursor, VS Code, JetBrains, Codex CLI) have no equivalent inter-session coordination mechanism.
 
-The [Implementer Lead](/agents/team/implementer-lead-agent) acts as coordinator (not a coder). It creates binding contracts (API, database, test, pattern) and spawns four parallel teammates:
+The [Implementer Lead](/agents/team/implementer-lead-agent) acts as coordinator (not a coder). It creates binding contracts (API, database, test, pattern) and spawns parallel teammates — Tests always, plus Backend, Frontend and Database only for the layers in scope:
 
 ### [Implementer Lead](/agents/team/implementer-lead-agent)
 
@@ -182,7 +184,7 @@ Checks code quality against standards, verifies pattern compliance, reviews arch
 
 ## [Security Reviewer](/agents/security-reviewer-agent)
 
-Adversarial security review — posture is "how do I break this", not "looks okay". Optional; runs in the review wave, alongside Code Reviewer and Test Verifier, when selected. Its findings never trigger an automatic retry: they reach the implementer only through your decision at the gate. Read-only agent (`tools: Read, Grep, Glob, AskUserQuestion`, `model: opus`).
+Adversarial security review — posture is "how do I break this", not "looks okay". Optional; runs in the review wave, alongside Code Reviewer and Test Verifier, when the Orchestrator derives it at the implementation gate (or you add it there). Its findings never trigger an automatic retry: they reach the implementer only through your decision at the gate. Read-only agent (`tools: Read, Grep, Glob, AskUserQuestion`, `model: opus`).
 
 Covers seven categories: authorization and IDOR (including writes through nested payloads where a PUT on a parent can mutate a child belonging to a different parent), authentication on sensitive endpoints, injection (SQL, command, template, NoSQL), secret handling, data over-exposure in responses, input validation at the server boundary, and dependency risks.
 
@@ -210,7 +212,7 @@ Note: `coverage-analysis` skipped — `testing-handbook-skills` installs 15 skil
 
 ## [QA Plan Agent](/agents/qa-plan-agent)
 
-Optional Phase 5b. Plans the verification the automated suite cannot give: manual and exploratory test cases, regression retest selection, test data and environment needs, and UAT sign-off criteria. Every row traces to an acceptance criterion, an uncovered line from Test Verifier, the bug triage's reproduction, or a `file:line` caller found in the code — it never invents scenarios from the feature request. It writes for two readers: the gate gets the evidence, the tester gets product language only, opening with a `## Core` block that names what the change fixes and the cases that prove it, so the plan leads with what matters instead of listing every automation residue at the same weight. Each manual case carries a `Setup` cell — the applications, configuration, concurrent sessions, machines and roles the case needs — which is exactly what an acceptance criterion cannot carry without becoming unreadable. It is also the only writer of `.kairos/_qa-regression.md`, the project-wide catalogue of manual cases: it appends the reusable ones it wrote, retires those this change automated or removed, and at the next feature selects the existing `QA-n` cases whose area the change touched — the manual half of regression testing, which grepping callers cannot find. Posts an extract of the plan to the issue tracker when one is configured — cases, setup, regression retests, test data, sign-off — so the human who executes it does not have to go looking in `.kairos/`: the `AC-n` list in the issue stays the developer's to satisfy, and this comment is the manual half beside it.
+Optional Phase 5b. Plans the verification the automated suite cannot give: manual and exploratory test cases, regression retest selection, test data and environment needs, and UAT sign-off criteria. Every row traces to an acceptance criterion, an uncovered line from Test Verifier, the bug triage's reproduction, or a `file:line` caller found in the code — it never invents scenarios from the feature request. It writes for two readers: the gate gets the evidence, the tester gets product language only, opening with a `## Core` block that names what the change fixes and the cases that prove it, so the plan leads with what matters instead of listing every automation residue at the same weight. Each manual case carries a `Setup` cell — the applications, configuration, concurrent sessions, machines and roles the case needs — which is exactly what an acceptance criterion cannot carry without becoming unreadable. It is also the only writer of `.kairos/_qa-regression.md`, the project-wide catalogue of manual cases: it appends the reusable ones it wrote, retires those this change automated or removed, and at the next feature selects the existing `QA-n` cases whose area the change touched — the manual half of regression testing, which grepping callers cannot find. A tester is never sent to the developer's tools: no dev tools, scripts or hand edits to the database, because a case that needs them is either staged by a developer, named in `Setup`, or written up as a risk. The plan reaches the tester through the issue tracker, after you approve it, so nobody has to go looking in `.kairos/`. Up to 3 checks and no epic, an extract of the plan is the comment; above that, or with an epic, the tester's part is a Markdown file in the repository (directory stored in `.kairos/.qa-dir`) and the comment points to it. With an epic, every issue of that epic writes its own section into one cumulative file and the comment goes on the epic. The `AC-n` list in the issue stays the developer's to satisfy, and this plan is the manual half beside it.
 
 ---
 
@@ -227,9 +229,9 @@ Note: No generic deploy MCP available — all deploy MCPs are vendor-specific (V
 
 ## [Documentation Agent](/agents/documentation-agent)
 
-Optional Phase 6b, runs after Release Planner. Writes feature-facing documentation in the **target project** — README updates, API reference entries, a CHANGELOG entry, migration notes for breaking changes — matching whatever doc conventions the project already has. The second agent in the framework, after the Phase 3 implementer, permitted to write real files outside `.kairos/`; scoped strictly to documentation, never source code.
+Optional Phase 6b, runs after Release Planner. Writes feature-facing documentation in the **target project** — README updates, API reference entries, a CHANGELOG entry, migration notes for breaking changes — matching whatever doc conventions the project already has. The second agent in the framework, after the Phase 3 implementer, permitted to write real files outside `.kairos/`; scoped strictly to documentation, never source code. The Orchestrator also uses it for two verbatim writes, the project summary at the end of a run and the QA plan file: the Orchestrator runs the gate itself, and only an approved draft is handed over, so the agent checks the target is a documentation file and writes it.
 
-Output is `06b-documentation.md`: a Docs Touched table plus the drafted content, and a Documentation Gaps table (same 5-column shape as every other Risks/Findings table) for anything it can't confidently write without inventing details.
+Run by the Orchestrator it works in two calls, like the implementer: a draft that writes only `06b-documentation.md`, and, after you approve it at the Orchestrator's gate, a write that applies the approved text to the documentation files. Output is `06b-documentation.md`: a Docs Touched table plus the drafted content, and a Documentation Gaps table (same 5-column shape as every other Risks/Findings table) for anything it can't confidently write without inventing details.
 
 ---
 

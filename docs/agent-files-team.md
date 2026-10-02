@@ -1,7 +1,7 @@
 # Team Mode Agent Files — Copy & Use
 
 ::: info Claude Code only
-These five agents are used exclusively in **Team Mode** — activated on explicit user request via the Orchestrator. See [Team Mode setup](/setup/claude-code#how-to-activate-team-mode) for details.
+These five agents are used exclusively in **Team Mode** — offered by the Orchestrator when a test-first change touches two or more of backend/frontend/db, and activated only after you confirm the cost. See [Team Mode setup](/setup/claude-code#how-to-activate-team-mode) for details.
 :::
 
 > **How this stays in sync** — Each block is imported directly from the source file in the repository at build time. Any edit to the source agent file is automatically reflected here on the next build. No manual copy-paste between source and documentation is needed.
@@ -24,7 +24,7 @@ These five agents are used exclusively in **Team Mode** — activated on explici
 
 ## Implementer Lead
 
-Team coordinator for complex multi-layer features. Claude Code only. Spawns four parallel specialists.
+Team coordinator for complex multi-layer features. Claude Code only. Spawns parallel specialists: Tests, plus one per layer in scope.
 
 <<< @/agents/team/implementer-lead-agent.md{md}
 

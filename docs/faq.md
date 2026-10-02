@@ -2,7 +2,7 @@
 
 **Q: Do I have to learn all 17 agents?**
 
-A: No. You start the Orchestrator and describe what you want; it asks which phases should run and invokes the rest. The agents you may end up calling yourself are the six standalone ones, all optional: Context Extractor, Impact Assessment, and Bug Triage before a run; Retrospective, Improvement Advisor, and Dependency Audit after one or outside any feature. See [All Agents](./agents).
+A: No. You start the Orchestrator and describe what you want; it works out which phases should run from facts about the change, shows you that pipeline at its Start Gate for you to confirm or correct, and invokes the rest. The agents you may end up calling yourself are the standalone ones, all optional: Context Extractor and Bug Triage before a run (Impact Assessment too, though the Orchestrator runs it for you anyway); Retrospective, Improvement Advisor, and Dependency Audit after one or outside any feature. See [All Agents](./agents).
 
 ---
 
@@ -14,13 +14,13 @@ A: Launch the Orchestrator as the session's primary agent — in Claude Code, `c
 
 **Q: What if what I have is a bug, not a feature?**
 
-A: Start with Bug Triage. It reproduces the defect, isolates it, states the root cause at `file:line` with an evidence trail, and recommends whether the fix belongs on the Quick fix path or the full pipeline. You can run it yourself before the pipeline, or hand the report straight to the Orchestrator — it recognises a bug report, offers to run triage first, and gates the result for you.
+A: Start with Bug Triage. It reproduces the defect, isolates it, states the root cause at `file:line` with an evidence trail, and recommends whether the fix belongs on the short `simple_fix` path or the full pipeline. You can run it yourself before the pipeline, or hand the report straight to the Orchestrator — it recognises a bug report, offers to run triage first, and gates the result for you.
 
 ---
 
 **Q: Does every feature pay for the whole pipeline?**
 
-A: No. The Orchestrator asks one question up front — how big is this change — and the answer drives everything downstream. `simple_fix` runs a code-only implementer plus a review, in Lean Mode. `medium` runs the ordinary pipeline in Trimmed Mode. `significant_rework` runs everything in full and asks you to choose the loop policy yourself. See [Workflow](./workflow).
+A: No. The Impact Assessment measures how big the change is, and the Orchestrator derives the pipeline from that and the other facts it reports; you confirm or correct the effort at the Start Gate. `simple_fix` runs the code-first implementer (which still extends the tests of the code it touches) plus a review, in Lean Mode. `medium` runs the ordinary pipeline in Trimmed Mode. `significant_rework` runs everything in full and asks you to choose the loop policy yourself. See [Workflow](./workflow).
 
 ---
 
@@ -69,3 +69,27 @@ A: Roughly 3.5× a normal run, and it needs Claude Code with the experimental Ag
 **Q: Can teams collaborate?**
 
 A: Yes. The agents, the skills, and the `.kairos/` artifacts all live in the repository, so they travel with the branch and review like any other file. Each phase can also post its artifact as a comment on the issue in Jira, GitLab, or Bitbucket.
+
+---
+
+**Q: How do I know which model each agent really used, and what it cost in tokens?**
+
+A: Open `_usage.md` in the feature folder. In Claude Code the Orchestrator has it rewritten after every agent that returns, with one row per agent call: the model that answered and the input, output, cache-write and cache-read tokens. `/kairos:usage` prints the same report on demand. It reads the subagent transcripts Claude Code writes, so the model and the token counts are measured, not reported by an agent about itself. On a sample of 437 real KAIROS subagent runs every agent had used the model tier its `model:` line names. See [Usage](/workflow#usage-model-and-tokens-per-agent).
+
+---
+
+**Q: Can I run only part of the pipeline, for example only the analysis?**
+
+A: Yes. At the start the Orchestrator asks once which areas to run (analysis, development, review, delivery; the default is all), or reads an `Areas:` line from the issue. Inside the areas you chose it still derives each agent from the facts. Run the same issue again later and it offers the remaining areas. See [Areas](/setup/templates#areas).
+
+---
+
+**Q: Do the reviewers overwrite each other's ledger entries when they run in parallel?**
+
+A: No. Inside the review wave none of them writes the ledger: each returns its updates as a block in its own report, and the Orchestrator applies the blocks one after another. QA plan, release planner and documentation are not parallelized, because they depend on each other's output.
+
+---
+
+**Q: I build a big issue one slice at a time. Do I get a folder per slice?**
+
+A: No. An issue has one folder and one ledger. When the folder already holds a finished run, the Orchestrator offers **Start a new run**: it moves the finished run's reports to `runs/run-<k>/`, keeps the ledger (so decisions and constraints carry over), the triage and the tracking log, and starts the next slice fresh. Criteria that belong to a slice not built yet show as `later` in the tracking file and in the test verification, never as gaps. See [Tracking File](/workflow#tracking-file).

@@ -111,6 +111,11 @@ What's INCLUDED in feature?
 What's EXPLICITLY EXCLUDED?
 Dependencies on other systems?
 
+### 4c. Slices (only when the work lands in more than one run)
+Write slices only when the issue, or an answer the human gave in step 2, says the work lands in several steps: parts that ship at different times, parts blocked on another branch or issue, or an order of landing. A change measured `XL` by `00b-impact.md` whose parts can be built independently qualifies too. Otherwise write `N/A — one run` and move on: never invent slices to look organized, and skip this step entirely in Lean Mode.
+
+For each slice give its name (`S1`, `S2`, …), what it holds (items or use cases), the `AC-n` it owns, what it waits for and when it lands. **Every acceptance criterion belongs to exactly one slice**, assigned here, because `test-verifier-agent` reads this table to tell a criterion no test covers (a gap) from one that a later slice will build (`later — <slice>`), and the tracking file reads that answer. The slice a run builds is the first one that is ready, unless the orchestrator states a `scope:` that names another. On a later run of the same issue, the prompt carries `Earlier runs on this issue`: read the `## Slices` table in the earlier `01-requirements.md`, do not re-slice a slice that was already decided, keep its `AC-n` IDs, and number any new criterion after the highest one.
+
 ### 4b. Use Cases
 
 For each primary way a user (or calling system) accomplishes the goal from step 4's Scope, capture a short functional flow — independent of how it will be implemented:
@@ -173,6 +178,14 @@ risk_counts: { critical: 0, high: 1, medium: 2, low: 1 }
 
 ## Scope
 <feature description — what's included, what's explicitly excluded, dependencies on other systems>
+
+## Slices
+*(Omit in Lean Mode. `N/A — one run` when the work lands in one run; see step 4c)*
+
+| Slice | Holds | Acceptance criteria | Waits for | Lands |
+|-------|-------|---------------------|-----------|-------|
+| S1 | items 7, 8, 10 | AC-14 to AC-18, AC-21 to AC-23 | nothing | now |
+| S2 | items 1, 2 | AC-1 to AC-3 | #665 | after #665 |
 
 ## Use Cases
 *(Omit entirely in Lean Mode; one line per use case in Trimmed Mode — see step 4b)*

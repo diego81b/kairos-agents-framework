@@ -37,7 +37,7 @@ your-project/
 │       ├── architect-agent.agent.md
 │       ├── context-extractor-agent.agent.md   <- Pre-pipeline: full-repo context (standalone)
 │       ├── implementer-tdd-agent.agent.md    <- TDD implementer (default)
-│       ├── implementer-coder-agent.agent.md  <- Code-only implementer (no test suite)
+│       ├── implementer-coder-agent.agent.md  <- Code-first implementer (code, then the tests the project calls for)
 │       ├── code-reviewer-agent.agent.md
 │       ├── security-reviewer-agent.agent.md  <- Adversarial security review (optional, read-only)
 │       ├── test-verifier-agent.agent.md
@@ -46,7 +46,7 @@ your-project/
 │       ├── documentation-agent.agent.md      <- Feature-facing docs (optional, Phase 6b)
 │       ├── retrospective-agent.agent.md      <- Standalone, post-pipeline: lessons capture
 │       ├── improvement-advisor-agent.agent.md <- Standalone, infrequent: framework change proposals
-│       ├── impact-assessment-agent.agent.md  <- Pre-pipeline: issue grounding + recommendations (standalone)
+│       ├── impact-assessment-agent.agent.md  <- Pre-pipeline: issue grounding, facts for the derivation (dispatched by the orchestrator)
 │       ├── bug-triage-agent.agent.md         <- Bug reproduction + root cause (standalone)
 │       └── dependency-audit-agent.agent.md   <- Standalone, periodic: dependency + tech-debt backlog
 ```
@@ -151,13 +151,13 @@ Same reasoning/execution split as the shipped `agents/*.md` frontmatter — see 
 | `orchestrator-agent` | `opus` | o1, o3, Gemini Ultra |
 | `architect-agent` | `opus` | o1, o3, Gemini Ultra — system design needs strongest model |
 | `context-extractor-agent` | `opus` | o1, o3, Gemini Ultra |
-| `impact-assessment-agent` | `opus` | o1, o3, Gemini Ultra — drives every downstream agent's scope |
+| `impact-assessment-agent` | `opus` | o1, o3, Gemini Ultra — its facts drive the derivation of every downstream agent |
 | `security-reviewer-agent` | `opus` | o1, o3, Gemini Ultra — adversarial analysis needs strongest model |
 | `improvement-advisor-agent` | `opus` | o1, o3, Gemini Ultra |
 | `bug-triage-agent` | `opus` | o1, o3, Gemini Ultra |
 | `pm-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
 | `implementer-tdd-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
-| `implementer-coder-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro — no TDD overhead |
+| `implementer-coder-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro — no test-first overhead |
 | `code-reviewer-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
 | `test-verifier-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
 | `qa-plan-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |

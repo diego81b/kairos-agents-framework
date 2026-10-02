@@ -72,6 +72,8 @@ Note what's **not** in the converted file: any Claude/Anthropic model id. Unlike
 
 ## Step 3 — Configure Kimi models (optional)
 
+The Claude Code pack's `.kairos/.models` file has no effect here: the orchestrator ignores it and says so at the Start Gate. The `model_preference` mapping below is the model setting on Kimi Code.
+
 `model_preference` only differentiates agents when Kimi Code's secondary-model experiment is enabled and a secondary model is configured. In `~/.kimi-code/config.toml`:
 
 ```toml
@@ -103,7 +105,7 @@ This project uses the KAIROS multi-agent development framework.
 Agent definitions are in `agents/` (Markdown, canonical) and `.kimi-code/agents/` (Kimi Code copies).
 
 Always follow the KAIROS workflow sequence:
-pm-agent → architect-agent → implementer-tdd-agent (TDD) OR implementer-coder-agent (no TDD) → code-reviewer-agent → test-verifier-agent → qa-plan-agent → release-planner-agent
+pm-agent → architect-agent → implementer-tdd-agent (TDD) OR implementer-coder-agent (code-first) → code-reviewer-agent → test-verifier-agent → qa-plan-agent → release-planner-agent
 
 After each phase, present the output and wait for explicit approval (✅ / ✏️ / ⛔) before proceeding.
 Save each approved output to `.kairos/<feature_folder>/0X-*.md`.

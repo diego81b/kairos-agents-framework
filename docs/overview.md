@@ -45,11 +45,11 @@ Each subagent:
 | # | Agent | Role | Output |
 | --- | --- | --- | --- |
 | pre | **Context Extractor** *(standalone — you run it)* | Full-repo scan → stack, patterns, conventions | `00-context.md` |
-| pre | **Impact Assessment** *(standalone — you run it)* | Issue-scoped grounding → effort, domains, agent recommendations | `00b-impact.md` |
+| pre | **Impact Assessment** *(started by the Orchestrator)* | Issue-scoped grounding → effort, domains, test suite, contract change — the facts the pipeline is derived from | `00b-impact.md` |
 | 0 | **Orchestrator** | Coordinates the pipeline, manages HITL | Routes & aggregates |
 | 1 | **PM Agent** | Requirements, constraints, acceptance criteria | `01-requirements.md` |
 | 2 | **Architect Agent** | design options → recommended choice, API contracts, DB schema, threat model, migration safety | `02-architecture.md` |
-| 3 | **Implementer Agent** | Implementation plan → TDD cycle (tests first, then code) — **default when the project has a test suite**; a code-only variant (no TDD) is available for projects without one | Code + `03-implementation.md` |
+| 3 | **Implementer Agent** | Implementation plan → TDD cycle (tests first, then code) — **default when the project has a test suite**; a code-first variant (code, then the tests the project calls for) runs for `simple_fix`, for projects without a suite, and when the design says `test_first: no` | Code + `03-implementation.md` |
 | 4 | **Code Reviewer** | Standards, security, performance, contract compliance | `04-review.md` |
 | 4b | **Security Reviewer** _(optional)_ | Adversarial security pass — IDOR, auth, injection, secrets, data exposure | `04b-security-review.md` |
 | 5 | **Test Verifier** | Coverage adequacy (>80%), edge cases, assertion quality | `05-test-verification.md` |
@@ -59,17 +59,17 @@ Each subagent:
 
 All output files are saved to `.kairos/<feature-folder>/` — one subfolder per feature, named from the issue reference (e.g. `PROJ-42_add-stripe-payments`). Each phase writes a single Markdown file: a small YAML frontmatter header carrying only what the Orchestrator branches on — a verdict, the tallies its status rules threshold, and a loop signal where a loop exists — followed by the human-readable report (data model, issues, findings, runbook) — see the [Workflow](/workflow) page for why.
 
-The two `pre` rows are standalone too: you launch them yourself before the run, and the Orchestrator only reads the files they leave on disk — it never runs them for you. Counting them, six of the seventeen agents are yours to start; the eleven numbered ones are the Orchestrator's.
+The two `pre` rows differ. Context Extractor is standalone: you launch it yourself before the run, and the Orchestrator only reads the `00-context.md` it leaves on disk. Impact Assessment is started by the Orchestrator at every run, because the pipeline is derived from its facts; if you already ran it yourself, its `00b-impact.md` is reused. Counting Context Extractor, five of the seventeen agents are yours to start; the twelve others are the Orchestrator's.
 
-The other four sit outside this table entirely, all invoked directly by you rather than scheduled by the pipeline. **Bug Triage** is the entry point when what you have is a defect rather than a feature: it reproduces, finds the root cause, and recommends where the fix re-enters the pipeline. It is also the one standalone agent the Orchestrator may dispatch itself — when your input reads as a bug report and no triage exists, it offers to run it and then gates the result like any phase artifact. **Dependency Audit** runs every few months outside any feature, turning dependencies and accumulated debt into a prioritized backlog at `.kairos/_tech-debt.md`. **Retrospective Agent** distills a finished feature's own artifacts into lessons, appended to the project-root `.kairos/_lessons.md`; **Improvement Advisor** reads that file back every few features and proposes framework changes as ADR records, never editing an agent file itself. See [All Agents](./agents) for all four.
+The other four sit outside this table entirely, all invoked directly by you rather than scheduled by the pipeline. **Bug Triage** is the entry point when what you have is a defect rather than a feature: it reproduces, finds the root cause, and recommends where the fix re-enters the pipeline. It is also a standalone agent the Orchestrator may dispatch itself — when your input reads as a bug report and no triage exists, it offers to run it and then gates the result like any phase artifact. **Dependency Audit** runs every few months outside any feature, turning dependencies and accumulated debt into a prioritized backlog at `.kairos/_tech-debt.md`. **Retrospective Agent** distills a finished feature's own artifacts into lessons, appended to the project-root `.kairos/_lessons.md`; **Improvement Advisor** reads that file back every few features and proposes framework changes as ADR records, never editing an agent file itself. See [All Agents](./agents) for all four.
 
 ### Team Mode — optional extension (Claude Code only)
 
-For complex multi-layer features, you can explicitly request **Team Mode**. The Orchestrator replaces the single Implementer Agent with a coordinated team:
+For complex multi-layer features, the Orchestrator offers **Team Mode** when the TDD path was chosen, two or more of backend/frontend/db are touched, Agent Teams is enabled and the host is Claude Code. On your confirmation it replaces the single Implementer Agent with a coordinated team:
 
 | Agent | Role |
 | --- | --- |
-| **Implementer Lead** | Creates binding contracts, spawns and monitors 4 parallel teammates |
+| **Implementer Lead** | Creates binding contracts, spawns and monitors parallel teammates for the layers in scope |
 | **Teammate Tests** | Generates full test suite (RED phase first) |
 | **Teammate Backend** | Implements APIs per contract |
 | **Teammate Frontend** | Implements UI per contract |
@@ -105,22 +105,20 @@ Two places ask less often than one gate per agent, because the gate there carrie
 
 ## Selective Pipeline
 
-Not every task needs the full pipeline. When you start a KAIROS run, the orchestrator asks you to choose which agents should run — with an advisory suggestion from the impact assessment (or from the orchestrator itself when that wasn't run), but never a hidden default: the choice is always yours.
+Not every task needs the full pipeline, and you don't pick agents from a menu. The Orchestrator derives which agents run from facts about the change — the effort, the domains touched, whether the project has a test suite, whether a contract changes — reported by the Impact Assessment and, later, by the Architect. Each agent is decided at the point in the run where its facts exist:
 
-In Claude Code the selection is four checkbox questions, not typed numbers — you tick what you want and nothing is pre-selected:
-
-| Question | Choices |
+| Decided | Agents |
 |---|---|
-| **Analysis** (multi) | `pm-agent` — Requirements analysis · `architect-agent` — System design |
-| **Implementer** (single) | `implementer-tdd-agent` *(recommended — TDD, works everywhere)* · `implementer-coder-agent` — code-only, no TDD (project has no test suite) · `implementer-lead-agent` — Team Mode, Lead + 4 teammates (~3.5× cost) · **No implementer** |
-| **Review** (multi) | `code-reviewer-agent` — Quality assurance · `security-reviewer-agent` — Adversarial security review (recommended for auth, payments, write endpoints) · `test-verifier-agent` — Test quality & coverage |
-| **Release** (multi) | `qa-plan-agent` — Manual & exploratory QA plan (recommended when a person will verify by hand, or when the implementer wrote no tests) · `release-planner-agent` — Deployment planning · `documentation-agent` — Feature-facing docs (recommended when API contracts or user-facing behavior changed) |
+| **At the start** | `pm-agent`, `architect-agent`, whether code is written at all, `code-reviewer-agent` |
+| **Right before the plan** | which implementer: `implementer-tdd-agent`, the code-first `implementer-coder-agent`, or Team Mode (offered with its ~3.5× cost) |
+| **At the implementation gate** | `test-verifier-agent` (the diff has a test file), `security-reviewer-agent` |
+| **At the review gate** | `qa-plan-agent`, `release-planner-agent`, `documentation-agent` |
 
-Leaving a question empty means those phases don't run. In IDEs without the checkbox prompt (Cursor, JetBrains/Copilot, Codex CLI, OpenCode) the orchestrator prints the same list as a numbered menu and you reply with numbers (`1 3 4`), agent names, or a pasted KAIROS template block.
+Before the first agent runs, the **Start Gate** shows the derived pipeline, the rule behind each agent, the effort and the auto-fix budget, and asks one question: start, request changes, or stop. Every later decision is printed at the gate before it, with the rule that fired. A free-text reply at any of those gates is a correction (`skip release-planner`, `add security-reviewer`, `effort medium`): it holds for the rest of the run and is logged in `_tracking.md`. In IDEs without the interactive prompt (Cursor, JetBrains/Copilot, Codex CLI, OpenCode) the same gate is printed as a typed menu.
 
-If the issue already contains a `## KAIROS Pipeline` checklist block (placed there by you or a team template), the orchestrator reads it automatically and just asks you to confirm.
+If the issue already contains a `## KAIROS Pipeline` section, the Orchestrator reads it first and starts without asking: you already decided, so it only prints what is about to run. An override block (`Size:`, `Effort:`, `Epic:`, `Areas:`, `Auto-fix:`, `Skip:`, `Add:`) is applied on top of the derivation, and an older checklist still wins over it. The one question a run still asks before any code is read is which **areas** it covers (analysis, development, review, delivery; the default is all, one click), because what a run is for is your intent, not a fact in the code.
 
-Pre-built presets for common task types — Feature, Bug Fix, Hotfix, Refactor, Docs — are available in [Pipeline Templates](./setup/templates).
+The full rule table and override examples (hotfix, security-sensitive, refactor, docs-only) are in [Pipeline Templates](./setup/templates).
 
 ---
 
@@ -136,7 +134,7 @@ A typical KAIROS feature run produces:
 - ✅ Deployment plan with rollback procedure
 - ✅ Full issue tracker comment trail (Jira / GitLab / Bitbucket)
 
-> When using `implementer-coder-agent` (no-TDD path), test files and coverage reports are not produced.
+> When using `implementer-coder-agent` (code-first path), tests are written after the code and only as its plan's Test Decision calls for; with no test suite in the project, none are produced.
 
 ---
 
@@ -146,12 +144,12 @@ A typical KAIROS feature run produces:
 agents/
 ├── orchestrator-agent.md        ← Coordinator
 ├── context-extractor-agent.md   ← Pre-pipeline: full-repo context
-├── impact-assessment-agent.md   ← Pre-pipeline: issue-scoped grounding + agent recommendations
+├── impact-assessment-agent.md   ← Pre-pipeline: issue-scoped grounding, facts for the derivation
 ├── bug-triage-agent.md          ← Standalone: bug reproduction + root cause
 ├── pm-agent.md                  ← Requirements
 ├── architect-agent.md           ← System design
 ├── implementer-tdd-agent.md     ← TDD code generation (default)
-├── implementer-coder-agent.md   ← Code-only, no TDD (projects without test suite)
+├── implementer-coder-agent.md   ← Code-first: code, then the tests the project calls for
 ├── code-reviewer-agent.md       ← Quality review
 ├── security-reviewer-agent.md   ← Adversarial security review (optional, read-only)
 ├── test-verifier-agent.md       ← Test quality
@@ -181,7 +179,7 @@ skills/                          ← Shared checklists/formats reused across age
 ├── migration-safety/SKILL.md
 └── threat-model/SKILL.md
 
-commands/                        ← Claude Code slash commands (/kairos:setup, /kairos:view)
+commands/                        ← Claude Code slash commands (/kairos:setup, /kairos:view, /kairos:usage)
 ```
 
 Each agent file is self-contained — YAML frontmatter for tool and model configuration, markdown body for the agent prompt. How you get these three directories into your tool depends on the tool: Claude Code installs all three together via `claude plugin install` (recommended) or a manual copy; other tools copy `agents/` (and `skills/`/`commands/` where supported) into their own subagent directory. See [Setup](./setup/) for the exact steps per tool.

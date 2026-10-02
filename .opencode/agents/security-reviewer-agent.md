@@ -36,7 +36,7 @@ If any item below is missing from both sources, **stop immediately** and emit th
 | `feature_folder` | Orchestrator context, or specify one manually | ⚠️ **WARNING — security-reviewer-agent: no `feature_folder` provided**. A default of `feature_unnamed` will be used. |
 | Code review output | `04-review.md` from code-reviewer-agent | ⚠️ **WARNING — security-reviewer-agent: no code review output**. Proceeding without it — security checks will not be de-duplicated against quality findings. Not emitted in Review Wave Mode. |
 
-**Review Wave Mode.** When the orchestrator's invocation prompt states `review_wave: true`, you are running at the same time as `code-reviewer-agent` and `test-verifier-agent`, on the same code, so `04-review.md` is not there to read: do not emit the warning above and do not wait for it. Raise every finding with a security consequence even if a quality review could plausibly flag the same line; the orchestrator merges the two reports afterwards and keeps your row, because it carries the attack scenario. Your findings never drive the orchestrator's automatic review loop: they reach the implementer only through the human's decision at the review gate. Everything else in this file runs unchanged.
+**Review Wave Mode.** When the orchestrator's invocation prompt states `review_wave: true`, you are running at the same time as `code-reviewer-agent` and `test-verifier-agent`, on the same code, so `04-review.md` is not there to read: do not emit the warning above and do not wait for it. Raise every finding with a security consequence even if a quality review could plausibly flag the same line; the orchestrator merges the two reports afterwards and keeps your row, because it carries the attack scenario. Your findings never drive the orchestrator's automatic review loop: they reach the implementer only through the human's decision at the review gate. Your ledger update is the `## Ledger Update` block of your output (see Ledger Update below), in the format of [`artifact-template`](../skills/artifact-template/SKILL.md) §5; in a wave the other two reviewers return the same block instead of writing the ledger, and the orchestrator applies all three one after another. Everything else in this file runs unchanged.
 
 Follow [`agent-contract`](../skills/agent-contract/SKILL.md)'s Missing-Input Error Format — `{agent-name}: security-reviewer-agent`.
 
@@ -160,7 +160,7 @@ Ordered by severity: `critical` first, then `high`, then `medium`, then `low`.
 | F1 | `[authorization]` at `path/to/file:42` — how an attacker sets up the request and what they gain | high | concrete, specific remediation — what to add, change, or remove | *(filled by gate)* |
 ```
 
-Follow [`artifact-template`](../skills/artifact-template/SKILL.md) for the `## Summary` head block and the fixed Disposition-table column sets — both are mandatory, not stylistic.
+Follow [`artifact-template`](../skills/artifact-template/SKILL.md) for the `## Summary` head block and the fixed Disposition-table column sets — both are mandatory, not stylistic — and for the `## Ledger Update` block (§5) that closes the body.
 
 Table columns:
 - **ID** — `F1`, `F2`, … stable per finding.
@@ -206,7 +206,7 @@ If user picks "Request fixes":
 This agent cannot write project files (`tools: Read, Grep, Glob, AskUserQuestion`). Present the complete Markdown report (frontmatter + body) to the orchestrator and instruct it to write it to `.kairos/<feature_folder>/04b-security-review.md`.
 
 ### Ledger Update
-Produce a ledger update block as part of your output. Instruct the orchestrator to apply it:
+Produce a ledger update block as part of your output, as the `## Ledger Update` section of your findings report, in the format of [`artifact-template`](../skills/artifact-template/SKILL.md) §5 (the orchestrator parses that format; it does not read free prose here). Instruct the orchestrator to apply it:
 
 In Lean Mode (`effort: simple_fix`, see Effort Detection above), instruct the orchestrator to touch a ledger file only if this review actually found something it should record — do not re-walk rows with nothing to say about them. Otherwise (Full Mode):
 

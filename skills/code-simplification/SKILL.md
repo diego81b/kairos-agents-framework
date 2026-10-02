@@ -118,8 +118,8 @@ BEFORE SIMPLIFYING, ANSWER:
 
 Make one simplification at a time; treat each as its own verified step inside the REFACTOR step, not bundled with feature or bug-fix changes in the same edit.
 
-- **Test-suite path** (`implementer-tdd-agent`): re-run tests after every change. Tests fail → revert and reconsider.
-- **No-test-suite path** (`implementer-coder-agent`): re-read the diff for behavior equivalence after every change — there is no test suite to catch a regression, so each change must be individually small enough to verify by inspection.
+- **Tests cover the code** (`implementer-tdd-agent`, or `implementer-coder-agent` once its Test Decision's tests exist): re-run tests after every change. Tests fail → revert and reconsider.
+- **No test covers the code** (`implementer-coder-agent` with no tests by decision): re-read the diff for behavior equivalence after every change — there is no test to catch a regression, so each change must be individually small enough to verify by inspection.
 
 If a simplification would touch more than ~500 lines, that's a signal to reconsider scope rather than push through by hand.
 

@@ -37,9 +37,9 @@ See [Skills & MCP Enhancements](docs/skills-mcp.md) for the full map and install
 
 When starting a KAIROS run, invoke the orchestrator with the **bare feature request only**:
 
-- **Never pre-select phases or agents in the invocation prompt.** Agent selection is a human decision made at the orchestrator's Step 0e gate — a caller-supplied list is treated as an unconfirmed proposal, never as authorization.
+- **Never pre-select phases or agents in the invocation prompt.** The orchestrator derives every agent from facts and you confirm or correct the result at its Start Gate — a caller-supplied list is shown there as an unconfirmed proposal and applied only if you say so, never treated as authorization.
 - **Never launch the orchestrator backgrounded or detached — and never invoke it by name inside an existing conversation.** Every phase ends at a HITL gate that needs a live human. In Claude Code, a spawned subagent has no `AskUserQuestion`, so gates degrade to the text-menu fallback — and this applies just as much to `@kairos:orchestrator-agent`/"use the orchestrator agent" typed mid-chat as to an explicit background launch, since both dispatch through the same `Agent` tool as a subagent. Start the session with the orchestrator as its **primary** agent instead — `claude --agent kairos:orchestrator-agent` (plugin install) or `claude --agent orchestrator-agent` (copied into `.claude/agents/`) — never as something you call from within another session. `--agent` is a startup flag only; to switch mid-session, exit (`Ctrl+D` / `/exit`) and relaunch with it.
-- **Run the standalone pre-pipeline agents yourself if you want them.** `context-extractor-agent` and `impact-assessment-agent` are invoked directly by you, before the orchestrator — the orchestrator never auto-invokes them.
+- **Run `context-extractor-agent` yourself if you want it.** It is invoked directly by you, before the orchestrator — the orchestrator never auto-invokes it. `impact-assessment-agent` is dispatched by the orchestrator at every run; if you already ran it standalone, its `00b-impact.md` is reused.
 
 ## Documentation Website
 
@@ -78,9 +78,9 @@ A release means: bump versions + changelog, commit, tag `vX.Y.Z`, push.
 | Mode | Cost | Works on | When to use |
 | --- | --- | --- | --- |
 | Single Agent (default) | ~$0.068/feature | Everywhere | All features |
-| Team Mode (optional) | ~$0.242/feature | Claude Code only | Critical systems, explicit request |
+| Team Mode (optional) | ~$0.242/feature | Claude Code only | Offered on the TDD path when two or more of backend/frontend/db are touched |
 
-Team Mode activates a Lead + 4 parallel specialists (Tests, Backend, Frontend, Database). The Orchestrator always shows a cost warning before enabling it.
+Team Mode activates a Lead + parallel specialists (Tests plus Backend, Frontend, Database for the layers in scope). The Orchestrator offers it only when the change spans two or more layers, Agent Teams is enabled and the host is Claude Code, and always shows a cost warning before enabling it.
 
 ## License
 
