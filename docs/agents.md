@@ -28,7 +28,7 @@ Pre-pipeline, issue-scoped grounding agent, and a required fact source for the O
 
 Unlike the Context Extractor, which scans the full repository, this agent reads only the code the issue directly touches. It consumes `00-context.md` if already present rather than rescanning. Output is `00b-impact.md` with a T-shirt size (`XS / S / M / L / XL`) and the effort estimate that follows from it (`simple_fix / medium / significant_rework`), domains touched (backend / frontend / db / auth / integrations), whether the project has a test suite, whether a contract changes, what kind of change the issue asks for, reusable assets with real file paths, gaps, and risks.
 
-The size measures how much of the codebase the change moves, not hours, and it is a label for people: only the effort decides how thorough each agent is. The Orchestrator puts the size on the issue as a `size:` label once you confirm the Start Gate. It reports facts and never names an agent. The Orchestrator applies its selection rules to those facts and folds this agent's gate into the Start Gate, where you see the derived pipeline and confirm or correct it.
+The size counts production files only (tests, docs, lockfiles and generated files follow a change, they do not size it) and takes the smaller of two adjacent sizes when nothing forces the larger. It measures how much of the codebase the change moves, not hours, and it is a label for people: only the effort decides how thorough each agent is. The Orchestrator puts the size on the issue as a `size:` label once you confirm the Start Gate. It reports facts and never names an agent. The Orchestrator applies its selection rules to those facts and folds this agent's gate into the Start Gate, where you see the derived pipeline and confirm or correct it.
 
 ::: tip Optional enhancements
 **Skills:** `deep-research` (built-in)
@@ -56,7 +56,7 @@ Never fixes anything. It has `Bash` to reproduce — run a test, read a log, `gi
 
 Master coordinator — initiates workflow, routes tasks to specialist agents, manages phase transitions, and ensures quality gates are passed before moving forward.
 
-It also keeps `_tracking.md`, the one file written for you rather than for the agents: current status, blockers, open points, how far the work has moved from the issue's acceptance criteria and scope, and a log of every gate, wave, fix pass and resume. It opens that file once and keeps it current; phase reports open only when you ask, except the implementation plan. It runs Code Reviewer, Security Reviewer and Test Verifier as one review wave with a single gate and a single fix pass.
+The review wave's three reviewers do not write the ledger themselves: it applies their `## Ledger Update` blocks one after another, so two reviewers never overwrite each other. In Claude Code it also keeps `_usage.md`, the model and tokens of every agent call, rewritten after each agent returns and measured from the transcripts. It also keeps `_tracking.md`, the one file written for you rather than for the agents: current status, blockers, open points, how far the work has moved from the issue's acceptance criteria and scope, and a log of every gate, wave, fix pass and resume. It opens that file once and keeps it current; phase reports open only when you ask, except the implementation plan. It runs Code Reviewer, Security Reviewer and Test Verifier as one review wave with a single gate and a single fix pass.
 
 ---
 

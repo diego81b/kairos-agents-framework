@@ -116,7 +116,7 @@ Not every task needs the full pipeline, and you don't pick agents from a menu. T
 
 Before the first agent runs, the **Start Gate** shows the derived pipeline, the rule behind each agent, the effort and the auto-fix budget, and asks one question: start, request changes, or stop. Every later decision is printed at the gate before it, with the rule that fired. A free-text reply at any of those gates is a correction (`skip release-planner`, `add security-reviewer`, `effort medium`): it holds for the rest of the run and is logged in `_tracking.md`. In IDEs without the interactive prompt (Cursor, JetBrains/Copilot, Codex CLI, OpenCode) the same gate is printed as a typed menu.
 
-If the issue already contains a `## KAIROS Pipeline` section, the Orchestrator reads it first: an override block (`Size:`, `Effort:`, `Epic:`, `Auto-fix:`, `Skip:`, `Add:`) is applied on top of the derivation, and an older checklist still wins over it.
+If the issue already contains a `## KAIROS Pipeline` section, the Orchestrator reads it first and starts without asking: you already decided, so it only prints what is about to run. An override block (`Size:`, `Effort:`, `Epic:`, `Areas:`, `Auto-fix:`, `Skip:`, `Add:`) is applied on top of the derivation, and an older checklist still wins over it. The one question a run still asks before any code is read is which **areas** it covers (analysis, development, review, delivery; the default is all, one click), because what a run is for is your intent, not a fact in the code.
 
 The full rule table and override examples (hotfix, security-sensitive, refactor, docs-only) are in [Pipeline Templates](./setup/templates).
 
@@ -179,7 +179,7 @@ skills/                          ← Shared checklists/formats reused across age
 ├── migration-safety/SKILL.md
 └── threat-model/SKILL.md
 
-commands/                        ← Claude Code slash commands (/kairos:setup, /kairos:view)
+commands/                        ← Claude Code slash commands (/kairos:setup, /kairos:view, /kairos:usage)
 ```
 
 Each agent file is self-contained — YAML frontmatter for tool and model configuration, markdown body for the agent prompt. How you get these three directories into your tool depends on the tool: Claude Code installs all three together via `claude plugin install` (recommended) or a manual copy; other tools copy `agents/` (and `skills/`/`commands/` where supported) into their own subagent directory. See [Setup](./setup/) for the exact steps per tool.

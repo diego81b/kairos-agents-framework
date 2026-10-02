@@ -27,7 +27,7 @@ claude plugin enable kairos
 
 Confirm with `claude plugin list`.
 
-This gets you the 17 core agents, the internal skills (`contract-checklist`, `coding-discipline`, etc.), and the `/kairos:setup` / `/kairos:view` slash commands in one shot. Agents are invoked with the `kairos:` scope — `@kairos:orchestrator-agent`, `@kairos:pm-agent` — and Team Mode agents with `@kairos:team:implementer-lead-agent`.
+This gets you the 17 core agents, the internal skills (`contract-checklist`, `coding-discipline`, etc.), and the `/kairos:setup` / `/kairos:view` / `/kairos:usage` slash commands in one shot. Agents are invoked with the `kairos:` scope — `@kairos:orchestrator-agent`, `@kairos:pm-agent` — and Team Mode agents with `@kairos:team:implementer-lead-agent`.
 
 ### Option B — Manual copy
 
@@ -40,7 +40,7 @@ cp path/to/kairos/agents/*.md .claude/agents/
 cp path/to/kairos/agents/team/*.md .claude/agents/team/
 ```
 
-This copies **agents only**. If you also want the internal skills or the `/kairos:setup` / `/kairos:view` commands, copy those directories too:
+This copies **agents only**. If you also want the internal skills or the `/kairos:setup` / `/kairos:view` commands, copy those directories too (`scripts/` as well, for `/kairos:usage`):
 
 ```bash
 cp -r path/to/kairos/skills .claude/skills
