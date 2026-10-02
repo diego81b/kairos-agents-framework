@@ -255,8 +255,13 @@ rows is now a derived view, rewritten with `## Status` from one read of the ledg
 are logged as `after run`. The criteria of slices not yet built sat at `pending` forever because
 `test-verifier-agent` wrote `not in this slice (S2)` in a free-text cell nothing parsed; its
 mapping has a fourth state, `later — <slice>`, never a gap and never the agent's own judgment (the
-requirements' slice table or the approved plan must assign the criterion to another slice), which
-the tracking file shows as `later` and `qa-plan-agent` skips.
+`## Slices` table of the requirements or the approved plan must assign the criterion to another
+slice), which the tracking file shows as `later` and `qa-plan-agent` skips. That table did not exist
+as a rule: the PM in the example wrote one by chance, so `later` would have fired only by chance.
+`pm-agent` now writes `## Slices` (step 4c) when the issue says the work lands in several steps or
+is `XL` with independent parts, assigns every criterion to exactly one slice, and on a later run
+reads the earlier table instead of re-slicing; the orchestrator passes the run's `scope:` so the PM
+and the implementer know which slice they build.
 
 The derived pipeline is the smallest the facts justify, and three things had been inflating it. The
 size rubric never said what a file is, so a small change and its tests reached `M` at three files; it

@@ -64,6 +64,8 @@ The review wave's three reviewers do not write the ledger themselves: it applies
 
 Analyzes requirements, creates detailed specifications, identifies edge cases, and documents acceptance criteria. Transforms a vague feature request into a precise implementation brief.
 
+When the issue says the work lands in several steps (parts that ship at different times, parts blocked on another branch) or is `XL` with independent parts, it also writes a `## Slices` table: every acceptance criterion belongs to exactly one slice, a later run of the same issue keeps the earlier slices and IDs, and the test verification and the tracking file use the table to show a criterion of an unbuilt slice as `later` instead of as a gap.
+
 ::: tip Optional enhancements
 **Skills:** `deep-research` (built-in), `issues-generator` (user-installed)
 :::
