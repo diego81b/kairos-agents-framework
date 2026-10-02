@@ -84,6 +84,8 @@ Classify the change in one pass: its T-shirt **size** first, and the **effort** 
 
 All criteria in a row must hold for that row to apply. A change matching the file count for one row but a higher-impact criterion for another (e.g. 2 files but a new endpoint) classifies at the higher row — a new endpoint, schema change, or auth impact always escalates past `S` regardless of file count.
 
+**Count production files only.** Tests, documentation, lockfiles, generated files and configuration that merely follows the change do not count toward the file number: they follow a change, they do not size it, and counting them is how a small change with its tests reaches `M`. When what you read fits two adjacent sizes, take the smaller: a larger size needs a criterion in its own row that you can point at, never a feeling that the change is "more than small". Every agent after you is derived from this size, so an inflated one costs a phase per agent.
+
 The size measures how much of the codebase the change moves, not how long it takes. Never write it as hours or days, here or anywhere in this artifact: a label named like an estimate gets read as one. Only `effort` decides how thorough every later agent is; `size` is a label for people and the tracker. The map in the last column is the only way one becomes the other, so the two never disagree.
 
 Reasoning must be specific — list the files and changes that drove the classification, not just a label.
