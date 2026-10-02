@@ -198,6 +198,8 @@ List only what the manual cases need. Infrastructure for the automated suite is 
 
 For each `AC-n` from `01-requirements.md`, state how it is accepted: by an automated test (name it, from the AC Mapping table), by one of your manual cases (name its ID), or **not verifiable as written** — in which case say why, and add a row to `open-questions.md` rather than inventing an interpretation.
 
+An `AC-n` whose mapping row says `later — <slice>` belongs to a slice this run does not build: write `later — <slice>` as how it is accepted, and add no case, no retest and no risk row for it. It is accepted in the run that builds that slice.
+
 A fourth answer, **not verifiable by hand — see Rn**, applies to an `AC-n` whose outcome step 2 found observable only through internals. It is written as a `high` `## Risks` row exactly like **not verifiable as written**, so the gate decides whether to automate it or accept it.
 
 Then carry pm-agent's `## Outcome Criterion` through verbatim as a separate line. It is deliberately not an `AC-n` and no test maps to it: it is checkable only after release, and it is the one statement that says whether the feature was worth building. If pm-agent recorded `not established — <reason>`, repeat that, do not supply one.
