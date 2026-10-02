@@ -561,7 +561,7 @@ On **Add to the issue**:
 
 **Paste-ready fallback** — no tracker CLI, a failed read or write, missing `jq` or Bitbucket credentials, or Jira: print the block in a fenced `markdown` code block with `Paste this into <issue key>'s description:`, and continue to Phase 1. The write-back never fails or blocks the run: the correction already holds for this run.
 
-Pass `feature_folder`, the original issue reference, the `active_agents` list, and `effort: <value>` explicitly to every subagent prompt.
+Pass `feature_folder`, the original issue reference, the `active_agents` list, and `effort: <value>` explicitly to every subagent prompt, and `scope: <the run's scope line>` too when it names a part of the issue (a slice) rather than the whole issue: it is what tells `pm-agent` which slice to write requirements for and the implementer which slice to plan.
 
 ### Phase Execution (conditional)
 
