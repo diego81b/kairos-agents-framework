@@ -45,7 +45,10 @@ Follow [`agent-contract`](../skills/agent-contract/SKILL.md)'s Missing-Input Err
 
 ## Review Wave Mode
 
-When the orchestrator's invocation prompt states `review_wave: true`, you are running at the same time as `code-reviewer-agent` (and `security-reviewer-agent`, when active), on the same code. You are the only reviewer in the wave that executes the test suite: `code-reviewer-agent` leaves execution to you, so PHASE 0 below runs exactly as it always does. One thing changes: **do not write `## Loop State`** in `ledger/loops.md` (Ledger Update below). The orchestrator reads `convergence_signal` from your frontmatter instead, so that two reviewers never edit the same file at once. Still read `iteration` from `## Loop State` when it exists, to fill `convergence_signal.iteration`.
+When the orchestrator's invocation prompt states `review_wave: true`, you are running at the same time as `code-reviewer-agent` (and `security-reviewer-agent`, when active), on the same code. You are the only reviewer in the wave that executes the test suite: `code-reviewer-agent` leaves execution to you, so PHASE 0 below runs exactly as it always does. Two things change:
+
+- **Do not write the ledger.** Two reviewers that read the same ledger row and write it back in the same minute overwrite one another, and each would allocate the next `C`/`D`/`Q` id from the same snapshot. Do the whole Ledger Update section below as usual, but write its result as the `## Ledger Update` block of your artifact, in the format of [`artifact-template`](../skills/artifact-template/SKILL.md) §5, and touch none of `constraints.md`, `decisions.md` and `open-questions.md`. The orchestrator applies the block after every reviewer has returned. Still read all three files first: the block lists only what you changed or added.
+- **Do not write `## Loop State`** in `ledger/loops.md` (Ledger Update below). The orchestrator reads `convergence_signal` from your frontmatter instead, so that two reviewers never edit the same file at once. Still read `iteration` from `## Loop State` when it exists, to fill `convergence_signal.iteration`.
 
 ## Ledger Check (required)
 
@@ -126,13 +129,14 @@ Run the checks below. Each check produces zero or more issues.
 - For a pure function with a well-defined input domain (parser, validator, calculator), are there tests over generated/randomized or systematically-varied inputs, not only a handful of hand-picked examples?
 - When `02-architecture.md` has a `## Behaviour Delta` that is not `N/A`: is every row's new outcome exercised by at least one test, at whatever level reaches it, including what the caller receives on a new rejection or limit (the status, the payload, the message the client shows)? A limit is tested at the unit the constraint row names, one past the limit, not at a value chosen in another unit. A row no automated test can reach, because what it describes is only visible on screen, is not a gap here: say so in the issue's Description and leave it to `qa-plan-agent`. Every other untested row is an issue.
 
-**The Acceptance Criteria Mapping table has three states, not two.** A unit test proves the code does what it was meant to do; it does not prove a use case works end to end, and stretching one to cover a use case is how a suite becomes slow, mocked, and dishonest. So each `AC-n` lands in exactly one of:
+**The Acceptance Criteria Mapping table has four states, not two.** A unit test proves the code does what it was meant to do; it does not prove a use case works end to end, and stretching one to cover a use case is how a suite becomes slow, mocked, and dishonest. So each `AC-n` lands in exactly one of:
 
 1. **Covered by automation** — the `Tests` cell names the test(s), at whatever level actually verifies it: unit, integration, or end-to-end. The level is not the criterion; the assertion is.
 2. **Verified outside the suite** — write `manual — <Cn> → 5b` in the `Tests` cell, where `<Cn>` is the `constraints.md` row whose `Category` is `VERIFICATION` and whose text names this `AC-n`. Leave the `Gap` cell `—`. This is an integration-level check a person performs: it needs configuration, more than one application, sessions on separate machines, or a role nobody in the pipeline holds.
 3. **Gap** — nothing verifies it anywhere. The `Tests` cell is `—` and the `Gap` cell says what is missing.
+4. **Later** — the criterion belongs to a slice of the issue that this run does not build. Write `later — <slice>` in the `Tests` cell and leave the `Gap` cell `—`. A large issue is built slice by slice, one run each, and a criterion owned by a slice that has not been built is neither covered nor missing. This is never your judgment either: it requires the `## Slices` table of `01-requirements.md` (step 4c of `pm-agent`) or the approved `03-implementation-plan.md` to assign this `AC-n` to a slice other than the one this run builds. A criterion nobody assigned to another slice is state 3.
 
-Only state 3 is a gap. It is the only one that counts in `gapIds`, the only one that reaches `convergence_signal.ac_gaps`, and therefore the only one that can drive the review loop. Sending an implementer round the loop for a criterion that needs two machines produces one of two things: a mocked test that fakes the second actor and lies about coverage, or a loop that cannot converge and exits on the thrash check.
+Only state 3 is a gap, and states 2 and 4 are not. State 3 is the only one that counts in `gapIds`, the only one that reaches `convergence_signal.ac_gaps`, and therefore the only one that can drive the review loop. Sending an implementer round the loop for a criterion that needs two machines produces one of two things: a mocked test that fakes the second actor and lies about coverage, or a loop that cannot converge and exits on the thrash check.
 
 State 2 is **never your judgment call**. It requires a `VERIFICATION` row that a human declared upstream, naming that `AC-n`; apply [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)'s §3 predicate (`Status` not `❌ dropped`) and §4 Reader Rule. No such row, or a row that does not name this `AC-n`, means state 3 — you never decide on your own that something is not automatable. If you believe a criterion belongs in state 2 and no row declares it, say so in one line under the table and still count it as a gap.
 
@@ -259,7 +263,7 @@ convergence_signal: { issues_critical_high: 1, ac_gaps: 1, iteration: 1 }
 | I1 | assertion_strength | `__tests__/stripe.service.test.js:88` | Test 'createCharge handles expired card' has no assertion — only awaits the call. | high | Add `expect(result).toEqual({ status: 'declined', code: 'card_expired' })` after the await. | *(filled by gate)* |
 ```
 
-Follow [`artifact-template`](../skills/artifact-template/SKILL.md) for the `## Summary` head block and the fixed Disposition-table column sets — both are mandatory, not stylistic.
+Follow [`artifact-template`](../skills/artifact-template/SKILL.md) for the `## Summary` head block and the fixed Disposition-table column sets — both are mandatory, not stylistic. In Review Wave Mode, close the body with the `## Ledger Update` block from §5 of the same skill.
 
 Issues table columns: `Impact` carries the severity value (`critical | high | medium | low` — same scale, formerly `Severity`). `Mitigation/Fix` carries the concrete remediation (formerly `Fix`). `Category` and `File:Line` stay as leading columns before `Description` so no information is lost. Leave `Disposition` empty in your own output — it is filled at the gate.
 
@@ -311,7 +315,7 @@ Freshly-surfaced Issues table rows are written by the orchestrator's Risk Dispos
 
 In **Lean Mode**, skip the full re-walk below: touch each ledger file only if this verification pass actually changed something it should record. If nothing changed in a file, leave it untouched.
 
-In **Full Mode**, update all three ledger files under `.kairos/<feature_folder>/ledger/`:
+In **Full Mode**, update all three ledger files under `.kairos/<feature_folder>/ledger/` (in Review Wave Mode, write the same updates as the `## Ledger Update` block instead, see above):
 
 **`constraints.md`** — Update the Status of the rows this phase acted on — one it satisfied, deferred, re-opened, or contradicted. That includes a row you did not create: a constraint the code no longer honours is a row this phase acted on, and re-opening it is the point. What you skip is the row you have nothing to say about. The full re-walk of every row belongs to `architect-agent` (first accounting pass) and `release-planner-agent` (final accounting); here, leave an untouched row exactly as you found it. Apply [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)'s Writer Rule to any row you do write:
 - Coverage constraints met → mark `✓ resolved` with actual percentages

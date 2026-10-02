@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Repo Is
 
-KAIROS is a documentation-only project: a collection of AI agent definition files (Markdown) and a VitePress documentation site. There is no compiled code, no test suite, and no runtime beyond the docs build.
+KAIROS is a documentation-only project: a collection of AI agent definition files (Markdown) and a VitePress documentation site. There is no compiled code, no test suite, and no runtime beyond the docs build, with one exception: `scripts/usage.mjs`, a dependency-free Node script behind `/kairos:usage` (see "Commands" below).
 
 The two main deliverables are:
 - `agents/` — the agent instruction files themselves (the actual framework artifact)
@@ -119,6 +119,35 @@ risk, not a tester's step. That split is also why `## Risks` admits only four ro
 (regression retest, `AC-n` not verifiable by hand, uncovered `VERIFICATION` row, an open
 question the release depends on): 5b plans verification, it does not audit the code.
 
+Delivery of the plan changed in v9.0.0, for the same outside reader. Two rules moved into the
+agent: a precondition is reached through the product, prepared by a developer and named as such
+in `Setup`, or written up as a `## Risks` row, never a tester step in dev tools, scripts or
+hand edits to the database (it extends `Outcome, never mechanism`, which only covered Steps and
+Expected result; the old charter example that throttled the network in the browser broke it).
+And the tester's part goes where a person can execute from it. Up to three checks (manual
+cases, regression retests and existing cases to re-run, counted together) and no epic, the
+extract stays the issue comment. Above that, or whenever the issue has an epic, `qa-plan-agent`
+writes the tester's part as `_qa-file.md` inside `.kairos/`, and the comment
+(`_qa-comment.md`, always written) shrinks to the framing line, the core and a pointer
+carrying a literal `{qa_file}` token the orchestrator fills in. The agent never writes into the repository itself: after
+the QA gate approves, the orchestrator hands the file to `documentation-agent` in passthrough
+mode, so the framework keeps two writers outside `.kairos/`. Letting `qa-plan-agent` write it
+was rejected for that reason, and because the agent used to post its comment before the gate,
+an outward action taken ahead of approval. In an orchestrated run the orchestrator now posts
+the comment after the gate; standalone, the agent has no orchestrator to hand the write to and
+leaves the file in the feature folder with the target path printed. The directory is a fourth
+project setting, `.kairos/.qa-dir`, asked once and proposed as `docs/qa-plans/`: before the
+QA plan runs when the issue has an epic (the agent must read the epic's file), at the QA gate
+otherwise; like `.manual-qa` it is per machine, not shared. An epic gets one
+file, `<qa-dir>/<epic>.md`, and each child run rewrites only its own `## <issue>` section and
+its own row of the `## Issues` table (issue, size, section); the comment goes on the epic.
+Reading sibling feature folders to assemble that file was rejected: `.kairos/` is local and
+gitignored, so a colleague's run would not exist for it. The file is the accumulator. The epic
+reference is read from the tracker when its CLI exposes one (GitLab `epic`, Jira `parent`) and
+otherwise comes from an `Epic:` line in the `## KAIROS Pipeline` block; Bitbucket Issues has no
+epics. The file reaches the default branch only when the merge request that carries it merges,
+so the comment's link is dead until then, and the comment says so.
+
 Two more standalone agents sit off that table entirely: `bug-triage-agent.md`
 (`00c-bug-triage.md`) is the entry point for a bug report rather than a feature request, and
 `dependency-audit-agent.md` (`.kairos/_tech-debt.md`) runs outside any feature at all.
@@ -168,6 +197,123 @@ issue is a saved human confirmation, so it still wins over the derivation, exact
 before v9.0.0 expect. A new template carries only `Effort:`, `Auto-fix:` and explicit `Skip:`/`Add:`
 overrides.
 
+The human can also narrow a run to the **areas** of the pipeline they want, because what a run is
+for (analyse this issue now, build it later) is not a fact any file holds. Four areas group the
+agents: `analysis` (`pm-agent`, `architect-agent`), `development` (the implementer), `review`
+(`code-reviewer-agent`, `security-reviewer-agent`, `test-verifier-agent`) and `delivery`
+(`qa-plan-agent`, `release-planner-agent`, `documentation-agent`). `impact-assessment-agent` and
+`bug-triage-agent` belong to none: they are fact sources, and the derivation needs them whatever was
+chosen. An agent runs when its Selection Rule fires and its area is selected, and `overrides.add`
+still beats both. Areas are the coarse lever and the rules stay the fine one: choosing areas narrows
+what the derivation may pick and never replaces it, so nobody scrolls an agent list. It is the one
+question a run still asks before facts exist, which is why it has a one-click default (all areas) and
+is skipped whenever the answer is already saved: an `Areas:` line in the issue's `## KAIROS Pipeline`
+block, a resumed run's `run.md`, or a checklist (which names agents, not areas). A finished run whose
+areas were not all selected is not "nothing to resume": Step 0b offers to run the remaining areas,
+reading the earlier artifacts as facts, and the cleanup gate recommends keeping the phase files
+because a later area reads them. `review` or `delivery` without `development` has no
+`03-implementation.md` to read, so the orchestrator builds the change surface from `git diff` against
+the default branch and hands it to the reviewers as pasted paths, which they already accept.
+
+A run starts without asking when the answer is already on record. An issue that carries a
+`## KAIROS Pipeline` section holds a saved human decision, so the Start Gate becomes an announcement
+of what is about to run and the checklist question is skipped, unless something needs a human: an
+Escalate from the impact assessment, a fact reported unknown, the architect skipped against its rule,
+an empty pipeline. A folder whose `run.md` is `in_progress` or `stopped` resumes without the folder
+question and without the resume confirmation and says where it restarts. What it never skips is a gate
+the earlier session had open, recorded in `run.md` as `gate_pending`: the old confirmation was the one
+thing between a resume and an unapproved artifact, so removing it needed that record. A folder holding
+only pre-pipeline artifacts (`00-context`, `00b-impact`, `00c-bug-triage`, no `run.md`) is not a resume
+at all: the run starts at Step 0e and reuses them. Four defects sat behind a real bug-fix run that
+redid work already done. The folder was found by its exact slug, which follows the wording of the
+prompt, so a reworded prompt for the same issue missed the folder and the triage in it. The issue was
+read after the folder was named. A failed read of the issue was silent (on GitLab a `--json` flag that
+does not exist, fixed earlier in this release), so a saved section was ignored. And the write-back
+offered to save choices the issue already held, and would have replaced the section with the run's
+corrections alone, dropping its other lines. The folder is now found by the issue key, the issue is
+read first and a failed read prints one line, and the write-back re-reads the description before it
+asks, merges the issue's lines with the run's corrections, and offers nothing when the result equals
+what the issue already says.
+
+An issue is one folder and one ledger, however many runs it takes. A large issue is built slice by
+slice, and a finished run used to leave only "Create new folder" (`-2`) as a way to start the next
+slice, which split the ledger into two copies that drift apart: in a real run the second folder
+copied the ledger while the first kept going, and a person had to merge them by hand. For an issue
+the folder is now never duplicated. **Start a new run** archives the finished run's reports to
+`runs/run-<k>/` with a snapshot of its `_tracking.md` and `run.md`, keeps `ledger/`, `00-context.md`,
+`00c-bug-triage.md` and the live `_tracking.md` log, re-runs the impact assessment (the archived one
+measured another slice) and tells every agent where the earlier runs are, so a later run reads the
+earlier requirements and architecture instead of redoing them. Archiving into a subfolder rather
+than renaming files with a slice suffix keeps the numbered-phase glob that Step 0b resumes from
+honest: a `03-implementation-S1.md` would match it. `run.md` gains `run`, `started`, `scope` (one line
+from the human's prompt) and `earlier_runs`. The tracking file in the same example had two further
+defects. Its `## Open Questions` and `## Open Constraints` were written once at Step 10 and never
+refreshed, so after the human answered the last questions it listed twelve open questions under a
+status line saying none, and a `BLOCKING` constraint the ledger had closed. And its log had blank
+lines between entries and free-form events after the run ended. Every section that restates ledger
+rows is now a derived view, rewritten with `## Status` from one read of the ledger, and later events
+are logged as `after run`. The criteria of slices not yet built sat at `pending` forever because
+`test-verifier-agent` wrote `not in this slice (S2)` in a free-text cell nothing parsed; its
+mapping has a fourth state, `later — <slice>`, never a gap and never the agent's own judgment (the
+`## Slices` table of the requirements or the approved plan must assign the criterion to another
+slice), which the tracking file shows as `later` and `qa-plan-agent` skips. That table did not exist
+as a rule: the PM in the example wrote one by chance, so `later` would have fired only by chance.
+`pm-agent` now writes `## Slices` (step 4c) when the issue says the work lands in several steps or
+is `XL` with independent parts, assigns every criterion to exactly one slice, and on a later run
+reads the earlier table instead of re-slicing; the orchestrator passes the run's `scope:` so the PM
+and the implementer know which slice they build.
+
+The derived pipeline is the smallest the facts justify, and three things had been inflating it. The
+size rubric never said what a file is, so a small change and its tests reached `M` at three files; it
+now counts production files, since tests, docs, lockfiles and generated files follow a change rather
+than size it, and takes the smaller of two adjacent sizes when nothing it read forces the larger.
+`architect-agent` no longer runs at `medium` merely because backend and frontend both change: without
+a contract change, a `db` or `auth` domain or a `significant_rework`, the design is two layers edited,
+and `Add: architect-agent` restores it. `test-verifier-agent` does not run on a `simple_fix`: with no
+`pm-agent` there is no `AC-n` list to map tests against, and `code-reviewer-agent` already reads the
+tests. The Start Gate also prints the agents decided now and folds every later decision into one
+line, because nine lines of which five said "decided later" read as a pipeline that would run in full.
+
+A third project setting sits beside `.kairos/.manual-qa`: `.kairos/.models`, one `<agent>: <alias>`
+line per agent, written by `/kairos:setup` or by hand and never asked by the orchestrator. Before
+each dispatch the orchestrator reads it and, on a host whose Agent call takes a `model` parameter
+(Claude Code), passes the alias for the agent it is about to call; with no line, or on a host
+without the parameter, the agent's own `model:` frontmatter applies, so the shipped opus/sonnet
+tiers stay the default and the file exists only to differ from them. Claude Code resolves a
+subagent's model as: per-call `model` parameter, then frontmatter `model:`, then
+`CLAUDE_CODE_SUBAGENT_MODEL`, then the session model. That is why the file works without editing any
+agent, and why the environment variable alone changes nothing on agents that declare `model:` (it
+needs `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1`, which also overrides the file). Three limits are
+deliberate. The file holds aliases only (`opus`, `sonnet`, `haiku`, `fable`), because the per-call
+parameter accepts no `inherit` and no full model ID; those still need frontmatter edits, which is
+why the copy-and-edit path stays in `/kairos:setup` as an advanced option. It reaches only agents
+the orchestrator dispatches, so the orchestrator, the standalone agents and Team Mode teammates keep
+their frontmatter. And it is per project, not per issue: an issue-level `Model:` line was rejected,
+because the model tier is a cost setting of the organisation and not a fact about one change, and
+the line would have added parsing, write-back composition and a `run.md` field for a decision nobody
+makes per issue. The orchestrator reads the file at each dispatch instead of copying it into
+`run.md`, so an edit mid-run applies from the next call and a resume needs nothing restored.
+
+Two fields called `effort` are unrelated. Claude Code's `effort:` agent-frontmatter field (`low` to
+`max`) sets how deeply that agent reasons; KAIROS's `effort` (`simple_fix`, `medium`,
+`significant_rework`) is the size of the change, measured by `impact-assessment-agent` and stamped
+into every agent's prompt. The two never share a file: the shipped agents set no `effort:` in
+frontmatter, and the Agent call has no per-call effort parameter, so reasoning depth could only ever
+be static per agent file. Renaming KAIROS's field to `size` was rejected for now, since `Effort:`
+lines in issue templates already sit in trackers and every legacy fallback would need a second name.
+
+KAIROS also carries a T-shirt `size` (`XS` to `XL`), measured by `impact-assessment-agent` from
+the same facts as `effort` and split finer: `XS`/`S` map to `simple_fix`, `M`/`L` to `medium`,
+`XL` to `significant_rework`. That map is the one place the two meet, so no decision has two
+sources: nothing branches on `size`, and `effort` keeps deciding Lean, Trimmed and Full mode.
+`size` exists for people, to group an epic's issues, and the orchestrator stamps it on the issue
+as a `size:` label at the Start Gate. It measures the footprint of the change, never hours, and
+the agent's text says so, because a label named like an estimate gets read as one. A `Size:` line
+in the override block sets both fields; an `Effort:` line sets only `effort`, and the gate shows
+the measured size beside it. A checklist issue skips the impact assessment and so gets no size.
+Sizing every issue of an epic before any run was rejected for now: it spends an impact assessment
+on issues that may never run, and nothing consumes the result. The agent stays runnable per issue.
+
 `implementer-coder-agent` changed meaning in the same release. It was "code only, no tests"; it is
 now code-first: it writes the code, then decides test by test whether to add or update tests, from
 facts it states in the plan's `## Test Decision` (does the project have a suite, do the touched
@@ -179,9 +325,27 @@ repo that has them, and `test-verifier-agent` runs whenever the coder wrote a te
 
 `documentation-agent` is the second agent, after the Phase 3 implementer, permitted to
 write real files outside `.kairos/` in the target project — scoped strictly to
-documentation (README/CHANGELOG/`docs/**`), never source code.
+documentation (README/CHANGELOG/`docs/**`), never source code. Besides its own Phase 6b it
+serves the orchestrator in Verbatim passthrough mode, for the Step 10d project summary and
+the Phase 5b QA plan file, and in that mode it never runs a gate of its own. It is a subagent
+and a subagent has no `AskUserQuestion`: the first v9.0.0 run of Step 10d showed the
+orchestrator improvising a gate for it, with the file already written under `docs/` before
+anyone approved it. The orchestrator now owns that gate (draft in `.kairos/<feature_folder>/`,
+path printed, `open` trigger, Approve / Request changes / Stop) and dispatches the passthrough
+only with an approved draft, so the agent's whole job is the Hard Constraint check and the write.
+Phase 6b had the same defect in a quieter form: in an orchestrated run the agent skipped its own
+gate, the orchestrator ran the real one, and nothing then wrote the README or CHANGELOG, because
+the agent had already returned and its "write only after approval" step never came round. It now
+splits at that boundary exactly like Phase 3: `step: draft` writes `06b-documentation.md` and the
+ledger rows and nothing else, the orchestrator runs the gate, and on Approve the same agent is
+called again with `step: write` and `gate: resolved`, applies what the approved draft shows (the
+draft carries the exact text, so the write step never redrafts), and appends `## Docs Written`.
+A file whose anchor no longer matches is skipped and reported, and a resume that finds the draft
+without `## Docs Written` shows the gate again. Having the orchestrator write the files itself was
+rejected: it would be a third writer outside `.kairos/`, and Hard Constraint 1 forbids more.
 
-The orchestrator itself has two narrow exceptions to writing only inside `.kairos/`.
+The orchestrator itself has two narrow exceptions to writing only inside `.kairos/`, plus one
+tracker write.
 Step 0c's Gitignore check — once per project, only after an explicit human
 choice — appends a single `.kairos/` line to the target project's `.gitignore`.
 Step 0f's Issue Write-back — only when the run started from an issue reference, the
@@ -192,7 +356,12 @@ rest of the description. It exists because the section is how a team reuses a pi
 across machines, and the plugin ships no skill that authors issues: the orchestrator
 writing back what a human just confirmed is the one source every host gets, and it
 writes a decision rather than a guess from the issue text. It never touches any other
-file outside `.kairos/`, and no other tracker content.
+file outside `.kairos/`, and no other tracker content except the size label. That label is the
+tracker write: when the run started from an issue reference and the human confirms the Start
+Gate, the orchestrator sets `size:<value>` on the issue, replacing an earlier `size:` label,
+and skips it silently without a tracker CLI or where the tracker has no labels. The
+confirmation is the Start Gate itself, which prints the label it will set; a free-text
+correction of the size changes the label and the derived effort together.
 
 The orchestrator also keeps one file for the human across the whole lifecycle, no subagent
 involved: `_tracking.md` in the feature folder. It is created at Step 0f, right after
@@ -273,6 +442,26 @@ and the single loop are unchanged, only the elapsed time differs. A `run.md` or 
 template written before v8.5.0 with separate `phase3`/`phase4` budgets (or
 `Auto-fix after review`/`after tests` lines) resolves to the larger of the two.
 
+A third constraint is the ledger. The three reviewers used to update `constraints.md`,
+`decisions.md` and `open-questions.md` themselves, so two of them could read the same row and write
+it back in the same minute, each allocating the next id from the same snapshot. In a wave none of
+them touches the ledger. Each ends its artifact with a `## Ledger Update` block (format:
+`skills/artifact-template/SKILL.md` §5) and the orchestrator applies the blocks one after another in
+its merge, allocating the ids itself and keeping `🔴 open` when two reviewers disagree about a row.
+`security-reviewer-agent` already worked this way, which exposed a second defect: nothing applied its
+block, so its constraint re-openings and decisions never reached the ledger. Claude Code refuses to
+write a file that changed since it was read, which had shown the first problem only as a failed edit
+and a retry; a host without that check would have overwritten silently. One writer of shared state at
+a time is the rule any further parallelism has to meet. Running `qa-plan-agent`,
+`release-planner-agent` and `documentation-agent` as a wave of their own was considered and rejected:
+the QA gate can end in a fix pass that changes the code the other two read, `release-planner-agent`'s
+final accounting must see every row the others add and so runs last (`qa-plan-agent` and
+`documentation-agent` both write constraint and question rows of their own, so the single-writer
+rule above would be needed first and would still not fix the order), and `documentation-agent`
+optionally reads `06-deployment-plan.md` for its migration notes. What it would save is one phase of
+elapsed time on the runs where all three fire, which the Selection Rules already make rare. Revisit
+it only against a measured bottleneck.
+
 The recheck after a fix pass runs only the reviewers the fix pass's diff calls for, since
 v8.6.0. In a real run, a manual correction after review removed an interceptor, added one test
 and extracted one method, and the orchestrator had to improvise which reviewers to re-run,
@@ -292,6 +481,19 @@ implementer's own claim that its new test fails without the fix is never grounds
 selection, is now the only way code changes after the review wave: code changes asked at a recheck
 gate or at the QA plan gate go through it too, and a recheck that turns up nothing continues
 under the wave rule instead of stopping at a gate.
+
+An agent is complete when its call returns, never when its report appears on disk. Every agent
+writes its artifact before its ledger update and before it hands control back, so a resume rule that
+reads the artifact (`03-implementation.md` with a `status` other than `partial`) called an
+implementer done while it was still closing, and the review wave started on it. The orchestrator now
+writes `in_flight` into `run.md` before each dispatch and clears it when the call returns; a resume
+that finds it set re-invokes that agent with `recovery: true` and skips the artifact-based resume
+point. Both implementers and `implementer-lead-agent` handle `recovery: true` by reading `git status`,
+the approved plan and the earlier `03-implementation.md` first, and write `03-implementation.md` as
+their last file, after the ledger update, so a finished report means a finished pass. Reading the
+artifact alone was rejected because a fix pass or loop iteration re-invokes an implementer against a
+`03-implementation.md` that already says `complete`, so an interrupted pass is indistinguishable from a
+finished one; only the orchestrator's own dispatch record separates them.
 
 `architect-agent` gains a **Behaviour Delta** section for the same epic's other finding:
 every defect `qa-plan-agent` found late in those two issues was an observable change on a flow
@@ -327,7 +529,7 @@ human applies an accepted proposal by hand.
 
 Every phase (Pre-A through 6b) writes a single Markdown file: a YAML frontmatter header carrying only what the orchestrator branches on — a verdict field, the tallies its status rules threshold, and a loop signal where a loop exists; a field nothing branches on belongs in the body, not here — followed by a plain-Markdown body (data model, issues tables, findings, runbook) — see each agent file's "Output Format" section. No phase output is JSON: nothing in this repo parses these files programmatically, every consumer is either another agent reading the file as prompt text or a human at a HITL gate, so Markdown serves both better than escaped JSON strings. Any Risks/Issues/Findings table in the body carries a `Disposition` column, resolved row-by-row by the orchestrator's Risk Disposition Loop (see `orchestrator-agent.md`'s HITL section) before the whole-artifact gate is shown — or, for the two agents that also run standalone with a Risks table (`pm-agent`, `impact-assessment-agent`), by their own copy of that loop, since a standalone run never reaches the orchestrator.
 
-All artifacts land in `.kairos/<feature_folder>/` inside the target project (not this repo). Each feature folder also contains a `ledger/` subdirectory with three living files — `constraints.md`, `decisions.md`, `open-questions.md` — that agents read at phase start and update at phase end (forced accounting model), plus two the orchestrator alone keeps: `run.md` (the run's settings — effort, active agents, auto-fix budget, wave gates — so a resumed session restores them) and `loops.md` (review loop state and the history of non-converged loops, kept out of `open-questions.md`). Before v8.5.0 a third, `audit-log.md`, held one line per gate; that log now lives in the feature folder's `_tracking.md`, and an existing `audit-log.md` is only read, never written. Folders written before v8.4.0 must keep resuming: every reader of these files falls back to the older location or format, and the orchestrator migrates on first touch rather than any agent assuming the new file exists. In `decisions.md`, only the orchestrator writes the `Supersedes` column, on a human's Accept of a decision conflict — never the agent the conflict scan is checking. Each phase updates only the rows its own work touched; the full re-walk of every row runs twice, at `architect-agent` (first accounting pass) and `release-planner-agent` (final accounting), which is what puts every row in a terminal state before release. `constraints.md` carries a `Category` column from `constraint-taxonomy`'s closed vocabulary, written once at row creation and never rewritten afterwards, because three checks are gated on it: `code-reviewer-agent`'s Accessibility check runs only when an `ACCESSIBILITY` row was declared, `security-reviewer-agent`'s Compliance & Privacy check only when a `PRIVACY` or `COMPLIANCE` row was, and `qa-plan-agent`'s Cross-Environment Verification step only when a `VERIFICATION` row was — the category that records a check no developer environment can stage alone, declared at requirement time instead of discovered after the code is written. A `VERIFICATION` row names the `AC-n` it covers, and that naming is what lets `test-verifier-agent` classify those criteria as verified elsewhere rather than as coverage gaps. Undeclared means `N/A`, which is the normal case — an obligation is never inferred from the code, and a legacy 6-column table reads as undeclared until a writer migrates it. The exceptions to the feature-folder rule: `.kairos/_lessons.md`, `.kairos/decisions/`, `.kairos/_tech-debt.md`, and `.kairos/_qa-regression.md` sit at the project root, not inside any feature folder, because they persist across feature runs — only `retrospective-agent`, `improvement-advisor-agent`, `dependency-audit-agent`, and `qa-plan-agent` ever touch them, one path each.
+All artifacts land in `.kairos/<feature_folder>/` inside the target project (not this repo). Each feature folder also contains a `ledger/` subdirectory with three living files — `constraints.md`, `decisions.md`, `open-questions.md` — that agents read at phase start and update at phase end (forced accounting model), plus two the orchestrator alone keeps: `run.md` (the run's settings — effort, active agents, auto-fix budget, wave gates, and the agents dispatched but not yet returned — so a resumed session restores them and re-invokes an interrupted agent instead of trusting the report it left on disk) and `loops.md` (review loop state and the history of non-converged loops, kept out of `open-questions.md`). Before v8.5.0 a third, `audit-log.md`, held one line per gate; that log now lives in the feature folder's `_tracking.md`, and an existing `audit-log.md` is only read, never written. Folders written before v8.4.0 must keep resuming: every reader of these files falls back to the older location or format, and the orchestrator migrates on first touch rather than any agent assuming the new file exists. In `decisions.md`, only the orchestrator writes the `Supersedes` column, on a human's Accept of a decision conflict — never the agent the conflict scan is checking. Each phase updates only the rows its own work touched; the full re-walk of every row runs twice, at `architect-agent` (first accounting pass) and `release-planner-agent` (final accounting), which is what puts every row in a terminal state before release. `constraints.md` carries a `Category` column from `constraint-taxonomy`'s closed vocabulary, written once at row creation and never rewritten afterwards, because three checks are gated on it: `code-reviewer-agent`'s Accessibility check runs only when an `ACCESSIBILITY` row was declared, `security-reviewer-agent`'s Compliance & Privacy check only when a `PRIVACY` or `COMPLIANCE` row was, and `qa-plan-agent`'s Cross-Environment Verification step only when a `VERIFICATION` row was — the category that records a check no developer environment can stage alone, declared at requirement time instead of discovered after the code is written. A `VERIFICATION` row names the `AC-n` it covers, and that naming is what lets `test-verifier-agent` classify those criteria as verified elsewhere rather than as coverage gaps. Undeclared means `N/A`, which is the normal case — an obligation is never inferred from the code, and a legacy 6-column table reads as undeclared until a writer migrates it. The exceptions to the feature-folder rule: `.kairos/_lessons.md`, `.kairos/decisions/`, `.kairos/_tech-debt.md`, and `.kairos/_qa-regression.md` sit at the project root, not inside any feature folder, because they persist across feature runs — only `retrospective-agent`, `improvement-advisor-agent`, `dependency-audit-agent`, and `qa-plan-agent` ever touch them, one path each.
 
 `_qa-regression.md` is the manual counterpart of the automated suite: the cumulative catalogue of manual cases, each with a stable `QA-n` ID, the `Area` it belongs to, and its own `Setup`. `qa-plan-agent` is its only writer — it appends the cases it wrote this run, and retires a case when the current change automated the behavior it verified or removed it. It is also its own reader at the next feature: 5b's regression selection has two sources, the callers it greps in the code and the existing `QA-n` cases whose `Area` the change touched, each selected only with the changed file that justifies it. Without the catalogue a manual case dies with its feature folder, and the retest a QA person actually performs — re-running old manual cases to see whether this change broke them — has nothing to draw from.
 
@@ -355,7 +557,9 @@ VitePress `srcDir` is set to `..` (repo root), so the site sources Markdown from
 
 ### Commands (`commands/`)
 
-Claude Code plugin slash commands, auto-discovered since the plugin root is the repo root: `/kairos:setup` (guided per-tier model configuration) and `/kairos:view` (renders one `.kairos/<feature_folder>/` phase artifact as a synthetic HTML page via the Artifact tool — Claude Code only, one file per invocation, never the whole feature folder). Unlike `agents/*.md`, files here are not mirrored into `.opencode/agents/` or `.kimi-code/agents/` — they're a Claude-Code-native construct.
+Claude Code plugin slash commands, auto-discovered since the plugin root is the repo root: `/kairos:setup` (guided per-tier model configuration, written to `.kairos/.models`), `/kairos:view` (renders one `.kairos/<feature_folder>/` phase artifact as a synthetic HTML page via the Artifact tool — Claude Code only, one file per invocation, never the whole feature folder) and `/kairos:usage` (the model and the token buckets each dispatched agent really used, measured from the host's own subagent transcripts by `scripts/usage.mjs`). Unlike `agents/*.md`, files here are not mirrored into `.opencode/agents/` or `.kimi-code/agents/` — they're a Claude-Code-native construct.
+
+`/kairos:usage` exists because the only other source for "which model ran this agent" is the agent itself, and a model asked its own name can be wrong; the transcript records the model of every turn and the usage of every response, so the figures are measured and never reported by an LLM about itself. The script is the repo's one piece of code and is deliberately a plain script rather than a hook or a service: it reads `~/.claude/projects/<project>/<session>/subagents/agent-*.jsonl` and their `.meta.json`, takes the feature from the `Feature folder:` line each dispatch prompt carries, counts every response once (a response is written to the transcript several times, one line per content block, each carrying the same usage, so summing lines roughly doubles every figure), and keeps input, output, cache-write and cache-read tokens apart because they are billed differently. Claude Code documents the path but not the file format, so it is best effort and says so when it finds nothing it understands. In a run, the orchestrator has the script write `.kairos/<feature_folder>/_usage.md` after every agent that returns: one row per agent call, a total, and a flag on a model that differs from the one configured. A separate file rather than a section of `_tracking.md` or of each agent's report, because the script writes the whole file itself (no model retypes a number), one file is the only place to read, no phase artifact that a later agent reads as input carries figures it did not ask for, and a run stopped halfway still has its table. An agent cannot write its own row: it does not know its token count while it runs. `/kairos:usage` prints the same report on demand, one row per agent call and never an aggregate per agent type; `.kairos/.models` and each agent's `model:` frontmatter are what it compares the measured model against. In a sample of 437 real KAIROS subagent transcripts every agent had run on the tier its frontmatter names.
 
 ### Plugin (`​.claude-plugin/`)
 

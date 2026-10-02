@@ -4,7 +4,7 @@ Since v9.0.0 you don't pick agents from a menu. The orchestrator works out which
 
 Two formats are read:
 
-1. **The override block** (new): `Effort:`, `Auto-fix:`, `Skip:` and `Add:` lines, all optional. The orchestrator derives the pipeline and applies them on top.
+1. **The override block** (new): `Size:`, `Effort:`, `Epic:`, `Areas:`, `Auto-fix:`, `Skip:` and `Add:` lines, all optional. The orchestrator derives the pipeline and applies them on top.
 2. **The checklist** (older): one checkbox per agent. A checklist is a selection a person already confirmed, so it still **wins over the derivation**. Issues written before v9.0.0 run exactly as they did.
 
 ---
@@ -13,17 +13,17 @@ Two formats are read:
 
 `impact-assessment-agent` runs at the start of every run (the orchestrator starts it). It reads the issue and the code it touches, then reports the facts the rules below use: effort, the domains touched, whether the project has a test suite, and whether the change alters a contract. `architect-agent` reports the same kind of facts about its design. Neither one names an agent. The rule table lives in the orchestrator alone.
 
-| Agent | Decided | Runs when |
-|---|---|---|
-| `pm-agent` | at the start | effort is `medium` or `significant_rework` |
-| `architect-agent` | at the start | effort is `significant_rework`, or `medium` and the change touches `db` or `auth`, changes a contract, or spans two or more of backend/frontend/db |
-| an implementer | at the start (whether), before the plan (which) | the issue asks for code. A spike or an analysis-only issue writes none |
-| `code-reviewer-agent` | at the start | an implementer runs |
-| `test-verifier-agent` | at the implementation gate | the implementation wrote or changed a test file |
-| `security-reviewer-agent` | at the implementation gate | the change touches `auth` or `integrations`, a `SECURITY`/`PRIVACY`/`COMPLIANCE` constraint exists, or the architecture's threat model produced rows |
-| `qa-plan-agent` | at the review gate | the project verifies features by hand (asked once per project) and something is left for a person: no tests were written, an acceptance criterion went to manual verification, or the change touches the frontend. A `VERIFICATION` constraint triggers it in any project |
-| `release-planner-agent` | at the review gate | the change ships a migration, a new environment variable or configuration key, a deployment or CI file, or a dependency change |
-| `documentation-agent` | at the review gate | the change alters a contract, or the architecture's Behaviour Delta is not `N/A` |
+| Agent | Area | Decided | Runs when |
+|---|---|---|---|
+| `pm-agent` | analysis | at the start | effort is `medium` or `significant_rework` |
+| `architect-agent` | analysis | at the start | effort is `significant_rework`, or `medium` and the change touches `db` or `auth` or changes a contract. Backend and frontend both changing is not a rule: with no contract change the design is two layers edited |
+| an implementer | development | at the start (whether), before the plan (which) | the issue asks for code. A spike or an analysis-only issue writes none |
+| `code-reviewer-agent` | review | at the start | an implementer runs |
+| `test-verifier-agent` | review | at the implementation gate | the implementation wrote or changed a test file, and effort is not `simple_fix` (with no `pm-agent` there is no acceptance-criteria list to map tests against, and code review already reads the tests) |
+| `security-reviewer-agent` | review | at the implementation gate | the change touches `auth` or `integrations`, a `SECURITY`/`PRIVACY`/`COMPLIANCE` constraint exists, or the architecture's threat model produced rows |
+| `qa-plan-agent` | delivery | at the review gate | the project verifies features by hand (asked once per project) and something is left for a person: no tests were written, an acceptance criterion went to manual verification, or the change touches the frontend. A `VERIFICATION` constraint triggers it in any project |
+| `release-planner-agent` | delivery | at the review gate | the change ships a migration, a new environment variable or configuration key, a deployment or CI file, or a dependency change |
+| `documentation-agent` | delivery | at the review gate | the change alters a contract, or the architecture's Behaviour Delta is not `N/A` |
 
 **Which implementer.** The choice is made right before the implementation plan, when the design exists:
 
@@ -32,6 +32,8 @@ Two formats are read:
 - on the TDD path, Team Mode (`implementer-lead-agent`) is offered when two or more of backend/frontend/db are touched, `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is set and you are in Claude Code. You still confirm its ~3.5× cost.
 
 `implementer-coder-agent` is **code-first**, not code-only: it writes the code, then adds or updates tests where the project has them. When the modules it touches already have tests it must extend them, and it may skip tests only with a written reason in the plan.
+
+An agent runs only when its rule fires **and** its area is selected (see [Areas](#areas)). `impact-assessment-agent` and `bug-triage-agent` belong to no area: they report the facts, so they run whichever areas you chose.
 
 Each decision taken during the run is printed at the gate before it, with the rule that fired. Reply there to change it (`add security-reviewer`, `skip release-planner`): the correction holds for the rest of the run and is logged in `_tracking.md`.
 
@@ -48,19 +50,59 @@ Copy this block into any issue description, or paste it as your reply at the orc
 ```markdown
 ## KAIROS Pipeline
 
-Effort: medium
+Size: M
+Epic: PROJ-10
 Auto-fix: 1
 Skip: release-planner-agent
 Add: security-reviewer-agent
 ```
 
-**`Effort:`** takes `simple_fix`, `medium`, or `significant_rework` and replaces the effort `impact-assessment-agent` measured. It says how big the change is: the orchestrator passes it to every agent, and it decides whether they run a short, trimmed, or full process, as well as the derivation rules above.
+**`Size:`** takes `XS`, `S`, `M`, `L` or `XL` and replaces the size `impact-assessment-agent` measured. The effort follows from it (see [Size](#size)), so a `Size:` line sets both.
+
+**`Effort:`** takes `simple_fix`, `medium`, or `significant_rework` and replaces the effort `impact-assessment-agent` measured. It says how big the change is: the orchestrator passes it to every agent, and it decides whether they run a short, trimmed, or full process, as well as the derivation rules above. It does not change the size: the start gate shows the size as measured and the effort you forced, side by side.
+
+**`Epic:`** names the epic this issue belongs to (`PROJ-10`, `&5`). Without the line the orchestrator reads the epic from the tracker when the CLI exposes one (GitLab epics, Jira parent). It decides where the QA plan goes: with an epic, the plan is one cumulative file for the whole epic (see [Phase 5b](/workflow#phase-5b-qa-plan-qa-plan-agent-optional)). Bitbucket Issues has no epics, so there the line is the only source.
+
+**`Areas:`** takes `all`, or any of `analysis`, `development`, `review`, `delivery` (`analisi` and `sviluppo` work too). See [Areas](#areas). With the line present the orchestrator does not ask which areas to run.
 
 **`Auto-fix:`** takes a number: how many times the agents may fix their own problems before stopping to ask you. It covers the review wave: code review, security review and test verification run together, and the agents may retry while code review reports a serious problem or test verification a gap. Security findings always wait for you. `0` means always ask. Without the line, `simple_fix` and `medium` get 1 and `significant_rework` asks you at the start. The ceiling is 5, or 2 when Team Mode runs, because each Team Mode fix is a whole team run.
 
 **`Skip:`** and **`Add:`** take a comma-separated list of agent names. A skipped agent never runs, whatever its rule says. An added agent runs in its normal place in the pipeline, even when its rule would not fire. Naming an implementer in `Add:` (for example `implementer-coder-agent`) forces that implementer.
 
 Before the first agent runs, the orchestrator shows the pipeline it derived, with these corrections applied, at its start gate. You can still change anything there.
+
+**A section in the issue means no question.** When the issue already carries a `## KAIROS Pipeline` section (either format), you have already decided: the orchestrator prints the pipeline it is about to run and starts, without asking you to confirm it again. It still asks when something is not a decision you have seen: the issue could not be read, the impact assessment left an unresolved escalation or failed, a fact that gates an agent is unknown, the architect was skipped against its rule, or nothing would run. A checklist is used as written; to derive the pipeline instead, say `derive` in your prompt when you start the run.
+
+### Areas
+
+A run does not always need the whole pipeline. The agents belong to four areas, and you can limit a run to some of them, for example only the analysis of an issue now and the build later:
+
+| Area | Agents |
+|---|---|
+| `analysis` | `pm-agent`, `architect-agent` |
+| `development` | the implementer |
+| `review` | `code-reviewer-agent`, `security-reviewer-agent`, `test-verifier-agent` |
+| `delivery` | `qa-plan-agent`, `release-planner-agent`, `documentation-agent` |
+
+The orchestrator asks once, at the start, unless an `Areas:` line already answers it: **All areas** (the default, one click) or **Choose areas**. Inside the areas you chose the rules above still decide each agent, so you never scroll a list of agents. To change the choice at the start gate, reply `only analysis`, `solo sviluppo`, `add review`, `skip delivery` or `all areas`.
+
+Two things to know. `review` or `delivery` without `development` has no implementation record to read, so the orchestrator lists the changed files from `git diff` against the default branch and gives them to the agents. And when a run covered only some areas, running the same issue again offers **Run the remaining areas**, using the earlier artifacts as facts; the cleanup at the end recommends keeping the phase files for that reason.
+
+### Size
+
+`impact-assessment-agent` gives every issue a T-shirt size before any code is written. It measures the footprint of the change from the code the issue touches, not hours: read it as "how much of the codebase moves", never as a time estimate. The same criteria as the effort apply, split finer, and the effort follows from the size through a fixed map:
+
+| Size | Criteria | Effort |
+|------|----------|--------|
+| `XS` | 1 file, no new endpoint, no schema change, no auth impact | `simple_fix` |
+| `S` | 2 files, same limits | `simple_fix` |
+| `M` | 3-6 files, at most 1 new or modified endpoint, schema change possible, no auth redesign | `medium` |
+| `L` | 7-10 files, 2-3 new or modified endpoints, schema change possible, no auth redesign | `medium` |
+| `XL` | more than 10 files, a new subsystem or domain, auth changes or schema migrations | `significant_rework` |
+
+As with the effort, a criterion of a higher level wins over the file count: a new endpoint, a schema change or an auth impact never leaves a change at `XS` or `S`. Only the effort decides how thorough each agent is; the size is a label for people, so nothing branches on it.
+
+The start gate shows the size next to the effort. When you confirm it on a run that started from an issue, the orchestrator sets a `size:<value>` label on that issue, replacing any `size:` label already there, so the tracker can group an epic's issues by size. Where there is no tracker CLI, or the tracker has no labels (Bitbucket Issues), the label is skipped without a message and the run continues. A checklist written before v9.0.0 skips the impact assessment, so it gets no size and no label.
 
 ### Saving corrections to the issue
 
@@ -111,7 +153,7 @@ Auto-fix: 1
 
 A checklist that checks `implementer-coder-agent` now gets the code-first coder: where the touched code already has tests, it extends them. To keep a run free of tests, say so at the start gate.
 
-To move an issue to derivation, pick **Derive instead** when the orchestrator asks, then save the resulting override block to the issue.
+To move an issue to derivation, say `derive` in your prompt when you start the run (the orchestrator no longer asks), then accept the offer to save the resulting override block to the issue.
 
 ---
 

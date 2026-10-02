@@ -69,3 +69,27 @@ A: Roughly 3.5× a normal run, and it needs Claude Code with the experimental Ag
 **Q: Can teams collaborate?**
 
 A: Yes. The agents, the skills, and the `.kairos/` artifacts all live in the repository, so they travel with the branch and review like any other file. Each phase can also post its artifact as a comment on the issue in Jira, GitLab, or Bitbucket.
+
+---
+
+**Q: How do I know which model each agent really used, and what it cost in tokens?**
+
+A: Open `_usage.md` in the feature folder. In Claude Code the Orchestrator has it rewritten after every agent that returns, with one row per agent call: the model that answered and the input, output, cache-write and cache-read tokens. `/kairos:usage` prints the same report on demand. It reads the subagent transcripts Claude Code writes, so the model and the token counts are measured, not reported by an agent about itself. On a sample of 437 real KAIROS subagent runs every agent had used the model tier its `model:` line names. See [Usage](/workflow#usage-model-and-tokens-per-agent).
+
+---
+
+**Q: Can I run only part of the pipeline, for example only the analysis?**
+
+A: Yes. At the start the Orchestrator asks once which areas to run (analysis, development, review, delivery; the default is all), or reads an `Areas:` line from the issue. Inside the areas you chose it still derives each agent from the facts. Run the same issue again later and it offers the remaining areas. See [Areas](/setup/templates#areas).
+
+---
+
+**Q: Do the reviewers overwrite each other's ledger entries when they run in parallel?**
+
+A: No. Inside the review wave none of them writes the ledger: each returns its updates as a block in its own report, and the Orchestrator applies the blocks one after another. QA plan, release planner and documentation are not parallelized, because they depend on each other's output.
+
+---
+
+**Q: I build a big issue one slice at a time. Do I get a folder per slice?**
+
+A: No. An issue has one folder and one ledger. When the folder already holds a finished run, the Orchestrator offers **Start a new run**: it moves the finished run's reports to `runs/run-<k>/`, keeps the ledger (so decisions and constraints carry over), the triage and the tracking log, and starts the next slice fresh. Criteria that belong to a slice not built yet show as `later` in the tracking file and in the test verification, never as gaps. See [Tracking File](/workflow#tracking-file).

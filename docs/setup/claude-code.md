@@ -27,7 +27,7 @@ claude plugin enable kairos
 
 Confirm with `claude plugin list`.
 
-This gets you the 17 core agents, the internal skills (`contract-checklist`, `coding-discipline`, etc.), and the `/kairos:setup` / `/kairos:view` slash commands in one shot. Agents are invoked with the `kairos:` scope — `@kairos:orchestrator-agent`, `@kairos:pm-agent` — and Team Mode agents with `@kairos:team:implementer-lead-agent`.
+This gets you the 17 core agents, the internal skills (`contract-checklist`, `coding-discipline`, etc.), and the `/kairos:setup` / `/kairos:view` / `/kairos:usage` slash commands in one shot. Agents are invoked with the `kairos:` scope — `@kairos:orchestrator-agent`, `@kairos:pm-agent` — and Team Mode agents with `@kairos:team:implementer-lead-agent`.
 
 ### Option B — Manual copy
 
@@ -40,7 +40,7 @@ cp path/to/kairos/agents/*.md .claude/agents/
 cp path/to/kairos/agents/team/*.md .claude/agents/team/
 ```
 
-This copies **agents only**. If you also want the internal skills or the `/kairos:setup` / `/kairos:view` commands, copy those directories too:
+This copies **agents only**. If you also want the internal skills or the `/kairos:setup` / `/kairos:view` commands, copy those directories too (`scripts/` as well, for `/kairos:usage`):
 
 ```bash
 cp -r path/to/kairos/skills .claude/skills
@@ -238,7 +238,7 @@ Requires the respective CLI authenticated: `jira init`, `glab auth login`, or a 
 | Problem | Fix |
 |---------|-----|
 | Agent not found | Check `.claude/agents/` exists and contains `.md` files with valid YAML frontmatter |
-| Wrong model used | Verify the `model:` field in each agent's frontmatter |
+| Wrong model used | Check `.kairos/.models` first (it outranks frontmatter for agents the orchestrator dispatches), then the agent's `model:` frontmatter. `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1` in `settings.json` overrides both |
 | Orchestrator not delegating | The `description:` field must clearly describe when to use the agent |
 | `.kairos/` not created | The implementer-tdd-agent or implementer-coder-agent creates it on first write — ensure `write_file` is in its `tools:` list |
 | Gates keep degrading to a text menu / `AskUserQuestion` unavailable | The orchestrator is running as a subagent, not as the session's primary agent — it was invoked by name (`@orchestrator-agent` / `@kairos:orchestrator-agent`) inside an existing chat instead of at startup. Exit and relaunch with `claude --agent kairos:orchestrator-agent` (plugin) or `claude --agent orchestrator-agent` (manual copy) — see Step 3 |
@@ -385,20 +385,34 @@ Each `[HITL]` gate is a pause where **you** review and approve before the next a
 
 ## Customizing models
 
-KAIROS's shipped frontmatter splits agents into two tiers — `opus` for the 6 reasoning-heavy agents (`orchestrator`, `architect`, `context-extractor`, `impact-assessment`, `security-reviewer`, `improvement-advisor`) and `sonnet` for the 8 execution agents (`pm`, `implementer-tdd`, `implementer-coder`, `code-reviewer`, `test-verifier`, `release-planner`, `documentation`, `retrospective`). Claude Code has no plugin-install-time or config-file mechanism for per-agent models, but there are four ways to change them:
+KAIROS's shipped frontmatter splits agents into two tiers: `opus` for the 7 reasoning-heavy agents (`orchestrator`, `architect`, `context-extractor`, `impact-assessment`, `security-reviewer`, `improvement-advisor`, `bug-triage`) and `sonnet` for the 10 execution agents (`pm`, `implementer-tdd`, `implementer-coder`, `code-reviewer`, `test-verifier`, `qa-plan`, `release-planner`, `documentation`, `retrospective`, `dependency-audit`). Those are the defaults: with nothing configured, every agent runs on its own `model:`.
 
-0. **`/kairos:setup` (plugin users, recommended)** — the plugin ships a guided setup command that asks for a strategy (Default / Economy / Inherit / Custom) and applies it: on copy-installs it rewrites the `model:` frontmatter of your `.claude/agents/` files per tier; on plugin-only installs it can materialize project copies (rewriting the scoped `@kairos:` calls to bare names so routing stays self-contained) or, if you prefer, set a single global subagent model via `CLAUDE_CODE_SUBAGENT_MODEL` in `settings.json`.
-1. **Edit the `model:` frontmatter** in your `.claude/agents/` copies. Aliases (`sonnet`, `opus`, `haiku`), full model IDs (e.g. `claude-opus-5`), and `inherit` (follow the main conversation) are all accepted. Downgrading the execution tier to `haiku` is the easiest token-saver; keep `orchestrator-agent` and `architect-agent` on stronger models. Downside: your edits are local forks — re-apply them after re-copying updated KAIROS agents.
-2. **Global subagent override** — the `CLAUDE_CODE_SUBAGENT_MODEL` environment variable wins over every subagent's frontmatter `model:` (resolution order: env var → per-invocation override → frontmatter → main conversation model). Settable in `settings.json`:
+Claude Code picks a subagent's model in this order: the `model` parameter of the call that starts it, then the agent's frontmatter `model:`, then the `CLAUDE_CODE_SUBAGENT_MODEL` environment variable, then the main conversation's model (older Claude Code versions ranked the environment variable first). There are four ways to change the result:
+
+1. **`.kairos/.models` (recommended)** — a plain-text file in your project, one `<agent>: <alias>` line per agent, written by `/kairos:setup` (Default, Economy or Custom strategy) or by hand. Before each dispatch the orchestrator reads it and passes the alias as the call's `model` parameter, which outranks the agent's frontmatter. Nothing else changes: no forked agent files, no edits to re-apply after a plugin update, and deleting the file restores the shipped tiers. The Start Gate shows the lines in effect.
+   ```
+   # .kairos/.models
+   architect-agent: opus
+   pm-agent: haiku
+   code-reviewer-agent: opus
+   ```
+   It has three limits. It holds aliases only (`opus`, `sonnet`, `haiku`, `fable`), because the per-call parameter takes neither `inherit` nor a full model ID; a line with anything else is reported and ignored. It applies only to agents the orchestrator dispatches: `impact-assessment`, `bug-triage`, `pm`, `architect`, both implementers, `code-reviewer`, `security-reviewer`, `test-verifier`, `qa-plan`, `release-planner` and `documentation`. The orchestrator itself, the agents you start yourself (`context-extractor`, `retrospective`, `improvement-advisor`, `dependency-audit`) and Team Mode teammates keep their frontmatter model. And it is Claude Code only: OpenCode and Kimi Code ignore it (their own model settings are on their setup pages).
+2. **Edit the `model:` frontmatter** in your `.claude/agents/` copies. This is the way to get `inherit`, a full model ID (e.g. `claude-opus-5-5`), or a different model for the agents option 1 does not reach. Downside: your edits are local forks, so re-apply them after re-copying updated KAIROS agents.
+3. **Global subagent model** — `CLAUDE_CODE_SUBAGENT_MODEL` in `settings.json` is only the fallback for a subagent that has no `model:` of its own. Every KAIROS agent declares one, so by itself the variable changes nothing. Add `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1` to make it override both the frontmatter and the per-call parameter (which also switches `.kairos/.models` off):
    ```json
    {
-     "env": { "CLAUDE_CODE_SUBAGENT_MODEL": "haiku" }
+     "env": {
+       "CLAUDE_CODE_SUBAGENT_MODEL": "haiku",
+       "CLAUDE_CODE_SUBAGENT_MODEL_FORCE": "1"
+     }
    }
    ```
-   Coarse but zero-maintenance: **all** subagents — including architect and security review — run on that one model, so it's a blunt cost cut, not a per-tier tuning.
-3. **Shadow copy (manual variant of option 0)** — a same-named agent file in your project's `.claude/agents/` outranks the plugin's copy for the **bare** name (project scope > plugin scope). Caveat: the plugin's orchestrator routes via scoped calls (`@kairos:pm-agent`, …), which keep resolving to the plugin's agents with shipped models — so a lone shadow copy only affects direct bare-name invocations. For pipeline-wide effect, copy all 17 core agents and rewrite the scoped `@kairos:` calls to bare names (this is exactly what `/kairos:setup` automates).
+   Coarse but zero-maintenance: **all** subagents, architect and security review included, run on that one model, so it is a blunt cost cut, not a per-tier tuning.
+4. **Shadow copy (manual variant of option 2)** — a same-named agent file in your project's `.claude/agents/` outranks the plugin's copy for the **bare** name (project scope > plugin scope). Caveat: the plugin's orchestrator routes via scoped calls (`@kairos:pm-agent`, …), which keep resolving to the plugin's agents with shipped models, so a lone shadow copy only affects direct bare-name invocations. For pipeline-wide effect, copy all 17 core agents and rewrite the scoped `@kairos:` calls to bare names (this is what the advanced path of `/kairos:setup` automates).
 
-There is intentionally no KAIROS-side config file for this: Claude Code offers no hook the plugin could use to rewrite frontmatter at install time.
+::: info Two things called effort
+Claude Code's `effort:` agent-frontmatter field (`low`, `medium`, `high`, `xhigh`, `max`) sets how deeply that agent reasons. KAIROS's `effort` (`simple_fix`, `medium`, `significant_rework`) is the size of the change: `impact-assessment-agent` measures it and the orchestrator stamps it into every agent's prompt. The T-shirt `size` (`XS` to `XL`) is a finer label derived from the same facts; only `effort` decides how thorough an agent is. They are unrelated and live in different places. The shipped agents set no `effort:` in their frontmatter, and the Agent call has no per-call effort parameter, so reasoning depth can only be set per agent file, not per run.
+:::
 
 ---
 
@@ -408,8 +422,8 @@ Claude Code accepts short aliases that always resolve to the latest model in eac
 
 | Alias | Resolves to | Use for |
 |-------|------------|--------|
-| `sonnet` | Latest Sonnet | The 8 execution agents — good balance of quality and speed |
-| `opus` | Latest Opus | Orchestrator and the 5 other reasoning-heavy agents (architect, context extractor, impact assessment, security reviewer, improvement advisor) |
+| `sonnet` | Latest Sonnet | The 10 execution agents — good balance of quality and speed |
+| `opus` | Latest Opus | Orchestrator and the 6 other reasoning-heavy agents (architect, context extractor, impact assessment, security reviewer, improvement advisor, bug triage) |
 | `haiku` | Latest Haiku | Team Mode teammates — fast and cost-efficient |
 
 ### Per-agent defaults
@@ -430,6 +444,7 @@ These are the tiers `agents/*.md` actually ships with — same split as "Customi
 | `implementer-coder-agent` | `sonnet` | Upgrade to `opus` for complex codebases; no test-first overhead |
 | `code-reviewer-agent` | `sonnet` | Upgrade to `opus` for deep security audits |
 | `test-verifier-agent` | `sonnet` | Sufficient for coverage analysis |
+| `qa-plan-agent` | `sonnet` | Sufficient for manual test design from real coverage gaps |
 | `release-planner-agent` | `sonnet` | Sufficient for deployment planning |
 | `documentation-agent` | `sonnet` | Sufficient for README/CHANGELOG/API-reference generation |
 | `retrospective-agent` | `sonnet` | Sufficient for lessons synthesis from existing artifacts |

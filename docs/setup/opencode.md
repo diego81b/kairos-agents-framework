@@ -90,6 +90,8 @@ permission:
 
 ## Step 2b — Customize models without forking the pack (optional)
 
+The Claude Code pack's `.kairos/.models` file has no effect here: OpenCode's agent call takes no per-call model, so the orchestrator ignores the file and says so at the Start Gate. Use the `opencode.json` mechanism below instead.
+
 OpenCode is a gateway to many providers, and hardcoding one `provider/model-id` per agent in the mirror can't fit everyone. You don't need to edit the shipped `.opencode/agents/*.md` files to change models: OpenCode's `opencode.json` **configures agents by name**, so a config entry overrides the matching markdown agent's `model:` while the pack files stay pristine (and re-copyable after KAIROS updates without losing your model choices). Put it in your project root (`opencode.json`, safe to commit) or globally (`~/.config/opencode/opencode.json`):
 
 ```jsonc

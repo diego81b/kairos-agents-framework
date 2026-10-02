@@ -19,6 +19,7 @@ Every gate below is an interactive `AskUserQuestion` prompt — **but only when 
 | 5 | Test Verifier (review wave) | `05-test-verification.md` | same gate |
 | 5b | QA Plan Agent *(optional)* | `05b-qa-plan.md` | ✅ / ✏️ / ⏭️ / ⛔ |
 | 6 | Release Planner | `06-deployment-plan.md` | ✅ / ✏️ / ⛔ |
+| 6b | Documentation Agent *(optional)* | `06b-documentation.md`, then the documentation files | ✅ / ✏️ / ⛔ |
 
 Phases 4, 4b and 5 run together as one **review wave**: the active reviewers read the same code, in parallel where the host allows it, and you answer one gate for all three (see [Review Wave](#review-wave-phases-4-4b-and-5)).
 
@@ -47,13 +48,18 @@ Every phase writes a single Markdown file: a small YAML frontmatter header carry
 - Developer provides a natural-language feature request (with optional issue reference)
 - Orchestrator loads `00-context.md`, `00b-impact.md`, and `00c-bug-triage.md` if present. A triage on disk is attached to every later subagent prompt
 - **Bug-Input Check**: if the input reads as a bug report — a symptom against an expectation, a stack trace, reproduction steps, "this used to work" — and no `00c-bug-triage.md` exists, the Orchestrator offers to run `bug-triage-agent` first. On accept it dispatches it with `mode: orchestrated`: the agent reproduces, finds the root cause, writes `00c-bug-triage.md`, and returns without a gate of its own, which the Orchestrator then presents as it would any phase artifact
-- **Impact Grounding**: unless `00b-impact.md` already exists or the issue carries a checklist template, the Orchestrator dispatches `impact-assessment-agent` with `mode: orchestrated`. It reads the issue and the code it touches and reports facts, never agent names: effort, domains touched, whether the project has a test suite, whether a contract changes, whether the issue asks for code at all. The Orchestrator writes `00b-impact.md` and resolves its Risks table row by row
+- **Impact Grounding**: unless `00b-impact.md` already exists or the issue carries a checklist template, the Orchestrator dispatches `impact-assessment-agent` with `mode: orchestrated`. It reads the issue and the code it touches and reports facts, never agent names: size and effort, domains touched, whether the project has a test suite, whether a contract changes, whether the issue asks for code at all. The Orchestrator writes `00b-impact.md` and resolves its Risks table row by row
 - **Derivation**: the Orchestrator applies one rule table to those facts (see [Pipeline Templates](/setup/templates#how-the-pipeline-is-derived)). At this point it decides `pm-agent`, `architect-agent`, whether an implementer runs and `code-reviewer-agent`. The implementer itself is chosen right before the plan; the review agents at the implementation gate; QA plan, release planning and documentation at the review gate. A triage's `recommended_entry` beats the impact assessment's effort, because it comes from a reproduction
 - **Manual QA setting** (once per project): the first run asks whether a person verifies features by hand in this project, and stores the answer in `.kairos/.manual-qa`. It is the one input to the QA plan rule that no code can supply
-- **Start gate**: the Orchestrator shows the derived pipeline, the rule behind each agent, the effort and auto-fix budget, and, when it ran this time, the impact assessment's `## Summary`. One question: start, re-run the impact assessment with your feedback, or stop. A free-text reply is a correction (`effort medium`, `skip release-planner`, `add security-reviewer`, `every wave`), applied and stored in `ledger/run.md` as an override. **Effort is stamped into every subagent's invocation prompt**, so each agent enters Lean, Trimmed, or Full mode from a value you saw. `simple_fix` also sets the auto-fix budget to 1, widens the Risk Disposition Loop's auto-accept threshold to `medium`, and merges the plan and implementation into one step; `medium` sets the budget to 1; `significant_rework` asks for it
-- A `## KAIROS Pipeline` section in the issue is read first. An override block (`Effort:`, `Auto-fix:`, `Skip:`, `Add:`) is applied on top of the derivation. An older checklist wins over it: the checked agents run, the impact assessment is not started, and the Orchestrator asks once whether to use the checklist or **Derive instead**
+- **QA directory setting** (once per project, only when a QA plan needs a file): asked before the QA plan runs when the issue belongs to an epic (the plan has to read the epic's existing file), and at the QA gate otherwise, when the plan turned out to need one. The answer is stored in `.kairos/.qa-dir`. The Orchestrator proposes `docs/qa-plans/` and accepts any other path inside the project; the file is never written before you have approved the plan
+- **Model settings** (optional, Claude Code): a `.kairos/.models` file, written by `/kairos:setup`, holds one `<agent>: <alias>` line per agent. The Orchestrator reads it before each dispatch and passes the alias as the call's model, which outranks the agent's own `model:`; without the file every agent runs on its shipped model. It covers only the agents the Orchestrator dispatches, see [Customizing models](/setup/claude-code#customizing-models)
+- **Start gate**: the Orchestrator shows the derived pipeline, the rule behind each agent, the size, the effort and auto-fix budget, the model lines from `.kairos/.models` when there are any, and, when it ran this time, the impact assessment's `## Summary`. One question: start, re-run the impact assessment with your feedback, or stop. A free-text reply is a correction (`effort medium`, `skip release-planner`, `add security-reviewer`, `only analysis`, `every wave`), applied and stored in `ledger/run.md` as an override. **Effort is stamped into every subagent's invocation prompt**, so each agent enters Lean, Trimmed, or Full mode from a value you saw. `simple_fix` also sets the auto-fix budget to 1, widens the Risk Disposition Loop's auto-accept threshold to `medium`, and merges the plan and implementation into one step; `medium` sets the budget to 1; `significant_rework` asks for it
+- The issue is read first, before the folder is named, and the Orchestrator says what it found (`## KAIROS Pipeline found: override block (...)`, no section, or a warning when the issue could not be read). A `## KAIROS Pipeline` section is a decision you already made, so the run **starts without asking**: the Orchestrator prints the pipeline it is about to run and goes on. It still asks when something is not a decision you have seen (the issue could not be read, an unresolved escalation, an unknown fact that gates an agent, the architect skipped against its rule, an empty pipeline). An override block (`Size:`, `Effort:`, `Epic:`, `Areas:`, `Auto-fix:`, `Skip:`, `Add:`) is applied on top of the derivation. An older checklist wins over it: the checked agents run and the impact assessment is not started; say `derive` in your prompt to ignore it
+- **Areas**: before the facts are gathered, one question, `All areas` (the default) or `Choose areas`, limits the run to some of the four areas: analysis, development, review, delivery. An `Areas:` line in the issue answers it. Inside the chosen areas the rules still derive each agent, and the start gate shows the areas that are not selected as one line. Run the same issue again later and the Orchestrator offers the remaining areas (see [Areas](/setup/templates#areas))
+- **One issue, one folder.** A folder is found by the issue reference, not by the slug (a reworded prompt for the same issue lands in the same folder), and a second folder is never offered for an issue, because it would split the ledger into two copies that drift apart. A large issue built slice by slice is one run per slice in that folder: on a finished run choose **Start a new run**, and the Orchestrator archives the finished run's reports under `runs/run-<k>/` (with a snapshot of its tracking file and settings), keeps the ledger and the triage, rebuilds the impact assessment for the new slice and tells every agent where the earlier runs are. The tracking file stays one file, with a `new run` line in its log. A folder with only a context, impact or triage file is reused, not resumed. A run left `in_progress` or `stopped` resumes **without questions** and says where it restarts; the one thing it never skips is a gate the earlier session had open, which is shown again
 - If the invocation prompt already dictates an agent list, the Orchestrator shows it at the start gate as a proposal and applies it only if you say so
 - The Orchestrator saves the run's settings to `ledger/run.md` and creates `_tracking.md`, the one file it keeps open in your editor for the rest of the run (see [Tracking File](#tracking-file))
+- **Size label** (only when the run started from an issue and you confirmed the start gate): the Orchestrator sets a `size:<XS|S|M|L|XL>` label on the issue, replacing an earlier `size:` label, so the tracker can group an epic's issues by size. Skipped without a message where there is no tracker CLI or no labels. See [Pipeline Templates](/setup/templates#size)
 - **Issue write-back** (only when the run started from an issue and you corrected something at the start gate): the Orchestrator offers to save the correction to the issue as an override block, never touching the rest of the description. On Jira, or with no tracker CLI, it prints a paste-ready block instead. See [Pipeline Templates](/setup/templates#saving-corrections-to-the-issue)
 
 _Input: free-text feature request + optional issue reference + optional `00-context.md`_
@@ -206,7 +212,9 @@ Code review, security review and test verification all read the same finished co
 - **One loop.** If you gave the run an auto-fix budget, the Orchestrator retries on its own while code review or test verification reports a `critical`/`high` issue or an acceptance-criteria gap, then runs every reviewer one last time before the gate. Security findings never trigger an automatic retry; they wait for you. See [Agentic Loop](/agentic-loop).
 - **Who runs the tests.** Inside a wave only Test Verifier executes the test suite; Code Reviewer keeps its static checks and lint, so the two never build into the same output at the same moment. Findings both reviewers raise on the same line are merged by the Orchestrator.
 
-`qa-plan-agent` (5b) is not part of the wave. It runs after the wave's gate, on settled code, and can still lead to one more fix pass of its own, with the same recheck rule.
+- **Who writes the ledger.** Inside a wave none of the three reviewers writes `constraints.md`, `decisions.md` or `open-questions.md`. Each ends its own report with a `## Ledger Update` block, and the Orchestrator applies the three blocks one after another once all have returned, allocating the new ids itself and keeping a row `🔴 open` when two reviewers disagree about it. Two agents that read the same row and write it back in the same minute would otherwise overwrite each other. Parallelism costs nothing here: the slow work (reading code, running tests) stays parallel, and the write is a few seconds. Outside a wave a reviewer updates the ledger itself.
+
+`qa-plan-agent` (5b) is not part of the wave. It runs after the wave's gate, on settled code, and can still lead to one more fix pass of its own, with the same recheck rule. QA plan, release planner and documentation do not run as a wave of their own either: the QA gate can end in a fix pass that changes the code the other two read, the release planner's final accounting has to see every row the others add, and documentation reads the deployment plan for its migration notes.
 
 ---
 
@@ -295,6 +303,7 @@ Answered at the combined review gate. Gaps and issues you mark **Mitigate now** 
 - Name the core: what the change fixes (the bug triage's root cause, or the requirement's outcome) and the one to three behaviours that mean it failed, so those cases come first
 - Build the coverage complement: what Test Verifier reported as uncovered, plus every `AC-n` with a gap, keeping only what a person can actually reach through the product
 - Write manual and exploratory test cases a person can execute without reading the code, each with the `Setup` it needs — applications, configuration, concurrent sessions, machines, roles — in product language: screens, actions, visible outcomes, no class names, files, database objects or pipeline IDs
+- Never send the tester to the developer's tools: no browser dev tools, no scripts, no hand edits to the database, no hand-built requests. A case starts from a state the product can reach. When the only way to stage a precondition is technical, a developer prepares it and the case says so in its `Setup`; when no case can be written without it, the plan carries a risk row instead of a step for the tester
 - List the behaviour changes a tester will see and must not file as bugs
 - Answer any `VERIFICATION` constraint declared upstream — which case covers it, or a `high` risk row when none does; `N/A` when none was declared, which is the normal case
 - Select regression retests by grepping real callers of every changed symbol
@@ -302,10 +311,11 @@ Answered at the combined review gate. Gaps and issues you mark **Mitigate now** 
 - Select the existing `QA-n` cases from the project-wide catalogue whose area this change touched, each with the changed file that puts it there
 - Append this run's reusable manual cases to `.kairos/_qa-regression.md`, retire the ones this change automated or removed
 - State UAT sign-off per `AC-n`, and carry pm-agent's Outcome Criterion through verbatim
+- Decide where the tester reads the plan. Up to 3 checks (manual cases, regression retests and existing cases to re-run, counted together) and no epic: an extract goes into the issue comment, as before. More than 3, or an epic: the tester's part is written as a Markdown file, `_qa-file.md`, and the comment carries a short pointer to it
 
 _Input: `05-test-verification.md` (optional), `01-requirements.md`, `03-implementation.md`, `00c-bug-triage.md` (optional)_
 _Output: a single Markdown file — frontmatter (status, coverage basis, case counts, regression-risk tallies) + the plan body_
-_Saved to: `.kairos/<feature_folder>/05b-qa-plan.md`_
+_Saved to: `.kairos/<feature_folder>/05b-qa-plan.md`, plus `_qa-comment.md` (the text posted to the tracker) and, when the plan goes to a file, `_qa-file.md`_
 
 ::: info HITL checkpoint
 User reviews the plan before it goes to whoever will execute it. `NEEDS_ATTENTION` is not a loop trigger — nothing re-invokes an implementer from here; it means a regression risk or an unverifiable acceptance criterion needs a human decision first.
@@ -313,8 +323,12 @@ User reviews the plan before it goes to whoever will execute it. `NEEDS_ATTENTIO
 `✅ Approve` · `✏️ Request changes` · `⏭️ Skip next` · `⛔ Stop`
 :::
 
-::: tip Runs after the loop, and posts to the issue
-Phase 5b runs only once the review loop has exited and the review gate has resolved — a QA plan written mid-loop describes code that is about to change again. It is also the one artifact whose reader sits outside the pipeline, so it posts itself to the issue tracker when an issue reference was given. No `jira`/`glab` on the machine is fine: it prints a paste-ready comment instead of failing the phase. That comment is the acceptance/QA split in practice: the issue's `AC-n` list stays developer-verifiable, and the setup a check really needs — two applications, a specific configuration, two sessions on two machines — travels in the comment instead of bloating the criteria. What gets posted is an extract, not the file: core, cases, setup, expected behaviour changes, retests, test data and the manual part of the sign-off, without the Summary, Coverage Complement and code evidence the gate reads and a tester cannot act on. Empty sections are left out.
+::: tip Runs after the loop, and reaches the tester through the issue
+Phase 5b runs only once the review loop has exited and the review gate has resolved — a QA plan written mid-loop describes code that is about to change again. It is also the one artifact whose reader sits outside the pipeline, so once you approve it the plan is delivered to the issue tracker when an issue reference was given. No `jira`/`glab` on the machine is fine: the Orchestrator prints a paste-ready comment instead of failing the phase. Nothing is posted or written to the repository before you approve the plan at its gate. That comment is the acceptance/QA split in practice: the issue's `AC-n` list stays developer-verifiable, and the setup a check really needs — two applications, a specific configuration, two sessions on two machines — travels with the plan instead of bloating the criteria. What the tester gets is an extract, not the report: core, cases, setup, expected behaviour changes, retests, test data and the manual part of the sign-off, without the Summary, Coverage Complement and code evidence the gate reads and a tester cannot act on. Empty sections are left out.
+
+**Small plans stay in the comment; larger ones become a file.** With up to 3 checks and no epic, the extract is the comment. Above that it is written to the repository as a Markdown file in the QA directory (`.kairos/.qa-dir`, asked once per project), and the comment shrinks to the framing line, the core and a pointer to the file. The file is written by `documentation-agent` on the Orchestrator's instruction, after you approve, and it lands in your working tree so it travels with the merge request; until that merge the link points at a file that is not on the default branch yet. Standalone, `qa-plan-agent` has no Orchestrator to hand the write to: it leaves `_qa-file.md` in the feature folder and prints the path to copy it to.
+
+**An epic gets one cumulative plan.** When the issue belongs to an epic (an `Epic:` line, or the tracker's own parent link), every issue of that epic writes into the same file, `<qa-dir>/<epic>.md`. Each run rewrites only its own `## <issue>` section and its own row in the `## Issues` table at the top, which lists every issue with its size; the other issues' sections are never touched. The comment goes on the epic, not on the child issue. Read across the epic's issues, that table is also the catalogue by size: the `size:` labels group them in the tracker, the table groups them in the plan.
 :::
 
 ---
@@ -337,6 +351,25 @@ User approves the deployment runbook (`06-deployment-plan.md`). This is the fina
 
 ---
 
+## Phase 6b: Documentation (Documentation Agent) — optional
+
+- Read the project's existing documentation first (README, CHANGELOG format, docs directory) and match it
+- List the user-facing surfaces the change altered, from the architecture's contracts and what the implementer actually shipped
+- Draft the README, API reference, CHANGELOG entry and migration notes those surfaces need, as the exact text to be written; flag what it cannot write without inventing (a missing example, an undocumented error code) as a documentation gap
+- Once you approve the draft, write it into the project's documentation files
+
+_Input: `02-architecture.md`, `03-implementation.md`, `06-deployment-plan.md` (optional), the project's existing docs_
+_Output: `06b-documentation.md`, then the documentation files it lists_
+_Saved to: `.kairos/<feature_folder>/06b-documentation.md`, then README, CHANGELOG and `docs/**` in the project_
+
+::: info HITL checkpoint
+The Orchestrator runs this phase in two calls, like Phase 3, because the agent that writes real files outside `.kairos/` is a subagent and cannot ask you anything. The first call only drafts: `documentation-agent` writes `06b-documentation.md` and touches nothing else. The gate on it is the Orchestrator's. The second call runs only after you approve: the Orchestrator calls the agent again to write the files listed in `## Docs Touched`, exactly as the draft shows them, and the agent appends a `## Docs Written` table to the report. A file whose anchor text changed since the draft is left alone and reported, and nothing outside `.kairos/` is written before your approval. Resuming a run that stopped between the gate and the write shows the gate again.
+
+`✅ Approve` · `✏️ Request changes` · `⛔ Stop`
+:::
+
+---
+
 ## Shared Ledger — Cross-Phase Project Memory
 
 Each KAIROS run maintains three living files under `.kairos/<feature_folder>/ledger/` that accumulate shared state across all phases, plus two files the Orchestrator alone keeps there:
@@ -346,10 +379,12 @@ Each KAIROS run maintains three living files under `.kairos/<feature_folder>/led
 | `constraints.md` | All constraints with per-phase accounting | PM Agent (or Context Extractor if run first) | Every agent |
 | `decisions.md` | Architectural and implementation decisions log | Architect Agent | Any agent; the `Supersedes` cell only by the Orchestrator |
 | `open-questions.md` | Cross-phase questions with answers, and deferred risks | Any agent or human (via HITL gate) | Any agent |
-| `run.md` | The run's settings: effort, active agents, auto-fix budget, wave gates | Orchestrator, before Phase 1 | Orchestrator |
+| `run.md` | The run's settings: effort, active agents, auto-fix budget, wave gates, and the agents dispatched but not yet returned (`in_flight`) | Orchestrator, before Phase 1 | Orchestrator |
 | `loops.md` | Auto-fix state while a retry is running, and the history of retries that did not converge | Orchestrator | Orchestrator; the checker adds its convergence signal |
 
 `run.md` is what lets a pipeline resume in a later session with the same settings: the resumed run restores the effort, skips the agents that were never selected, and keeps the auto-fix budgets the human chose. `loops.md` keeps retry bookkeeping out of `open-questions.md`, so that file holds only what a person has to read.
+
+`run.md` also records which agents were dispatched and have not returned. A report on disk never proves an agent finished: every agent writes its report before its ledger update and before it hands control back, so the file exists while the agent is still working. The Orchestrator therefore treats an agent as complete only when its call returns, and opens no gate and starts no other agent until then. If a session ends first (a closed laptop, a stopped run), the next session finds the agent still marked in flight and re-invokes it in recovery mode, whatever report it left behind. A recovering implementer reads `git status`, the approved plan and the earlier `03-implementation.md`, keeps the files that already match the plan, writes the ones that are missing and re-runs the tests before it reports.
 
 Before v8.5.0 a third file, `audit-log.md`, kept one line per gate. That log now lives in `_tracking.md` (below); an existing `audit-log.md` is read, never written.
 
@@ -392,15 +427,17 @@ The ledger is written for the agents. `.kairos/<feature_folder>/_tracking.md` is
 | Section | Rewritten or appended | What it tells you |
 |---|---|---|
 | `## Status` | rewritten every event | current phase, next step, what blocks the run, the questions and constraints still `🔴 open` |
-| `## Issue Alignment` | rewritten every event | every `AC-n` as `pending`, `covered`, `manual`, `gap`, `changed` or `dropped`, and every scope change made along the way |
+| `## Issue Alignment` | rewritten every event | every `AC-n` as `pending`, `covered`, `manual`, `later` (it belongs to a slice this run does not build), `gap`, `changed` or `dropped`, and every scope change made along the way |
 | `## Log` | appended, never rewritten | one line per event: each gate and your answer, each wave continued automatically, each fix pass, loop exit, resume and stop |
 | `## Phases` | one section replaced per gate | a few lines per phase, taken from that report's `## Summary` |
+
+Every section that restates ledger rows (the status block and, once the run has finished, Open Questions, Open Constraints and Accepted Risks) is rewritten from one read of the ledger, so the file cannot disagree with itself: a question you answer or a constraint that resolves after the run has ended updates all of them, and is logged as an `after run` line.
 
 A scope change is listed when a decision in `ledger/decisions.md` opens with `Scope:`. PM Agent, Architect Agent and the Orchestrator write that prefix when a decision widens or narrows what the issue asked, so the alignment section never has to guess.
 
 Gates no longer open each report in the editor. The gate prints the report's path; reply `open` (or `apri`) and the Orchestrator opens it and shows the same gate again. The implementation plan is the one exception and still opens automatically.
 
-At the end of the run the Orchestrator finalizes the file: Files Changed, the risks you chose to ship with, and the constraints still open. It then offers to delete the phase reports it now summarizes; the ledger and `_tracking.md` are never deleted. Folders from before v8.5.0 have a `_recap.md` written only at the end: a finished one is left as it is, and a resumed one gets a `_tracking.md` on first touch, with the old audit-log lines copied into its log.
+At the end of the run the Orchestrator finalizes the file: Files Changed, the risks you chose to ship with, and the constraints still open. In Claude Code the model and token table is in a file of its own, `_usage.md` (see [Usage](#usage-model-and-tokens-per-agent)). It then offers to delete the phase reports it now summarizes; the ledger and `_tracking.md` are never deleted. Last, it offers a sanitized copy of the summary inside the project (`docs/kairos-summaries/<feature_folder>.md`), because `.kairos/` may be gitignored. That copy has its own gate, and the Orchestrator owns it: it writes the draft to `.kairos/<feature_folder>/_project-summary.md`, prints the path (reply `open` to read it) and asks Approve, Request changes or Stop. Only after Approve does it hand the draft to `documentation-agent`, which checks that the target is a documentation file and writes it. Nothing reaches `docs/` before you approve. Folders from before v8.5.0 have a `_recap.md` written only at the end: a finished one is left as it is, and a resumed one gets a `_tracking.md` on first touch, with the old audit-log lines copied into its log.
 
 ---
 
@@ -483,3 +520,11 @@ DEPLOYMENT (from Release Planner):
 - Quality assurance report
 - Deployment plan with rollback procedure
 :::
+
+---
+
+## Usage: model and tokens per agent
+
+In Claude Code the Orchestrator keeps `.kairos/<feature_folder>/_usage.md` current: after every agent that returns it has `scripts/usage.mjs` rewrite the file, so a run stopped halfway still has its table, and nothing is added to the agents' own reports. `/kairos:usage` prints the same report on demand. It has one row per agent call and a total; for every agent the Orchestrator dispatched, the model that actually answered and the input, output, cache-write and cache-read tokens, with a flag on any agent whose model differs from `.kairos/.models` or its own `model:` line.
+
+The figures are measured by `scripts/usage.mjs` from the subagent transcripts Claude Code writes under `~/.claude/projects/`, not reported by an agent about itself (a model asked its own name can be wrong). Each response is counted once, and the four token kinds stay apart because they are billed differently. Claude Code does not document the transcript format, so the script is best effort: when it finds nothing it understands, it says so and `_usage.md` is not written. `/kairos:usage --feature <folder>` reports every session of a feature; with no argument it reports the latest session, primary agent included. It needs Node 18 or later. OpenCode and Kimi Code have no such transcripts and print nothing.

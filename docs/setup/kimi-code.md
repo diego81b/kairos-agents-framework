@@ -72,6 +72,8 @@ Note what's **not** in the converted file: any Claude/Anthropic model id. Unlike
 
 ## Step 3 — Configure Kimi models (optional)
 
+The Claude Code pack's `.kairos/.models` file has no effect here: the orchestrator ignores it and says so at the Start Gate. The `model_preference` mapping below is the model setting on Kimi Code.
+
 `model_preference` only differentiates agents when Kimi Code's secondary-model experiment is enabled and a secondary model is configured. In `~/.kimi-code/config.toml`:
 
 ```toml

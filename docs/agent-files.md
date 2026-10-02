@@ -71,7 +71,7 @@ Standalone pre-pipeline agent. Run this before the Orchestrator to produce `00-c
 
 ## Impact Assessment
 
-Pre-pipeline grounding agent, dispatched by the Orchestrator at Step 0e in Orchestrated mode unless you already ran it yourself (then its `00b-impact.md` is reused). Produces `00b-impact.md` — effort, domains, test suite, contract change and change kind: facts the Orchestrator derives the pipeline from. It never names an agent; its gate is folded into the Orchestrator's Start Gate.
+Pre-pipeline grounding agent, dispatched by the Orchestrator at Step 0e in Orchestrated mode unless you already ran it yourself (then its `00b-impact.md` is reused). Produces `00b-impact.md` — T-shirt size and the effort that follows from it, domains, test suite, contract change and change kind: facts the Orchestrator derives the pipeline from. It never names an agent; its gate is folded into the Orchestrator's Start Gate.
 
 <<< @/agents/impact-assessment-agent.md{md}
 
@@ -151,7 +151,7 @@ Test quality verification — coverage, assertion quality, edge-case coverage.
 
 ## QA Plan Agent
 
-Manual and exploratory verification planning — what the automated suite cannot cover, regression retest selection, test data and environment, UAT sign-off.
+Manual and exploratory verification planning — what the automated suite cannot cover, regression retest selection, test data and environment, UAT sign-off. Never sends a tester to the developer's tools. Writes the comment and, above three checks or for an epic, the file the Orchestrator delivers after you approve the plan.
 
 <<< @/agents/qa-plan-agent.md{md}
 
@@ -167,7 +167,7 @@ Deployment planning — rollback procedures, monitoring, canary strategy.
 
 ## Documentation Agent
 
-Optional Phase 6b, runs after Release Planner. Feature-facing documentation (README, API reference, CHANGELOG) in the target project — the second agent, after the Phase 3 implementer, permitted to write outside `.kairos/`, scoped strictly to documentation files.
+Optional Phase 6b, runs after Release Planner. Feature-facing documentation (README, API reference, CHANGELOG) in the target project — the second agent, after the Phase 3 implementer, permitted to write outside `.kairos/`, scoped strictly to documentation files. Also writes, verbatim and only after the Orchestrator's own gate, the project summary and the QA plan file.
 
 <<< @/agents/documentation-agent.md{md}
 
