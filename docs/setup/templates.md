@@ -39,6 +39,8 @@ Each decision taken during the run is printed at the gate before it, with the ru
 
 ::: info When architect is skipped
 Skipping `architect-agent` when the rule calls for it is allowed. The orchestrator says what is lost: the Behaviour Delta that test verification and the QA plan read, the threat-model rows that can trigger the security review, and the first full pass over the ledger. The implementer and Team Mode decisions then fall back to `00b-impact.md` and the project files.
+
+Two of those facts, the threat-model rows and the Behaviour Delta, are then absent by design, not unknown: they count as none, and the security and documentation rules are decided by their other conditions (the domains, the constraints, a contract change). Without that, every `simple_fix`, which never has an architecture, would run the security review and a documentation draft. At the implementation gate the orchestrator also compares the domains with the files the implementation actually wrote, so an `auth` or `integrations` file the impact assessment did not list still starts the security review. A fact that should exist and does not (an impact assessment that failed, an artifact written by an older version) still counts toward running the agent.
 :::
 
 ---
@@ -59,7 +61,7 @@ Add: security-reviewer-agent
 
 **`Size:`** takes `XS`, `S`, `M`, `L` or `XL` and replaces the size `impact-assessment-agent` measured. The effort follows from it (see [Size](#size)), so a `Size:` line sets both.
 
-**`Effort:`** takes `simple_fix`, `medium`, or `significant_rework` and replaces the effort `impact-assessment-agent` measured. It says how big the change is: the orchestrator passes it to every agent, and it decides whether they run a short, trimmed, or full process, as well as the derivation rules above. It does not change the size: the start gate shows the size as measured and the effort you forced, side by side.
+**`Effort:`** takes `simple_fix`, `medium`, or `significant_rework` and replaces the effort `impact-assessment-agent` measured. It says how big the change is: the orchestrator passes it to every agent, and it decides whether they run a short, trimmed, or full process, as well as the derivation rules above. It does not change the size: the start gate shows the size as measured and the effort you forced, side by side. A bug triage can raise the effort (`full-pipeline` on a change the impact assessment called `simple_fix` makes it `medium`) but never lowers it: when the triage says `quick-fix` and the impact assessment measures `medium` or more, the run keeps the larger effort and the start gate says so. An `Effort: simple_fix` line is how you take the triage's word instead.
 
 **`Epic:`** names the epic this issue belongs to (`PROJ-10`, `&5`). Without the line the orchestrator reads the epic from the tracker when the CLI exposes one (GitLab epics, Jira parent). It decides where the QA plan goes: with an epic, the plan is one cumulative file for the whole epic (see [Phase 5b](/workflow#phase-5b-qa-plan-qa-plan-agent-optional)). Bitbucket Issues has no epics, so there the line is the only source.
 
@@ -193,6 +195,19 @@ Skip: release-planner-agent
 Effort: simple_fix
 Add: pm-agent, documentation-agent
 ```
+
+### Short path with stronger tests
+
+A `simple_fix` runs code-first with no requirements, no architecture and no plan gate, and skips `test-verifier-agent`. For a bug fix in a project that wants a regression test written first and reviewed, keep the short path and add the two agents:
+
+```markdown
+## KAIROS Pipeline
+
+Effort: simple_fix
+Add: implementer-tdd-agent, test-verifier-agent
+```
+
+An implementer named in `Add:` beats the `simple_fix` rule, so `implementer-tdd-agent` runs test-first in its combined step (plan and code in one run, Lean Mode). `test-verifier-agent` runs at the implementation gate as usual, without an acceptance-criteria list to map tests against, because no `pm-agent` ran. Without these two lines `implementer-coder-agent` already requires a regression test that fails without the fix and checks that by reverting the fix, so add them only when the order (test first) or the test review matters to you. The lines belong to one issue or one run: there is no project-wide setting.
 
 ::: info Prerequisites are not in the list
 `context-extractor-agent` still runs only when you start it. `impact-assessment-agent` is started by the orchestrator on every derived run; if you already ran it yourself, the orchestrator reuses its `00b-impact.md`. `bug-triage-agent` is offered when the request reads as a bug report.

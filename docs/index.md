@@ -4,7 +4,7 @@ layout: home
 hero:
   name: "KAIROS"
   text: "The Right Moment for Development"
-  tagline: Multi-agent SDLC orchestration with a human at every gate. Built for the quality of what ships, not for the speed of getting there.
+  tagline: Multi-agent SDLC orchestration with a human at every gate that holds a decision. Built for the quality of what ships, not for the speed of getting there.
   actions:
     - theme: brand
       text: Get Started

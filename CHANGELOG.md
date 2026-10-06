@@ -4,6 +4,38 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+---
+
+## v9.1.0 — October 6, 2026
+
+Three real runs of a downstream project showed where the pipeline spent a person's time and where it caught defects. The review gate is where the human changed decisions (rows the loop had auto-accepted as `low` were promoted to **Mitigate now**), so it stays. The gates that resolved as a bare "Approve" are the ones that can continue on their own. Two rules that read wrongly on the short path are fixed in the same release.
+
+### Added
+
+- **`agents/orchestrator-agent.md`**, **`docs/workflow.md`**, **`docs/faq.md`**, **`docs/overview.md`**, **`CLAUDE.md`** — phase continuation (HITL step 2b): after the bug triage, the requirements and the last wave of Phase 3, the orchestrator runs every check the gate would run and continues without asking when none of them turns something up. It prints one line with the rows it accepted for you (`low`, and `medium` in a `simple_fix`) and logs it. A `significant_rework` run, the architecture, the implementation plan, the review gate, a recheck that stopped, the QA plan, the release plan and the documentation draft keep asking. `run.md` gains `phase_gates` (`on_signal` for `simple_fix` and `medium`, `every_gate` otherwise and on an older checklist), and `every gate` at any gate restores a question at each one. The Start Gate says so in one `Gates:` line.
+- **`docs/use-cases.md`**, **`docs/.vitepress/config.js`**, **`docs/overview.md`** — a use-cases page: five shapes of work (a contained bug, a bug that hides a product decision, a medium feature, analysis now and build later, a short path with stronger tests) and, for each, what gets derived, which gates ask and which continue, and what the checks are for. The first three are shaped after real runs of a downstream project, without names or figures.
+- **`docs/setup/templates.md`** — "Short path with stronger tests": `Effort: simple_fix` plus `Add: implementer-tdd-agent, test-verifier-agent` keeps the short pipeline with test-first code and a test review.
+- **`skills/artifact-bookkeeping/SKILL.md`** — "Verdict values per phase": the exact `phase:` and `status:` values every agent writes, with the mixed case documented as it is, and the note on `open_dispositions`.
+
+### Changed
+
+- **`agents/orchestrator-agent.md`**, **`agents/bug-triage-agent.md`**, **`docs/workflow.md`**, **`docs/agents.md`**, **`docs/agent-files.md`**, **`docs/setup/templates.md`**, **`CLAUDE.md`** — a bug triage can raise the effort the impact assessment measured and never lower it: `quick-fix` against a `medium` or larger measurement keeps the measured effort, and the Start Gate names the conflict and the `Effort: simple_fix` line that takes the triage's word instead. The triage came from reproducing one symptom, the measurement from reading the code that would change.
+- **`agents/orchestrator-agent.md`** — a resume re-invokes an interrupted agent with `recovery: true` only when it defines that mode (`implementer-tdd-agent`, `implementer-coder-agent`, `implementer-lead-agent`, `documentation-agent`). Every other agent is re-run from the start with its first prompt and a line telling it to write its report again and check that a ledger row is not already there.
+- **`docs/index.md`**, **`docs/metrics.md`**, **`docs/workflow.md`**, **`CLAUDE.md`** — the claims that a human sits at every gate are qualified where three gates now continue on their own, and the resume text says which agents have a recovery mode.
+- **`skills/artifact-bookkeeping/SKILL.md`** — `total` in `risk_counts` is an optional key, because only one of the six templates writes it.
+- **`.opencode/agents/`**, **`.kimi-code/agents/`** — both orchestrator mirrors carry the same body changes.
+
+### Fixed
+
+- **`agents/orchestrator-agent.md`**, **`docs/setup/templates.md`**, **`CLAUDE.md`** — `threat_rows` and `behaviour_delta` are absent by design, not unknown, when `architect-agent` did not run. The unknown-fact rule had them count as the value that runs the agent, so every `simple_fix` (which never has an architecture) ran the security review and a documentation draft. They now count as none, the two rules fall back to their other conditions, and at the Phase 3 gate the domains are compared with the files the implementation wrote.
+- **`agents/orchestrator-agent.md`** — the review loop's state no longer carries `blocking_prev`, which was written every iteration and never read.
+- **`agents/orchestrator-agent.md`** — in a real run the orchestrator ended its turn on one line of text after an implementer handed back its report, and the completion notification queued behind it never woke it: the run sat silent for 21 minutes. A message headed `[Subagent hand-back]` is no longer answered with text alone. The orchestrator first makes a tool call it needs anyway and treats a notification that arrives meanwhile as the return, and makes a second call when none has arrived before it ends the turn. In the run, the same sequence with a tool call in between delivered the notification inside the turn.
+- **`agents/orchestrator-agent.md`** — at the start of every turn the orchestrator checks `in_flight` against the notifications in its context, so a completion that landed without waking it is still acted on.
+- **`agents/orchestrator-agent.md`** — the wait line now says what to do when nothing follows (reply `continue`). A `continue` with no notification does not re-invoke the agent at once: the original may still be running, so the orchestrator asks once whether it was stopped, then uses the `recovery: true` path.
+- **`docs/workflow.md`**, **`CLAUDE.md`** — the wait rules and the evidence behind them, including why treating the hand-back as the return was rejected.
+
+---
+
 ## v9.0.0 — September 28, 2026
 
 The start of a run asked the human to decide, before any code had been read, things an agent was about to establish with evidence: how big the change was, which agents should run, which implementer. The pipeline is now derived from facts, at the point in the run where each fact exists, and the human confirms or corrects it at a gate. Major version because `implementer-coder-agent` changes meaning: an issue that checked it to avoid tests now gets the tests its touched modules call for.

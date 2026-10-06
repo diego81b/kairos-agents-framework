@@ -79,7 +79,7 @@ Pre-pipeline grounding agent, dispatched by the Orchestrator at Step 0e in Orche
 
 ## Bug Triage
 
-Standalone entry point for a bug report rather than a feature request. Reproduces the defect, isolates it, finds the root cause with evidence, rates severity, and recommends where the fix re-enters the pipeline — its `recommended_entry` feeds the Orchestrator's effort resolution (`quick-fix` → `simple_fix`). Never fixes anything itself. Produces `00c-bug-triage.md`. Runs either directly from you or dispatched by the Orchestrator's Bug-Input Check in Orchestrated mode, where it skips its own gate and the Orchestrator presents the artifact instead.
+Standalone entry point for a bug report rather than a feature request. Reproduces the defect, isolates it, finds the root cause with evidence, rates severity, and recommends where the fix re-enters the pipeline — its `recommended_entry` feeds the Orchestrator's effort resolution (`quick-fix` → `simple_fix`, unless the impact assessment measured `medium` or more; a triage can raise the effort, never lower it). Never fixes anything itself. Produces `00c-bug-triage.md`. Runs either directly from you or dispatched by the Orchestrator's Bug-Input Check in Orchestrated mode, where it skips its own gate and the Orchestrator presents the artifact instead.
 
 <<< @/agents/bug-triage-agent.md{md}
 

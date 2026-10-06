@@ -218,7 +218,7 @@ the default branch and hands it to the reviewers as pasted paths, which they alr
 A run starts without asking when the answer is already on record. An issue that carries a
 `## KAIROS Pipeline` section holds a saved human decision, so the Start Gate becomes an announcement
 of what is about to run and the checklist question is skipped, unless something needs a human: an
-Escalate from the impact assessment, a fact reported unknown, the architect skipped against its rule,
+Escalate from the impact assessment, a fact reported unknown (not one absent by design), the architect skipped against its rule,
 an empty pipeline. A folder whose `run.md` is `in_progress` or `stopped` resumes without the folder
 question and without the resume confirmation and says where it restarts. What it never skips is a gate
 the earlier session had open, recorded in `run.md` as `gate_pending`: the old confirmation was the one
@@ -418,6 +418,43 @@ wave gates resolved as a bare "Continue", and the ones that carried real content
 temporary interface bridge, two test gaps) were exactly the ones a new constraint row would have
 stopped. `run.md`'s `wave_gates: every_wave` restores the old behaviour.
 
+Three phase gates follow the same rule since v9.1.0, under `run.md`'s `phase_gates`
+(`on_signal` by default for `simple_fix` and `medium`, `every_gate` for `significant_rework`
+and for a checklist without an Auto-fix line): the bug triage (the bug reproduced, its root
+cause was found and it is a defect, before the effort is known and with the Start Gate right after), the requirements (no open question, no `Scope:` decision, no `BLOCKING` constraint,
+nothing the Risk Disposition Loop had to ask) and the last wave of Phase 3. The stop list is
+the wave rule's, restated for a finished phase, plus the signals that belong to each artifact.
+The evidence came from three real runs of a downstream project, whose `_tracking.md` logs show
+where a human changed something: at the review gate and at the recheck, where `low` rows the
+loop had auto-accepted were promoted to **Mitigate now** in two of three runs, and at the
+architecture and plan gates, where a product decision and the plan's scope were settled. Those
+gates stay `ask`, together with the documentation draft and the QA plan, which write outside
+`.kairos/` or post to the tracker. The three that continue are the ones where nothing was
+recorded as changed, and the Phase 3 gate in particular is followed by the review wave, so a
+wrong "complete" costs one wave and no shipped defect. What this saves is the answer time of a
+person who is at the keyboard; the same logs show the larger delays elsewhere (a gate
+stopped by a `medium` row sat unanswered for two days, and review, fix and recheck rounds took
+roughly half the active time by the log timestamps, which also hold the human's own reaction
+time), and a signal cannot skip either. Every continued gate prints the rows it accepted (`low`,
+and `medium` in a `simple_fix`), so nothing the human would have seen is hidden. The three gates were
+chosen from three runs and one project: treat them as a first cut, and revisit the list
+against the `continued automatically` lines of later runs rather than extending it by
+analogy. `park` (a run that waits for a human without a session) and `stop_signal` (an agent's
+own request to stop) were rejected: the host has no daemon to notify, and the Summary's
+`Needs your attention` line already carries the same signal.
+
+A fact that exists only because the architect ran (`threat_rows`, `behaviour_delta`) is
+absent by design when it did not, and counts as none: the security and documentation rules
+fall back to their other conditions (domains, constraint categories, `contract_change`), and
+at the Phase 3 gate the domains are compared with `## Files Written`. Reading it as unknown,
+which the unknown-fact rule would do, ran the security reviewer and a documentation draft on
+every `simple_fix`, the one path that never has an architecture. A fact that should exist and
+does not (a failed impact assessment, an artifact from an older version) still counts toward
+running the agent. Likewise a triage can raise the effort the impact assessment measured but
+not lower it: a `quick-fix` came from reproducing one symptom, and the measurement came from
+reading the code that would change, so against a `medium` or larger measurement the measurement
+stands and the Start Gate names the conflict.
+
 Code review, security review and test verification run as one **review wave**. All three
 read the same settled code and none writes source (`security-reviewer-agent` is read-only),
 so the orchestrator dispatches the active ones in parallel and presents one combined gate:
@@ -488,12 +525,32 @@ reads the artifact (`03-implementation.md` with a `status` other than `partial`)
 implementer done while it was still closing, and the review wave started on it. The orchestrator now
 writes `in_flight` into `run.md` before each dispatch and clears it when the call returns; a resume
 that finds it set re-invokes that agent with `recovery: true` and skips the artifact-based resume
-point. Both implementers and `implementer-lead-agent` handle `recovery: true` by reading `git status`,
+point. Since v9.1.0 the line goes only to the four agents that define a recovery mode (both
+implementers, `implementer-lead-agent`, `documentation-agent`); any other agent is re-run from its
+first prompt and replaces its own report. Both implementers and `implementer-lead-agent` handle `recovery: true` by reading `git status`,
 the approved plan and the earlier `03-implementation.md` first, and write `03-implementation.md` as
 their last file, after the ledger update, so a finished report means a finished pass. Reading the
 artifact alone was rejected because a fix pass or loop iteration re-invokes an implementer against a
 `03-implementation.md` that already says `complete`, so an interrupted pass is indistinguishable from a
 finished one; only the orchestrator's own dispatch record separates them.
+
+A hand-back is not a return, and the wait line must not be a dead end (v9.1.0). In a real run the
+implementer's final report reached the orchestrator as a host message headed `[Subagent hand-back]`,
+0.1 s before the call's completion notification. The orchestrator would not open the gate on the
+report, which is the v9.1.0 rule working, and answered with one line of text. That ended its turn:
+the notification was queued while the turn ran, landed after it ended without starting another, and
+the run sat silent for 21 minutes until the human typed. The first agent of the same run, where the
+orchestrator made a tool call between the hand-back and the end of its turn, had its notification
+delivered inside that turn. The cause is the host's, read from the two transcripts and not from
+anything the host documents, so the rules below do not depend on it being the only one. On a
+hand-back the orchestrator makes the tool call it needs anyway (reading `run.md`), and a second one when no notification came with the first, before it decides
+whether to wait, and at the start of every turn it checks `in_flight` against the notifications in
+its context, since one that landed without waking it is still the return. The wait line now says
+what to do when nothing follows (reply `continue`), and a `continue` with no notification in
+context does not re-invoke the agent: the original may still be running, and a second writer on the
+same worktree and ledger breaks the single-writer rule, so the orchestrator asks once whether the
+agent was stopped. Treating the hand-back as the return was rejected: it is still a report
+delivered before the call has ended, the exact case the rule above was written for.
 
 `architect-agent` gains a **Behaviour Delta** section for the same epic's other finding:
 every defect `qa-plan-agent` found late in those two issues was an observable change on a flow

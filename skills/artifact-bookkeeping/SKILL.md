@@ -68,6 +68,27 @@ The orchestrator's Artifact Contract Check (`orchestrator-agent.md` HITL step 0)
 | `release-planner-agent` | `status`, `risk_counts` |
 | `documentation-agent` | `status`, `findings_summary` |
 
-`risk_counts` / `issues_summary` / `findings_summary` are the by-Impact tally from §1 (`{ critical, high, medium, low, total }`) regardless of which name a given phase uses for it. This table is a presence checklist derived from each agent's own Output Format block — if an agent file's frontmatter template changes, update its row here in the same edit. Look the row up by the artifact's own `phase:` value, not by which agent produced it: one agent can emit two artifacts with different contracts. The Phase 3a plan (`phase: implementer-plan`) is the case that forces this — it comes from an implementer but carries none of that implementer's execution fields, so checking it against the implementer's row would fail every run on fields that cannot exist before any code is written.
+`risk_counts` / `issues_summary` / `findings_summary` are the by-Impact tally from §1 (`{ critical, high, medium, low }`, with `total` as an optional fifth key: only `qa-plan-agent`'s template writes it, and the presence check never requires it) regardless of which name a given phase uses for it. This table is a presence checklist derived from each agent's own Output Format block — if an agent file's frontmatter template changes, update its row here in the same edit. Look the row up by the artifact's own `phase:` value, not by which agent produced it: one agent can emit two artifacts with different contracts. The Phase 3a plan (`phase: implementer-plan`) is the case that forces this — it comes from an implementer but carries none of that implementer's execution fields, so checking it against the implementer's row would fail every run on fields that cannot exist before any code is written.
 
-The fact fields added in v9.0.0 (`domains`, `test_first`, `contract_change`, `behaviour_delta`, `threat_rows` on the architecture; `domains`, `test_suite`, `contract_change`, `change_kind` on the impact assessment; `tests_written` on the coder's implementation; `size` on the impact assessment and `delivery` on the QA plan, added after v9.0.0's first cut) are required only on artifacts written from then on. A resumed folder's older artifact that lacks them is not malformed and is never re-run for it: the orchestrator reads each missing fact as unknown, which its Selection Rules resolve toward running the agent that fact gates. An older impact assessment's `recommended_agents` is ignored.
+The fact fields added in v9.0.0 (`domains`, `test_first`, `contract_change`, `behaviour_delta`, `threat_rows` on the architecture; `domains`, `test_suite`, `contract_change`, `change_kind` on the impact assessment; `tests_written` on the coder's implementation; `size` on the impact assessment and `delivery` on the QA plan, added after v9.0.0's first cut) are required only on artifacts written from then on. A resumed folder's older artifact that lacks them is not malformed and is never re-run for it: the orchestrator reads each missing fact as unknown, which its Selection Rules resolve toward running the agent that fact gates. An older impact assessment's `recommended_agents` is ignored. The one exception is a fact that exists only because an agent ran: `threat_rows` and `behaviour_delta` are absent by design, not unknown, when `architect-agent` did not run (see the orchestrator's Step 0e).
+
+### Verdict values per phase
+
+This is documentation, not enforcement: it lists the values each agent writes, exactly as written, so a reader matches the one its row shows. Case is not normalized (`READY` and `ready` are different values, and the phases below mix them). Normalizing would touch sixteen agents and their mirrors and break every `.kairos/` folder written before it, for a reader that is another agent or a person; do it only in a release that migrates older folders on first touch, as v8.4.0 did.
+
+| `phase:` | `status:` | Other verdict fields |
+|----------|-----------|----------------------|
+| `context-extractor`, `dependency-audit`, `retrospective`, `pm-agent` | `ready` | none |
+| `improvement-advisory` | `ready`, `insufficient_data` | none |
+| `impact-assessment` | none written | `effort`, `size`, `open_dispositions` |
+| `bug-triage` | `ready` | `reproduced`: `yes`, `no`, `cannot-reproduce-here`; `root_cause_found`: `yes`, `no`; `recommended_entry`: `quick-fix`, `full-pipeline`, `not-a-defect` |
+| `architect` | `ready` | `promptable`: `yes`, `no` |
+| `implementer-plan` | `pending_approval` | none |
+| `implementer` | `complete`, `partial`, `too_big`, `blocked` | none |
+| `code-review`, `test-verify` | `READY`, `NEEDS_FIXES` | `convergence_signal` |
+| `security-review` | `SECURE`, `VULNERABILITIES_FOUND` | none |
+| `qa-plan` | `READY`, `NEEDS_ATTENTION` | `delivery`: `comment`, `file` |
+| `release-plan` | `ready`, `blocked` | none |
+| `documentation` | `ready`, `needs_input` | none |
+
+Two things in the table above are not what §1 and the rows of §4 would suggest. `impact-assessment-agent` alone writes `open_dispositions`, the count of Risks and Open Questions rows whose Disposition cell is still empty. It is not the count §1 rules out (that one would equal one table's `total`, and this one spans two tables), and it exists for the person who ran the agent standalone: the orchestrator never reads it and the presence check does not require it. And `implementer-lead-agent`'s execution artifact (Team Mode, outside the mirrors) writes `phase: 3` and `status: COMPLETE`, with no row in §4, so the presence check has nothing to apply to it; its plan artifact uses `phase: implementer-plan` like every other implementer's.
