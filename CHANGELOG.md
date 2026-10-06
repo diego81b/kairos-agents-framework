@@ -4,6 +4,8 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+---
+
 ## v9.1.0 — October 6, 2026
 
 Three real runs of a downstream project showed where the pipeline spent a person's time and where it caught defects. The review gate is where the human changed decisions (rows the loop had auto-accepted as `low` were promoted to **Mitigate now**), so it stays. The gates that resolved as a bare "Approve" are the ones that can continue on their own. Two rules that read wrongly on the short path are fixed in the same release.
@@ -27,6 +29,10 @@ Three real runs of a downstream project showed where the pipeline spent a person
 
 - **`agents/orchestrator-agent.md`**, **`docs/setup/templates.md`**, **`CLAUDE.md`** — `threat_rows` and `behaviour_delta` are absent by design, not unknown, when `architect-agent` did not run. The unknown-fact rule had them count as the value that runs the agent, so every `simple_fix` (which never has an architecture) ran the security review and a documentation draft. They now count as none, the two rules fall back to their other conditions, and at the Phase 3 gate the domains are compared with the files the implementation wrote.
 - **`agents/orchestrator-agent.md`** — the review loop's state no longer carries `blocking_prev`, which was written every iteration and never read.
+- **`agents/orchestrator-agent.md`** — in a real run the orchestrator ended its turn on one line of text after an implementer handed back its report, and the completion notification queued behind it never woke it: the run sat silent for 21 minutes. A message headed `[Subagent hand-back]` is no longer answered with text alone. The orchestrator first makes a tool call it needs anyway and treats a notification that arrives meanwhile as the return, and makes a second call when none has arrived before it ends the turn. In the run, the same sequence with a tool call in between delivered the notification inside the turn.
+- **`agents/orchestrator-agent.md`** — at the start of every turn the orchestrator checks `in_flight` against the notifications in its context, so a completion that landed without waking it is still acted on.
+- **`agents/orchestrator-agent.md`** — the wait line now says what to do when nothing follows (reply `continue`). A `continue` with no notification does not re-invoke the agent at once: the original may still be running, so the orchestrator asks once whether it was stopped, then uses the `recovery: true` path.
+- **`docs/workflow.md`**, **`CLAUDE.md`** — the wait rules and the evidence behind them, including why treating the hand-back as the return was rejected.
 
 ---
 

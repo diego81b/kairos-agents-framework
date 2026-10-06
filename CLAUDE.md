@@ -534,6 +534,24 @@ artifact alone was rejected because a fix pass or loop iteration re-invokes an i
 `03-implementation.md` that already says `complete`, so an interrupted pass is indistinguishable from a
 finished one; only the orchestrator's own dispatch record separates them.
 
+A hand-back is not a return, and the wait line must not be a dead end (v9.1.0). In a real run the
+implementer's final report reached the orchestrator as a host message headed `[Subagent hand-back]`,
+0.1 s before the call's completion notification. The orchestrator would not open the gate on the
+report, which is the v9.1.0 rule working, and answered with one line of text. That ended its turn:
+the notification was queued while the turn ran, landed after it ended without starting another, and
+the run sat silent for 21 minutes until the human typed. The first agent of the same run, where the
+orchestrator made a tool call between the hand-back and the end of its turn, had its notification
+delivered inside that turn. The cause is the host's, read from the two transcripts and not from
+anything the host documents, so the rules below do not depend on it being the only one. On a
+hand-back the orchestrator makes the tool call it needs anyway (reading `run.md`), and a second one when no notification came with the first, before it decides
+whether to wait, and at the start of every turn it checks `in_flight` against the notifications in
+its context, since one that landed without waking it is still the return. The wait line now says
+what to do when nothing follows (reply `continue`), and a `continue` with no notification in
+context does not re-invoke the agent: the original may still be running, and a second writer on the
+same worktree and ledger breaks the single-writer rule, so the orchestrator asks once whether the
+agent was stopped. Treating the hand-back as the return was rejected: it is still a report
+delivered before the call has ended, the exact case the rule above was written for.
+
 `architect-agent` gains a **Behaviour Delta** section for the same epic's other finding:
 every defect `qa-plan-agent` found late in those two issues was an observable change on a flow
 that had already shipped. A cap rejection the operator never saw, a cap counted in keys
