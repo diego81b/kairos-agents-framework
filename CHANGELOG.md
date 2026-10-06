@@ -6,6 +6,18 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v9.1.1 — October 6, 2026
+
+A real run stopped at the Start Gate after the human picked **Request changes**, the option marked `(Recommended)` because the impact assessment had escalated two open questions. The button carries no text, so the Orchestrator answered with a list of the accepted correction forms and waited, and the human had to ask Claude what the button was for. Re-running the assessment cannot close an escalated question, so the recommendation pointed at the one action that does not help, and a button pick without feedback had no branch at all.
+
+### Fixed
+
+- **`agents/orchestrator-agent.md`**, **`docs/workflow.md`** — the Start Gate never marks **Request changes** as `(Recommended)`. **Start** keeps the recommendation when the assessment escalated a risk and names the open rows in its description, because those are questions only a person can close.
+- **`agents/orchestrator-agent.md`**, **`docs/workflow.md`** — **Request changes** picked as a button, with no text, asks what should change instead of waiting for text. At the Start Gate the options are answering the open questions now (each asked on its own, the answer written into `ledger/open-questions.md`), correcting a measured fact, changing the pipeline, or going back to the gate. At every other gate they are answering an open question from the Summary, describing the change, or going back. The agent is never re-invoked with empty feedback.
+- **`.opencode/agents/`**, **`.kimi-code/agents/`** — both orchestrator mirrors carry the same body changes.
+
+---
+
 ## v9.1.0 — October 6, 2026
 
 Three real runs of a downstream project showed where the pipeline spent a person's time and where it caught defects. The review gate is where the human changed decisions (rows the loop had auto-accepted as `low` were promoted to **Mitigate now**), so it stays. The gates that resolved as a bare "Approve" are the ones that can continue on their own. Two rules that read wrongly on the short path are fixed in the same release.
