@@ -7,7 +7,7 @@
 
 KAIROS is a framework that wires specialized AI agents into a single, human-controlled pipeline. You describe what you want to build; KAIROS breaks it into phases — requirements, design, code, review, tests, deployment — and each phase ends in a written artifact you approve before the next one starts. The point is not to reach code faster; it is that nothing reaches code unreviewed.
 
-The human never loses control: every phase ends at a checkpoint where you approve, redirect, or skip before anything moves forward.
+The human never loses control: every phase ends at a checkpoint where you approve, redirect, or skip before anything moves forward. Three of them (after the bug triage, the requirements and the finished implementation) continue on their own when the Orchestrator's checks find nothing for you to decide, and `every gate` asks at all of them (see [Gates that continue on their own](/workflow#gates-that-continue-on-their-own)).
 
 ---
 

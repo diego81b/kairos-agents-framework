@@ -418,6 +418,43 @@ wave gates resolved as a bare "Continue", and the ones that carried real content
 temporary interface bridge, two test gaps) were exactly the ones a new constraint row would have
 stopped. `run.md`'s `wave_gates: every_wave` restores the old behaviour.
 
+Three phase gates follow the same rule since v9.1.0, under `run.md`'s `phase_gates`
+(`on_signal` by default for `simple_fix` and `medium`, `every_gate` for `significant_rework`
+and for a checklist without an Auto-fix line): the bug triage (the bug reproduced and is a
+defect), the requirements (no open question, no `Scope:` decision, no `BLOCKING` constraint,
+nothing the Risk Disposition Loop had to ask) and the last wave of Phase 3. The stop list is
+the wave rule's, restated for a finished phase, plus the signals that belong to each artifact.
+The evidence came from three real runs of a downstream project, whose `_tracking.md` logs show
+where a human changed something: at the review gate and at the recheck, where `low` rows the
+loop had auto-accepted were promoted to **Mitigate now** in two of three runs, and at the
+architecture and plan gates, where a product decision and the plan's scope were settled. Those
+gates stay `ask`, together with the documentation draft and the QA plan, which write outside
+`.kairos/` or post to the tracker. The three that continue are the ones where nothing was
+recorded as changed, and the Phase 3 gate in particular is followed by the review wave, so a
+wrong "complete" costs one wave and no shipped defect. What this saves is the answer time of a
+person who is at the keyboard; the same logs show the larger delays elsewhere (a gate
+stopped by a `medium` row sat unanswered for two days, and review, fix and recheck rounds took
+roughly half the active time by the log timestamps, which also hold the human's own reaction
+time), and a signal cannot skip either. Every continued gate prints the rows it accepted (`low`,
+and `medium` in a `simple_fix`), so nothing the human would have seen is hidden. The three gates were
+chosen from three runs and one project: treat them as a first cut, and revisit the list
+against the `continued automatically` lines of later runs rather than extending it by
+analogy. `park` (a run that waits for a human without a session) and `stop_signal` (an agent's
+own request to stop) were rejected: the host has no daemon to notify, and the Summary's
+`Needs your attention` line already carries the same signal.
+
+A fact that exists only because the architect ran (`threat_rows`, `behaviour_delta`) is
+absent by design when it did not, and counts as none: the security and documentation rules
+fall back to their other conditions (domains, constraint categories, `contract_change`), and
+at the Phase 3 gate the domains are compared with `## Files Written`. Reading it as unknown,
+which the unknown-fact rule would do, ran the security reviewer and a documentation draft on
+every `simple_fix`, the one path that never has an architecture. A fact that should exist and
+does not (a failed impact assessment, an artifact from an older version) still counts toward
+running the agent. Likewise a triage can raise the effort the impact assessment measured but
+not lower it below `medium`: its `quick-fix` came from a reproduction, and the measurement
+came from reading the code that would change, so when they disagree the larger one stands and
+the Start Gate names the conflict.
+
 Code review, security review and test verification run as one **review wave**. All three
 read the same settled code and none writes source (`security-reviewer-agent` is read-only),
 so the orchestrator dispatches the active ones in parallel and presents one combined gate:

@@ -84,6 +84,12 @@ A: Yes. At the start the Orchestrator asks once which areas to run (analysis, de
 
 ---
 
+**Q: The pipeline feels slow compared with plain Claude. What can I change without losing the checks?**
+
+A: Keep the review wave: it is where the checks live, and in real runs it is where you changed a decision (a `low` row promoted to **Mitigate now**). What you can drop is the round trip at gates where nothing was left to decide. The Orchestrator now continues on its own after the bug triage when the bug reproduced and is a defect (the Start Gate follows it anyway) and, in `simple_fix` and `medium` runs, after the requirements (no open question, no scope change, nothing it had to ask you) and after the finished implementation (the review wave is the next check). It says so in one line, with the rows it accepted for you (`low`, and `medium` in a `simple_fix`). It stops the moment any signal fires, and `significant_rework` keeps every gate. Reply `every gate` to be asked at every gate again. The architecture, the implementation plan, the review gate, the documentation draft and the QA plan always ask: the plan is the last gate before source files change, the review gate is where you change decisions, and the last two write outside `.kairos/` or post to the tracker. This saves the minutes you spend answering, not the time the agents take or a day nobody answers a gate. For a bug fix, `Effort: simple_fix` plus `Add: implementer-tdd-agent, test-verifier-agent` in the issue gives the short pipeline (no requirements, no architecture, no plan gate) with test-first code and a test review. See [Pipeline Templates](/setup/templates#short-path-with-stronger-tests).
+
+---
+
 **Q: Do the reviewers overwrite each other's ledger entries when they run in parallel?**
 
 A: No. Inside the review wave none of them writes the ledger: each returns its updates as a block in its own report, and the Orchestrator applies the blocks one after another. QA plan, release planner and documentation are not parallelized, because they depend on each other's output.
