@@ -187,4 +187,4 @@ Each agent file is self-contained — YAML frontmatter for tool and model config
 ---
 
 Ready to start? → [Set up KAIROS with your IDE](./setup/)  
-Want the full picture? → [Workflow walkthrough](./workflow) · [All Agents](./agents)
+Want the full picture? → [Use cases](./use-cases) · [Workflow walkthrough](./workflow) · [All Agents](./agents)

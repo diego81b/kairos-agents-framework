@@ -69,7 +69,8 @@ export default defineConfig({
       {
         text: 'Getting Started',
         items: [
-          { text: 'What is KAIROS?', link: '/overview' }
+          { text: 'What is KAIROS?', link: '/overview' },
+          { text: 'Use Cases', link: '/use-cases' }
         ]
       },
       {

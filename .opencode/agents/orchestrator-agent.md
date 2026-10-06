@@ -328,7 +328,7 @@ Any output means `test_suite: yes`.
 - `medium` → `loop_policy = { review: { mode: "auto", max_retries: 1 } }`, `phase_gates = on_signal`, `quick_fix_mode = false`. One auto-retry on a review loop is what a `medium` change earns; asking for the policy up front, before anyone has seen a finding, is a decision with no information behind it.
 - `significant_rework` → no preset; `quick_fix_mode = false`, `phase_gates = every_gate`, and the Loop Policy prompt below runs. A change this size is the one where each gate is worth reading.
 
-`phase_gates` is `on_signal` or `every_gate`: whether the three gates that HITL step 2b names (the bug triage, the requirements and the last wave of Phase 3) may continue without asking. A free-text `every gate` / `ogni gate` at any gate sets it to `every_gate`, together with `wave_gates: every_wave`.
+`phase_gates` is `on_signal` or `every_gate`: whether the three gates that HITL step 2b names (the bug triage, the requirements and the last wave of Phase 3) may continue without asking. A free-text `every gate` / `ogni gate` at any gate sets it to `every_gate`, together with `wave_gates: every_wave`. At the Start Gate that choice survives the re-run of these presets that every correction triggers: a preset never replaces an `every_gate` the human asked for in this run, even when the same correction changes the effort.
 
 Then overlay `template_loop_policy` from Step 0d: when it set the budget, that value replaces the preset's.
 

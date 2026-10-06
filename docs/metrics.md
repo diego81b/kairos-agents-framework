@@ -27,7 +27,7 @@ None of these is a claim about output quality in the abstract. Each one is a mec
 
 ## What it does not promise
 
-- **A time saving.** Gates cost you attention on purpose. A run with an attentive human at every gate is not faster than one prompt to one model; it is auditable, which is a different thing.
+- **A time saving.** Gates cost you attention on purpose (three of them continue on their own when nothing needs you, see [Gates that continue on their own](/workflow#gates-that-continue-on-their-own)). A run with an attentive human at every gate is not faster than one prompt to one model; it is auditable, which is a different thing.
 - **Correct code without review.** The output is a strong draft with a written trail of what was checked. The gates exist because the drafts need you.
 - **A number.** No "40% faster", no "90% correct". If you want figures for your team, measure them in your repository — see below.
 

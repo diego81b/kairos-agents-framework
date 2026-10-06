@@ -90,7 +90,7 @@ Rate on observed impact, not on how hard the fix looks. Difficulty belongs to th
 ### 5. Recommend the Re-entry Point
 Where this fix should enter the pipeline. Exactly one of:
 
-- **Quick fix** — the root cause is local, the fix is contained, and nothing about the design needs to change. The orchestrator reads it as `effort: simple_fix`, which derives the short path: the code-first `implementer-coder-agent`, which adds the regression test when the project has a suite, then code review.
+- **Quick fix** — the root cause is local, the fix is contained, and nothing about the design needs to change. The orchestrator reads it as `effort: simple_fix` unless the impact assessment measured `medium` or more, in which case the larger effort stands and the human is told at the Start Gate. `simple_fix` derives the short path: the code-first `implementer-coder-agent`, which adds the regression test when the project has a suite, then code review.
 - **Full pipeline** — the root cause is structural: the design is wrong, the fix spans domains, a contract or schema has to change, or the defect is a symptom of a decision rather than a slip. Say which phase it should start from and why.
 - **Not a defect** — the code behaves as designed and the expectation was wrong, or the report describes an environment problem. Say which, with the evidence.
 

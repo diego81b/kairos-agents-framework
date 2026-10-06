@@ -218,7 +218,7 @@ the default branch and hands it to the reviewers as pasted paths, which they alr
 A run starts without asking when the answer is already on record. An issue that carries a
 `## KAIROS Pipeline` section holds a saved human decision, so the Start Gate becomes an announcement
 of what is about to run and the checklist question is skipped, unless something needs a human: an
-Escalate from the impact assessment, a fact reported unknown, the architect skipped against its rule,
+Escalate from the impact assessment, a fact reported unknown (not one absent by design), the architect skipped against its rule,
 an empty pipeline. A folder whose `run.md` is `in_progress` or `stopped` resumes without the folder
 question and without the resume confirmation and says where it restarts. What it never skips is a gate
 the earlier session had open, recorded in `run.md` as `gate_pending`: the old confirmation was the one
@@ -420,8 +420,8 @@ stopped. `run.md`'s `wave_gates: every_wave` restores the old behaviour.
 
 Three phase gates follow the same rule since v9.1.0, under `run.md`'s `phase_gates`
 (`on_signal` by default for `simple_fix` and `medium`, `every_gate` for `significant_rework`
-and for a checklist without an Auto-fix line): the bug triage (the bug reproduced and is a
-defect), the requirements (no open question, no `Scope:` decision, no `BLOCKING` constraint,
+and for a checklist without an Auto-fix line): the bug triage (the bug reproduced, its root
+cause was found and it is a defect, before the effort is known and with the Start Gate right after), the requirements (no open question, no `Scope:` decision, no `BLOCKING` constraint,
 nothing the Risk Disposition Loop had to ask) and the last wave of Phase 3. The stop list is
 the wave rule's, restated for a finished phase, plus the signals that belong to each artifact.
 The evidence came from three real runs of a downstream project, whose `_tracking.md` logs show
@@ -451,9 +451,9 @@ which the unknown-fact rule would do, ran the security reviewer and a documentat
 every `simple_fix`, the one path that never has an architecture. A fact that should exist and
 does not (a failed impact assessment, an artifact from an older version) still counts toward
 running the agent. Likewise a triage can raise the effort the impact assessment measured but
-not lower it below `medium`: its `quick-fix` came from a reproduction, and the measurement
-came from reading the code that would change, so when they disagree the larger one stands and
-the Start Gate names the conflict.
+not lower it: a `quick-fix` came from reproducing one symptom, and the measurement came from
+reading the code that would change, so against a `medium` or larger measurement the measurement
+stands and the Start Gate names the conflict.
 
 Code review, security review and test verification run as one **review wave**. All three
 read the same settled code and none writes source (`security-reviewer-agent` is read-only),
@@ -525,7 +525,9 @@ reads the artifact (`03-implementation.md` with a `status` other than `partial`)
 implementer done while it was still closing, and the review wave started on it. The orchestrator now
 writes `in_flight` into `run.md` before each dispatch and clears it when the call returns; a resume
 that finds it set re-invokes that agent with `recovery: true` and skips the artifact-based resume
-point. Both implementers and `implementer-lead-agent` handle `recovery: true` by reading `git status`,
+point. Since v9.1.0 the line goes only to the four agents that define a recovery mode (both
+implementers, `implementer-lead-agent`, `documentation-agent`); any other agent is re-run from its
+first prompt and replaces its own report. Both implementers and `implementer-lead-agent` handle `recovery: true` by reading `git status`,
 the approved plan and the earlier `03-implementation.md` first, and write `03-implementation.md` as
 their last file, after the ledger update, so a finished report means a finished pass. Reading the
 artifact alone was rejected because a fix pass or loop iteration re-invokes an implementer against a
