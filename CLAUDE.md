@@ -326,6 +326,25 @@ and `Add: architect-agent` restores it. `test-verifier-agent` does not run on a 
 tests. The Start Gate also prints the agents decided now and folds every later decision into one
 line, because nine lines of which five said "decided later" read as a pipeline that would run in full.
 
+The impact assessment itself is sized to the change. It is the only agent that always runs before
+the pipeline exists, so its cost lands on the smallest runs: in three real runs of a downstream
+project it took 1m23s, 2m40s and 5m27s on Opus, which is 2%, 21% and 10% of the agents' time, and
+the two where it weighed most had no triage. Two rules came out of that. It reads in proportion:
+with one or two named production files it reads those and the tests that cover them, widens only
+when a criterion of a larger size shows up, and writes a short artifact for `XS` and `S`. And it
+starts from a bug triage's evidence when one exists, so the files the triage reproduced and searched
+are not read again; the orchestrator passes the triage's path and the never-lower rule above is
+unchanged, because the assessment still sizes the change around the root cause. Skipping the
+assessment when the issue's override block or an approved `quick-fix` triage already says
+`simple_fix` was rejected for now: it would have saved 1m23s on one of the three runs, and without
+`00b-impact.md` the unknown-fact rule would run the security review and a documentation draft on
+every `simple_fix`, so it needs the absent-by-design rule widened and the Phase 3 and review gates
+to decide `domains` and `contract_change` from `## Files Written` first. It would also drop the one
+open-question scan a `simple_fix` gets before code (in the first of the three runs it brought a
+test file into scope). The gain of the two rules above is not measured: read `_usage.md` over the
+next runs, and a cheaper tier for this agent is one line in `.kairos/.models`
+(`impact-assessment-agent: sonnet`) once its sizes have been compared with Opus on a few issues.
+
 A third project setting sits beside `.kairos/.manual-qa`: `.kairos/.models`, one `<agent>: <alias>`
 line per agent, written by `/kairos:setup` or by hand and never asked by the orchestrator. Before
 each dispatch the orchestrator reads it and, on a host whose Agent call takes a `model` parameter
