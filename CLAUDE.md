@@ -115,9 +115,10 @@ file, a SQL object or a pipeline ID. The plan opens with a `## Core` block namin
 change fixes and the few behaviours that mean it failed, so the cases that matter come first.
 A manual case checks an outcome a person can observe through the product, never the mechanism
 behind it; a check reachable only through database internals or a hand-built request is a gate
-risk, not a tester's step. That split is also why `## Risks` admits only four row kinds
+risk, not a tester's step. That split is also why `## Risks` admits only five row kinds
 (regression retest, `AC-n` not verifiable by hand, uncovered `VERIFICATION` row, an open
-question the release depends on): 5b plans verification, it does not audit the code.
+question the release depends on, and since v9.2.0 an `automatable gap`): 5b plans verification,
+it does not audit the code.
 
 Delivery of the plan changed in v9.0.0, for the same outside reader. Two rules moved into the
 agent: a precondition is reached through the product, prepared by a developer and named as such
@@ -129,7 +130,7 @@ cases, regression retests and existing cases to re-run, counted together) and no
 extract stays the issue comment. Above that, or whenever the issue has an epic, `qa-plan-agent`
 writes the tester's part as `_qa-file.md` inside `.kairos/`, and the comment
 (`_qa-comment.md`, always written) shrinks to the framing line, the core and a pointer
-carrying a literal `{qa_file}` token the orchestrator fills in. The agent never writes into the repository itself: after
+carrying a literal `{qa_file}` token the orchestrator fills in (renamed `{qa_pointer}` in v9.2.0, below). The agent never writes into the repository itself: after
 the QA gate approves, the orchestrator hands the file to `documentation-agent` in passthrough
 mode, so the framework keeps two writers outside `.kairos/`. Letting `qa-plan-agent` write it
 was rejected for that reason, and because the agent used to post its comment before the gate,
@@ -147,6 +148,42 @@ reference is read from the tracker when its CLI exposes one (GitLab `epic`, Jira
 otherwise comes from an `Epic:` line in the `## KAIROS Pipeline` block; Bitbucket Issues has no
 epics. The file reaches the default branch only when the merge request that carries it merges,
 so the comment's link is dead until then, and the comment says so.
+
+v9.2.0 answers two complaints from the testers who receive these plans. Real plans were long
+(downstream runs: 90 to 287 lines per issue, an epic file of 227 lines and 6,700 words, a small
+bug fix with eight cases) and complicated, and the limits the agent already had were not holding:
+a case packed screens, option values and modes into one `Setup` cell (the rule "one case per
+behaviour, variants in Setup" had produced matrices, each row a dozen runs), regression retests
+were chains of actions, and test data carried a run order. Two rules changed. A complement item
+reaches the tester only when it is manual for one of the two reasons the agent's own role names,
+no assertion can see the outcome or no developer environment can stage it; "not automated yet" is
+not "cannot be automated", so an item a named test could close becomes an `automatable gap` risk
+row, and **Mitigate now** sends it through the existing fix pass to the implementer and the test
+verifier instead of to a person. And the tester's part has hard limits (5 cases, 3 in Lean Mode,
+of a one-line `Setup` with at most three `repeat with` variants and three short steps; 3 one-line
+retests, only for callers no test exercises; 4 data rows; Expected Behaviour Changes at most three
+rows; no sign-off table, each case names its `AC-n`), with the evidence of what was left out kept
+in `## Coverage Complement` for the gate. The numbers are a first cut calibrated on two downstream
+projects: revisit them against what testers report, not by analogy. Regenerated from the same
+inputs by a test run of the edited spec, the tester's part of one run went from 64 lines and 1,989
+words to 39 and 703, and of the other from 84 lines and 2,441 words to 38 and 692. That measures
+length, not coverage.
+
+Delivery is the human's choice at the QA gate, since projects differ (v9.2.0). The agent always
+writes `_qa-file.md`, the tester's part in full, and `_qa-comment.md`, the Core plus a literal
+`{qa_pointer}` line (it replaces the older `{qa_file}`); `delivery` in `05b-qa-plan.md` is now only
+the recommendation. After the gate approves, the orchestrator asks (never for an epic or a run
+without an issue): a comment, which is `_qa-file.md` with its first line replaced, so nothing is
+composed twice; a file attached to the issue; or the repository file as before. A comment and an
+attachment cannot accumulate the plans of several issues, so an epic stays a cumulative
+repository file. The attachment is offered on GitLab only, through `glab api` with `--form` (GitLab
+has no attachment object: the uploaded file lives only through the link in the note). Jira is
+excluded because no Jira CLI uploads files and a `curl` call needs a site URL and token the CLI does
+not expose; an upload to Bitbucket Issues is not supported here. The upload and the relative link
+inside a note were read from GitLab's documentation and not run. A per-project
+setting for the delivery way was rejected: the human said projects differ, and the choice is one
+click at a gate that already asks. Plans written before v9.2.0 still deliver: `delivery: comment`
+posts its `_qa-comment.md` as it is, and the old `{qa_file}` line counts as the pointer line.
 
 Two more standalone agents sit off that table entirely: `bug-triage-agent.md`
 (`00c-bug-triage.md`) is the entry point for a bug report rather than a feature request, and
@@ -196,6 +233,21 @@ stay with the human: whether a person verifies features by hand is a project set
 issue is a saved human confirmation, so it still wins over the derivation, exactly as issues written
 before v9.0.0 expect. A new template carries only `Effort:`, `Auto-fix:` and explicit `Skip:`/`Add:`
 overrides.
+
+Two things about that gate were wrong in the first real runs of v9.0.0, and v9.2.0 fixes both. The
+manual QA question was asked at Step 0e of a project's first run, before any code was read and in
+runs that could never write a QA plan (`delivery` not selected, `qa-plan-agent` skipped); its
+header read as "does a QA phase exist?". It is now asked once, at the gate that decides the
+`qa-plan-agent` row, only when every other condition for the row already holds, and it names the fact
+that fired it (the same lazy pattern as `.kairos/.qa-dir`). And the Start Gate's buttons were
+Start, Request changes and Stop, so choosing agents looked gone: `add`/`skip` existed only as typed
+text, and on a resumed run Request changes was absent too. **Change the pipeline** is now a fixed
+button that lists the agents a person can add or skip with their state, a few at a time because
+`AskUserQuestion` holds at most four options per question. Saving `Manual-QA: yes` in the issue's
+`## KAIROS Pipeline` block, so colleagues stop answering the same question on each machine, was
+considered and left out for now: `.manual-qa` is per machine like `.qa-dir`, the question now
+costs one click on the runs that reach it, and the line would add parsing and write-back
+composition for a value that rarely changes.
 
 The human can also narrow a run to the **areas** of the pipeline they want, because what a run is
 for (analyse this issue now, build it later) is not a fact any file holds. Four areas group the

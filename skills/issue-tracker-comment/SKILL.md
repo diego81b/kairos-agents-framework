@@ -38,7 +38,7 @@ glab issue note <issue-id> --message "{title}\n\n$(cat .kairos/<feature_folder>/
 
 ## Extract body
 
-`qa-plan-agent` posts a subset of its artifact rather than the file: its reader is a tester, and half of `05b-qa-plan.md` is pipeline bookkeeping that tester cannot act on. The agent's own step names which sections go in. In an orchestrated run the agent writes that body to `_qa-comment.md` and the orchestrator posts it after its gate (a plain body: `cat` that file, never `05b-qa-plan.md`). Standalone, the agent composes it inline — no `cat` of the artifact, and no second file written to hold the extract:
+`qa-plan-agent` posts a subset of its artifact rather than the file: its reader is a tester, and half of `05b-qa-plan.md` is pipeline bookkeeping that tester cannot act on. The agent's own step names which sections go in. In an orchestrated run the agent writes that body to `_qa-file.md` (the whole extract) and `_qa-comment.md` (the Core and a pointer line), and the orchestrator posts one of them after its gate, as the human chose (a plain body: `cat` that file, never `05b-qa-plan.md`). Standalone, the agent composes it inline — no `cat` of the artifact, and no second file written to hold the extract:
 
 **GitLab** (`glab`):
 ```bash

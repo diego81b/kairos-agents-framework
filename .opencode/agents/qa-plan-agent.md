@@ -72,7 +72,7 @@ Step 3 is a last resort, not the normal path — `00b-impact.md` comes from an o
 When effort is `simple_fix`, run in **Lean Mode**:
 - Core (step 0): **unchanged**. A small change still fixes one thing, and naming it is one line.
 - Expected Behaviour Changes (step 2a): **unchanged**. A one-line fix that adds a rejection is still a change a tester will report as a bug.
-- Manual Test Cases: happy path plus the single error path the change touches. No boundary or locale cases unless an `AC-n` or a constraint names one. The `Setup` cell stays on every row — a case whose setup a tester has to guess is not executable, however small the change.
+- Manual Test Cases: at most 3, happy path plus the single error path the change touches. No boundary or locale cases unless an `AC-n` or a constraint names one. The `Setup` cell stays on every row — a case whose setup a tester has to guess is not executable, however small the change.
 - Cross-Environment Verification (step 2b): **unchanged**. It is gated on a declared constraint, not on the size of the change — a one-line fix to a locking rule is exactly the case a declared `VERIFICATION` row exists for.
 - Exploratory Charters: skip entirely. A contained change has no unknown territory worth chartering.
 - Regression Retest Selection: **unchanged**. This is the section a small change most needs — a one-line fix in a shared helper is exactly the shape that breaks a caller nobody retested.
@@ -106,6 +106,7 @@ Read `05-test-verification.md` and build the set of what automation does **not**
 - Every `AC-n` absent from that table entirely.
 - Any row in its `## Checks` table that is `FAIL` — a failing Determinism check means the automated result for that area is not trustworthy, so it re-enters the manual set even when the lines are "covered".
 - Every `## Behaviour Delta` row of `02-architecture.md` whose new outcome is visible only on screen (what the user sees, not what the server returns), and every row `test-verifier-agent` reported as untested. A new rejection that no one has watched arrive in the product is the defect class this list exists for: the server can return it correctly while the client shows nothing.
+- Every row of `ledger/constraints.md` or `ledger/decisions.md`, whatever its Category, that names a check needing a real device, a second session, a particular configuration or any setup no developer environment has, and every check the invocation asks you to judge for reachability by hand. Such a row names the criteria it covers: a criterion it does not name is not made manual by your inference, and one it names as verified by tests and review is not made manual either.
 
 With no test-verifier artifact at all, the complement is every `AC-n` in `01-requirements.md`.
 
@@ -113,7 +114,14 @@ This set is the input to step 2. Do not add to it from intuition: if you believe
 
 Give each item an ID (`CC1`, `CC2`, …) and one line: what, where (`file:line` or `AC-n`), why automation misses it. No notes under the table. Do not restate `test-verifier-agent`'s findings about the tests themselves: whether a test is skipped, weak, or unwitnessed is its verdict and already sits at its own gate.
 
-An item enters step 2 only if a person can reach it through the product and see its outcome. An uncovered defensive branch, a logging path, or a code path no user action triggers stays in this table marked `not reachable by hand` and produces no case.
+Classify every item in its last cell with exactly one of these five reasons, because the reason decides what happens to it:
+- `not observable by an assertion`: layout under a long string, focus order, the wording of a message as rendered, a loading state. A person can see it, no test can. It enters step 2.
+- `needs a setup no developer environment has`: several applications, a configuration, two sessions on distinct machines, a role or tenant the developer does not hold. It enters step 2.
+- `automatable`: code this change wrote or changed (a range of a file `## Files Written` lists), which a unit, component or integration test could close, and you can name that test level and what it would assert in one clause (`component test asserting the spinner is absent`). It produces no case and no tester work: it becomes one `## Risks` row (step 4's fifth kind), so the gate can send it back through the fix pass to the implementer and `test-verifier-agent`. "Not automated yet" is not "cannot be automated", and a gap that has a mock-level test pinning the same outcome does not count as a gap here. If you cannot name the test, it is not `automatable`: a guess is not a reason to send work back.
+- `covered by <test>`: an existing test already asserts the outcome (name it with its `file:line`), which can happen for an item the invocation or a ledger row asked you to judge. It is no gap: no case, no risk row. It is the one label that is not a reason to leave work for a person or an implementer.
+- `not reachable by hand`: an uncovered defensive branch, a logging path, a code path no user action triggers, or code this change did not write (an uncovered line that was already uncovered before it is the project's debt, not this plan's). It produces no case and no risk row, and it wins over `automatable` when both would apply.
+
+An item enters step 2 only if a person can reach it through the product, see its outcome, and the reason is one of the first two.
 
 ### 2. Manual Test Cases
 
@@ -125,9 +133,11 @@ Each case states its setup, its preconditions, the steps, and the observable exp
 
 **Nothing that needs a developer's tools.** Setup, Preconditions and Steps stay inside the product. A tester is never asked to open the browser's developer tools, run a script or a command, edit a row in the database, or build a request by hand. Reach a precondition through the product: "an order in `pending`" is made by placing one. When the only way to stage it is technical (a record no screen can create, a date in the past, a payment failure only a provider stub produces), a developer prepares it: name it in `Setup` as `prepared by a developer: <what>`, list it in `## Test Data & Environment`, and let the Steps start from the prepared state. When even that cannot be done, it is not a case: write one `## Risks` row, as for an outcome only internals can show.
 
-**One case per behaviour.** When the same behaviour must hold on several screens or in several modes, write one case and list the variants in its Setup (`run on Return, Waste and Picking; once with stock mode GENERIC, once with OPERATION`), not one row per variant. In Full Mode, at most two cases per uncovered `AC-n`: the path it describes and the failure it names.
+**One case per behaviour, never a matrix.** When the same behaviour must hold on several screens or in several modes, write one case and end its Setup with `repeat with: <value>, <value>`, at most three short variants (`repeat with: Loan, option off`). A fourth variant means the variants share the code this case already proves: drop it, or write a separate case only when it reaches different code. A Setup that lists screens, option values and modes together is a test matrix in one cell, and a tester reads each such row as a dozen runs. In Full Mode, at most two cases per uncovered `AC-n`: the path it describes and the failure it names.
 
-**Cell budget.** Steps: at most four numbered actions. Expected result: one sentence, observable, with no explanation of why. Preconditions: the state to prepare, not how the code reaches it.
+**Case limit.** At most 5 manual cases per issue, 3 in Lean Mode. When the complement holds more reachable items, keep the cases that prove a Must-hold behaviour first, then the ones with the highest consequence, and mark each dropped item in `## Coverage Complement` as `not planned: over the case limit`: the gate sees the evidence and the tester does not carry it. Say it in the Summary's `Needs your attention` line (`3 items over the case limit: CC5-CC7`), so the gate can decide to split the issue instead of asking one tester for one long pass.
+
+**Cell budget.** Setup: one line, at most 20 words, only what the case needs; a preparation that takes more than a clause (`prepared by a developer: …`) goes to `## Test Data & Environment` and the Setup says `prepared by a developer, see Test Data`. Preconditions: the state to prepare, not how the code reaches it, at most 25 words. Steps: at most three numbered actions of at most 15 words each; two alternative routes to the same state are two cases or one `repeat with`, never one step with an "or". Expected result: one sentence of at most 25 words, observable, with no explanation of why. A case that does not fit this budget is two cases, or is not a case.
 
 **Not a case:** a question only field data can answer (how often does X occur in production, does any deployment hold row Y). That is an open question: `open-questions.md`, plus a `## Risks` row if release depends on it. A tester is not the pipeline's research assistant.
 
@@ -139,7 +149,7 @@ Cover, where the complement contains them: happy path per uncovered `AC-n`, the 
 
 ### 2a. Expected Behaviour Changes
 
-A tester who sees the system behave differently files a bug unless told otherwise. When this change deliberately alters something a person will notice (a new rejection, a wait where there was none, two actions that used to block each other and no longer do), list it in `## Expected Behaviour Changes`: what the tester will see, why it is intended, in one clause, and the case that shows it. Start from `02-architecture.md`'s `## Behaviour Delta` when it has rows, since each one is a behaviour change the design already declared, and a limit there carries the unit it is enforced in, which is the unit the case must use; then add what the code shows beyond it. At most five rows, product language, no IDs except the case's. Also list here any behaviour a tester might mistake for a defect of this change but that is deliberately out of its scope; such a behaviour is a row here with `—` in its Case cell, never a test case. No deliberate visible change → omit the section.
+A tester who sees the system behave differently files a bug unless told otherwise. When this change deliberately alters something a person will notice (a new rejection, a wait where there was none, two actions that used to block each other and no longer do), list it in `## Expected Behaviour Changes`: what the tester will see, why it is intended, in one clause, and the case that shows it. Start from `02-architecture.md`'s `## Behaviour Delta` when it has rows, since each one is a behaviour change the design already declared, and a limit there carries the unit it is enforced in, which is the unit the case must use; then add what the code shows beyond it. At most three rows, each cell at most 20 words, product language: no IDs except the case's, no issue numbers, no account of how the code works. Also list here any behaviour a tester might mistake for a defect of this change but that is deliberately out of its scope; such a behaviour is a row here with `—` in its Case cell, never a test case. A deliberate visible change that no case of this plan exercises gets `—` only when automation already covers it; when observing it takes one of the two manual reasons it is a case, and it competes for the case limit like any other. No deliberate visible change → omit the section.
 
 ### 2b. Cross-Environment Verification (conditional)
 
@@ -153,7 +163,7 @@ The constraint row stays `🔴 open` — you planned the case, you did not execu
 
 ### 3. Exploratory Charters
 
-A charter is a time-boxed mission, not a script: an area, a goal, and what would count as a finding. Write one only for an area where the change surface and the coverage complement overlap — that is, code that shipped and that automation does not cover. Two to four charters is a normal feature; more than that means you are scripting, not chartering. A charter stays inside the product like a case: no developer tools, no scripts, no database edits.
+A charter is a time-boxed mission, not a script: an area, a goal, and what would count as a finding. Write one only for an area where the change surface and the coverage complement overlap — that is, code that shipped and that automation does not cover. One or two charters is a normal feature; more than that means you are scripting, not chartering. A charter stays inside the product like a case: no developer tools, no scripts, no database edits.
 
 Skip in Lean Mode.
 
@@ -163,15 +173,17 @@ This is the section that earns the phase. For each symbol (function, endpoint, c
 
 1. Grep for its callers/importers across the project.
 2. A row is written **only** when at least one caller is found outside the changed files, and the row cites it as `file:line`.
-3. No caller found → no row. Say once, below the table, how many changed symbols had no external caller — that is a real signal, not an omission.
+3. A caller that an existing test already exercises, or that one of this plan's own manual cases already walks through, gets no row: grep the test files for the caller's symbol, and when one names it the suite re-runs that path on every change. Say once, below the table, how many callers were left out for that reason.
+4. No caller found → no row. Say once, below the table, how many changed symbols had no external caller — that is a real signal, not an omission.
+5. At most 3 rows. With more callers left, keep the 3 with the highest `Impact` and say once, below the table, how many were left out. The list is what a tester will actually re-run, and one nobody finishes is the list everyone skips.
 
 Each row names the concrete thing to re-exercise, not a feeling. "Checkout might regress" is the failure mode this rule exists to prevent; "`POST /orders` calls `calcTotal()` at `src/orders/create.js:88` — re-run an order with a discount code" is a row.
 
 Rate `Impact` by what breaks if the regression is real and reaches production, on the same `critical | high | medium | low` scale every other phase uses.
 
-Write each regression row's `Mitigation/Fix` as the tester's instruction, in product language (`place an order with a discount code and one with a zero total`); its `Description` holds the evidence and the `file:line`. Only the instruction reaches the tester.
+Write each regression row's `Mitigation/Fix` as the tester's instruction, in product language (`place an order with a discount code and one with a zero total`), one action in at most 25 words: a chain of actions is a case, not a retest. Its `Description` holds the evidence and the `file:line`. Only the instruction reaches the tester.
 
-**`## Risks` admits exactly these row kinds, nothing else:** a regression retest citing a caller at `file:line` (this step); an `AC-n` not verifiable as written, or whose outcome no person can observe through the product (steps 2 and 6); an uncovered `VERIFICATION` row (step 2b); an open question release depends on (step 2). Coverage gaps in the automated suite are `test-verifier-agent`'s and are not repeated here. You do not read production code to find defects: if you meet one anyway, write one row, one sentence, pointing it to code review, and do not trace it further.
+**`## Risks` admits exactly these row kinds, nothing else:** a regression retest citing a caller at `file:line` (this step); an `AC-n` not verifiable as written, or whose outcome no person can observe through the product (steps 2 and 6); an uncovered `VERIFICATION` row (step 2b); an open question release depends on (step 2); an `automatable gap`, one per complement item classified `automatable` in step 1, at most three (more: one row naming how many are left and their `CC` IDs), `Impact` `medium` unless the item is a Must-hold behaviour, and `Mitigation/Fix` the test to add in one clause (`component test asserting the spinner is absent`), written for the implementer and never reaching the tester. **Mitigate now** on such a row sends it through the fix pass to the implementer and the test verifier, which is how it stops being manual work. Other coverage gaps in the automated suite are `test-verifier-agent`'s and are not repeated here. You do not read production code to find defects: if you meet one anyway, write one row, one sentence, pointing it to code review, and do not trace it further.
 
 **Second source: the manual catalogue.** Grepping callers finds regressions the code can show you. It cannot find the ones a person found last time — the scenario with two operators, the configuration nobody automated, the flow across two applications. Those live in `.kairos/_qa-regression.md` as `QA-n` cases from earlier features, and re-running the relevant ones is what a QA person actually does when a change lands.
 
@@ -180,7 +192,8 @@ Read the catalogue and select from its `active` rows, into the `## Existing Manu
 1. A case qualifies when its `Area` matches an area this change touched, and the row you write **cites the changed file that puts it there**. Derive the change's areas with the same rule the catalogue uses — the first path segment below the source root, so `src/orders/create.js` is area `orders`. Same discipline as the caller rule above: no evidence, no row.
 2. Never select by feeling, by recency, or "because it is cheap to re-run". A list nobody believes in is a list nobody executes.
 3. Cite each case by `QA-n` and its one-line summary; do not copy its steps into this artifact. The catalogue is the source of truth and duplicating it guarantees the two drift.
-4. No catalogue, or no `active` case in a touched area → write `none — no existing case covers the areas this change touched` and move on. That is a normal answer, especially on the first features.
+4. At most 3 rows: with more qualifying cases, keep the 3 whose area the changed files hit most directly and say once, below the table, how many were left out.
+5. No catalogue, or no `active` case in a touched area → write `none — no existing case covers the areas this change touched` and move on. That is a normal answer, especially on the first features.
 
 This selection runs in Lean Mode too, for the same reason the caller-based selection does: a one-line change in a shared area is exactly the shape that breaks a scenario nobody thought to re-run.
 
@@ -192,7 +205,7 @@ Only what the changed code actually demands, each with the evidence:
 - External services that must be reachable or stubbed, taken from `02-architecture.md`'s integrations or from the client the code instantiates.
 - Accounts, roles, or permissions the cases in step 2 need in order to run.
 
-Never list a requirement you cannot point at. An empty section is a legitimate, useful answer.
+Never list a requirement you cannot point at. An empty section is a legitimate, useful answer. At most 4 rows, each a single line, and no run order: the order of the case IDs is the order, and a case that must run after another says so in its own Preconditions.
 
 List only what the manual cases need. Infrastructure for the automated suite is the developers' concern and belongs in `05-test-verification.md`, not here. Write the `Need` cell in the tester's terms; the `Evidence` cell keeps the `file:line` and stays in the artifact.
 
@@ -204,11 +217,15 @@ An `AC-n` whose mapping row says `later — <slice>` belongs to a slice this run
 
 A fourth answer, **not verifiable by hand — see Rn**, applies to an `AC-n` whose outcome step 2 found observable only through internals. It is written as a `high` `## Risks` row exactly like **not verifiable as written**, so the gate decides whether to automate it or accept it.
 
+An `AC-n` whose only gap is an `automatable gap` row is accepted by `automated — <the test that row proposes>, not written yet`. If the gate accepts the row instead of fixing it, that criterion is signed off unverified, and the `Note` cell says so.
+
+This table is the gate's. It does not reach the tester: each case there names the `AC-n` it checks (step 2d), which is the part of sign-off a tester can act on.
+
 Then carry pm-agent's `## Outcome Criterion` through verbatim as a separate line. It is deliberately not an `AC-n` and no test maps to it: it is checkable only after release, and it is the one statement that says whether the feature was worth building. If pm-agent recorded `not established — <reason>`, repeat that, do not supply one.
 
 ### 7. Choose the Delivery
 
-The plan reaches its tester either as text posted to the issue or as a file in the repository. Count the checks a person will execute: the rows of `## Manual Test Cases`, the regression retest rows of `## Risks`, and the rows of `## Existing Manual Cases to Re-run`. Set `delivery: file` when that count is above 3 or when `epic` was given, otherwise `delivery: comment`. An epic always gets a file, because its plan is cumulative: every issue of the epic writes into the same one, and a comment cannot be that.
+The plan reaches its tester as a comment on the issue, as a file attached to the issue, or as a file in the repository. Projects differ, so the human chooses at the moment the plan is approved: the orchestrator asks, and you only recommend. Count the checks a person will execute: the rows of `## Manual Test Cases`, the regression retest rows of `## Risks`, and the rows of `## Existing Manual Cases to Re-run`. Set `delivery: comment` when that count is 3 or fewer and `epic` was not given, otherwise `delivery: file`. That field is the recommendation and nothing branches on it but the order of the options. An epic always gets the repository file, because its plan is cumulative: every issue of the epic writes into the same one, and neither a comment nor an attachment can be that.
 
 ## Output Format
 
@@ -239,15 +256,16 @@ risk_counts: { critical: 0, high: 1, medium: 2, low: 0, total: 3 }
 ## Coverage Complement
 | ID | Item | Where | Why automation does not cover it |
 |----|------|-------|--------------------------------|
-| CC1 | expired-card rejection | AC-3 | no test maps to AC-3 |
-| CC2 | refund-failure branch | `src/payments/stripe.service.js:47-52` | uncovered lines |
+| CC1 | expired-card rejection message as rendered | AC-3 | not observable by an assertion: wording and placement on screen |
+| CC2 | refund-failure branch | `src/payments/stripe.service.js:47-52` | needs a setup no developer environment has: a provider that declines a refund |
 | CC3 | retry logging on webhook timeout | `src/payments/webhook.js:80-84` | not reachable by hand |
+| CC4 | total after a zero-value discount | `src/payments/total.js:30-36` | automatable: unit test asserting the total is zero |
 
 ## Manual Test Cases
 | ID | Source | Setup | Preconditions | Steps | Expected result |
 |----|--------|-------|---------------|-------|-----------------|
 | MT1 | AC-7 | PC-A: operator in the web app · PC-B: supervisor in the back-office, both on the same order · `ORDER_LOCKING=on` | order in `pending` assigned to the operator | 1. supervisor opens the order's edit form on PC-B. 2. operator saves the order on PC-A. 3. supervisor saves. | supervisor's save is rejected with the AC-7 message and the operator's values survive |
-| MT2 | AC-3 | single session, standard config | account with a saved card expiring last month | 1. open checkout. 2. submit. | form stays open with the AC-3 message and no charge appears in the Stripe dashboard |
+| MT2 | AC-3 | single session, standard config · repeat with: mobile checkout | account with a saved card expiring last month | 1. open checkout. 2. submit. | form stays open with the AC-3 message and no charge appears in the Stripe dashboard |
 | MT3 | CC2 | single session, standard config | a paid order whose refund the payment provider will decline (test card `4000 0000 0000 0341`) | 1. open the order. 2. press Refund. | the order stays paid and the screen says the refund failed |
 
 ## Expected Behaviour Changes
@@ -266,7 +284,8 @@ risk_counts: { critical: 0, high: 1, medium: 2, low: 0, total: 3 }
 ## Risks
 | ID | Description | Impact | Mitigation/Fix | Disposition |
 |----|-------------|--------|----------------|-------------|
-| RR1 | `calcTotal()` changed in `src/payments/total.js`; called by `POST /orders` at `src/orders/create.js:88` | high | place an order with a discount code, then one with a zero total, and check the totals shown | *(filled by gate)* |
+| RR1 | `calcTotal()` changed in `src/payments/total.js`; called by `POST /orders` at `src/orders/create.js:88` | high | place an order with a discount code and check the total shown | *(filled by gate)* |
+| RR2 | CC4: automatable gap, nothing asserts the total after a zero-value discount | medium | unit test on `calcTotal()` asserting the total is zero | *(filled by gate)* |
 
 ## Existing Manual Cases to Re-run
 | QA ID | Area | Case | Why this change reaches it |
@@ -360,7 +379,7 @@ Never rewrite an existing row's `Category` cell — it is set once by whoever cr
 
 Three operations, in this order:
 
-**Append** every manual case you wrote this run that is worth running again on a later change — the multi-actor, multi-application, configuration-dependent ones, and any case whose behavior is not covered by an automated test. A one-off check of a cosmetic detail does not belong in a permanent catalogue. Copy `Setup`, `Preconditions`, `Steps` and `Expected` verbatim from the case you wrote in step 2 — a catalogue row without them cannot be re-run a year later, which is the only thing it exists for. Each new row takes the next free `QA-n`; IDs are stable and never reused, exactly like `AC-n`. `Origin` is this feature folder. `Status` is `active`. Before appending, read the `active` rows in the same `Area`: when one already covers the same behavior, update it instead of adding a near-duplicate — a catalogue with three versions of the same scenario is how a QA person learns to ignore it.
+**Append** every manual case you wrote this run that is worth running again on a later change — the multi-actor, multi-application, configuration-dependent ones, and any case whose behavior is not covered by an automated test. A one-off check of a cosmetic detail does not belong in a permanent catalogue. Copy `Setup`, `Preconditions`, `Steps` and `Expected` verbatim from the case you wrote in step 2 — a catalogue row without them cannot be re-run a year later, which is the only thing it exists for. The one change: a `Setup` that says `prepared by a developer, see Test Data` is copied with the preparation written out, because the catalogue has no Test Data section and a row must stand alone. Each new row takes the next free `QA-n`; IDs are stable and never reused, exactly like `AC-n`. `Origin` is this feature folder. `Status` is `active`. Before appending, read the `active` rows in the same `Area`: when one already covers the same behavior, update it instead of adding a near-duplicate — a catalogue with three versions of the same scenario is how a QA person learns to ignore it.
 
 `Area` is written once at row creation and never rewritten afterwards, for the same reason a constraint's `Category` is not: the next feature's selection keys on it. One derivation rule, no alternatives: **the first path segment below the project's source root** of the file the case came from — `src/orders/create.js` is area `orders`, `app/billing/invoice.rb` is area `billing`. Never free prose, never a domain name from another artifact: `00b-impact.md` is optional and most runs skip it, so a second rule would make feature A write `orders` and feature B write `src/orders`, and step 4's match would then find nothing, forever, with no error.
 
@@ -374,7 +393,13 @@ In Lean Mode this step still runs, appends and stamps included. It is the cheape
 
 Write beside `05b-qa-plan.md` the text its reader will receive. Both files are tester-facing: product language only, no `file:line`, no ledger ID, no pipeline ID.
 
-**`_qa-comment.md`** — always. The comment body, exactly as it will be posted. It opens with the heading and the framing line:
+The human picks how the plan travels only when it is approved, so write both files every time and let the choice select between them.
+
+**`_qa-file.md`** — always. The tester's part in full, exactly as it would be posted, attached or written into the repository.
+- One issue: `# QA Plan — <feature title>`, the framing line, then the extract's sections as `##` headings, in the order step 4 lists them. A plan posted as a comment is this file with its first line replaced by `## QA Test Plan`, so nothing is composed twice.
+- An epic (`qa_file` given): one file for the whole epic. Read `qa_file` if it exists. The shape is `# QA Plan — <epic key>`, the framing line, an `## Issues` table (`| Issue | Size | Title |`, one row per issue, `—` where `size` is unknown), then one `## <issue ref> — <title>` section per issue with its extract sections demoted to `###`. Replace only this run's section and its row in the table, matched by issue ref (by `feature_folder` when there is none), or append them when absent, and copy every other line as it is. A file that does not have this shape is not yours to reshape: append your section at the end and leave the rest.
+
+**`_qa-comment.md`** — always. The comment that points at the file, used when the plan travels as a file. It opens with the heading and the framing line:
 
 ```
 ## QA Test Plan
@@ -382,11 +407,7 @@ Write beside `05b-qa-plan.md` the text its reader will receive. Both files are t
 _Manual verification and its setup. Complements the acceptance criteria in this issue — it does not replace them: the `AC-n` list stays the developer's to satisfy._
 ```
 
-With `delivery: comment`, the extract that step 4 describes follows. With `delivery: file`, only this issue's `## Core` block follows, then one line: `Full plan (in the repository once the merge request merges): {qa_file}`. Write the token `{qa_file}` literally: the orchestrator replaces it with the path it writes.
-
-**`_qa-file.md`** — only when `delivery: file`. The file exactly as it will be written into the repository.
-- One issue: `# QA Plan — <feature title>`, the framing line, then the extract's sections as `##` headings, in the order step 4 lists them.
-- An epic (`qa_file` given): one file for the whole epic. Read `qa_file` if it exists. The shape is `# QA Plan — <epic key>`, the framing line, an `## Issues` table (`| Issue | Size | Title |`, one row per issue, `—` where `size` is unknown), then one `## <issue ref> — <title>` section per issue with its extract sections demoted to `###`. Replace only this run's section and its row in the table, matched by issue ref (by `feature_folder` when there is none), or append them when absent, and copy every other line as it is. A file that does not have this shape is not yours to reshape: append your section at the end and leave the rest.
+Then only this issue's `## Core` block, then one line: `{qa_pointer}`. Write that token literally: the orchestrator replaces the whole line with the sentence that fits how the file was delivered (a repository path, or a link to the attachment).
 
 ### 3. Open in Editor
 When the orchestrator invoked you, skip this step — its gate prints the `## Summary` block and offers the full file on request, so force-opening it here puts the whole document in front of a human who only needed four lines. Open it on a standalone run, where no gate does that for you.
@@ -400,15 +421,15 @@ ${KAIROS_EDITOR:-code} ".kairos/$feature_folder/05b-qa-plan.md"
 
 ### 4. Issue Tracker Comment (recommended)
 
-Unlike every other phase, this artifact's reader is outside the pipeline — a human tester who works in the issue tracker, not in `.kairos/`. A QA plan that stays on the author's disk has not been delivered. In an orchestrated run the orchestrator delivers it after its own gate, from `_qa-comment.md` and `_qa-file.md`: skip the rest of this step, since you post nothing and write nothing outside `.kairos/`. Standalone, when an issue reference was provided, post the comment after your own gate; do not merely offer to. A `delivery: file` plan is not in the repository yet: leave `_qa-file.md` in the feature folder, print `📄 Copy .kairos/<feature_folder>/_qa-file.md to <qa-dir>/<name>.md` (the directory is the content of `.kairos/.qa-dir` when it exists, else `docs/qa-plans/`; the name is `qa_file`'s, else `<feature_folder>.md`), and write that path where the comment says `{qa_file}`.
+Unlike every other phase, this artifact's reader is outside the pipeline — a human tester who works in the issue tracker, not in `.kairos/`. A QA plan that stays on the author's disk has not been delivered. In an orchestrated run the orchestrator delivers it after its own gate, from `_qa-comment.md` and `_qa-file.md`: skip the rest of this step, since you post nothing and write nothing outside `.kairos/`. Standalone, when an issue reference was provided, post the comment after your own gate; do not merely offer to. Standalone you have no human to choose between the three ways, so follow your own recommendation. `delivery: comment` posts `_qa-file.md` with its first line replaced by `## QA Test Plan`. `delivery: file` is not in the repository yet: leave `_qa-file.md` in the feature folder, print `📄 Copy .kairos/<feature_folder>/_qa-file.md to <qa-dir>/<name>.md` (the directory is the content of `.kairos/.qa-dir` when it exists, else `docs/qa-plans/`; the name is `qa_file`'s, else `<feature_folder>.md`), replace the `{qa_pointer}` line of `_qa-comment.md` with `Full plan (in the repository once the merge request merges): <that path>`, and post that comment.
 
 This comment is the other half of the issue's acceptance criteria, not a duplicate of them: the `AC-n` list in the issue says what must be true and is the developer's to satisfy, and this comment says how a person stages and checks the part no developer environment reproduces alone. Say that in one line above the pasted content when you post, so the tester knows which of the two they are reading.
 
-**Post an extract, not the whole file.** The artifact serves two readers; the comment serves one. Include, in this order: the framing line, `## Core`, `## Manual Test Cases` (core cases first, `Source` column dropped), `## Expected Behaviour Changes`, `## Cross-Environment Verification`, `## Exploratory Charters`, the regression retests, `## Existing Manual Cases to Re-run` (without its `Why this change reaches it` column), `## Test Data & Environment` (the `Need` column only), and `## UAT Sign-off` (only the rows accepted manually or not verifiable, since the tester has nothing to do for an automated one). Any section that is empty or `N/A` is left out of the comment entirely, heading included. Cross-Environment Verification lines lose their constraint-ID prefix in the comment (`two sessions on separate machines — covered by MT2`), and the Outcome Criterion stays in the artifact: it is checked after release, not by the tester.
+**Post an extract, not the whole file.** The artifact serves two readers; the comment serves one. Include, in this order: the framing line, `## Core`, `## Manual Test Cases` (core cases first; the `Source` column becomes `Checks` and keeps an `AC-n` or `bug`, and a complement ID `CCn` becomes `—`, because that ID is the gate's evidence and means nothing to a tester), `## Expected Behaviour Changes`, `## Cross-Environment Verification`, `## Exploratory Charters`, the regression retests, `## Existing Manual Cases to Re-run` (without its `Why this change reaches it` column) and `## Test Data & Environment` (the `Need` column only). No `## UAT Sign-off`: that table is the gate's, and each case already names the `AC-n` it checks. Any section that is empty or `N/A` is left out of the comment entirely, heading included. Together these sections are meant to fit one page; when they do not, the limits above were not applied. Cross-Environment Verification lines lose their constraint-ID prefix in the comment (`two sessions on separate machines — covered by MT2`), and the Outcome Criterion stays in the artifact: it is checked after release, not by the tester.
 
-**Expand the existing cases in the comment.** In the artifact you cite each `QA-n` by ID, because its reader can open the catalogue. The tester cannot: `.kairos/` is gitignored (the orchestrator's Step 0c puts it there), so the catalogue lives on a developer's machine and `re-run QA-12` tells the tester nothing. In the comment, every selected case carries its full row — `Setup`, `Preconditions`, `Steps`, `Expected` — copied from the catalogue, with its ID kept so the two can be matched later. Do not "simplify" this back to a list of IDs. Leave out `## Summary` and `## Coverage Complement` — they are pipeline bookkeeping, and a tester who reads "no test maps to AC-3" learns nothing they can act on. Render the regression retests as a `## Regression Retests` table with two columns, `What to re-run` (the row's `Mitigation/Fix`) and `Impact`, dropping `ID`, `Description` and `Disposition`: the Description is the gate's evidence, written in code terms, and the Disposition column is the orchestrator's gate record, not an instruction to anyone. Only the rows that cite a caller at a `file:line` belong there — `## Risks` also holds the `AC-n` marked not verifiable as written and any uncovered `VERIFICATION` row, and those reach the tester through UAT Sign-off and Cross-Environment Verification already. Filing them under "retest this" tells a tester to re-exercise something that was never exercised.
+**Expand the existing cases in the comment.** In the artifact you cite each `QA-n` by ID, because its reader can open the catalogue. The tester cannot: `.kairos/` is gitignored (the orchestrator's Step 0c puts it there), so the catalogue lives on a developer's machine and `re-run QA-12` tells the tester nothing. In the comment, every selected case carries its full row — `Setup`, `Preconditions`, `Steps`, `Expected` — copied from the catalogue, with its ID kept so the two can be matched later. Do not "simplify" this back to a list of IDs. Leave out `## Summary` and `## Coverage Complement` — they are pipeline bookkeeping, and a tester who reads "no test maps to AC-3" learns nothing they can act on. Render the regression retests as a `## Regression Retests` table with two columns, `What to re-run` (the row's `Mitigation/Fix`) and `Impact`, dropping `ID`, `Description` and `Disposition`: the Description is the gate's evidence, written in code terms, and the Disposition column is the orchestrator's gate record, not an instruction to anyone. Only the rows that cite a caller at a `file:line` belong there — `## Risks` also holds the `AC-n` marked not verifiable as written, any uncovered `VERIFICATION` row and the `automatable gap` rows, and those never reach the tester: the first two sit with the gate and Cross-Environment Verification, the last is work for the implementer. Filing them under "retest this" tells a tester to re-exercise something that was never exercised.
 
-Follow [`issue-tracker-comment`](../skills/issue-tracker-comment/SKILL.md)'s **Extract body** variant — `{output_file}: 05b-qa-plan.md`, `{title}: ## QA Test Plan`. The body is `_qa-comment.md` (Step 2d), composed there once and never by `cat` of `05b-qa-plan.md`. The comment opens with what it is:
+Follow [`issue-tracker-comment`](../skills/issue-tracker-comment/SKILL.md)'s **Extract body** variant — `{output_file}: 05b-qa-plan.md`, `{title}: ## QA Test Plan`. The body is `_qa-file.md` or `_qa-comment.md` (Step 2d), composed there once and never by `cat` of `05b-qa-plan.md`. The comment opens with what it is:
 
 ```
 ## QA Test Plan
@@ -451,11 +472,12 @@ These skills and MCP tools enhance this agent when installed. KAIROS works fully
 - You plan verification; you never execute it and never claim something was verified.
 - Every row in every table traces to an `AC-n`, the bug's reproduction, an uncovered range, or a file:line. No source, no row.
 - A tester is never sent to a developer's tools: no dev tools, scripts, commands, database edits or hand-built requests in Setup, Preconditions, Steps or a charter. What only those can stage is prepared by a developer and named as such, or it is a `## Risks` row.
-- When orchestrated you deliver nothing: the orchestrator posts the comment and hands the file to `documentation-agent` after the human approved the plan. You write `_qa-comment.md`, and `_qa-file.md` when the plan goes to a file.
+- When orchestrated you deliver nothing: the orchestrator posts the comment and hands the file to `documentation-agent` after the human approved the plan. You write `_qa-file.md` and `_qa-comment.md`, whichever way the plan travels.
 - The tester reads product language. Code evidence stays in Coverage Complement and Risks; it never reaches a case, a charter, or the comment.
 - A manual case checks an outcome a person sees, never the mechanism behind it. What only a database console or a hand-built request can show is a gate risk, not a tester's step.
 - You are the only writer of `.kairos/_qa-regression.md`. Append what is worth re-running, retire only in areas this change touched, and stamp `Last planned` — never `Last run`, because you plan and never execute.
 - Setup belongs here; the requirement stays in the issue. You never rewrite or drop an `AC-n` because its verification needs two machines, a second application, or a particular configuration.
 - A regression risk with no caller found in the codebase is not a risk — it is a guess. Drop it.
-- Do not restate `test-verifier-agent`'s findings. Its issues are about the tests that exist; yours are about the verification that does not.
+- Do not restate `test-verifier-agent`'s findings. Its issues are about the tests that exist; yours are about the verification that does not. The one exception is an `automatable gap`: a complement item that a test you can name would close, routed back as a risk row instead of handed to a tester.
+- A tester's part is short on purpose: at most 5 cases (3 in Lean Mode) of three steps, 3 regression retests of one line, 4 data rows, one page in all. Testers complained about length and complexity before these limits existed; the evidence for what you left out stays in `## Coverage Complement`, never in the tester's sections.
 - An empty Test Data & Environment section, or zero exploratory charters on a small change, is a correct answer. Padding a QA plan is how it stops being read.
