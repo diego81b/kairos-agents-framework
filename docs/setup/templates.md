@@ -21,7 +21,7 @@ Two formats are read:
 | `code-reviewer-agent` | review | at the start | an implementer runs |
 | `test-verifier-agent` | review | at the implementation gate | the implementation wrote or changed a test file, and effort is not `simple_fix` (with no `pm-agent` there is no acceptance-criteria list to map tests against, and code review already reads the tests) |
 | `security-reviewer-agent` | review | at the implementation gate | the change touches `auth` or `integrations`, a `SECURITY`/`PRIVACY`/`COMPLIANCE` constraint exists, or the architecture's threat model produced rows |
-| `qa-plan-agent` | delivery | at the review gate | the project verifies features by hand (asked once per project) and something is left for a person: no tests were written, an acceptance criterion went to manual verification, or the change touches the frontend. A `VERIFICATION` constraint triggers it in any project |
+| `qa-plan-agent` | delivery | at the review gate | the project verifies features by hand (asked once per project, at this gate, and only when something below fires) and something is left for a person: no tests were written, an acceptance criterion went to manual verification, or the change touches the frontend. A `VERIFICATION` constraint triggers it in any project |
 | `release-planner-agent` | delivery | at the review gate | the change ships a migration, a new environment variable or configuration key, a deployment or CI file, or a dependency change |
 | `documentation-agent` | delivery | at the review gate | the change alters a contract, or the architecture's Behaviour Delta is not `N/A` |
 
@@ -35,7 +35,7 @@ Two formats are read:
 
 An agent runs only when its rule fires **and** its area is selected (see [Areas](#areas)). `impact-assessment-agent` and `bug-triage-agent` belong to no area: they report the facts, so they run whichever areas you chose.
 
-Each decision taken during the run is printed at the gate before it, with the rule that fired. Reply there to change it (`add security-reviewer`, `skip release-planner`): the correction holds for the rest of the run and is logged in `_tracking.md`.
+Each decision taken during the run is printed at the gate before it, with the rule that fired. Reply there to change it (`add security-reviewer`, `skip release-planner`): the correction holds for the rest of the run and is logged in `_tracking.md`. At the Start Gate the same choice is a button, **Change the pipeline**, which lists the agents that can be added or skipped with their current state.
 
 ::: info When architect is skipped
 Skipping `architect-agent` when the rule calls for it is allowed. The orchestrator says what is lost: the Behaviour Delta that test verification and the QA plan read, the threat-model rows that can trigger the security review, and the first full pass over the ledger. The implementer and Team Mode decisions then fall back to `00b-impact.md` and the project files.

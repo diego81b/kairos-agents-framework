@@ -32,6 +32,7 @@ Work through [`analysis-discipline`](../skills/analysis-discipline/SKILL.md) thr
 ## Your Input
 - Issue description (required)
 - `00-context.md` from context-extractor-agent (optional — if present, consume it; do not rescan what it already covers)
+- `00c-bug-triage.md` from bug-triage-agent (optional: if present, consume it; do not re-read what its evidence already covers)
 - `feature_folder` (for output path)
 
 ## Input Validation
@@ -59,6 +60,10 @@ If `.kairos/<feature_folder>/00-context.md` exists, read it and extract:
 Do NOT re-read files already covered by `00-context.md`. Move to step 2.
 
 If `00-context.md` is absent, do a targeted scan: read only the files directly named or implied by the issue (e.g. if the issue mentions "payment endpoints", read the payments route, service, and model files — not the entire src directory).
+
+If `.kairos/<feature_folder>/00c-bug-triage.md` exists, read it before any code. Its `## Root Cause` and `## Evidence` sections hold the `file:line` where the defect lives and the call sites the triage found by search, and it reproduced the defect, so the files it cites are already read. Take the files to change, the callers and the domains from there, and do not open a cited file again unless step 3 needs a line the triage does not quote. Your reading starts where its evidence stops: what the fix touches around the root cause (the tests that cover it, the callers a change could break). The triage answers what is wrong; you size the change that fixes it, so a `quick-fix` in the triage is evidence for step 3, never its result.
+
+**Read in proportion to the change.** Every agent after you is derived from what you report, and most issues are small, so the cheapest read that can check the size table in step 3 is the right one. When the issue, or the triage, names the production files that change and there are one or two of them, read those files and the tests that already cover them, and stop: that is enough to check every `XS` and `S` criterion. When the issue names no file, find the one or two places it points to with a few `Grep` calls, then apply the same limit. Widen the read only when what you read shows a criterion of a larger row (a new or modified endpoint, a schema change, auth impact, a third production file), and then only as far as that row needs. Never list a directory to look for files the issue did not name, and stop reading as soon as you can name, for the size you are about to write, the files that drove it and the evidence for each fact in step 7.
 
 ### 2. Map Domains Touched
 For each domain below, determine whether the issue touches it and, if yes, which specific files:
@@ -221,6 +226,8 @@ Frontmatter field notes:
 - `risk_counts` — tally of the Risks table rows by their Impact rating.
 - `open_dispositions` — count of table rows (Risks + Open Questions combined) whose Disposition cell is still empty. It starts equal to the total row count and drops to `0` once the Risk Disposition Loop resolves every row.
 - `domains`, `test_suite`, `contract_change`, `change_kind` — the facts from steps 2 and 7, matching the `## Domains` and `## Pipeline Facts` sections. The orchestrator branches on them, which is why they are in the frontmatter.
+
+**Short artifact for `XS` and `S`.** When `size` is `XS` or `S`, keep every heading and the frontmatter, and write each section in the fewest lines that still carry its content: `## Effort` in two or three sentences naming the files that drove the size, `## Work Breakdown` in one or two rows, `## Existing Reusable Assets` and `## Gaps` in one line each (the test files the implementer must keep green; what has to be created, or `none`), `## Risks` and `## Open Questions` only for what the issue leaves undecided or the code contradicts, and `## Pipeline Facts` with its evidence as always. A small change with a page-long artifact makes the gate read more than the code it asks about. From `M` up, write the sections in full.
 
 ## Ledger Check
 
