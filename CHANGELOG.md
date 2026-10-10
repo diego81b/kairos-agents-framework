@@ -6,6 +6,21 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v9.3.1 — October 10, 2026
+
+A last check of QA plan size against real plans found two defects. A plan had no way to say it asked nothing of a person, and on a `simple_fix`, where test-verifier does not run, the agent treated every acceptance criterion as unverified even when tests covered it. The size limits are unchanged: they are the same from M to XL, and no L or XL plan written under the current rules exists to tune them against.
+
+### Added
+
+- **`agents/qa-plan-agent.md`**, **`agents/orchestrator-agent.md`**, **`docs/workflow.md`**, **`docs/agents.md`**, **`CLAUDE.md`** — a plan whose tester's part is empty (no manual case, no regression retest, no existing case, no charter) is `delivery: none`. It keeps Summary, Core, Coverage Complement, Risks when it has rows and UAT Sign-off for the gate, writes no `_qa-file.md` or `_qa-comment.md`, and posts nothing. The orchestrator skips the delivery question and prints `QA plan: nothing to verify by hand`. The gate is unchanged, since a risk row may still need a decision there.
+
+### Changed
+
+- **`agents/qa-plan-agent.md`**, **`docs/workflow.md`**, **`docs/agents.md`**, **`CLAUDE.md`** — with no test verification artifact, the agent reads the tests the implementer wrote and the existing tests of the changed files instead of treating every criterion as unverified. A criterion that an assertion it opened covers is cited as `covered by <file:line>` and leaves the plan, the covered ones sharing one row; one no test names stays. A test it did not open is not evidence.
+- **`.opencode/agents/`**, **`.kimi-code/agents/`** — the orchestrator and QA plan mirrors carry the same body changes.
+
+---
+
 ## v9.3.0 — October 10, 2026
 
 KAIROS had no place to configure it and no page that said how. Its three project settings lived in `.kairos/`, which the first run gitignores, so a "project setting" meant this machine and this project: nothing a team could share, nothing a person could set once for every repository. A `.kairos-cfg/` folder, in the project and in the home directory, now holds them, and one docs page lists every setting.

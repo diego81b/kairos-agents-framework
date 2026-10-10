@@ -189,6 +189,32 @@ plans push items over the case limit; that shows in the gate's `Needs your atten
 in the tester's part. Not yet measured: the wording comes from reading that one plan, not from a
 regenerated run, so check the next real plans against the two complaints before extending it.
 
+v9.3.1 answers whether a QA plan is the right size for its issue and whether it is needed at all when
+tests already cover the change. It was read from the plans of two downstream projects (XS `simple_fix`
+runs, an M and an S run, the XS and one M plan written before v9.2.0). Two defects. The plan had no way
+to say it asked nothing of a person: after step 1 the agent still wrote the Core and both delivery
+files, and the orchestrator delivered whenever `_qa-file.md` existed and the run had an issue, so a
+change that started the agent only because `frontend` is in `domains` or no test row was written
+posted a comment with nothing in it to do. An empty tester's part (no manual case, retest, catalogue
+case or charter) is now `delivery: none`: the artifact keeps Summary, Core, Coverage Complement, Risks
+when it has rows and UAT Sign-off for the gate, writes no `_qa-file.md` or `_qa-comment.md`, and the
+orchestrator skips the delivery question and prints one line. The gate itself is unchanged, because a
+`## Risks` row (an `automatable gap`) may still need a decision there. Letting a QA gate with nothing
+to decide continue on its own was left out: Phase Continuation's list is a first cut chosen from logs,
+and a fourth gate would extend it by analogy. The second defect: with no `05-test-verification.md`,
+which is every `simple_fix` because test-verifier does not run without a pm, the spec said to treat
+every `AC-n` as unverified and cover all of them by hand whether or not the implementer wrote tests;
+an XS change with its test file beside the code got eight complement items and six cases. Without a
+verifier artifact the agent now reads the tests `03-implementation.md` lists and the existing tests of
+the changed files, and an `AC-n` that an assertion it opened covers is `covered by <file:line>` and
+leaves the complement, the covered criteria sharing one row. That judgement is the agent's own, with
+no second reviewer in a `simple_fix`, so it must cite an assertion it read and a test it did not open
+is no evidence. Not done: limits scaled by `size`. Five cases, 3 retests and 4 data rows are the same
+from M to XL, but the sample holds an M plan that stopped at 3 cases and one that hit 5, and no L or XL
+written under the current rules, so any scaled number would be invented. Not measured: neither rule
+has run on a real plan yet; check the next `simple_fix` plan that has tests for `delivery: none` or a
+short complement before building on them.
+
 Delivery is the human's choice at the QA gate, since projects differ (v9.2.0). The agent always
 writes `_qa-file.md`, the tester's part in full, and `_qa-comment.md`, the Core plus a literal
 `{qa_pointer}` line (it replaces the older `{qa_file}`); `delivery` in `05b-qa-plan.md` is now only
