@@ -169,6 +169,26 @@ inputs by a test run of the edited spec, the tester's part of one run went from 
 words to 39 and 703, and of the other from 84 lines and 2,441 words to 38 and 692. That measures
 length, not coverage.
 
+v9.2.1 answers two complaints that v9.2.0 left standing, read from a real plan of a downstream
+project (seven cases across a phone app and a desktop browser, written two days before v9.2.0): the
+tester could not tell where a step happens, app or web, and the steps did not lead to the expected
+result. Neither had a rule. The place a case runs lived only in `Setup`, which v9.2.0 capped at one
+line, and steps carried no marker, so "In Settings, Security, press Enable" could be either device.
+One `Expected` cell bundled outcomes from several steps and two devices with nothing saying after
+which step to look (a message shows at step 3, the list on the other device at step 4); one case's
+expected result was its own precondition read back; one outcome came from a developer's edit made
+between two steps, not from anything the tester did. Three rules, all inside the existing columns so
+the `_qa-regression.md` catalogue, which copies `Steps` and `Expected` verbatim, needs no new schema.
+`Setup` opens by naming each surface once, with a short label and the product's own name for it, and
+a case on more than one surface opens every step with that label. `Expected` has at most two parts,
+one per step where the tester looks, each opening with that step's number; a part no step triggers or
+reads is a precondition, not an expected result. A developer's preparation happens before step 1 and
+its undoing after the last step, never between two steps. Regression retests and charters name their
+surface the same way. A case that needs more than two observation points is now two cases, so some
+plans push items over the case limit; that shows in the gate's `Needs your attention` line and never
+in the tester's part. Not yet measured: the wording comes from reading that one plan, not from a
+regenerated run, so check the next real plans against the two complaints before extending it.
+
 Delivery is the human's choice at the QA gate, since projects differ (v9.2.0). The agent always
 writes `_qa-file.md`, the tester's part in full, and `_qa-comment.md`, the Core plus a literal
 `{qa_pointer}` line (it replaces the older `{qa_file}`); `delivery` in `05b-qa-plan.md` is now only

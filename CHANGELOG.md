@@ -6,6 +6,19 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v9.2.1 — October 10, 2026
+
+Testers said QA plans did not make clear what to do and where (web or app), and that steps did not lead to the expected result. The plan they read was written before v9.2.0, so its length and matrix problems are already limited; these two were not. Nothing told a case where each step happens or after which step to look, and v9.2.0's one-line `Setup` and short steps left even less room for it.
+
+### Changed
+
+- **`agents/qa-plan-agent.md`**, **`docs/workflow.md`**, **`docs/agents.md`**, **`CLAUDE.md`** — every step of a QA case says where it happens. `Setup` names each surface once with a short label (`Phone: Android app · PC: web app in a desktop browser`), and a case on more than one surface opens every step with that label. Regression retests and charters name their surface the same way.
+- **`agents/qa-plan-agent.md`**, **`docs/workflow.md`**, **`docs/agents.md`**, **`CLAUDE.md`** — the expected result is tied to the step that produces it: at most two parts, each opening with the number of the step after which the tester looks (`after 2: …; after 3: …`). Something no step triggers or reads is a precondition, not an expected result, and a case whose expected result only restates its preconditions is not a case. A case that needs more than two places to look becomes two cases, so a plan may report more items over the case limit.
+- **`agents/qa-plan-agent.md`**, **`CLAUDE.md`** — a developer's preparation happens before step 1 and its undoing after the last step, never between two steps. A case that needs a developer in the middle is split or becomes a risk row.
+- **`.opencode/agents/`**, **`.kimi-code/agents/`** — the QA plan mirrors carry the same body changes.
+
+---
+
 ## v9.2.0 — October 7, 2026
 
 Two things read badly in a real run. The Start Gate offered no visible way to choose agents, only Start, Request changes and Stop, so the choice looked gone; `add <agent>` and `skip <agent>` existed only as typed text, and on a resumed run even Request changes was missing. And the first run of a project asked "Does a person verify features by hand in this project (QA, UAT)?" before any code had been read, which reads as "does a QA phase exist?" and was asked even in runs that could never write a QA plan. Testers also kept complaining that manual plans were long and complicated: real downstream plans ran to 90 to 287 lines per issue and an epic file to 6,700 words, with a small bug fix carrying eight cases, and projects differ in where a tester wants to find the plan.
