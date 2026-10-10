@@ -125,24 +125,34 @@ function readTranscript(file) {
   return { total, models, turns: byResponse.size, first, last, firstUser }
 }
 
-// What the model should have been: .kairos/.models first, then the agent's own `model:` frontmatter.
-function readModelsFile() {
+// What the model should have been: the `models` files first, in the order the orchestrator reads them
+// (project .kairos-cfg/models, then .kairos/.models, then ~/.kairos-cfg/models), then the agent's own
+// `model:` frontmatter. The first file naming an agent wins; an alias outside the four is ignored.
+const MODEL_FILES = [
+  { file: path.join(process.cwd(), '.kairos-cfg', 'models'), source: '.kairos-cfg/models' },
+  { file: path.join(process.cwd(), '.kairos', '.models'), source: '.kairos/.models' },
+  { file: path.join(os.homedir(), '.kairos-cfg', 'models'), source: '~/.kairos-cfg/models' }
+]
+const ALIASES = new Set(['opus', 'sonnet', 'haiku', 'fable'])
+function readModelsFiles() {
   const map = new Map()
-  try {
-    for (const raw of fs.readFileSync(path.join(process.cwd(), '.kairos', '.models'), 'utf8').split('\n')) {
+  for (const { file, source } of MODEL_FILES) {
+    let text
+    try { text = fs.readFileSync(file, 'utf8') } catch { continue }
+    for (const raw of text.split('\n')) {
       const line = raw.trim()
       if (!line || line.startsWith('#')) continue
       const m = /^([\w:-]+)\s*:\s*(\w+)$/.exec(line)
-      if (m) map.set(m[1], m[2].toLowerCase())
+      if (m && ALIASES.has(m[2].toLowerCase()) && !map.has(m[1])) map.set(m[1], { alias: m[2].toLowerCase(), source })
     }
-  } catch { /* no overrides */ }
+  }
   return map
 }
-const overrides = readModelsFile()
+const overrides = readModelsFiles()
 const agentsDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'agents')
 function expectedAlias(agentType) {
   const name = agentType.replace(/^kairos:(team:)?/, '')
-  if (overrides.has(name)) return { alias: overrides.get(name), source: '.kairos/.models' }
+  if (overrides.has(name)) return overrides.get(name)
   try {
     const front = fs.readFileSync(path.join(agentsDir, `${name}.md`), 'utf8').split('---')[1] || ''
     const m = /^model:\s*(\S+)/m.exec(front)
