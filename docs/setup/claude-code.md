@@ -238,7 +238,7 @@ Requires the respective CLI authenticated: `jira init`, `glab auth login`, or a 
 | Problem | Fix |
 |---------|-----|
 | Agent not found | Check `.claude/agents/` exists and contains `.md` files with valid YAML frontmatter |
-| Wrong model used | Check `.kairos/.models` first (it outranks frontmatter for agents the orchestrator dispatches), then the agent's `model:` frontmatter. `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1` in `settings.json` overrides both |
+| Wrong model used | Check the model lines the Start Gate printed and the file each came from (`.kairos-cfg/models`, `.kairos/.models` or `~/.kairos-cfg/models`; they outrank frontmatter for agents the orchestrator dispatches), then the agent's `model:` frontmatter. `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1` in `settings.json` overrides both |
 | Orchestrator not delegating | The `description:` field must clearly describe when to use the agent |
 | `.kairos/` not created | The implementer-tdd-agent or implementer-coder-agent creates it on first write — ensure `write_file` is in its `tools:` list |
 | Gates keep degrading to a text menu / `AskUserQuestion` unavailable | The orchestrator is running as a subagent, not as the session's primary agent — it was invoked by name (`@orchestrator-agent` / `@kairos:orchestrator-agent`) inside an existing chat instead of at startup. Exit and relaunch with `claude --agent kairos:orchestrator-agent` (plugin) or `claude --agent orchestrator-agent` (manual copy) — see Step 3 |
@@ -389,9 +389,9 @@ KAIROS's shipped frontmatter splits agents into two tiers: `opus` for the 7 reas
 
 Claude Code picks a subagent's model in this order: the `model` parameter of the call that starts it, then the agent's frontmatter `model:`, then the `CLAUDE_CODE_SUBAGENT_MODEL` environment variable, then the main conversation's model (older Claude Code versions ranked the environment variable first). There are four ways to change the result:
 
-1. **`.kairos/.models` (recommended)** — a plain-text file in your project, one `<agent>: <alias>` line per agent, written by `/kairos:setup` (Default, Economy or Custom strategy) or by hand. Before each dispatch the orchestrator reads it and passes the alias as the call's `model` parameter, which outranks the agent's frontmatter. Nothing else changes: no forked agent files, no edits to re-apply after a plugin update, and deleting the file restores the shipped tiers. The Start Gate shows the lines in effect.
+1. **A `models` file in `.kairos-cfg/` (recommended)** — a plain-text file, one `<agent>: <alias>` line per agent, written by `/kairos:setup` (Default, Economy or Custom strategy) or by hand. Put it in the project's `.kairos-cfg/` to share it with the team (it is committed) or in `~/.kairos-cfg/` to keep it to yourself; the project beats your home folder, and the older `.kairos/.models` is still read between the two (see [Customizing KAIROS](/customizing) for the full order). Before each dispatch the orchestrator reads the files and passes the alias as the call's `model` parameter, which outranks the agent's frontmatter. Nothing else changes: no forked agent files, no edits to re-apply after a plugin update, and deleting the file restores the shipped tiers. The Start Gate shows the lines in effect and where each came from. Never put an API key or token in these files: `.kairos-cfg/` is committed, and keys stay in your keychain.
    ```
-   # .kairos/.models
+   # .kairos-cfg/models
    architect-agent: opus
    pm-agent: haiku
    code-reviewer-agent: opus

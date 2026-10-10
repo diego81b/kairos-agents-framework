@@ -385,6 +385,32 @@ the line would have added parsing, write-back composition and a `run.md` field f
 makes per issue. The orchestrator reads the file at each dispatch instead of copying it into
 `run.md`, so an edit mid-run applies from the next call and a resume needs nothing restored.
 
+v9.3.0 gives the settings a place of their own, because three project settings lived in `.kairos/`,
+which Step 0c gitignores, so "project setting" had meant "this machine, this project": nothing the
+team could share, and nothing a person could set once for every project, while the docs had no page
+that listed the knobs. `.kairos-cfg/` is the configuration folder, in the project and in the home
+directory, one file per setting: `models` at both levels, `manual-qa` and `qa-dir` in the project
+only (where plans go and whether a person verifies by hand are facts about one repository, so a
+personal default would be wrong in the next one). The project folder is meant to be committed and the
+Gitignore check leaves it alone, since it matches only `.kairos/`. Four rules came with it. Every
+old path is still read, as the v8.4.0 ledger move did, so nothing has to migrate: for each setting
+the first match wins, `.kairos-cfg/` in the project, then the old `.kairos/` file, then, for `models`
+alone, the home folder, then the agent's own `model:`; the new file beats the old one so a stale
+local `.kairos/.models` cannot override a file someone just committed. `models` merges per agent,
+not per file. The orchestrator still writes only inside `.kairos/`: the answers it asks for stay
+there, and a `.kairos-cfg/` value, when present, wins and stops the question, which keeps the
+two-writers-outside-`.kairos/` rule intact; only `/kairos:setup` writes the folder, after asking
+whether the models are the project's or the person's, and it removes the old `.kairos/.models` when
+it replaces a project choice, because Default means "delete the file" and a surviving old file would
+bring its lines back. And no secret goes in `.kairos-cfg/`: it is committed, no setting needs a
+credential, and the runner's own rule is that a provider key lives in the keychain and never in a
+file, so the orchestrator reads only the three named files and ignores anything else in the folder.
+`docs/customizing.md` is the one page that lists every setting and the order it is read in. The move
+and its fallback are KAIROS's work and not the runner's: they live here, and the runner carries no
+migration of its own. Not measured: the order, the two-level
+`models` file and the rule that a committed `models` beats a person's own were chosen by reading how
+the settings are used, not from a team that has run it, so revisit them against what teams report.
+
 Two fields called `effort` are unrelated. Claude Code's `effort:` agent-frontmatter field (`low` to
 `max`) sets how deeply that agent reasons; KAIROS's `effort` (`simple_fix`, `medium`,
 `significant_rework`) is the size of the change, measured by `impact-assessment-agent` and stamped
@@ -705,7 +731,7 @@ VitePress `srcDir` is set to `..` (repo root), so the site sources Markdown from
 
 ### Commands (`commands/`)
 
-Claude Code plugin slash commands, auto-discovered since the plugin root is the repo root: `/kairos:setup` (guided per-tier model configuration, written to `.kairos/.models`), `/kairos:view` (renders one `.kairos/<feature_folder>/` phase artifact as a synthetic HTML page via the Artifact tool — Claude Code only, one file per invocation, never the whole feature folder) and `/kairos:usage` (the model and the token buckets each dispatched agent really used, measured from the host's own subagent transcripts by `scripts/usage.mjs`). Unlike `agents/*.md`, files here are not mirrored into `.opencode/agents/` or `.kimi-code/agents/` — they're a Claude-Code-native construct.
+Claude Code plugin slash commands, auto-discovered since the plugin root is the repo root: `/kairos:setup` (guided per-tier model configuration, written to `.kairos-cfg/models` in the project or in the home directory), `/kairos:view` (renders one `.kairos/<feature_folder>/` phase artifact as a synthetic HTML page via the Artifact tool — Claude Code only, one file per invocation, never the whole feature folder) and `/kairos:usage` (the model and the token buckets each dispatched agent really used, measured from the host's own subagent transcripts by `scripts/usage.mjs`). Unlike `agents/*.md`, files here are not mirrored into `.opencode/agents/` or `.kimi-code/agents/` — they're a Claude-Code-native construct.
 
 `/kairos:usage` exists because the only other source for "which model ran this agent" is the agent itself, and a model asked its own name can be wrong; the transcript records the model of every turn and the usage of every response, so the figures are measured and never reported by an LLM about itself. The script is the repo's one piece of code and is deliberately a plain script rather than a hook or a service: it reads `~/.claude/projects/<project>/<session>/subagents/agent-*.jsonl` and their `.meta.json`, takes the feature from the `Feature folder:` line each dispatch prompt carries, counts every response once (a response is written to the transcript several times, one line per content block, each carrying the same usage, so summing lines roughly doubles every figure), and keeps input, output, cache-write and cache-read tokens apart because they are billed differently. Claude Code documents the path but not the file format, so it is best effort and says so when it finds nothing it understands. In a run, the orchestrator has the script write `.kairos/<feature_folder>/_usage.md` after every agent that returns: one row per agent call, a total, and a flag on a model that differs from the one configured. A separate file rather than a section of `_tracking.md` or of each agent's report, because the script writes the whole file itself (no model retypes a number), one file is the only place to read, no phase artifact that a later agent reads as input carries figures it did not ask for, and a run stopped halfway still has its table. An agent cannot write its own row: it does not know its token count while it runs. `/kairos:usage` prints the same report on demand, one row per agent call and never an aggregate per agent type; `.kairos/.models` and each agent's `model:` frontmatter are what it compares the measured model against. In a sample of 437 real KAIROS subagent transcripts every agent had run on the tier its frontmatter names.
 
