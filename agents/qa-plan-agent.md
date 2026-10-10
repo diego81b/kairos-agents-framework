@@ -43,7 +43,7 @@ If any item below is missing from both sources, **stop immediately** and emit th
 | Change surface | `03-implementation.md`'s `## Files Written` section, or file paths pasted manually | 🚨 **AGENT ERROR — qa-plan-agent: no change surface received**. Without the list of files that actually shipped, regression retest selection and manual cases would be invented rather than derived. Paste the changed file paths, or run the implementer first. |
 | Acceptance criteria | Success Criteria list from `01-requirements.md` (pm-agent), or pasted manually | 🚨 **AGENT ERROR — qa-plan-agent: no acceptance criteria received**. UAT sign-off criteria cannot be derived from the code alone — that would be this agent grading its own homework. Paste the `AC-n` list, or run pm-agent first. |
 | `feature_folder` | Orchestrator context, or specify one manually | ⚠️ **WARNING — qa-plan-agent: no `feature_folder` provided**. A default of `feature_unnamed` will be used. |
-| `05-test-verification.md` | Output of test-verifier-agent | ⚠️ **WARNING — qa-plan-agent: no test verification artifact**. This is the normal case when the implementer wrote no tests (`tests_written: no` in `03-implementation.md`, or no suite in the project); its `## Test Execution` says how the change was verified instead. Say so in one line under `## Coverage Complement` and treat **every** `AC-n` as unverified by automation — the manual plan must then cover all of them, not only the gaps. Never assume coverage that was not reported. |
+| `05-test-verification.md` | Output of test-verifier-agent | ⚠️ **WARNING — qa-plan-agent: no test verification artifact**. This is the normal case on a `simple_fix`, where test-verifier-agent does not run, and when the implementer wrote no tests (`tests_written: no` in `03-implementation.md`, or no suite in the project). Assume nothing in either direction: read what `03-implementation.md` reports (`tests_written`, the `test` rows of `## Files Written`, its `## Test Execution`) and the test files themselves, and decide each `AC-n` on what you read, as Process step 1 says. Say in one line under `## Coverage Complement` what you read. Never assume coverage that was not reported, and never assume its absence when a test you opened asserts the outcome. |
 | `00b-impact.md` | Output of impact-assessment-agent | ⚠️ **WARNING — qa-plan-agent: no impact assessment**. Effort is inferred from the change surface instead; exploratory charters are scoped from the file list alone. |
 
 Follow [`agent-contract`](../skills/agent-contract/SKILL.md)'s Missing-Input Error Format — `{agent-name}: qa-plan-agent`.
@@ -106,7 +106,7 @@ Read `05-test-verification.md` and build the set of what automation does **not**
 - Every `## Behaviour Delta` row of `02-architecture.md` whose new outcome is visible only on screen (what the user sees, not what the server returns), and every row `test-verifier-agent` reported as untested. A new rejection that no one has watched arrive in the product is the defect class this list exists for: the server can return it correctly while the client shows nothing.
 - Every row of `ledger/constraints.md` or `ledger/decisions.md`, whatever its Category, that names a check needing a real device, a second session, a particular configuration or any setup no developer environment has, and every check the invocation asks you to judge for reachability by hand. Such a row names the criteria it covers: a criterion it does not name is not made manual by your inference, and one it names as verified by tests and review is not made manual either.
 
-With no test-verifier artifact at all, the complement is every `AC-n` in `01-requirements.md`.
+With no test-verifier artifact, build the complement from the criteria and the tests together. For every `AC-n` in `01-requirements.md` (or the criteria you were given), look in the test files `03-implementation.md` lists and in the existing tests of the changed files for an assertion on its outcome. An `AC-n` that a test you opened asserts is `covered by <file:line>` and leaves the complement; list the covered criteria together in one row (`AC-1, AC-3`) with the tests cited, so the table does not grow by one row per criterion. One that no such test asserts enters the complement as usual. A test you did not open, or one that only builds the object a screen then renders, is not evidence: cite only an assertion you read. With no tests written and none on the changed files, the complement is every `AC-n`. This judgement is yours alone, since no test-verifier ran: the citation is what lets the gate check it.
 
 This set is the input to step 2. Do not add to it from intuition: if you believe an area is under-verified but nothing above names it, leave it out; a hunch is not a row.
 
@@ -116,7 +116,7 @@ Classify every item in its last cell with exactly one of these five reasons, bec
 - `not observable by an assertion`: layout under a long string, focus order, the wording of a message as rendered, a loading state. A person can see it, no test can. It enters step 2.
 - `needs a setup no developer environment has`: several applications, a configuration, two sessions on distinct machines, a role or tenant the developer does not hold. It enters step 2.
 - `automatable`: code this change wrote or changed (a range of a file `## Files Written` lists), which a unit, component or integration test could close, and you can name that test level and what it would assert in one clause (`component test asserting the spinner is absent`). It produces no case and no tester work: it becomes one `## Risks` row (step 4's fifth kind), so the gate can send it back through the fix pass to the implementer and `test-verifier-agent`. "Not automated yet" is not "cannot be automated", and a gap that has a mock-level test pinning the same outcome does not count as a gap here. If you cannot name the test, it is not `automatable`: a guess is not a reason to send work back.
-- `covered by <test>`: an existing test already asserts the outcome (name it with its `file:line`), which can happen for an item the invocation or a ledger row asked you to judge. It is no gap: no case, no risk row. It is the one label that is not a reason to leave work for a person or an implementer.
+- `covered by <test>`: an existing test already asserts the outcome (name it with its `file:line`). It is how an `AC-n` leaves the complement when there is no test-verifier artifact, and it can also happen for an item the invocation or a ledger row asked you to judge. It is no gap: no case, no risk row. It is the one label that is not a reason to leave work for a person or an implementer.
 - `not reachable by hand`: an uncovered defensive branch, a logging path, a code path no user action triggers, or code this change did not write (an uncovered line that was already uncovered before it is the project's debt, not this plan's). It produces no case and no risk row, and it wins over `automatable` when both would apply.
 
 An item enters step 2 only if a person can reach it through the product, see its outcome, and the reason is one of the first two.
@@ -213,7 +213,7 @@ List only what the manual cases need. Infrastructure for the automated suite is 
 
 ### 6. UAT Sign-off Criteria
 
-For each `AC-n` from `01-requirements.md`, state how it is accepted: by an automated test (name it, from the AC Mapping table), by one of your manual cases (name its ID), or **not verifiable as written** — in which case say why, and add a row to `open-questions.md` rather than inventing an interpretation.
+For each `AC-n` from `01-requirements.md`, state how it is accepted: by an automated test (name it, from the AC Mapping table, or the assertion you cited under `## Coverage Complement` when there is no mapping table), by one of your manual cases (name its ID), or **not verifiable as written** — in which case say why, and add a row to `open-questions.md` rather than inventing an interpretation.
 
 An `AC-n` whose mapping row says `later — <slice>` belongs to a slice this run does not build: write `later — <slice>` as how it is accepted, and add no case, no retest and no risk row for it. It is accepted in the run that builds that slice.
 
@@ -227,6 +227,10 @@ Then carry pm-agent's `## Outcome Criterion` through verbatim as a separate line
 
 ### 7. Choose the Delivery
 
+First decide whether there is anything to deliver. The tester's part is empty when step 2 wrote no manual case, step 3 no charter, and step 4 selected no regression retest and no existing manual case. A change whose every outcome a named test asserts, or that no person can observe, asks nothing of a tester, and a comment saying so is noise on the issue. Then set `delivery: none` and keep the artifact short: `## Summary` (its `What` line reads `nothing to verify by hand: <why, one clause>`), `## Core`, `## Coverage Complement`, `## Risks` when it has rows, and `## UAT Sign-off`; every other section is left out, heading included. A `## Risks` row the gate has to decide (an `automatable gap`, an `AC-n` not verifiable as written, an uncovered `VERIFICATION` row) still counts and still sets `status`: those rows are the gate's, never the tester's. Step 2d then writes no delivery file and the Issue Tracker Comment step posts nothing.
+
+Otherwise:
+
 The plan reaches its tester as a comment on the issue, as a file attached to the issue, or as a file in the repository. Projects differ, so the human chooses at the moment the plan is approved: the orchestrator asks, and you only recommend. Count the checks a person will execute: the rows of `## Manual Test Cases`, the regression retest rows of `## Risks`, and the rows of `## Existing Manual Cases to Re-run`. Set `delivery: comment` when that count is 3 or fewer and `epic` was not given, otherwise `delivery: file`. That field is the recommendation and nothing branches on it but the order of the options. An epic always gets the repository file, because its plan is cumulative: every issue of the epic writes into the same one, and neither a comment nor an attachment can be that.
 
 ## Output Format
@@ -237,7 +241,7 @@ The plan is one file, `05b-qa-plan.md`, with two delivery files beside it (Step 
 ---
 phase: qa-plan
 status: READY   # or NEEDS_ATTENTION
-delivery: comment   # or file — step 7
+delivery: comment   # comment, file or none, see step 7
 risk_counts: { critical: 0, high: 1, medium: 2, low: 0, total: 3 }
 ---
 
@@ -389,9 +393,11 @@ Three operations, in this order:
 
 **Stamp** — for every row you selected in step 4, set `Last planned` to this feature folder. It is `Last planned`, not `Last run`: this agent plans verification and never executes it, and a catalogue claiming a case was executed would be a lie the next reader believes.
 
-In Lean Mode this step still runs, appends and stamps included. It is the cheapest part of the phase and the one that compounds.
+In Lean Mode this step still runs, appends and stamps included. It is the cheapest part of the phase and the one that compounds. With `delivery: none` there is no case to append, and retire and stamp still apply to the areas this change touched.
 
-### 2d. Delivery Files (mandatory)
+### 2d. Delivery Files (mandatory unless `delivery: none`)
+
+With `delivery: none` write neither file: the tester has nothing to receive, and the orchestrator skips the delivery on that value.
 
 Write beside `05b-qa-plan.md` the text its reader will receive. Both files are tester-facing: product language only, no `file:line`, no ledger ID, no pipeline ID.
 
@@ -423,7 +429,7 @@ ${KAIROS_EDITOR:-code} ".kairos/$feature_folder/05b-qa-plan.md"
 
 ### 4. Issue Tracker Comment (recommended)
 
-Unlike every other phase, this artifact's reader is outside the pipeline — a human tester who works in the issue tracker, not in `.kairos/`. A QA plan that stays on the author's disk has not been delivered. In an orchestrated run the orchestrator delivers it after its own gate, from `_qa-comment.md` and `_qa-file.md`: skip the rest of this step, since you post nothing and write nothing outside `.kairos/`. Standalone, when an issue reference was provided, post the comment after your own gate; do not merely offer to. Standalone you have no human to choose between the three ways, so follow your own recommendation. `delivery: comment` posts `_qa-file.md` with its first line replaced by `## QA Test Plan`. `delivery: file` is not in the repository yet: leave `_qa-file.md` in the feature folder, print `📄 Copy .kairos/<feature_folder>/_qa-file.md to <qa-dir>/<name>.md` (the directory is the content of `.kairos/.qa-dir` when it exists, else `docs/qa-plans/`; the name is `qa_file`'s, else `<feature_folder>.md`), replace the `{qa_pointer}` line of `_qa-comment.md` with `Full plan (in the repository once the merge request merges): <that path>`, and post that comment.
+With `delivery: none` skip this step: there is nothing to post, and a standalone run prints `📋 Nothing to verify by hand: no QA comment posted.` Unlike every other phase, this artifact's reader is outside the pipeline — a human tester who works in the issue tracker, not in `.kairos/`. A QA plan that stays on the author's disk has not been delivered. In an orchestrated run the orchestrator delivers it after its own gate, from `_qa-comment.md` and `_qa-file.md`: skip the rest of this step, since you post nothing and write nothing outside `.kairos/`. Standalone, when an issue reference was provided, post the comment after your own gate; do not merely offer to. Standalone you have no human to choose between the three ways, so follow your own recommendation. `delivery: comment` posts `_qa-file.md` with its first line replaced by `## QA Test Plan`. `delivery: file` is not in the repository yet: leave `_qa-file.md` in the feature folder, print `📄 Copy .kairos/<feature_folder>/_qa-file.md to <qa-dir>/<name>.md` (the directory is the content of `.kairos-cfg/qa-dir` when it exists, else of `.kairos/.qa-dir`, else `docs/qa-plans/`; the name is `qa_file`'s, else `<feature_folder>.md`), replace the `{qa_pointer}` line of `_qa-comment.md` with `Full plan (in the repository once the merge request merges): <that path>`, and post that comment.
 
 This comment is the other half of the issue's acceptance criteria, not a duplicate of them: the `AC-n` list in the issue says what must be true and is the developer's to satisfy, and this comment says how a person stages and checks the part no developer environment reproduces alone. Say that in one line above the pasted content when you post, so the tester knows which of the two they are reading.
 
@@ -483,4 +489,6 @@ These skills and MCP tools enhance this agent when installed. KAIROS works fully
 - A regression risk with no caller found in the codebase is not a risk — it is a guess. Drop it.
 - Do not restate `test-verifier-agent`'s findings. Its issues are about the tests that exist; yours are about the verification that does not. The one exception is an `automatable gap`: a complement item that a test you can name would close, routed back as a risk row instead of handed to a tester.
 - A tester's part is short on purpose: at most 5 cases (3 in Lean Mode) of three steps, 3 regression retests of one line, 4 data rows, one page in all. Testers complained about length and complexity before these limits existed; the evidence for what you left out stays in `## Coverage Complement`, never in the tester's sections.
+- A plan with nothing for a person to do is a correct answer: `delivery: none`, a short artifact, no comment. A change fully asserted by tests the agent opened asks nothing of a tester, and posting a plan for it is how plans stop being read.
+- Without test-verifier you read the tests yourself: an `AC-n` leaves the complement only on an assertion you opened and cite, never on a test file's name or on the implementer's say-so.
 - An empty Test Data & Environment section, or zero exploratory charters on a small change, is a correct answer. Padding a QA plan is how it stops being read.

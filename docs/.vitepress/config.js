@@ -58,7 +58,8 @@ export default defineConfig({
           { text: 'OpenAI Codex CLI', link: '/setup/codex' },
           { text: 'OpenCode', link: '/setup/opencode' },
           { text: 'Kimi Code', link: '/setup/kimi-code' },
-          { text: 'Pipeline Templates', link: '/setup/templates' }
+          { text: 'Pipeline Templates', link: '/setup/templates' },
+          { text: 'Customizing KAIROS', link: '/customizing' }
         ]
       },
       { text: 'Workflow', link: '/workflow' },
@@ -85,7 +86,8 @@ export default defineConfig({
           { text: 'OpenAI Codex CLI', link: '/setup/codex' },
           { text: 'OpenCode', link: '/setup/opencode' },
           { text: 'Kimi Code', link: '/setup/kimi-code' },
-          { text: 'Pipeline Templates', link: '/setup/templates' }
+          { text: 'Pipeline Templates', link: '/setup/templates' },
+          { text: 'Customizing KAIROS', link: '/customizing' }
         ]
       },
       {

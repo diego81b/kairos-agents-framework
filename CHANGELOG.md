@@ -6,6 +6,45 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v9.3.1 — October 10, 2026
+
+A last check of QA plan size against real plans found two defects. A plan had no way to say it asked nothing of a person, and on a `simple_fix`, where test-verifier does not run, the agent treated every acceptance criterion as unverified even when tests covered it. The size limits are unchanged: they are the same from M to XL, and no L or XL plan written under the current rules exists to tune them against.
+
+### Added
+
+- **`agents/qa-plan-agent.md`**, **`agents/orchestrator-agent.md`**, **`docs/workflow.md`**, **`docs/agents.md`**, **`CLAUDE.md`** — a plan whose tester's part is empty (no manual case, no regression retest, no existing case, no charter) is `delivery: none`. It keeps Summary, Core, Coverage Complement, Risks when it has rows and UAT Sign-off for the gate, writes no `_qa-file.md` or `_qa-comment.md`, and posts nothing. The orchestrator skips the delivery question and prints `QA plan: nothing to verify by hand`. The gate is unchanged, since a risk row may still need a decision there.
+
+### Changed
+
+- **`agents/qa-plan-agent.md`**, **`docs/workflow.md`**, **`docs/agents.md`**, **`CLAUDE.md`** — with no test verification artifact, the agent reads the tests the implementer wrote and the existing tests of the changed files instead of treating every criterion as unverified. A criterion that an assertion it opened covers is cited as `covered by <file:line>` and leaves the plan, the covered ones sharing one row; one no test names stays. A test it did not open is not evidence.
+- **`.opencode/agents/`**, **`.kimi-code/agents/`** — the orchestrator and QA plan mirrors carry the same body changes.
+
+---
+
+## v9.3.0 — October 10, 2026
+
+KAIROS had no place to configure it and no page that said how. Its three project settings lived in `.kairos/`, which the first run gitignores, so a "project setting" meant this machine and this project: nothing a team could share, nothing a person could set once for every repository. A `.kairos-cfg/` folder, in the project and in the home directory, now holds them, and one docs page lists every setting.
+
+### Added
+
+- **`docs/customizing.md`**, **`docs/.vitepress/config.js`**, **`docs/faq.md`** — a "Customizing KAIROS" page: what to use for which change, the two folders, every setting, the order the files are read in, which hosts read what, and what has no setting (an agent's behaviour, which still means editing its file). The FAQ answer on customizing points to it.
+- **`agents/orchestrator-agent.md`**, **`docs/workflow.md`**, **`docs/setup/claude-code.md`**, **`CLAUDE.md`** — `.kairos-cfg/` holds `models` (project and home folder), `manual-qa` and `qa-dir` (project only). The project folder is meant to be committed and the Gitignore check leaves it alone. For each setting the first source wins: `.kairos-cfg/` in the project, then the old `.kairos/` file, then, for `models`, the home folder, then the default. `models` merges per agent line. A value that cannot be used is reported once and ignored. A value held by `.kairos-cfg/` stops the manual QA and QA directory questions.
+
+### Changed
+
+- **`agents/orchestrator-agent.md`**, **`agents/qa-plan-agent.md`**, **`docs/workflow.md`** — the Start Gate's `Models:` line names the place each line came from (`project`, `local`, `user`). The orchestrator still writes only inside `.kairos/`: the answers it asks for stay there, and it never writes `.kairos-cfg/`.
+- **`commands/setup.md`**, **`docs/setup/claude-code.md`** — `/kairos:setup` asks whether the models are for you (`~/.kairos-cfg/models`, the recommended choice because nothing is committed) or for the project (`.kairos-cfg/models`), writes that file, removes the old `.kairos/.models` when it replaces a project choice, and reports the models in effect with the file each came from.
+- **`commands/usage.md`**, **`scripts/usage.mjs`** — the expected model is read from the same three files in the same order, so a mismatch flag names the file it was expected from. An alias outside `opus`, `sonnet`, `haiku` and `fable` is ignored, as the orchestrator does.
+- **`docs/setup/kimi-code.md`**, **`docs/setup/opencode.md`** — they say the `models` files have no effect on those hosts.
+- **`.opencode/agents/`**, **`.kimi-code/agents/`** — the orchestrator and QA plan mirrors carry the same body changes.
+
+### Notes
+
+- Nothing has to be migrated. Every old path is still read, as the v8.4.0 ledger move did, and the new file wins when both exist, so a stale local `.kairos/.models` cannot override what a team committed.
+- No secret belongs in `.kairos-cfg/`: it is committed and no setting needs a credential. The orchestrator reads only the three named files and ignores anything else in the folder.
+
+---
+
 ## v9.2.1 — October 10, 2026
 
 Testers said QA plans did not make clear what to do and where (web or app), and that steps did not lead to the expected result. The plan they read was written before v9.2.0, so its length and matrix problems are already limited; these two were not. Nothing told a case where each step happens or after which step to look, and v9.2.0's one-line `Setup` and short steps left even less room for it.

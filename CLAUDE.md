@@ -189,6 +189,32 @@ plans push items over the case limit; that shows in the gate's `Needs your atten
 in the tester's part. Not yet measured: the wording comes from reading that one plan, not from a
 regenerated run, so check the next real plans against the two complaints before extending it.
 
+v9.3.1 answers whether a QA plan is the right size for its issue and whether it is needed at all when
+tests already cover the change. It was read from the plans of two downstream projects (XS `simple_fix`
+runs, an M and an S run, the XS and one M plan written before v9.2.0). Two defects. The plan had no way
+to say it asked nothing of a person: after step 1 the agent still wrote the Core and both delivery
+files, and the orchestrator delivered whenever `_qa-file.md` existed and the run had an issue, so a
+change that started the agent only because `frontend` is in `domains` or no test row was written
+posted a comment with nothing in it to do. An empty tester's part (no manual case, retest, catalogue
+case or charter) is now `delivery: none`: the artifact keeps Summary, Core, Coverage Complement, Risks
+when it has rows and UAT Sign-off for the gate, writes no `_qa-file.md` or `_qa-comment.md`, and the
+orchestrator skips the delivery question and prints one line. The gate itself is unchanged, because a
+`## Risks` row (an `automatable gap`) may still need a decision there. Letting a QA gate with nothing
+to decide continue on its own was left out: Phase Continuation's list is a first cut chosen from logs,
+and a fourth gate would extend it by analogy. The second defect: with no `05-test-verification.md`,
+which is every `simple_fix` because test-verifier does not run without a pm, the spec said to treat
+every `AC-n` as unverified and cover all of them by hand whether or not the implementer wrote tests;
+an XS change with its test file beside the code got eight complement items and six cases. Without a
+verifier artifact the agent now reads the tests `03-implementation.md` lists and the existing tests of
+the changed files, and an `AC-n` that an assertion it opened covers is `covered by <file:line>` and
+leaves the complement, the covered criteria sharing one row. That judgement is the agent's own, with
+no second reviewer in a `simple_fix`, so it must cite an assertion it read and a test it did not open
+is no evidence. Not done: limits scaled by `size`. Five cases, 3 retests and 4 data rows are the same
+from M to XL, but the sample holds an M plan that stopped at 3 cases and one that hit 5, and no L or XL
+written under the current rules, so any scaled number would be invented. Not measured: neither rule
+has run on a real plan yet; check the next `simple_fix` plan that has tests for `delivery: none` or a
+short complement before building on them.
+
 Delivery is the human's choice at the QA gate, since projects differ (v9.2.0). The agent always
 writes `_qa-file.md`, the tester's part in full, and `_qa-comment.md`, the Core plus a literal
 `{qa_pointer}` line (it replaces the older `{qa_file}`); `delivery` in `05b-qa-plan.md` is now only
@@ -384,6 +410,32 @@ because the model tier is a cost setting of the organisation and not a fact abou
 the line would have added parsing, write-back composition and a `run.md` field for a decision nobody
 makes per issue. The orchestrator reads the file at each dispatch instead of copying it into
 `run.md`, so an edit mid-run applies from the next call and a resume needs nothing restored.
+
+v9.3.0 gives the settings a place of their own, because three project settings lived in `.kairos/`,
+which Step 0c gitignores, so "project setting" had meant "this machine, this project": nothing the
+team could share, and nothing a person could set once for every project, while the docs had no page
+that listed the knobs. `.kairos-cfg/` is the configuration folder, in the project and in the home
+directory, one file per setting: `models` at both levels, `manual-qa` and `qa-dir` in the project
+only (where plans go and whether a person verifies by hand are facts about one repository, so a
+personal default would be wrong in the next one). The project folder is meant to be committed and the
+Gitignore check leaves it alone, since it matches only `.kairos/`. Four rules came with it. Every
+old path is still read, as the v8.4.0 ledger move did, so nothing has to migrate: for each setting
+the first match wins, `.kairos-cfg/` in the project, then the old `.kairos/` file, then, for `models`
+alone, the home folder, then the agent's own `model:`; the new file beats the old one so a stale
+local `.kairos/.models` cannot override a file someone just committed. `models` merges per agent,
+not per file. The orchestrator still writes only inside `.kairos/`: the answers it asks for stay
+there, and a `.kairos-cfg/` value, when present, wins and stops the question, which keeps the
+two-writers-outside-`.kairos/` rule intact; only `/kairos:setup` writes the folder, after asking
+whether the models are the project's or the person's, and it removes the old `.kairos/.models` when
+it replaces a project choice, because Default means "delete the file" and a surviving old file would
+bring its lines back. And no secret goes in `.kairos-cfg/`: it is committed, no setting needs a
+credential, and the runner's own rule is that a provider key lives in the keychain and never in a
+file, so the orchestrator reads only the three named files and ignores anything else in the folder.
+`docs/customizing.md` is the one page that lists every setting and the order it is read in. The move
+and its fallback are KAIROS's work and not the runner's: they live here, and the runner carries no
+migration of its own. Not measured: the order, the two-level
+`models` file and the rule that a committed `models` beats a person's own were chosen by reading how
+the settings are used, not from a team that has run it, so revisit them against what teams report.
 
 Two fields called `effort` are unrelated. Claude Code's `effort:` agent-frontmatter field (`low` to
 `max`) sets how deeply that agent reasons; KAIROS's `effort` (`simple_fix`, `medium`,
@@ -705,7 +757,7 @@ VitePress `srcDir` is set to `..` (repo root), so the site sources Markdown from
 
 ### Commands (`commands/`)
 
-Claude Code plugin slash commands, auto-discovered since the plugin root is the repo root: `/kairos:setup` (guided per-tier model configuration, written to `.kairos/.models`), `/kairos:view` (renders one `.kairos/<feature_folder>/` phase artifact as a synthetic HTML page via the Artifact tool — Claude Code only, one file per invocation, never the whole feature folder) and `/kairos:usage` (the model and the token buckets each dispatched agent really used, measured from the host's own subagent transcripts by `scripts/usage.mjs`). Unlike `agents/*.md`, files here are not mirrored into `.opencode/agents/` or `.kimi-code/agents/` — they're a Claude-Code-native construct.
+Claude Code plugin slash commands, auto-discovered since the plugin root is the repo root: `/kairos:setup` (guided per-tier model configuration, written to `.kairos-cfg/models` in the project or in the home directory), `/kairos:view` (renders one `.kairos/<feature_folder>/` phase artifact as a synthetic HTML page via the Artifact tool — Claude Code only, one file per invocation, never the whole feature folder) and `/kairos:usage` (the model and the token buckets each dispatched agent really used, measured from the host's own subagent transcripts by `scripts/usage.mjs`). Unlike `agents/*.md`, files here are not mirrored into `.opencode/agents/` or `.kimi-code/agents/` — they're a Claude-Code-native construct.
 
 `/kairos:usage` exists because the only other source for "which model ran this agent" is the agent itself, and a model asked its own name can be wrong; the transcript records the model of every turn and the usage of every response, so the figures are measured and never reported by an LLM about itself. The script is the repo's one piece of code and is deliberately a plain script rather than a hook or a service: it reads `~/.claude/projects/<project>/<session>/subagents/agent-*.jsonl` and their `.meta.json`, takes the feature from the `Feature folder:` line each dispatch prompt carries, counts every response once (a response is written to the transcript several times, one line per content block, each carrying the same usage, so summing lines roughly doubles every figure), and keeps input, output, cache-write and cache-read tokens apart because they are billed differently. Claude Code documents the path but not the file format, so it is best effort and says so when it finds nothing it understands. In a run, the orchestrator has the script write `.kairos/<feature_folder>/_usage.md` after every agent that returns: one row per agent call, a total, and a flag on a model that differs from the one configured. A separate file rather than a section of `_tracking.md` or of each agent's report, because the script writes the whole file itself (no model retypes a number), one file is the only place to read, no phase artifact that a later agent reads as input carries figures it did not ask for, and a run stopped halfway still has its table. An agent cannot write its own row: it does not know its token count while it runs. `/kairos:usage` prints the same report on demand, one row per agent call and never an aggregate per agent type; `.kairos/.models` and each agent's `model:` frontmatter are what it compares the measured model against. In a sample of 437 real KAIROS subagent transcripts every agent had run on the tier its frontmatter names.
 
