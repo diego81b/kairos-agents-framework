@@ -10,10 +10,18 @@ All notable changes to KAIROS Framework are documented in this file.
 
 Three gates now continue by themselves on a `simple_fix`, and nothing said how to tell whether that is safe. An approval rate cannot: a gate that continued is approved by construction. The log now carries the two keys that count what changed after a gate instead, and the rule for reading them is written down.
 
+The start gate also stopped treating what you say to it as noise. In a real run, an answer that widened the work never reached the impact assessment, and a question typed at the gate had nowhere to go but a regenerated report or an open question nobody owned.
+
+### Fixed
+
+- **`agents/orchestrator-agent.md`**, **`docs/workflow.md`**, **`CLAUDE.md`** — a question typed at the start gate is answered by the Orchestrator from the impact assessment, the ledger and the files it cites, then the gate is shown again. It is no longer sent to the assessment as feedback or filed as an open question.
+- **`agents/orchestrator-agent.md`**, **`docs/workflow.md`** — answering an open question at the start gate re-runs the impact assessment when the answer adds, removes or replaces a file, a test, a flow or a criterion, or names another size, effort, domain, test suite, contract change or change kind. Before, no answer ever did, so a size measured before the answer stayed in force.
+- **`agents/impact-assessment-agent.md`**, **`docs/workflow.md`** — a re-run reads the previous report and the ledger, answers every point of the feedback in one `Feedback:` line (accepted, or not accepted with a `file:line`), applies answered questions instead of asking them again, and opens the files an objection names even when the read-in-proportion limit would have stopped earlier. The standalone gate answers a question instead of filing it.
+
 ### Added
 
 - **`agents/orchestrator-agent.md`**, **`docs/workflow.md`**, **`CLAUDE.md`** — a gate that asked now ends its `## Log` note with `auto-accepted: <ids, or none>` (the rows accepted for you) and `off-recommendation: <ids, or none>` (the rows you dispositioned differently from the `(Recommended)` option), the same `auto-accepted:` key a continued gate already wrote. A row accepted for you that a later gate promotes to `MUST — from <phase> R<id>` is then countable on both kinds of gate. `CLAUDE.md` records how to compare the two: rework after the gate, over the asked gates the continuation predicate would also have passed.
-- **`.opencode/agents/`**, **`.kimi-code/agents/`** — the orchestrator mirrors carry the same body changes.
+- **`.opencode/agents/`**, **`.kimi-code/agents/`** — the orchestrator and impact assessment mirrors carry the same body changes.
 
 ---
 

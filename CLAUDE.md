@@ -616,6 +616,32 @@ at the review gate, as the sign that the stop signals are too narrow. Not done: 
 by the orchestrator when a human promotes a row. The row's own `MUST — from` note is the record, and
 a second writer of the same fact would be a place for the two to disagree.
 
+The same release closes a gap in how the Start Gate treats what a person says to it, read from two
+real runs of two downstream projects. In the first (a run in which the human answered an open
+question at the gate that widened the work to a test needing a real database), the answer went into
+`open-questions.md`, the log said `no impact re-run needed`, and `00b-impact.md` kept its size, effort
+and domains with the question still `Escalate`: the rule "Answer open questions never re-dispatches
+the assessment" (v9.1.1) was written so that a plain answer would not cost a re-run, and it also kept
+the answers that change the measurement from reaching it. The decision row for that answer did not
+open with `Scope:` either, because the Scope rule names flows and criteria and a test is neither, so
+keying the re-run on that prefix would not have fired. In the second (an earlier run, before
+v9.1.1) the orchestrator re-dispatched after two answers and the size went from `S` to `M`, the agent
+reading the answers from the ledger and not from its prompt. Two rules follow. The re-run trigger is
+what the answer does, listed on the page: it adds, removes or replaces a file, a test, a flow or a
+criterion, or names another value for a measured fact, and in doubt it re-runs, since a second
+assessment costs one agent and a stale size derives the wrong pipeline. And a typed question is
+answered by the orchestrator, which holds the artifact, the ledger and read access, never
+re-dispatched and never filed: the assessment is a subagent with no channel back to the human, and a
+question stored as a `🔴 open` row at the gate that then says Start reads as settled. The agent side,
+`impact-assessment-agent`'s new re-run step, was missing altogether: its input listed no feedback and
+no earlier artifact, and its read-in-proportion limit could stop it before it opened the file an
+objection named. A re-run now answers each point in one `Feedback:` line, accepted or not accepted
+with a `file:line`, because a restated measurement without evidence is the "goes straight on" the
+human saw. Not changed: the generic HITL gate (step 5) has the same two paths for free text (an
+implicit Request changes or a standalone `🔴 open` row) and a keyword-only explain trigger. Fixing it
+there reaches every phase, and nothing seen in a real run says it fails the same way; read the
+`## Log` of a later run before widening it. Not measured: no run has used either rule.
+
 A fact that exists only because the architect ran (`threat_rows`, `behaviour_delta`) is
 absent by design when it did not, and counts as none: the security and documentation rules
 fall back to their other conditions (domains, constraint categories, `contract_change`), and
