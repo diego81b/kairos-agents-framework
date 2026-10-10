@@ -6,6 +6,17 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v9.4.0 — October 10, 2026
+
+Three gates now continue by themselves on a `simple_fix`, and nothing said how to tell whether that is safe. An approval rate cannot: a gate that continued is approved by construction. The log now carries the two keys that count what changed after a gate instead, and the rule for reading them is written down.
+
+### Added
+
+- **`agents/orchestrator-agent.md`**, **`docs/workflow.md`**, **`CLAUDE.md`** — a gate that asked now ends its `## Log` note with `auto-accepted: <ids, or none>` (the rows accepted for you) and `off-recommendation: <ids, or none>` (the rows you dispositioned differently from the `(Recommended)` option), the same `auto-accepted:` key a continued gate already wrote. A row accepted for you that a later gate promotes to `MUST — from <phase> R<id>` is then countable on both kinds of gate. `CLAUDE.md` records how to compare the two: rework after the gate, over the asked gates the continuation predicate would also have passed.
+- **`.opencode/agents/`**, **`.kimi-code/agents/`** — the orchestrator mirrors carry the same body changes.
+
+---
+
 ## v9.3.1 — October 10, 2026
 
 A last check of QA plan size against real plans found two defects. A plan had no way to say it asked nothing of a person, and on a `simple_fix`, where test-verifier does not run, the agent treated every acceptance criterion as unverified even when tests covered it. The size limits are unchanged: they are the same from M to XL, and no L or XL plan written under the current rules exists to tune them against.

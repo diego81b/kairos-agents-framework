@@ -45,6 +45,8 @@ A gate with nothing to decide costs a round trip, and in real runs most of them 
 
 When one continues, the Orchestrator prints one line naming what runs next and the rows it accepted for you (`low`, and `medium` in a `simple_fix`), and logs it in `_tracking.md`. A `significant_rework` run keeps every gate after the triage (the effort is not known yet at the triage gate, and the Start Gate follows it). Reply `every gate` at the start gate, or set `phase_gates: every_gate` in `ledger/run.md`, to be asked at all of them.
 
+To judge whether a gate that continues on its own is safe, compare what changed after it, not how often someone approved: a gate that continued is "approved" by construction, so an approval rate says nothing. The log line of every gate ends with two keys, `auto-accepted:` (rows the Orchestrator accepted for you) and, when you answered, `off-recommendation:` (rows you dispositioned differently from the `(Recommended)` option). Together with the `MUST — from <phase> R<id>` rows in `ledger/constraints.md`, they show whether a row that was accepted for you was promoted later, which is the case the continuation rule exists to avoid.
+
 These always ask. The architecture, because it holds decisions. The implementation plan, because it is the last gate before source files change. The combined review gate (and a recheck that turns up a `medium` row, as before), because that is where you changed decisions in real runs (a `low` row promoted to **Mitigate now**), which no signal can predict. The QA plan, release plan and documentation draft, because they post to the tracker or write outside `.kairos/`. Continuing saves the minutes you spend answering, not the time the agents take or the days a gate sits unanswered.
 
 ### Artifact Format — Markdown + Frontmatter
@@ -448,7 +450,7 @@ The ledger is written for the agents. `.kairos/<feature_folder>/_tracking.md` is
 |---|---|---|
 | `## Status` | rewritten every event | current phase, next step, what blocks the run, the questions and constraints still `🔴 open` |
 | `## Issue Alignment` | rewritten every event | every `AC-n` as `pending`, `covered`, `manual`, `later` (it belongs to a slice this run does not build), `gap`, `changed` or `dropped`, and every scope change made along the way |
-| `## Log` | appended, never rewritten | one line per event: each gate and your answer, each wave or gate continued automatically, each fix pass, loop exit, resume and stop |
+| `## Log` | appended, never rewritten | one line per event: each gate and your answer (with the rows accepted for you and the rows you dispositioned off the recommendation), each wave or gate continued automatically, each fix pass, loop exit, resume and stop |
 | `## Phases` | one section replaced per gate | a few lines per phase, taken from that report's `## Summary` |
 
 Every section that restates ledger rows (the status block and, once the run has finished, Open Questions, Open Constraints and Accepted Risks) is rewritten from one read of the ledger, so the file cannot disagree with itself: a question you answer or a constraint that resolves after the run has ended updates all of them, and is logged as an `after run` line.

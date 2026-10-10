@@ -586,6 +586,36 @@ analogy. `park` (a run that waits for a human without a session) and `stop_signa
 own request to stop) were rejected: the host has no daemon to notify, and the Summary's
 `Needs your attention` line already carries the same signal.
 
+v9.4.0 answers how to judge those continued gates against the ones that still ask. An approval rate is
+no basis: a gate that continued is "approved" by construction, so the two rates cannot differ for a
+reason worth reading. The unit is rework after the gate: what changed in an artifact that the gate let
+pass. Two keys in every gate's `## Log` note make it countable. `auto-accepted: <ids, or none>` was
+already written by a continued gate; a gate that asked now writes it too, since step 2 accepts the
+`low` rows (and `medium` in a quick fix) for the human at either kind of gate, so a later promotion
+joins on the same key on both sides. `off-recommendation: <ids, or none>` is new and exists only where
+a human answered: the rows dispositioned differently from the option step 2 marks `(Recommended)`,
+which is derived from the row alone and so is the one baseline a person's choice can be read against.
+A "late catch" on a continued gate is counted from what the ledger already records: a `constraints.md`
+row noted `MUST — from <phase> R<id>` for an id that the phase's gate logged as `auto-accepted`, or a
+fix pass whose `MUST — from` rows come from that artifact. A later Request changes, a `Scope:` decision
+or an `after run` line that reopens an earlier phase is read from the log by a person, not by rule:
+nothing links it to the gate it corrects, and inventing the link would make the figure look more exact
+than it is.
+
+The comparison itself needs one precaution. A continued gate exists only where no stop signal fired,
+so its population is the clean subset, and comparing it with all the gates that asked mixes in the
+ones a signal had stopped. Replay Step 2b's predicate over the artifacts of the gates that asked (a
+`significant_rework` run, a legacy checklist, a run corrected with `every gate`) and keep only those
+where it would have continued: the share of them where the human changed something is the rule's false
+negative rate, and the late-catch share of the continued gates is its cost when it was wrong. Neither
+number measures correctness. An Approve proves that a person saw nothing to change, not that nothing
+was wrong, and a defect nobody finds is invisible to both. The three gates came from three runs of
+one project, so no threshold ships with this: read the two shares over the next runs, and treat
+`low` rows promoted later in more than one run of three, which two of those three runs already showed
+at the review gate, as the sign that the stop signals are too narrow. Not done: logging a late catch
+by the orchestrator when a human promotes a row. The row's own `MUST — from` note is the record, and
+a second writer of the same fact would be a place for the two to disagree.
+
 A fact that exists only because the architect ran (`threat_rows`, `behaviour_delta`) is
 absent by design when it did not, and counts as none: the security and documentation rules
 fall back to their other conditions (domains, constraint categories, `contract_change`), and
