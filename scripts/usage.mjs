@@ -118,14 +118,17 @@ function readTranscript(file) {
     }
   }
   const total = { input: 0, output: 0, cacheWrite: 0, cacheRead: 0 }
+  let peak = 0
   for (const r of byResponse.values()) {
+    // The prompt of one request is all its input tokens, cache reads and writes included.
+    peak = Math.max(peak, r.input + r.cacheWrite + r.cacheRead)
     total.input += r.input
     total.output += r.output
     total.cacheWrite += r.cacheWrite
     total.cacheRead += r.cacheRead
     if (r.model && r.model !== '<synthetic>') models.set(r.model, (models.get(r.model) || 0) + 1)
   }
-  return { total, models, turns: byResponse.size, first, last, firstUser, agentSetting }
+  return { total, models, turns: byResponse.size, first, last, firstUser, agentSetting, peak }
 }
 
 // What the model should have been: the `models` files first, in the order the orchestrator reads them
@@ -212,7 +215,7 @@ function summarize(t, agentType, frontmatterOnly = false) {
     verdict = ranked.every(([m]) => family(m) === exp.alias) ? 'ok' : `expected ${exp.alias} (${exp.source})`
   }
   return {
-    model, verdict, turns: t.turns, ...t.total,
+    model, verdict, turns: t.turns, peak: t.peak, ...t.total,
     start: t.first, seconds: t.first !== null && t.last !== null ? Math.round((t.last - t.first) / 1000) : null,
   }
 }
@@ -236,27 +239,28 @@ if (rows.length === 0) {
   process.exit(0)
 }
 
-out.push('| # | Agent | Model | Check | Turns | Input | Output | Cache write | Cache read | Time |')
-out.push('|---|-------|-------|-------|-------|-------|--------|-------------|------------|------|')
+const kt = (x) => `${Math.round(x / 1000)}K`
+out.push('| # | Agent | Model | Check | Turns | Peak ctx | Input | Output | Cache write | Cache read | Time |')
+out.push('|---|-------|-------|-------|-------|----------|-------|--------|-------------|------------|------|')
 const sum = { turns: 0, input: 0, output: 0, cacheWrite: 0, cacheRead: 0 }
 rows.forEach((r, i) => {
   for (const k of Object.keys(sum)) sum[k] += r[k]
   const check = r.verdict === 'ok' ? 'ok' : r.verdict ? `⚠ ${r.verdict}` : '-'
   const label = `${r.agent.replace(/^kairos:/, '')}${r.description ? ` (${r.description.replace(/\|/g, '/')})` : ''}`
-  out.push(`| ${i + 1} | ${label} | ${r.model} | ${check} | ${r.turns} | ${n(r.input)} | ${n(r.output)} | ${n(r.cacheWrite)} | ${n(r.cacheRead)} | ${dur(r.seconds)} |`)
+  out.push(`| ${i + 1} | ${label} | ${r.model} | ${check} | ${r.turns} | ${kt(r.peak)} | ${n(r.input)} | ${n(r.output)} | ${n(r.cacheWrite)} | ${n(r.cacheRead)} | ${dur(r.seconds)} |`)
 })
-out.push(`| | **Total** | | | ${sum.turns} | ${n(sum.input)} | ${n(sum.output)} | ${n(sum.cacheWrite)} | ${n(sum.cacheRead)} | |`)
+out.push(`| | **Total** | | | ${sum.turns} | | ${n(sum.input)} | ${n(sum.output)} | ${n(sum.cacheWrite)} | ${n(sum.cacheRead)} | |`)
 out.push('')
-out.push('One row per agent call. Tokens are counted once per response and kept apart because they are billed differently: cache reads are the cheapest, cache writes and output the dearest.')
+out.push('One row per agent call. Tokens are counted once per response and kept apart because they are billed differently: cache reads are the cheapest, cache writes and output the dearest. Peak ctx is the largest prompt one request of that agent carried: every turn rereads its whole context, so tokens grow with turns times context, and a peak far above the others marks a call worth splitting or compacting.')
 if (feature && primary.length) {
   out.push('')
   out.push('Orchestrator, primary session (a session total, not part of the table above or its total):')
   out.push('')
-  out.push('| Session | Model | Check | Turns | Input | Output | Cache write | Cache read |')
-  out.push('|---------|-------|-------|-------|-------|--------|-------------|------------|')
+  out.push('| Session | Model | Check | Turns | Peak ctx | Input | Output | Cache write | Cache read |')
+  out.push('|---------|-------|-------|-------|----------|-------|--------|-------------|------------|')
   for (const p of primary) {
     const check = p.verdict === 'ok' ? 'ok' : p.verdict ? `⚠ ${p.verdict}` : '-'
-    out.push(`| ${p.session.slice(0, 8)} | ${p.model} | ${check} | ${p.turns} | ${n(p.input)} | ${n(p.output)} | ${n(p.cacheWrite)} | ${n(p.cacheRead)} |`)
+    out.push(`| ${p.session.slice(0, 8)} | ${p.model} | ${check} | ${p.turns} | ${kt(p.peak)} | ${n(p.input)} | ${n(p.output)} | ${n(p.cacheWrite)} | ${n(p.cacheRead)} |`)
   }
   out.push('')
   out.push('A transcript holds one session whatever was said in it: this row also covers any other feature run in the same session and any conversation after the run, so read it as an upper bound for this feature.')
