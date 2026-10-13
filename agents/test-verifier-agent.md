@@ -101,7 +101,9 @@ Otherwise (any condition fails), run the project's test+coverage command and cap
 | Go | `go test ./... -cover -coverprofile=coverage.out && go tool cover -func=coverage.out` |
 | Other | use project README / `package.json` scripts |
 
-Record:
+**Independent suites.** When the project has more than one suite and they share nothing (a backend runner and a frontend runner, each from its own toolchain), start them together in one message, in the background where the host lets a command run there, and read each result as it finishes instead of running them one after the other. Give each its own coverage output directory. Suites that share a database, a port, a build output directory or a coverage directory run one after the other, and so does an end-to-end suite that needs the application running: start it last, after the others have finished. Never start two copies of the same command together, and re-run a failing suite alone. When you cannot tell that two suites are independent, run them in sequence.
+
+Record, for each suite separately:
 - exit code
 - pass / fail / skip counts
 - coverage line / branch / function percentages

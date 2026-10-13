@@ -21,7 +21,12 @@ The start gate also stopped treating what you say to it as noise. In a real run,
 ### Added
 
 - **`agents/orchestrator-agent.md`**, **`docs/workflow.md`**, **`CLAUDE.md`** — a gate that asked now ends its `## Log` note with `auto-accepted: <ids, or none>` (the rows accepted for you) and `off-recommendation: <ids, or none>` (the rows you dispositioned differently from the `(Recommended)` option), the same `auto-accepted:` key a continued gate already wrote. A row accepted for you that a later gate promotes to `MUST — from <phase> R<id>` is then countable on both kinds of gate. `CLAUDE.md` records how to compare the two: rework after the gate, over the asked gates the continuation predicate would also have passed.
-- **`.opencode/agents/`**, **`.kimi-code/agents/`** — the orchestrator and impact assessment mirrors carry the same body changes.
+- **`scripts/usage.mjs`**, **`commands/usage.md`**, **`CLAUDE.md`** — `/kairos:usage --feature` and the `_usage.md` the Orchestrator writes now end with a second table: the primary session (the orchestrator) of every session that dispatched an agent for that feature, with its model, turns and token buckets. It was the one line the file left out, and in a sample of 19 real runs it was the largest, about 41% of the bill at current prices against 33% for the implementers. The row is a session total, kept out of the agent total, and also covers other features run in that session and any conversation after the run, so read it as an upper bound. Its model check uses the orchestrator's own `model:`, and only when the transcript shows it was started as `kairos:orchestrator-agent`. `--json` appends the same rows.
+- **`agents/test-verifier-agent.md`**, **`CLAUDE.md`** — suites that share nothing (a backend and a frontend runner, each with its own coverage directory) start together in one message and are read as each finishes. Suites that share a database, a port or a build directory, and an end-to-end suite that needs the application running, still run in sequence, the end-to-end one last. The gain is a ceiling and small: in 19 real runs the suite commands were 15% of test-verifier's time and overlapping all of them saved at most 9%, so no setting declares which suites are safe.
+
+### Changed
+
+- **`.opencode/agents/`**, **`.kimi-code/agents/`** — the orchestrator, impact assessment and test-verifier mirrors carry the same body changes.
 
 ---
 
