@@ -5,3 +5,4 @@ package-lock.json
 internal
 .claude/settings.local.json
 .kairos
+docs/.vitepress/.temp

@@ -313,6 +313,34 @@ because a later area reads them. `review` or `delivery` without `development` ha
 `03-implementation.md` to read, so the orchestrator builds the change surface from `git diff` against
 the default branch and hands it to the reviewers as pasted paths, which they already accept.
 
+The areas answer a different question from "which agents": a person who wants the last word on each
+agent had no way to say so. The rules decide every agent after the Start Gate and the gate prints the
+decision with the instruction to correct it in free text ("Never ask a separate question for it"), so
+deciding agent by agent meant typing `add` or `skip` at three gates and reading three announcements to
+know where to. The area question has a third answer, `Decide each step` (`agent_decisions: ask` in
+`run.md`, `derived` otherwise), which turns each Decision Announcement into one `multiSelect`
+question over the agents of that point (start gate, Phase 3 gate, review gate), the rules' answer
+marked `(Recommended)`. It does not replace the derivation: the rules still run and the human answers
+against them, so the choice stays grounded in the facts and an answer against the rules is stored
+through the same `overrides.add`/`overrides.skip` the Start Gate already uses, which keeps the issue
+write-back, the log and the resume unchanged. Three limits are deliberate. The implementer is left
+out: which one runs is a fact of the design (`test_first`) and Layered Mode already has its own
+confirmation. A question is asked even where `phase_gates: on_signal` would continue the gate, because
+the question is the stop the person asked for. And there is no template line for it, since an issue
+section is a saved decision and starts without asking; the mode is a per-run intent like `areas`,
+offered where the area question is asked, by free text at the Start Gate (`decide each step`,
+`derive`) and in the launch prompt, where it answers the area question in advance. A pipeline the
+issue already decided is never put to the person again, and "full" is final: **All areas** (typed
+`full`) sets `agent_decisions: derived` and no agent question comes at any gate. That ordering was
+decided by the user after a first cut let the launch prompt override a saved `## KAIROS Pipeline`
+section, on the argument that the prompt is a fresher statement than the section. The user's rule is
+simpler and keeps the section a saved decision: on a fast start or a checklist the phrase is
+ignored with one line, and the one way in is the person typing it at a Start Gate that asks anyway
+(an Escalate, an unknown fact), which is their own act. The cost: a person who has been through a
+write-back cannot opt in from the prompt and edits the section instead. Not measured: whether a person wants this on most runs (it adds up to
+three questions) or on a few; read the `## Log` lines `chosen by you` of later runs before making it
+a default or a setting.
+
 A run starts without asking when the answer is already on record. An issue that carries a
 `## KAIROS Pipeline` section holds a saved human decision, so the Start Gate becomes an announcement
 of what is about to run and the checklist question is skipped, unless something needs a human: an
