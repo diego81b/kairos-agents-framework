@@ -74,7 +74,7 @@ A: Yes. The agents, the skills, and the `.kairos/` artifacts all live in the rep
 
 **Q: How do I know which model each agent really used, and what it cost in tokens?**
 
-A: Open `_usage.md` in the feature folder. In Claude Code the Orchestrator has it rewritten after every agent that returns, with one row per agent call: the model that answered and the input, output, cache-write and cache-read tokens. `/kairos:usage` prints the same report on demand. It reads the subagent transcripts Claude Code writes, so the model and the token counts are measured, not reported by an agent about itself. On a sample of 437 real KAIROS subagent runs every agent had used the model tier its `model:` line names. See [Usage](/workflow#usage-model-and-tokens-per-agent).
+A: Open `_usage.md` in the feature folder. In Claude Code the Orchestrator has it rewritten after every agent that returns, with one row per agent call: the model that answered, the peak context and the input, output, cache-write and cache-read tokens, then a second table with the orchestrator's own session. `/kairos:usage` prints the same report on demand. It reads the subagent transcripts Claude Code writes, so the model and the token counts are measured, not reported by an agent about itself. On a sample of 437 real KAIROS subagent runs every agent had used the model tier its `model:` line names. See [Usage](/workflow#usage-model-and-tokens-per-agent).
 
 ---
 

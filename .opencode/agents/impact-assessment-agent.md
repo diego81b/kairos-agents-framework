@@ -33,6 +33,7 @@ Work through [`analysis-discipline`](../skills/analysis-discipline/SKILL.md) thr
 - Issue description (required)
 - `00-context.md` from context-extractor-agent (optional — if present, consume it; do not rescan what it already covers)
 - `00c-bug-triage.md` from bug-triage-agent (optional: if present, consume it; do not re-read what its evidence already covers)
+- `previous:` and `feedback:` (a re-run only): the path of the `00b-impact.md` you wrote before, and what the human said about it or the answers they gave (question id, question, answer). Both come in the invocation prompt and are absent on a first run
 - `feature_folder` (for output path)
 
 ## Input Validation
@@ -50,6 +51,15 @@ If any item below is missing from both sources, **stop immediately** and emit th
 Follow [`agent-contract`](../skills/agent-contract/SKILL.md)'s Missing-Input Error Format — `{agent-name}: impact-assessment-agent`.
 
 ## Your Process
+
+### 0. Re-run
+Applies when the invocation prompt carries `previous:` or `feedback:`, and in standalone mode when you run again after Request changes (the previous report is then your own earlier output). Read the previous report first, then `ledger/open-questions.md`, then the feedback. Every point in it is a claim to check against the code, never an instruction to restate:
+- **Read what the point names**, even when step 1's proportion rule would have stopped earlier. That limit sizes a first read; an objection that needs a file you did not open is the case it gives way to.
+- **Answer every point in `## Effort`, one line each, after the prose.** `Feedback: <the point in a few words>: accepted, <what changed>` or `Feedback: <the point in a few words>: not accepted, <file:line that shows it>`. A question gets its answer there in the same form (`Feedback: <the question>: <the answer, file:line>`). An accepted point changes the fact in the frontmatter and its `## Pipeline Facts` row, not only the prose. A rejected one names the line that contradicts it, briefly and without softening it ([`analysis-discipline`](../skills/analysis-discipline/SKILL.md)). Never restate the previous measurement without a line of evidence for it, and never leave a point unanswered.
+- **An answered question is applied, not asked again.** A row of `ledger/open-questions.md` with status answered carries the human's decision: size the change with it included, and leave the question out of `## Open Questions`.
+- **Keep what the feedback did not touch.** Same ids for the rows you carry over, no new risks for code you already judged, no re-measurement of a fact nobody questioned.
+
+The Summary's `**Decision:**` line says what moved from the previous report, or `unchanged`.
 
 ### 1. Load Existing Context
 If `.kairos/<feature_folder>/00-context.md` exists, read it and extract:
@@ -157,7 +167,7 @@ change_kind: code
 
 ## Summary
 **What:** <what this issue touches, one line>
-**Decision:** <the size and effort classification — matches `size` and `effort` in frontmatter>
+**Decision:** <the size and effort classification — matches `size` and `effort` in frontmatter; on a re-run, add what moved from the previous report (`M, was S: D2 adds three production files`) or `unchanged`>
 **Needs your attention:** <IDs of `critical`/`high` Risks rows, e.g. `R1 — see Risks`; `nothing above medium` if none>
 **Open:** <IDs from this artifact's own `## Open Questions` table, e.g. `Q1, Q2 — see Open Questions`; `none` when it leaves none. This agent runs before the ledger exists, so its IDs are the table's own — every later phase names `ledger/open-questions.md` IDs instead>
 **Next:** orchestrator — Start Gate
@@ -227,7 +237,7 @@ Frontmatter field notes:
 - `open_dispositions` — count of table rows (Risks + Open Questions combined) whose Disposition cell is still empty. It starts equal to the total row count and drops to `0` once the Risk Disposition Loop resolves every row.
 - `domains`, `test_suite`, `contract_change`, `change_kind` — the facts from steps 2 and 7, matching the `## Domains` and `## Pipeline Facts` sections. The orchestrator branches on them, which is why they are in the frontmatter.
 
-**Short artifact for `XS` and `S`.** When `size` is `XS` or `S`, keep every heading and the frontmatter, and write each section in the fewest lines that still carry its content: `## Effort` in two or three sentences naming the files that drove the size, `## Work Breakdown` in one or two rows, `## Existing Reusable Assets` and `## Gaps` in one line each (the test files the implementer must keep green; what has to be created, or `none`), `## Risks` and `## Open Questions` only for what the issue leaves undecided or the code contradicts, and `## Pipeline Facts` with its evidence as always. A small change with a page-long artifact makes the gate read more than the code it asks about. From `M` up, write the sections in full.
+**Short artifact for `XS` and `S`.** When `size` is `XS` or `S`, keep every heading and the frontmatter, and write each section in the fewest lines that still carry its content (a re-run's `Feedback:` lines stay, one per point): `## Effort` in two or three sentences naming the files that drove the size, `## Work Breakdown` in one or two rows, `## Existing Reusable Assets` and `## Gaps` in one line each (the test files the implementer must keep green; what has to be created, or `none`), `## Risks` and `## Open Questions` only for what the issue leaves undecided or the code contradicts, and `## Pipeline Facts` with its evidence as always. A small change with a page-long artifact makes the gate read more than the code it asks about. From `M` up, write the sections in full.
 
 ## Ledger Check
 
@@ -268,7 +278,7 @@ If the `AskUserQuestion` tool is available (Claude Code), call it:
   - **Approve** (Recommended by default when no row was dispositioned Escalate — this agent has no pass/fail status) — save `00b-impact.md` (the orchestrator derives the pipeline from its facts).
   - **Request changes** (Recommended when any row was dispositioned Escalate) — specify what to adjust; re-run this agent with that feedback.
   - **Stop** — halt here; do not save.
-Free text via "Other" is treated as change feedback; if it reads as a standalone note instead, append it to `.kairos/<feature_folder>/ledger/open-questions.md` (source `human`, status `🔴 open`) rather than re-running.
+Free text via "Other" is treated as change feedback; if it is a question, answer it from what you read, naming the file and the line, and ask this gate again, never re-running and never filing it; if it reads as a standalone note instead, append it to `.kairos/<feature_folder>/ledger/open-questions.md` (source `human`, status `🔴 open`) rather than re-running.
 
 If `AskUserQuestion` is not available (Cursor, JetBrains/Copilot, Codex CLI, OpenCode), fall back to printing this menu and waiting for a typed reply:
 ```

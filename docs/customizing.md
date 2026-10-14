@@ -10,6 +10,7 @@ KAIROS has four places where you can change how it behaves, from the narrowest t
 | set the models, the QA plan folder or the manual QA answer for the whole team | `.kairos-cfg/` in the project, committed | the team |
 | use my own models in every project | `~/.kairos-cfg/models` | only me |
 | answer a question once and keep the answer on this machine | nothing to do: KAIROS asks when it needs the answer and stores it in `.kairos/` | only this machine |
+| spend fewer tokens per run | Claude Code's auto-compact window, see [Keeping token use down](#keeping-token-use-down) | whoever sets it, in their own Claude Code settings |
 | change what an agent does (its rules, wording, limits) | fork the agent file, see [Changing an agent](#changing-an-agent) | whoever has the fork |
 
 ## The two folders
@@ -55,6 +56,26 @@ KAIROS 9.3.0 moved the settings, and the old places keep working, the same way t
 ## Which hosts read what
 
 `models` works on Claude Code only, because it depends on the Agent call taking a model parameter. OpenCode and Kimi Code ignore it and the Start Gate says so; their own model settings are on their [setup pages](/setup/). `manual-qa` and `qa-dir` are read by the orchestrator on every host.
+
+## Keeping token use down
+
+This is a Claude Code setting and not a KAIROS one, so it lives in none of the folders above. It is on this page because the orchestrator's session is the longest conversation a run holds, and its cost is easy to misread.
+
+Every turn rereads the whole conversation, so the tokens a session spends are its turns times its context, and 97% of them are cache reads. In 19 real runs of one project the orchestrator's context grew from about 90K to between 300K and 650K inside a single session, and the implementer's longest calls from about 70K to about 280K. Claude Code on a 1M model compacts at about 967K by default, so none of those sessions ever compacted.
+
+Claude Code lets you compact earlier. The documented ways are the `autoCompactWindow` key in `settings.json`, the `--autocompact 250k` launch flag (one launch, Claude Code 2.1.221 or later) and the `CLAUDE_CODE_AUTO_COMPACT_WINDOW` environment variable (a plain token count, 100000 to 1000000). The docs do not say whether the variable is honored in a `settings.json` `env` entry or only in the shell, so prefer the key or the flag.
+
+Replaying those 19 sessions with an earlier window gives the figures below. They are a simulation: after each compaction the context restarts at its early size plus 15K for the summary, one extra pass over the full context pays for the summary, and the number of turns stays the same. It does not model what a summary loses.
+
+| Window | Orchestrator tokens | Implementer tokens | All tokens of the sample |
+|--------|---------------------|--------------------|--------------------------|
+| 300K | −38% | −19% | −20% |
+| 250K | −42% | −31% | −27% |
+| 200K | −47% | −39% | −32% |
+
+The last column assumes the implementers compact too: the docs say the percentage override applies to subagents and do not say the same of the window. If only the orchestrator compacts, 250K saves about 13% of the sample.
+
+Two things are not verified, which is why the first run matters. The docs say the system prompt survives a compaction and do not name an agent started with `--agent`, so check that the orchestrator still holds its gates after one. And an implementer that compacts in the middle of a wave can lose a detail it needed. The run's state is on disk, and the orchestrator re-reads `ledger/run.md` after a compaction, but a summary can still drop something. Try one issue at 250K, then read `/kairos:usage --feature <folder>`: the Peak ctx column should stop near the window, the tokens of the run should drop, and the number of fix passes should not rise. If it rises, raise the window.
 
 ## Changing an agent
 

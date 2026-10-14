@@ -6,6 +6,36 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v9.4.0 — October 10, 2026
+
+Three gates now continue by themselves on a `simple_fix`, and nothing said how to tell whether that is safe. An approval rate cannot: a gate that continued is approved by construction. The log now carries the two keys that count what changed after a gate instead, and the rule for reading them is written down.
+
+The start gate also stopped treating what you say to it as noise. In a real run, an answer that widened the work never reached the impact assessment, and a question typed at the gate had nowhere to go but a regenerated report or an open question nobody owned.
+
+Token use became something you can read and act on. The usage report now includes the orchestrator, which was the largest line of the bill in 19 real runs, and the peak context of every call, because tokens are turns times context. The one lever the data supports, compacting earlier through Claude Code's own setting, is documented with its simulated effect and what is still unverified.
+
+### Fixed
+
+- **`agents/orchestrator-agent.md`**, **`docs/workflow.md`**, **`CLAUDE.md`** — a question typed at the start gate is answered by the Orchestrator from the impact assessment, the ledger and the files it cites, then the gate is shown again. It is no longer sent to the assessment as feedback or filed as an open question.
+- **`agents/orchestrator-agent.md`**, **`docs/workflow.md`** — answering an open question at the start gate re-runs the impact assessment when the answer adds, removes or replaces a file, a test, a flow or a criterion, or names another size, effort, domain, test suite, contract change or change kind. Before, no answer ever did, so a size measured before the answer stayed in force.
+- **`agents/impact-assessment-agent.md`**, **`docs/workflow.md`** — a re-run reads the previous report and the ledger, answers every point of the feedback in one `Feedback:` line (accepted, or not accepted with a `file:line`), applies answered questions instead of asking them again, and opens the files an objection names even when the read-in-proportion limit would have stopped earlier. The standalone gate answers a question instead of filing it.
+
+### Added
+
+- **`agents/orchestrator-agent.md`**, **`docs/workflow.md`**, **`CLAUDE.md`** — a gate that asked now ends its `## Log` note with `auto-accepted: <ids, or none>` (the rows accepted for you) and `off-recommendation: <ids, or none>` (the rows you dispositioned differently from the `(Recommended)` option), the same `auto-accepted:` key a continued gate already wrote. A row accepted for you that a later gate promotes to `MUST — from <phase> R<id>` is then countable on both kinds of gate. `CLAUDE.md` records how to compare the two: rework after the gate, over the asked gates the continuation predicate would also have passed.
+- **`scripts/usage.mjs`**, **`commands/usage.md`**, **`docs/workflow.md`**, **`docs/faq.md`**, **`CLAUDE.md`** — `/kairos:usage --feature` and the `_usage.md` the Orchestrator writes now end with a second table: the primary session (the orchestrator) of every session that dispatched an agent for that feature, with its model, turns and token buckets. It was the one line the file left out, and in a sample of 19 real runs it was the largest, about 41% of the bill at current prices against 33% for the implementers. The row is a session total, kept out of the agent total, and also covers other features run in that session and any conversation after the run, so read it as an upper bound. Its model check uses the orchestrator's own `model:`, and only when the transcript shows it was started as `kairos:orchestrator-agent`. `--json` appends the same rows.
+- **`agents/test-verifier-agent.md`**, **`CLAUDE.md`** — suites that share nothing (a backend and a frontend runner, each with its own coverage directory) start together in one message and are read as each finishes. Suites that share a database, a port or a build directory, and an end-to-end suite that needs the application running, still run in sequence, the end-to-end one last. The gain is a ceiling and small: in 19 real runs the suite commands were 15% of test-verifier's time and overlapping all of them saved at most 9%, so no setting declares which suites are safe.
+
+- **`scripts/usage.mjs`**, **`commands/usage.md`**, **`docs/workflow.md`**, **`docs/faq.md`**, **`CLAUDE.md`** — the usage table has a `Peak ctx` column, the largest prompt one request of an agent carried (also `peak` in `--json`). Tokens are turns times context and 97% of them are cache reads, so a growing context is where they go: in 19 real runs the orchestrator's grew from about 90K to 300K-650K inside one session. `CLAUDE.md` records what the same data ruled out (a model swap is token-neutral, trimming the orchestrator's spec saves under 3.5%, fewer waves points the wrong way) and a fix-pass count that corrects an earlier estimate.
+- **`docs/customizing.md`**, **`CLAUDE.md`** — a new section, "Keeping token use down", on Claude Code's auto-compact window (`autoCompactWindow`, `--autocompact`, `CLAUDE_CODE_AUTO_COMPACT_WINDOW`). Replaying the real sessions with a 250K window saves 42% of the orchestrator's tokens and, if subagents compact too, 27% of the sample. It is a simulation, and the section says what is unverified: that an `--agent` body survives a compaction, and that an implementer compacting mid-wave keeps what it needs.
+- **`agents/orchestrator-agent.md`** — after the host compacts its conversation, the orchestrator reads `ledger/run.md` (`in_flight`, `gate_pending`) before it answers and trusts it over the summary.
+
+### Changed
+
+- **`.opencode/agents/`**, **`.kimi-code/agents/`** — the orchestrator, impact assessment and test-verifier mirrors carry the same body changes.
+
+---
+
 ## v9.3.1 — October 10, 2026
 
 A last check of QA plan size against real plans found two defects. A plan had no way to say it asked nothing of a person, and on a `simple_fix`, where test-verifier does not run, the agent treated every acceptance criterion as unverified even when tests covered it. The size limits are unchanged: they are the same from M to XL, and no L or XL plan written under the current rules exists to tune them against.

@@ -586,6 +586,62 @@ analogy. `park` (a run that waits for a human without a session) and `stop_signa
 own request to stop) were rejected: the host has no daemon to notify, and the Summary's
 `Needs your attention` line already carries the same signal.
 
+v9.4.0 answers how to judge those continued gates against the ones that still ask. An approval rate is
+no basis: a gate that continued is "approved" by construction, so the two rates cannot differ for a
+reason worth reading. The unit is rework after the gate: what changed in an artifact that the gate let
+pass. Two keys in every gate's `## Log` note make it countable. `auto-accepted: <ids, or none>` was
+already written by a continued gate; a gate that asked now writes it too, since step 2 accepts the
+`low` rows (and `medium` in a quick fix) for the human at either kind of gate, so a later promotion
+joins on the same key on both sides. `off-recommendation: <ids, or none>` is new and exists only where
+a human answered: the rows dispositioned differently from the option step 2 marks `(Recommended)`,
+which is derived from the row alone and so is the one baseline a person's choice can be read against.
+A "late catch" on a continued gate is counted from what the ledger already records: a `constraints.md`
+row noted `MUST — from <phase> R<id>` for an id that the phase's gate logged as `auto-accepted`, or a
+fix pass whose `MUST — from` rows come from that artifact. A later Request changes, a `Scope:` decision
+or an `after run` line that reopens an earlier phase is read from the log by a person, not by rule:
+nothing links it to the gate it corrects, and inventing the link would make the figure look more exact
+than it is.
+
+The comparison itself needs one precaution. A continued gate exists only where no stop signal fired,
+so its population is the clean subset, and comparing it with all the gates that asked mixes in the
+ones a signal had stopped. Replay Step 2b's predicate over the artifacts of the gates that asked (a
+`significant_rework` run, a legacy checklist, a run corrected with `every gate`) and keep only those
+where it would have continued: the share of them where the human changed something is the rule's false
+negative rate, and the late-catch share of the continued gates is its cost when it was wrong. Neither
+number measures correctness. An Approve proves that a person saw nothing to change, not that nothing
+was wrong, and a defect nobody finds is invisible to both. The three gates came from three runs of
+one project, so no threshold ships with this: read the two shares over the next runs, and treat
+`low` rows promoted later in more than one run of three, which two of those three runs already showed
+at the review gate, as the sign that the stop signals are too narrow. Not done: logging a late catch
+by the orchestrator when a human promotes a row. The row's own `MUST — from` note is the record, and
+a second writer of the same fact would be a place for the two to disagree.
+
+The same release closes a gap in how the Start Gate treats what a person says to it, read from two
+real runs of two downstream projects. In the first (a run in which the human answered an open
+question at the gate that widened the work to a test needing a real database), the answer went into
+`open-questions.md`, the log said `no impact re-run needed`, and `00b-impact.md` kept its size, effort
+and domains with the question still `Escalate`: the rule "Answer open questions never re-dispatches
+the assessment" (v9.1.1) was written so that a plain answer would not cost a re-run, and it also kept
+the answers that change the measurement from reaching it. The decision row for that answer did not
+open with `Scope:` either, because the Scope rule names flows and criteria and a test is neither, so
+keying the re-run on that prefix would not have fired. In the second (an earlier run, before
+v9.1.1) the orchestrator re-dispatched after two answers and the size went from `S` to `M`, the agent
+reading the answers from the ledger and not from its prompt. Two rules follow. The re-run trigger is
+what the answer does, listed on the page: it adds, removes or replaces a file, a test, a flow or a
+criterion, or names another value for a measured fact, and in doubt it re-runs, since a second
+assessment costs one agent and a stale size derives the wrong pipeline. And a typed question is
+answered by the orchestrator, which holds the artifact, the ledger and read access, never
+re-dispatched and never filed: the assessment is a subagent with no channel back to the human, and a
+question stored as a `🔴 open` row at the gate that then says Start reads as settled. The agent side,
+`impact-assessment-agent`'s new re-run step, was missing altogether: its input listed no feedback and
+no earlier artifact, and its read-in-proportion limit could stop it before it opened the file an
+objection named. A re-run now answers each point in one `Feedback:` line, accepted or not accepted
+with a `file:line`, because a restated measurement without evidence is the "goes straight on" the
+human saw. Not changed: the generic HITL gate (step 5) has the same two paths for free text (an
+implicit Request changes or a standalone `🔴 open` row) and a keyword-only explain trigger. Fixing it
+there reaches every phase, and nothing seen in a real run says it fails the same way; read the
+`## Log` of a later run before widening it. Not measured: no run has used either rule.
+
 A fact that exists only because the architect ran (`threat_rows`, `behaviour_delta`) is
 absent by design when it did not, and counts as none: the security and documentation rules
 fall back to their other conditions (domains, constraint categories, `contract_change`), and
@@ -615,6 +671,19 @@ can still produce one more, so the honest figure is three or four passes down to
 constraints come with running in parallel. Only `test-verifier-agent` executes the test
 suite in a review wave; `code-reviewer-agent` keeps its static checks and lint but does not
 rebuild or rerun the suite, so the two never write the same build output concurrently.
+Inside that one execution, since v9.4.0, `test-verifier-agent` starts suites together when they
+share nothing: separate toolchains (a backend runner and a frontend runner), each with its own
+coverage output, started in one message and read as each finishes. Suites that share a database,
+a port or a build directory still run one after the other, and an end-to-end suite that needs the
+application running starts last and alone. The gain is a ceiling, and it is small: across 19 real
+runs of one downstream project the suite commands of the test-verifier calls took 49 of 339
+minutes (15%), and overlapping every one of them would have saved at most 30 (9%). Of the 13
+calls with two or more long runs, 4 used two toolchains and 8 repeated the same command, which
+cannot overlap. So the rule is one paragraph in the agent and no setting declaring which suites
+are safe: the agent cannot read safety from files, but a declaration would cost a setting for
+under a tenth of one phase. No end-to-end run appeared in that sample, so keeping it last and
+alone is reasoning and not a measurement. The larger duplication is elsewhere, the same suite
+run by the implementer, the verifier and, outside a wave, the reviewer, and is not addressed here.
 And `security-reviewer-agent` no longer sees `04-review.md` in a wave, so de-duplication of
 findings the two reviewers share moves to the orchestrator's merge. A host without parallel
 subagent dispatch runs the three one after another; the combined gate, the single fix pass
@@ -760,6 +829,12 @@ VitePress `srcDir` is set to `..` (repo root), so the site sources Markdown from
 Claude Code plugin slash commands, auto-discovered since the plugin root is the repo root: `/kairos:setup` (guided per-tier model configuration, written to `.kairos-cfg/models` in the project or in the home directory), `/kairos:view` (renders one `.kairos/<feature_folder>/` phase artifact as a synthetic HTML page via the Artifact tool — Claude Code only, one file per invocation, never the whole feature folder) and `/kairos:usage` (the model and the token buckets each dispatched agent really used, measured from the host's own subagent transcripts by `scripts/usage.mjs`). Unlike `agents/*.md`, files here are not mirrored into `.opencode/agents/` or `.kimi-code/agents/` — they're a Claude-Code-native construct.
 
 `/kairos:usage` exists because the only other source for "which model ran this agent" is the agent itself, and a model asked its own name can be wrong; the transcript records the model of every turn and the usage of every response, so the figures are measured and never reported by an LLM about itself. The script is the repo's one piece of code and is deliberately a plain script rather than a hook or a service: it reads `~/.claude/projects/<project>/<session>/subagents/agent-*.jsonl` and their `.meta.json`, takes the feature from the `Feature folder:` line each dispatch prompt carries, counts every response once (a response is written to the transcript several times, one line per content block, each carrying the same usage, so summing lines roughly doubles every figure), and keeps input, output, cache-write and cache-read tokens apart because they are billed differently. Claude Code documents the path but not the file format, so it is best effort and says so when it finds nothing it understands. In a run, the orchestrator has the script write `.kairos/<feature_folder>/_usage.md` after every agent that returns: one row per agent call, a total, and a flag on a model that differs from the one configured. A separate file rather than a section of `_tracking.md` or of each agent's report, because the script writes the whole file itself (no model retypes a number), one file is the only place to read, no phase artifact that a later agent reads as input carries figures it did not ask for, and a run stopped halfway still has its table. An agent cannot write its own row: it does not know its token count while it runs. `/kairos:usage` prints the same report on demand, one row per agent call and never an aggregate per agent type; `.kairos/.models` and each agent's `model:` frontmatter are what it compares the measured model against. In a sample of 437 real KAIROS subagent transcripts every agent had run on the tier its frontmatter names.
+
+The orchestrator was the one agent `_usage.md` left out, and in a sample of 19 real runs of one downstream project its session was the largest line of the bill (about 41% at current prices, against 33% for the implementers), so a reader of the file saw little more than half the cost. With `--feature` the script now adds the primary session of every session that dispatched an agent for that feature, as a table of its own under the agent total and out of it. A transcript holds one session whatever was said in it, so the row is a session total: it also covers any other feature run in that session and any conversation after the run, and is an upper bound for this feature. Attributing it by time window was rejected: it needs a boundary between two features that the transcript does not record, and the figure would look more exact than it is. Its check compares the model with the orchestrator's `model:` frontmatter, and only when the transcript carries the `kairos:orchestrator-agent` agent setting; `.kairos-cfg/models` never reaches the orchestrator, so it is not consulted. The orchestrator's own text needs no change for that table: it already says the file holds one row per agent call and a total, and the new table is additive.
+
+The user's real constraint is token volume on token-metered plans, not price, and that reorders every idea about cost. A model swap is token-neutral (same turns, same context) and a weaker writer can add fix passes, so it is a lever only if the plan weights models differently, which nothing here verified. Tokens are turns times context, 97% of them cache reads, and in the sample of 19 real runs of one project the context grew inside a session from about 90K to 300K-650K for the orchestrator (no compaction: the default trigger on a 1M model is about 967K) and from about 70K to about 280K for the implementer calls of 80 turns or more, which hold 42% of the implementer's tokens. `scripts/usage.mjs` now reports a Peak ctx column, the largest prompt one request of an agent carried, so the growth shows in `_usage.md` and the effect of any change can be read there. The lever that follows from the data is Claude Code's own auto-compact window, documented and set outside KAIROS (`docs/customizing.md`, "Keeping token use down"): replaying the real sessions with a 250K window saves 42% of the orchestrator's tokens and, if subagents compact too, 27% of the sample. It is a simulation, and two things in it are unverified: that an `--agent` body survives a compaction (the docs name the system prompt, not `--agent`) and that an implementer compacting mid-wave keeps what it needs. Two ideas were measured and not built. Moving the orchestrator's rarely used sections into skills loaded on demand has a ceiling of 7% of the sample even if the whole file went (about 50K of a 220K average context), realistically under 3.5%, on the file that holds the Hard Constraints. Fewer waves points the wrong way: the 6-file cap per wave already exists, and the long calls are the cost because context grows within a call, so splitting each in half would save about 5.7%, which is a plan-sizing question the sample cannot calibrate. A checkpoint question at the plan and review gates, asking the human to compact or restart, was dropped for the setting that does it without a click. Fix passes, read from the same ledgers: implementer fix passes are 12% of the sample's tokens (not a quarter: the first estimate counted two rechecks per pass, and 20 were found for 35 passes), and of 74 `MUST` rows the code review wrote 16 (22%), the review, test and QA phases together 27 (36%). The 16 review rows are about 6 corrections to deployment notes and docs, 5 weak tests, 4 code regressions and 1 project-style rule, none a requirement the writer could not read, and the notes show a serial pattern, each recheck finding a new problem in the same file. That points at the writer and at the recheck scope, not at the requirements, and no agent rule was changed on a sample of 16 rows from one project.
+
+After a compaction the orchestrator re-reads `ledger/run.md` and trusts it over the summary, a one-sentence rule beside the `in_flight` check at the start of every turn: with a compact window a compaction mid-run is routine, and the files on disk are the run's state, the summary is not.
 
 ### Plugin (`​.claude-plugin/`)
 

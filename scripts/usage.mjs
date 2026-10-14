@@ -6,7 +6,8 @@
 // read here is defensive and a file it does not understand is skipped, not fatal.
 //
 //   node usage.mjs                         latest session of this project, all its agents
-//   node usage.mjs --feature <folder>      every session, only the agents dispatched for that feature
+//   node usage.mjs --feature <folder>      every session, only the agents dispatched for that feature,
+//                                          then the primary session of each of those sessions (a session total)
 //   node usage.mjs --session <id>          one session
 //   node usage.mjs --feature <folder> --write <file>
 //                                          write the report to <file> (rewritten whole each time)
@@ -80,12 +81,14 @@ function readTranscript(file) {
   let first = null
   let last = null
   let firstUser = ''
+  let agentSetting = null
   let text
   try { text = fs.readFileSync(file, 'utf8') } catch { return null }
   for (const line of text.split('\n')) {
     if (!line.trim()) continue
     let o
     try { o = JSON.parse(line) } catch { continue }
+    if (!agentSetting && typeof o.agentSetting === 'string') agentSetting = o.agentSetting
     if (o.timestamp) {
       const t = Date.parse(o.timestamp)
       if (!Number.isNaN(t)) {
@@ -115,14 +118,17 @@ function readTranscript(file) {
     }
   }
   const total = { input: 0, output: 0, cacheWrite: 0, cacheRead: 0 }
+  let peak = 0
   for (const r of byResponse.values()) {
+    // The prompt of one request is all its input tokens, cache reads and writes included.
+    peak = Math.max(peak, r.input + r.cacheWrite + r.cacheRead)
     total.input += r.input
     total.output += r.output
     total.cacheWrite += r.cacheWrite
     total.cacheRead += r.cacheRead
     if (r.model && r.model !== '<synthetic>') models.set(r.model, (models.get(r.model) || 0) + 1)
   }
-  return { total, models, turns: byResponse.size, first, last, firstUser }
+  return { total, models, turns: byResponse.size, first, last, firstUser, agentSetting, peak }
 }
 
 // What the model should have been: the `models` files first, in the order the orchestrator reads them
@@ -150,9 +156,11 @@ function readModelsFiles() {
 }
 const overrides = readModelsFiles()
 const agentsDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'agents')
-function expectedAlias(agentType) {
+function expectedAlias(agentType, frontmatterOnly = false) {
   const name = agentType.replace(/^kairos:(team:)?/, '')
-  if (overrides.has(name)) return overrides.get(name)
+  // The orchestrator never reads the models files (they set the model of agents it dispatches), so its
+  // expected model is its own frontmatter only.
+  if (!frontmatterOnly && overrides.has(name)) return overrides.get(name)
   try {
     const front = fs.readFileSync(path.join(agentsDir, `${name}.md`), 'utf8').split('---')[1] || ''
     const m = /^model:\s*(\S+)/m.exec(front)
@@ -163,7 +171,11 @@ function expectedAlias(agentType) {
 const family = (modelId) => (/(opus|sonnet|haiku|fable)/i.exec(modelId || '') || [])[1]?.toLowerCase() || null
 
 const rows = []
+// With --feature, the primary session of every session that dispatched an agent for that feature: a session
+// total, kept out of the agent table and its total.
+const primary = []
 for (const s of chosen) {
+  const before = rows.length
   if (!feature && s.main) {
     const t = readTranscript(s.main)
     // Wall-clock time of the primary session includes every wait for a human, so it is not reported.
@@ -184,18 +196,26 @@ for (const s of chosen) {
     if (since && !Number.isNaN(since) && t.first !== null && t.first < since) continue
     rows.push({ session: s.id, agent: agentType, description: meta.description || '', feature: featureFolder, ...summarize(t, agentType) })
   }
+  if (feature && s.main && rows.length > before) {
+    const t = readTranscript(s.main)
+    if (t && t.turns) {
+      // Checked against the orchestrator's frontmatter only when the transcript says it was started as that agent.
+      const asOrchestrator = t.agentSetting === 'kairos:orchestrator-agent'
+      primary.push({ session: s.id, agent: 'primary session', feature: null, ...summarize(t, asOrchestrator ? 'kairos:orchestrator-agent' : null, true), seconds: null })
+    }
+  }
 }
 
-function summarize(t, agentType) {
+function summarize(t, agentType, frontmatterOnly = false) {
   const ranked = [...t.models.entries()].sort((a, b) => b[1] - a[1])
   const model = ranked.length ? ranked.map(([m]) => m).join(' + ') : 'unknown'
-  const exp = agentType ? expectedAlias(agentType) : null
+  const exp = agentType ? expectedAlias(agentType, frontmatterOnly) : null
   let verdict = ''
   if (exp && exp.alias !== 'inherit' && ranked.length) {
     verdict = ranked.every(([m]) => family(m) === exp.alias) ? 'ok' : `expected ${exp.alias} (${exp.source})`
   }
   return {
-    model, verdict, turns: t.turns, ...t.total,
+    model, verdict, turns: t.turns, peak: t.peak, ...t.total,
     start: t.first, seconds: t.first !== null && t.last !== null ? Math.round((t.last - t.first) / 1000) : null,
   }
 }
@@ -203,7 +223,7 @@ function summarize(t, agentType) {
 rows.sort((a, b) => (a.start || 0) - (b.start || 0))
 
 if (asJson) {
-  console.log(JSON.stringify(rows, null, 2))
+  console.log(JSON.stringify(rows.concat(primary), null, 2))
   process.exit(0)
 }
 const n = (x) => x.toLocaleString('en-US')
@@ -219,19 +239,32 @@ if (rows.length === 0) {
   process.exit(0)
 }
 
-out.push('| # | Agent | Model | Check | Turns | Input | Output | Cache write | Cache read | Time |')
-out.push('|---|-------|-------|-------|-------|-------|--------|-------------|------------|------|')
+const kt = (x) => `${Math.round(x / 1000)}K`
+out.push('| # | Agent | Model | Check | Turns | Peak ctx | Input | Output | Cache write | Cache read | Time |')
+out.push('|---|-------|-------|-------|-------|----------|-------|--------|-------------|------------|------|')
 const sum = { turns: 0, input: 0, output: 0, cacheWrite: 0, cacheRead: 0 }
 rows.forEach((r, i) => {
   for (const k of Object.keys(sum)) sum[k] += r[k]
   const check = r.verdict === 'ok' ? 'ok' : r.verdict ? `⚠ ${r.verdict}` : '-'
   const label = `${r.agent.replace(/^kairos:/, '')}${r.description ? ` (${r.description.replace(/\|/g, '/')})` : ''}`
-  out.push(`| ${i + 1} | ${label} | ${r.model} | ${check} | ${r.turns} | ${n(r.input)} | ${n(r.output)} | ${n(r.cacheWrite)} | ${n(r.cacheRead)} | ${dur(r.seconds)} |`)
+  out.push(`| ${i + 1} | ${label} | ${r.model} | ${check} | ${r.turns} | ${kt(r.peak)} | ${n(r.input)} | ${n(r.output)} | ${n(r.cacheWrite)} | ${n(r.cacheRead)} | ${dur(r.seconds)} |`)
 })
-out.push(`| | **Total** | | | ${sum.turns} | ${n(sum.input)} | ${n(sum.output)} | ${n(sum.cacheWrite)} | ${n(sum.cacheRead)} | |`)
+out.push(`| | **Total** | | | ${sum.turns} | | ${n(sum.input)} | ${n(sum.output)} | ${n(sum.cacheWrite)} | ${n(sum.cacheRead)} | |`)
 out.push('')
-out.push('One row per agent call. Tokens are counted once per response and kept apart because they are billed differently: cache reads are the cheapest, cache writes and output the dearest.')
-if (feature) out.push("The orchestrator's own turns are not attributed to a feature; run without --feature for the primary session.")
+out.push('One row per agent call. Tokens are counted once per response and kept apart because they are billed differently: cache reads are the cheapest, cache writes and output the dearest. Peak ctx is the largest prompt one request of that agent carried: every turn rereads its whole context, so tokens grow with turns times context, and a peak far above the others marks a call worth splitting or compacting.')
+if (feature && primary.length) {
+  out.push('')
+  out.push('Orchestrator, primary session (a session total, not part of the table above or its total):')
+  out.push('')
+  out.push('| Session | Model | Check | Turns | Peak ctx | Input | Output | Cache write | Cache read |')
+  out.push('|---------|-------|-------|-------|----------|-------|--------|-------------|------------|')
+  for (const p of primary) {
+    const check = p.verdict === 'ok' ? 'ok' : p.verdict ? `⚠ ${p.verdict}` : '-'
+    out.push(`| ${p.session.slice(0, 8)} | ${p.model} | ${check} | ${p.turns} | ${kt(p.peak)} | ${n(p.input)} | ${n(p.output)} | ${n(p.cacheWrite)} | ${n(p.cacheRead)} |`)
+  }
+  out.push('')
+  out.push('A transcript holds one session whatever was said in it: this row also covers any other feature run in the same session and any conversation after the run, so read it as an upper bound for this feature.')
+}
 
 if (writeTo) {
   const header = [
