@@ -28,8 +28,8 @@ Or globally, at `~/.kimi-code/agents/` (or the cross-tool `~/.agents/agents/`), 
 `agents/` (Claude-Code-canonical) remains the source of truth. `.kimi-code/agents/*.md` is a derived mirror maintained by hand — any edit to an `agents/*.md` file must update its `.kimi-code/agents/` counterpart in the same change. If you maintain your own copy instead of pulling updates from this repo, re-copy after KAIROS updates.
 :::
 
-::: warning No Team Mode mirror
-`agents/team/*.md` (the 5 Team Mode files) are **not** mirrored here — same exclusion as the OpenCode pack. Their bodies depend on Claude Code's Agent Teams feature throughout: `implementer-lead-agent.md` requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`, spawns teammates via Claude Code's `agent` tool, and its Test Plan Gate step calls `AskUserQuestion` unconditionally with no text-menu fallback. Kimi Code has its own parallel subagent support (`Agent` / `AgentSwarm`), but porting Team Mode's coordination logic to it is new work, not a frontmatter conversion. See Step 8.
+::: warning No Layered Mode mirror
+`agents/team/*.md` (the 5 Layered Mode files, called Team Mode until v9.5.0) are **not** mirrored here, the same status as in the OpenCode pack. The reason that once justified this, their dependence on Claude Code's Agent Teams feature, is gone since v9.5.0: the orchestrator now runs the mode as plain subagent calls in stages. But nobody has run Layered Mode on Kimi Code, so mirroring the files is a separate decision, deferred for now. The mirrored orchestrator offers the mode only on Claude Code, so nothing in this pack asks for it. See Step 8.
 :::
 
 ## Step 2 — How the frontmatter was converted
@@ -147,9 +147,9 @@ cp -r path/to/kairos/skills/* .kimi-code/skills/
 
 This keeps every agent body's relative skill references working, and registers each one as a native Kimi Code skill invocable via the `Skill` tool.
 
-## Step 8 — Parallel review and Team Mode
+## Step 8 — Parallel review and Layered Mode
 
-Kimi Code's `Agent` tool dispatches subagents and `AgentSwarm` runs them in parallel — so the "parallel review" pattern works here better than on most non-Claude tools. That still doesn't make Team Mode portable: `agents/team/*.md`'s coordination logic (the Agent Teams flag, Claude Code's own `agent`-tool spawning semantics, an unconditional `AskUserQuestion` with no fallback in `implementer-lead-agent.md`) is Claude-Code-specific, so the pack ships no Team Mode mirror. If you want Team Mode's behavior on Kimi Code, treat it as new work — rewrite the coordination against `Agent`/`AgentSwarm` — not a port.
+Kimi Code's `Agent` tool dispatches subagents and `AgentSwarm` runs them in parallel — so the "parallel review" pattern works here better than on most non-Claude tools. Layered Mode (`agents/team/*.md`, a lead plus layer agents run in stages) no longer depends on Claude Code's Agent Teams, since the orchestrator runs it as plain subagent calls, but nobody has run it on Kimi Code, so the pack ships no Layered Mode mirror and the mirrored orchestrator offers the mode only on Claude Code. If you want it on Kimi Code, treat it as its own piece of work: mirror the files and check the stage dispatch against `Agent`/`AgentSwarm`.
 
 ## Step 9 — Save `.kairos/` outputs
 
@@ -171,7 +171,7 @@ Kimi Code renders agent bodies as templates, substituting `${var}` placeholders 
 | Auto-delegation via `description` | ✅ Automatic | ✅ Automatic, plus `kimi --agent <name>` to bind the main agent at launch |
 | HITL built-in gate | ✅ Orchestrator-enforced, `AskUserQuestion` | ✅ **Native `AskUserQuestion`** — same primary branch as Claude Code |
 | Parallel subagents | ✅ | ✅ `Agent` / `AgentSwarm`, foreground or background |
-| Team Mode (`agents/team/`) | ✅ Native (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`) | ❌ Not shipped — coordination logic is Claude-Code-specific, see Step 8 |
+| Layered Mode (`agents/team/`) | ✅ Offered by the orchestrator, no flag needed | ❌ Not shipped (not mirrored and not run here yet), see Step 8 |
 | `.kairos/` persistence | ✅ Automatic | ✅ Automatic, same agent-level instructions |
 | Cost | Claude subscription | Kimi membership / API quota |
 

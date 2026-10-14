@@ -6,6 +6,37 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v9.5.0 — October 14, 2026
+
+Team Mode could not start under the orchestrator. The orchestrator dispatches `implementer-lead-agent` through its `Agent` tool, so the lead ran as a subagent, and a subagent cannot create an Agent Team: only the main session can. In a real run the orchestrator reported the mode as unable to start, the pipeline fell back to one TDD implementer in nine waves, and the human had already confirmed a cost warning for a mode that could not run.
+
+The mode is rebuilt as **Layered Mode**. The orchestrator is the coordinator and the stages are plain subagent calls, as in the review wave: no Agent Teams, no flag, no peer messaging. The agent ids and the `agents/team/` folder keep their names, so saved checklists and `Add:` overrides that name them still work.
+
+Not measured: the cost of Layered Mode against a single implementer (the old 3.5x figure came from the Agent Teams design and no longer applies), the quality of GREEN stages that run without the full suite, the cap of two FIX rounds and `max_retries` of 2. Read `_usage.md` after the first runs. Whether `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` set to `1` changes anything when the orchestrator dispatches named subagents is also unverified: KAIROS no longer reads it, and the docs say it is no longer needed.
+
+### Added
+
+- **`agents/orchestrator-agent.md`**, **`docs/workflow.md`**, **`docs/setup/templates.md`**, **`CLAUDE.md`**, **`.opencode/agents/`**, **`.kimi-code/agents/`** — a third answer to the area question, **Decide each step**, for a run where you want the last word on every agent. The rules still run and print what they say, and then the Orchestrator asks which agents of that point should run, with the rules' answer marked as recommended, at the start gate, at the implementation gate and at the review gate. What you tick against the rules is stored as an `Add:` or `Skip:` override, so the issue write-back and the resume work as before. Before, the later gates only announced the rules' decision and you could correct it by typing. It is asked even at a gate that would continue on its own and it leaves the implementer out. An issue that already carries a `## KAIROS Pipeline` section (override block or checklist) never gets the agent question: a `decide each step` in the prompt is ignored with one line, and choosing **All areas** (`full`) skips the agent question at every gate. Write `decide each step` in the prompt to answer the area question in advance, or reply it or `derive` at the start gate. Not measured: how often people want it on; read the `chosen by you` lines of `_tracking.md` before making it a default.
+- **`agents/orchestrator-agent.md`**, **`docs/workflow.md`**, **`docs/agentic-loop.md`**, **`CLAUDE.md`** — Phase 3b in Layered Mode runs as stages the orchestrator drives: RED (tests layer alone), GREEN (one call per in-scope layer, in parallel), VERIFY (the lead checks every layer against the contracts and is the only stage that runs the full suite), FIX (only the layers VERIFY named, then VERIFY again), REFACTOR and CLOSE. A review-loop or QA fix pass is the lead's `scope`, the layers' `fix`, then the lead's `close`. No gate sits between stages: each stage adds one line to `_tracking.md`.
+- **`agents/orchestrator-agent.md`**, **`docs/workflow.md`** — a contract gap the lead cannot settle stops the run with a "Contract gap" question: accept it as a documented gap, say you fixed it by hand, or stop the pipeline. A blocked layer asks to retry the stage or stop. The answer reaches the lead as a `human_decision:` line.
+- **`agents/orchestrator-agent.md`**, **`skills/artifact-template/SKILL.md`**, **`skills/artifact-bookkeeping/SKILL.md`** — new artifacts `03-layer-<layer>.md` (one report per layer) and `03-verify.md` (the lead's verdict: pass, fix or human), and `layered_stage` and `layered_round` in `ledger/run.md`, so an interrupted run resumes at the stage it stopped in. A missing `layered_stage` resumes at RED when the plan is approved and at 3a otherwise.
+- **`agents/team/implementer-lead-agent.md`** — a contract mismatch found in Step 2b becomes a row of the plan's `## Risks` table (kind "Contract divergence"), so the plan gate shows it: Mitigate now is applied by the lead at the next step, Escalate stops for the architect.
+
+### Changed
+
+- **`agents/team/implementer-lead-agent.md`** — rewritten for the orchestrator: steps `3a`, `verify`, `scope` and `close`, `03-contracts.md` as the binding record, `implementation_type: layered` and `layers_summary` in `03-implementation.md`. It has no `AskUserQuestion` and no Test Plan Gate: whatever needs a person is a row the orchestrator turns into a gate.
+- **`agents/team/teammate-tests-agent.md`**, **`agents/team/teammate-backend-agent.md`**, **`agents/team/teammate-frontend-agent.md`**, **`agents/team/teammate-database-agent.md`** — the layer agents run one stage per call (`red`, `green`, `fix`, `refactor`) and write `03-layer-<layer>.md`. They do static checks only: no full suite, no build, no migration applied. The database layer writes migrations and never runs them.
+- **`agents/orchestrator-agent.md`**, **`docs/setup/claude-code.md`**, **`docs/agents.md`**, **`docs/faq.md`**, **`README.md`** — the Team Mode check is now the Layered Mode check. It needs Claude Code and two or more of backend, frontend and database among the domains. It no longer reads `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`, and the cost warning says the cost is not measured instead of quoting a multiple.
+- **`agents/orchestrator-agent.md`** — `.kairos-cfg/models` now reaches the four layer agents too, because the orchestrator dispatches them, and a stage run by several layers in parallel takes each one's own line. Before, the teammates were started by the lead and kept their frontmatter model (`haiku`).
+- **`agents/impact-assessment-agent.md`**, **`.opencode/agents/`**, **`.kimi-code/agents/`** — the impact assessment, the orchestrator mirrors and the Layered Mode wording carry the same body changes.
+- **`docs/setup/opencode.md`**, **`docs/setup/kimi-code.md`**, **`AGENTS.md`**, **`.claude/CLAUDE.md`** — the "no mirror" notes for `agents/team/` now say why it holds today: nobody has run Layered Mode on those hosts, so porting is a separate decision. The old reason, the dependence on Agent Teams, is gone.
+
+### Removed
+
+- **`agents/team/implementer-lead-agent.md`**, **`docs/setup/claude-code.md`** — the `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` setup, the shared task list and peer messages between agents, and the Test Plan Gate with its `AskUserQuestion`. Starting the lead directly, which was never a documented path, now makes it say that the orchestrator dispatches it and stop.
+
+---
+
 ## v9.4.0 — October 10, 2026
 
 Three gates now continue by themselves on a `simple_fix`, and nothing said how to tell whether that is safe. An approval rate cannot: a gate that continued is approved by construction. The log now carries the two keys that count what changed after a gate instead, and the rule for reading them is written down.

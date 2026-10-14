@@ -44,7 +44,7 @@ No number to type. In IDEs without the checkbox prompt the orchestrator prints t
 
 For `simple_fix` and `medium` the question is skipped. The preset appears on the Step 0f Start Gate marked `(preset — reply to change)`; replying there with a different budget applies it before Phase 1. An issue can set it too, with an `Auto-fix: N` line in its `## KAIROS Pipeline` section.
 
-Works with any Phase-3 implementer: TDD, code-first, or Team Mode's lead agent. If Team Mode is confirmed later, right before the plan, a budget of 3 is lowered to 2: each retry there spawns a full team, so the ceiling is 2.
+Works with any Phase-3 implementer: TDD, code-first, or Layered Mode's lead agent. If Layered Mode is confirmed later, right before the plan, a budget of 3 is lowered to 2: each retry there is a lead scope call, a call per layer in scope and a lead close, so the ceiling is 2.
 
 Settings written before v8.5.0 had two budgets, one after review and one after tests (`phase4`/`phase3` in `ledger/run.md`, `Auto-fix after review`/`Auto-fix after tests` in an issue). They still work: the single loop takes the larger of the two.
 

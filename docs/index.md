@@ -15,8 +15,8 @@ hero:
 
 features:
   - icon: 🤖
-    title: 17 Core Agents + Team Mode
-    details: "Entry points (Context Extractor, Impact Assessment, Bug Triage) plus the Orchestrator, PM Agent, Architect, two Implementers (TDD and code-first), Code Reviewer, Security Reviewer, Test Verifier, QA Plan Agent, Release Planner, and an optional Documentation Agent — plus three standalone agents outside the sequence (Retrospective, Improvement Advisor, Dependency Audit). Optional Team Mode adds 5 parallel specialists (Claude Code only)."
+    title: 17 Core Agents + Layered Mode
+    details: "Entry points (Context Extractor, Impact Assessment, Bug Triage) plus the Orchestrator, PM Agent, Architect, two Implementers (TDD and code-first), Code Reviewer, Security Reviewer, Test Verifier, QA Plan Agent, Release Planner, and an optional Documentation Agent — plus three standalone agents outside the sequence (Retrospective, Improvement Advisor, Dependency Audit). Optional Layered Mode adds 5 agents, a lead and four layer agents run in stages (Claude Code only)."
   - icon: ⚡
     title: A Gate After Every Phase
     details: "Nothing advances until you approve it. Every risk and finding is dispositioned one row at a time, and real TDD is enforced — tests first, RED observed, coverage and assertion strength re-checked afterwards by a separate agent."

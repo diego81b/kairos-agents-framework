@@ -83,7 +83,7 @@ Every file in `agents/` (the 17 core pipeline agents, **not** `agents/team/`) ha
 - Removed core agent file → remove both.
 - Before committing, diff the two directories' bodies (strip frontmatter from each side and compare) to confirm nothing drifted.
 
-**`agents/team/*.md` is explicitly out of scope for this mirror** — do not add a Team Mode file to `.opencode/agents/` just because this rule says "every `agents/*.md` file." Team Mode's coordination logic (Claude Code's Agent Teams flag, the `agent` tool for spawning, an unconditional `AskUserQuestion` call with no fallback in `implementer-lead-agent.md`) is Claude-Code-specific; a frontmatter-only port ships a non-functional agent. See `docs/setup/opencode.md`'s "No Team Mode mirror" note before changing this.
+**`agents/team/*.md` is explicitly out of scope for this mirror** — do not add a Layered Mode file (the folder's name is the v9.4 one, kept on purpose) to `.opencode/agents/` just because this rule says "every `agents/*.md` file." The Agent Teams dependence that once justified this is gone since v9.5.0, but nobody has run Layered Mode on OpenCode, so mirroring is a separate decision. See `docs/setup/opencode.md`'s "No Layered Mode mirror" note before changing this.
 
 ## Kimi Code Mirror Sync
 
@@ -96,4 +96,4 @@ Every file in `agents/` (the 17 core pipeline agents, **not** `agents/team/`) al
 - New core agent file → add both `agents/<name>.md` and `.kimi-code/agents/<name>.md`. Removed core agent file → remove both.
 - Before committing, diff the two directories' bodies (strip frontmatter from each side and compare) to confirm nothing drifted.
 
-**`agents/team/*.md` is explicitly out of scope for this mirror too** — same rationale as the OpenCode exclusion above. See `docs/setup/kimi-code.md`'s "No Team Mode mirror" note before changing this.
+**`agents/team/*.md` is explicitly out of scope for this mirror too** — same status as the OpenCode exclusion above (deferred, not run there). See `docs/setup/kimi-code.md`'s "No Layered Mode mirror" note before changing this.

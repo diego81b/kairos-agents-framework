@@ -38,7 +38,7 @@ model: opus
 ---
 ```
 
-`agents/team/` holds the 5 Team Mode agents (Claude Code only — require `agent` tool support).
+`agents/team/` holds the 5 Layered Mode agents (the Claude Code plugin only). The folder and the agent ids (`kairos:team:implementer-lead-agent`, `kairos:team:teammate-*-agent`) keep their v9.4 names on purpose: saved `## KAIROS Pipeline` checklists and `Add:` overrides in trackers name them. See "Layered Mode" below.
 
 ### OpenCode Mirror (`.opencode/agents/`)
 
@@ -46,7 +46,7 @@ The 17 files in `agents/` (not `agents/team/`) each have a hand-converted counte
 
 **Any edit to an `agents/*.md` file's body or frontmatter must be mirrored into its `.opencode/agents/` counterpart in the same change** — treat this like updating `docs/agent-files.md` when agent files change, not as optional. Adding or removing a core agent file means adding or removing its `.opencode/agents/` counterpart too.
 
-`agents/team/` (the 5 Team Mode files) is deliberately **not** mirrored: their bodies depend on Claude Code's Agent Teams feature throughout (the `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` flag, spawning teammates via Claude Code's `agent` tool, an unconditional `AskUserQuestion` call in `implementer-lead-agent.md`'s Test Plan Gate with no fallback branch) — a frontmatter-only port would ship a subagent that can't function on OpenCode. Don't add Team Mode files to `.opencode/agents/` without first rewriting that coordination logic against OpenCode's own primitives.
+`agents/team/` (the 5 Layered Mode files) is deliberately **not** mirrored. Until v9.5.0 the reason was that their bodies depended on Claude Code's Agent Teams feature throughout; that dependency is gone (the layer agents are plain subagents the orchestrator dispatches), so the reason no longer holds in principle. Mirroring them is a separate decision, not made here: nobody has run Layered Mode on OpenCode, and the orchestrator's mirrored body only offers it when the host is Claude Code. Don't add the files to `.opencode/agents/` until a run there shows the dispatch pattern works on OpenCode's subagent primitives.
 
 ### Kimi Code Mirror (`.kimi-code/agents/`)
 
@@ -241,9 +241,9 @@ implementer-plan`, `status: pending_approval`) and touches no source file. The o
 owns that gate, exactly like every other phase gate. 3b re-invokes the same agent with the
 approved plan and executes. The plan file is written **unconditionally**, before the gate —
 same discipline as every other agent's "Write to Project" step, and the reason it stopped
-being buried inside the implementer's own transcript. `implementer-lead-agent` (Team Mode)
+being buried inside the implementer's own transcript. `implementer-lead-agent` (Layered Mode)
 splits at the same boundary: 3a runs its Steps 1-2b and writes `03-contracts.md` plus the
-plan; 3b reads the contracts back and resumes at Step 3.
+plan; 3b is a run of stages the orchestrator drives (see "Layered Mode" below).
 
 Since v9.0.0 the human no longer picks agents from a menu: every agent is derived from facts, at
 the point in the run where those facts exist, and the human confirms or corrects at a gate. The
@@ -270,10 +270,10 @@ now a real gate: one question per run replaces the menu and the effort question.
 implementer moved to `architect-agent`'s facts because the implementer is not needed until 3a,
 and by then the design exists. Without an architecture (a `simple_fix`, or architect skipped by an
 override) the rule falls back to `00b-impact.md` and the filesystem, and the announcement says what
-is lost: the Behaviour Delta, the threat-model rows and the first ledger re-walk. Team Mode is
-offered when the TDD path was chosen, two or more of backend/frontend/db are touched,
-`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is set and the host is Claude Code; the cost question
-remains, because it is a cost decision, not a technical one. Two decisions are not code facts and
+is lost: the Behaviour Delta, the threat-model rows and the first ledger re-walk. Layered Mode (called
+Team Mode until v9.5.0) is offered when the TDD path was chosen, two or more of backend/frontend/db
+are touched and the host is Claude Code; the cost question remains, because it is a cost decision, not
+a technical one. Two decisions are not code facts and
 stay with the human: whether a person verifies features by hand is a project setting
 (`.kairos/.manual-qa`, asked once per project), and a `## KAIROS Pipeline` checklist already in an
 issue is a saved human confirmation, so it still wins over the derivation, exactly as issues written
@@ -312,6 +312,34 @@ reading the earlier artifacts as facts, and the cleanup gate recommends keeping 
 because a later area reads them. `review` or `delivery` without `development` has no
 `03-implementation.md` to read, so the orchestrator builds the change surface from `git diff` against
 the default branch and hands it to the reviewers as pasted paths, which they already accept.
+
+The areas answer a different question from "which agents": a person who wants the last word on each
+agent had no way to say so. The rules decide every agent after the Start Gate and the gate prints the
+decision with the instruction to correct it in free text ("Never ask a separate question for it"), so
+deciding agent by agent meant typing `add` or `skip` at three gates and reading three announcements to
+know where to. The area question has a third answer, `Decide each step` (`agent_decisions: ask` in
+`run.md`, `derived` otherwise), which turns each Decision Announcement into one `multiSelect`
+question over the agents of that point (start gate, Phase 3 gate, review gate), the rules' answer
+marked `(Recommended)`. It does not replace the derivation: the rules still run and the human answers
+against them, so the choice stays grounded in the facts and an answer against the rules is stored
+through the same `overrides.add`/`overrides.skip` the Start Gate already uses, which keeps the issue
+write-back, the log and the resume unchanged. Three limits are deliberate. The implementer is left
+out: which one runs is a fact of the design (`test_first`) and Layered Mode already has its own
+confirmation. A question is asked even where `phase_gates: on_signal` would continue the gate, because
+the question is the stop the person asked for. And there is no template line for it, since an issue
+section is a saved decision and starts without asking; the mode is a per-run intent like `areas`,
+offered where the area question is asked, by free text at the Start Gate (`decide each step`,
+`derive`) and in the launch prompt, where it answers the area question in advance. A pipeline the
+issue already decided is never put to the person again, and "full" is final: **All areas** (typed
+`full`) sets `agent_decisions: derived` and no agent question comes at any gate. That ordering was
+decided by the user after a first cut let the launch prompt override a saved `## KAIROS Pipeline`
+section, on the argument that the prompt is a fresher statement than the section. The user's rule is
+simpler and keeps the section a saved decision: on a fast start or a checklist the phrase is
+ignored with one line, and the one way in is the person typing it at a Start Gate that asks anyway
+(an Escalate, an unknown fact), which is their own act. The cost: a person who has been through a
+write-back cannot opt in from the prompt and edits the section instead. Not measured: whether a person wants this on most runs (it adds up to
+three questions) or on a few; read the `## Log` lines `chosen by you` of later runs before making it
+a default or a setting.
 
 A run starts without asking when the answer is already on record. An issue that carries a
 `## KAIROS Pipeline` section holds a saved human decision, so the Start Gate becomes an announcement
@@ -404,8 +432,9 @@ needs `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1`, which also overrides the file). Thre
 deliberate. The file holds aliases only (`opus`, `sonnet`, `haiku`, `fable`), because the per-call
 parameter accepts no `inherit` and no full model ID; those still need frontmatter edits, which is
 why the copy-and-edit path stays in `/kairos:setup` as an advanced option. It reaches only agents
-the orchestrator dispatches, so the orchestrator, the standalone agents and Team Mode teammates keep
-their frontmatter. And it is per project, not per issue: an issue-level `Model:` line was rejected,
+the orchestrator dispatches, so the orchestrator and the standalone agents keep their frontmatter.
+Since v9.5.0 that reach includes `implementer-lead-agent` and the four layer agents, which the
+orchestrator dispatches itself, so a `teammate-backend-agent: sonnet` line works. And it is per project, not per issue: an issue-level `Model:` line was rejected,
 because the model tier is a cost setting of the organisation and not a fact about one change, and
 the line would have added parsing, write-back composition and a `run.md` field for a decision nobody
 makes per issue. The orchestrator reads the file at each dispatch instead of copying it into
@@ -739,7 +768,9 @@ writes `in_flight` into `run.md` before each dispatch and clears it when the cal
 that finds it set re-invokes that agent with `recovery: true` and skips the artifact-based resume
 point. Since v9.1.0 the line goes only to the four agents that define a recovery mode (both
 implementers, `implementer-lead-agent`, `documentation-agent`); any other agent is re-run from its
-first prompt and replaces its own report. Both implementers and `implementer-lead-agent` handle `recovery: true` by reading `git status`,
+first prompt and replaces its own report (the four layer agents of Layered Mode belong here: they
+read `git status` for their owned paths under the generic interrupted-run sentence and define no
+`recovery: true` mode of their own). Both implementers and `implementer-lead-agent` handle `recovery: true` by reading `git status`,
 the approved plan and the earlier `03-implementation.md` first, and write `03-implementation.md` as
 their last file, after the ledger update, so a finished report means a finished pass. Reading the
 artifact alone was rejected because a fix pass or loop iteration re-invokes an implementer against a
@@ -802,7 +833,26 @@ All artifacts land in `.kairos/<feature_folder>/` inside the target project (not
 
 `_qa-regression.md` is the manual counterpart of the automated suite: the cumulative catalogue of manual cases, each with a stable `QA-n` ID, the `Area` it belongs to, and its own `Setup`. `qa-plan-agent` is its only writer — it appends the cases it wrote this run, and retires a case when the current change automated the behavior it verified or removed it. It is also its own reader at the next feature: 5b's regression selection has two sources, the callers it greps in the code and the existing `QA-n` cases whose `Area` the change touched, each selected only with the changed file that justifies it. Without the catalogue a manual case dies with its feature folder, and the retest a QA person actually performs — re-running old manual cases to see whether this change broke them — has nothing to draw from.
 
-Team Mode (`agents/team/`) replaces phase 3 with a lead agent that spawns 4 parallel specialists; requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` and Claude Code ≥ 2.1.32.
+### Layered Mode (`agents/team/`)
+
+Layered Mode (called Team Mode until v9.5.0) replaces Phase 3's single implementer with a lead and up to four layer agents: `teammate-tests-agent`, `teammate-backend-agent`, `teammate-frontend-agent`, `teammate-database-agent`. It is Claude Code only and offered only on the TDD path when two or more of backend/frontend/db are touched.
+
+Why it was rebuilt. The orchestrator dispatches `implementer-lead-agent` through its `Agent` tool, so the lead ran as a subagent, and the lead's `tools:` has no `Agent`. The old design asked the lead to "create an agent team", which only the main session can do: Claude Code makes a named subagent a teammate only when it is spawned from the main conversation, and the lead of an Agent Team is fixed to that session. Under the orchestrator the mode could not start. In a real run the orchestrator reported it as "non e potuto partire", the pipeline fell back to one TDD implementer in nine waves, and the human had already confirmed a 3.5x cost warning for a mode that could not run. The check that offered it (`orchestrator-agent.md`, Team Mode check) tested the layers, the `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` flag and `$CLAUDECODE`, and never whether the lead could spawn anything. Nesting was rejected: a subagent can spawn subagents if `Agent` is in its `tools:` (up to three levels), but a nested lead only produces plain subagents, never Agent Teams teammates, so it would have kept the name and lost the feature, and it would be one more Claude Code only dependency inside a mode meant to be portable.
+
+What it is now. The orchestrator is the coordinator and the stages are plain subagent calls, as in the review wave. No Agent Teams, no flag, no peer messaging. 3a is unchanged in shape: the lead (opus) runs Steps 1 to 2c, writes `03-contracts.md` and `03-implementation-plan.md`, spawns nothing. 3b is a run of stages: **RED** (`teammate-tests-agent`, alone, `step: red`), **GREEN** (one Agent call per in-scope layer in one message, `step: green`), **VERIFY** (lead, `step: verify`: compliance against the contracts, the only stage that runs the full suite), **FIX** (only the layers the verify named, `step: fix`, then verify again), **REFACTOR** (the in-scope implementation layers, `step: refactor`), **CLOSE** (lead, `step: close`: re-verify, ledger update, `03-implementation.md` last). A review-loop or post-gate fix pass runs `scope` (lead) then `fix` (layers) then `close`. What the old design had and this does not: peer messaging (in practice teammates only messaged the lead, which routed every cross-domain request, so nothing used it), a shared task list, live progress and a way to message a running teammate. A mismatch fix is a new call with the fix tasks on disk, in a fresh context, so a fix round may cost more tokens than a message to a live teammate did. What stays: four contracts written before any layer starts, RED before GREEN, owned paths per layer, parallel GREEN, one compliance check against the contracts.
+
+Four rules came out of the design, each from a constraint the repo already states elsewhere.
+
+- **One runner of the suite.** Three layer agents in one message share a worktree. GREEN layers write code to the contract and run static checks on their own files at most (a type check without emit, lint); they run no test suite, no build into shared output and no migration against a shared database. `verify` is the only stage that runs the suite, as `test-verifier-agent` is the only runner in a review wave, and failures it finds become fix tasks per layer. The cost is that GREEN no longer confirms its own tests before verify does. RED runs alone, so `teammate-tests-agent` may run its own new tests there to confirm they fail.
+- **One writer of shared state.** Only the lead writes the ledger and `03-contracts.md`; only the orchestrator writes `run.md`. Each layer agent writes its own report, `03-layer-<layer>.md`, so parallel agents never write the same file. Handoff between agents is on disk, never pasted into a prompt: contracts are read from `03-contracts.md`, fix tasks from `03-verify.md`, cross-domain requests from the layer reports. A dispatch prompt carries only `key: value` lines (`Feature folder:`, `effort:`, `step:`, `layer:`, `round:`), which is also what lets `_usage.md` attribute each call to its feature.
+- **A subagent has no `AskUserQuestion` and cannot wait for a typed reply.** The lead's Step 2b mismatch gate used to run its own per-row loop and fall back to a text menu, which a spawned subagent cannot answer. Contract mismatches are now rows of the plan's `## Risks` table (same five columns, Disposition empty), so the orchestrator's Risk Disposition Loop resolves them at the plan gate and an Escalate stops for the architect, the shape the repo already used for `documentation-agent`'s passthrough gate and the QA plan. A `Mitigate now` row is applied by the lead to `03-contracts.md` at the start of `scope`/`verify`, never silently.
+- **The orchestrator keeps the state.** `run.md` gains `layered_stage` (`red`, `green`, `verify`, `fix`, `refactor`, `close`) and `layered_round` (the fix round counter, whose cap stays 2 repeats per contract field). A missing `layered_stage` means no layered run has started, so a folder written before v9.5.0 resumes at RED if its plan was approved and at 3a otherwise. `in_flight` already holds several entries for the review wave. `03-layer-*.md` and `03-verify.md` are supporting artifacts like `03-contracts.md`: ignored for the resume point, archived with a run and removed by the cleanup gate.
+
+Version and breakage. This ships as 9.5.0 and not as part of 9.4.0 (a release branch takes stabilization only, and this unvalidated change touches Phase 3) and not as v10 (v10 is the kairos-cli runner). It is not breaking in the sense of the versioning rule: the old mode never started under the orchestrator, the agent ids and the checklist lines that name them are unchanged, and running the lead standalone was never a documented path, only a note that a Test Plan Gate "still exists" there. That gate is removed, and a lead started directly now says it is dispatched by the orchestrator and stops. `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is no longer read or required. It is not unset on machines that have it, and with it on a dispatched named subagent might launch as a teammate; whether it does is not verified here, so the docs say the flag is no longer needed and make no claim about it being on.
+
+Not measured. The cost of Layered Mode: a run is one opus lead call for 3a, one for verify, one for close (more per fix round) plus one haiku call per layer and stage, against one implementer call before. The old "3.5x" figure was a prediction for a mode that never ran, so it is gone from the docs and the cost warning is qualitative; read `_usage.md` over the first runs. Also not measured: whether GREEN without a test run lands on contract more or less often than GREEN with one did, the cap of two fix repeats (kept from the old mode without new evidence), and `max_retries` 2 for the review loop (kept for the lead's variant, with a changed reason: each retry is now a lead scope call, one call per layer and a lead close). A run on a real multi-layer issue is the first evidence, and until it exists this is a first cut.
+
+Compatibility with kairos-cli (v10). The runner is code and parallelizes by wave natively, so it has no use for Agent Teams and its analysis lists Team Mode as "do not port". The stage schema above (contracts first, RED before GREEN, parallel GREEN per layer, one verify, owned paths, disk handoff) is exactly what a dispatcher can coordinate, so Layered Mode is portable to it where Agent Teams never was. The runner repo's documents still say Team Mode is not ported and need aligning after this release is tagged, since that repo pins a tagged KAIROS commit; nothing in the runner repo is edited from here.
 
 ### Deliberately Out of Scope
 

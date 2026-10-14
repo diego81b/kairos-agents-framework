@@ -13,7 +13,7 @@ Every gate below is an interactive `AskUserQuestion` prompt — **but only when 
 | 0 | Orchestrator + Impact Assessment (+ optional Context Extractor) | `00b-impact.md` + derived pipeline | Start gate |
 | 1 | PM Agent | `01-requirements.md` | ✅ / ✏️ / ⏭️ / ⛔ |
 | 2 | Architect Agent | `02-architecture.md` | ✅ / ✏️ / ⏭️ / ⛔ |
-| 3 | Implementer (test-first, code-first, or Team Mode) | Code + `03-implementation.md` | Plan gate, then ✅ / ✏️ / ⏭️ / ⛔ |
+| 3 | Implementer (test-first, code-first, or Layered Mode) | Code + `03-implementation.md` | Plan gate, then ✅ / ✏️ / ⏭️ / ⛔ |
 | 4 | Code Reviewer (review wave) | `04-review.md` | one combined review gate ✅ / ✏️ / ⏭️ / ⛔ |
 | 4b | Security Reviewer *(optional, review wave)* | `04b-security-review.md` | same gate |
 | 5 | Test Verifier (review wave) | `05-test-verification.md` | same gate |
@@ -23,7 +23,7 @@ Every gate below is an interactive `AskUserQuestion` prompt — **but only when 
 
 Phases 4, 4b and 5 run together as one **review wave**: the active reviewers read the same code, in parallel where the host allows it, and you answer one gate for all three (see [Review Wave](#review-wave-phases-4-4b-and-5)).
 
-Phase 3 routes to one of three paths, chosen from the design's facts right before the plan: the TDD Implementer (plan gate, then RED → GREEN → REFACTOR), the code-first Implementer (plan gate, then code and the tests the project calls for), or Team Mode (Claude Code only, offered with its cost when the TDD path spans two or more layers) where an Implementer Lead defines binding contracts and spawns Tests / Backend / Frontend / Database teammates in parallel before aggregating their output.
+Phase 3 routes to one of three paths, chosen from the design's facts right before the plan: the TDD Implementer (plan gate, then RED → GREEN → REFACTOR), the code-first Implementer (plan gate, then code and the tests the project calls for), or Layered Mode (Claude Code only, offered when the TDD path spans two or more layers) where an Implementer Lead defines binding contracts and the Orchestrator then runs Tests / Backend / Frontend / Database layer agents in stages before the Lead aggregates their output.
 
 Each HITL checkpoint is an interactive prompt (Claude Code's `AskUserQuestion` tool), not a text menu to reply to. Before it, if the phase's output has a Risks/Issues/Findings table with any row left undispositioned, the **Risk Disposition Loop** walks through those rows first — one at a time (or up to 4 per prompt), with **Accept / Mitigate now / Escalate / Defer** — instead of forcing an approve-or-reject on the whole table at once. Only once every row has a disposition does the whole-artifact gate below appear; it marks one option as recommended based on the phase's own status (an unresolved Escalate biases it toward Request changes), and always leaves a free-text option for detailed feedback:
 - ✅ **Approve** — continue to the next active agent
@@ -72,7 +72,8 @@ Every phase writes a single Markdown file: a small YAML frontmatter header carry
 - **Start gate**: the Orchestrator shows the derived pipeline, the rule behind each agent, the size, the effort and auto-fix budget, the model lines in effect with the place each came from when there are any, and, when it ran this time, the impact assessment's `## Summary`. One question: start, change the pipeline, re-run the impact assessment with your feedback, or stop. **Start** carries the recommendation even when the assessment escalated a risk, because an escalated question is one only you can answer and a re-run does not close it; **Request changes** is never the recommended option here. **Change the pipeline** is always offered, on a resumed run too: it is where you add or skip agents by clicking. It asks what to change (add an agent, skip an agent, or areas, effort and review loop in your own words), then lists the agents that can be added or skipped with the state each one has now, a few at a time because a prompt holds at most four options; the choice is stored as an override and the gate is shown again. Agents decided later (the review agents, QA plan, release plan, documentation) can be added or skipped here too, and the override then holds at the gate that decides them. **Request changes** appears only when the impact assessment ran in this session, because it re-runs that assessment. Pick it without typing anything and the Orchestrator asks what you want to change instead of waiting for text: answer the open questions now (each asked on its own, the answer written into `ledger/open-questions.md`), correct a measured fact, or go back to the gate. A free-text reply is a correction (`effort medium`, `skip release-planner`, `add security-reviewer`, `only analysis`, `every wave`, `every gate`), applied and stored in `ledger/run.md` as an override. **Effort is stamped into every subagent's invocation prompt**, so each agent enters Lean, Trimmed, or Full mode from a value you saw. `simple_fix` also sets the auto-fix budget to 1, widens the Risk Disposition Loop's auto-accept threshold to `medium`, and merges the plan and implementation into one step; `medium` sets the budget to 1; `significant_rework` asks for it
 - **Questions and answers at the start gate**: type a question at the gate (`why XS?`, `does it touch the export module?`, `is the T3 test really needed?`) and the Orchestrator answers it from the impact assessment, the ledger and the files the assessment cites, naming the file and line, then shows the gate again. It changes nothing by itself: if the answer shows that a measured fact is wrong, it says which correction would fix it and leaves the choice to you. A question is never re-run through the assessment and never filed as an open question, because the first regenerates the report without answering and the second leaves a question nobody owns. When you answer an open question from the **Request changes** menu, the Orchestrator re-runs the impact assessment whenever the answer changes what the change builds, touches or tests (a file, a test, a flow or a criterion added, removed or replaced) or names another size, effort, domain, test suite, contract change or change kind, and passes it the previous report and your answers. A re-run answers each of your points in one `Feedback:` line in the report's `## Effort`, either accepted with what changed or not accepted with the line of code that shows otherwise; a question you already answered is applied and not asked again. An answer that picks what the assessment already assumed does not re-run it.
 - The issue is read first, before the folder is named, and the Orchestrator says what it found (`## KAIROS Pipeline found: override block (...)`, no section, or a warning when the issue could not be read). A `## KAIROS Pipeline` section is a decision you already made, so the run **starts without asking**: the Orchestrator prints the pipeline it is about to run and goes on. It still asks when something is not a decision you have seen (the issue could not be read, an unresolved escalation, an unknown fact that gates an agent, the architect skipped against its rule, an empty pipeline). An override block (`Size:`, `Effort:`, `Epic:`, `Areas:`, `Auto-fix:`, `Skip:`, `Add:`) is applied on top of the derivation. An older checklist wins over it: the checked agents run and the impact assessment is not started; say `derive` in your prompt to ignore it
-- **Areas**: before the facts are gathered, one question, `All areas` (the default) or `Choose areas`, limits the run to some of the four areas: analysis, development, review, delivery. An `Areas:` line in the issue answers it. Inside the chosen areas the rules still derive each agent, and the start gate shows the areas that are not selected as one line. Run the same issue again later and the Orchestrator offers the remaining areas (see [Areas](/setup/templates#areas))
+- **Areas**: before the facts are gathered, one question, `All areas` (the default), `Choose areas` or `Decide each step` (next item), limits the run to some of the four areas: analysis, development, review, delivery. An `Areas:` line in the issue answers it. Inside the chosen areas the rules still derive each agent, and the start gate shows the areas that are not selected as one line. Run the same issue again later and the Orchestrator offers the remaining areas (see [Areas](/setup/templates#areas))
+- **Deciding agent by agent**: the same question has a third answer, `Decide each step`, for a run where you want the last word on every agent and not only on the areas. It covers all four areas and changes how the rules are used: at the start gate, at the implementation gate and at the review gate the Orchestrator still applies its rules, prints what they say, and then asks which agents of that point should run, with the rules' answer marked as the recommended one. You tick the agents that run. An agent you tick against the rules, or leave out against them, is stored as an `Add:` or `Skip:` override, so the issue write-back can offer to save it. The question is asked even at a gate that would otherwise continue on its own, because the question is the stop. The implementer is not part of it: which one runs still follows the design, and `Add: <implementer>` forces another. Write `decide each step` in the prompt that starts the run to answer the area question in advance, or reply it at the start gate to switch it on mid-way, and reply `derive` to go back to the rules. It is never asked when the pipeline is already decided. An issue that carries a `## KAIROS Pipeline` section (an override block or a checklist) starts without it, and a `decide each step` in the prompt does not override the section: the orchestrator says so in one line and goes on, so to decide agent by agent on that issue edit its section. Choosing **All areas** (reply `full`) is final too: no agent question is asked later, at any gate.
 - **One issue, one folder.** A folder is found by the issue reference, not by the slug (a reworded prompt for the same issue lands in the same folder), and a second folder is never offered for an issue, because it would split the ledger into two copies that drift apart. A large issue built slice by slice is one run per slice in that folder: on a finished run choose **Start a new run**, and the Orchestrator archives the finished run's reports under `runs/run-<k>/` (with a snapshot of its tracking file and settings), keeps the ledger and the triage, rebuilds the impact assessment for the new slice and tells every agent where the earlier runs are. The tracking file stays one file, with a `new run` line in its log. A folder with only a context, impact or triage file is reused, not resumed. A run left `in_progress` or `stopped` resumes **without questions** and says where it restarts; the one thing it never skips is a gate the earlier session had open, which is shown again
 - If the invocation prompt already dictates an agent list, the Orchestrator shows it at the start gate as a proposal and applies it only if you say so
 - The Orchestrator saves the run's settings to `ledger/run.md` and creates `_tracking.md`, the one file it keeps open in your editor for the rest of the run (see [Tracking File](#tracking-file))
@@ -131,7 +132,7 @@ User reviews the selected design option and API contracts (in `02-architecture.m
 
 ## Phase 3: Implementation
 
-Right before the plan, the Orchestrator chooses the implementer from facts and prints the rule that chose it: no test suite or `simple_fix` → the code-first `implementer-coder-agent`; otherwise the architecture's `test_first` fact (`yes` → `implementer-tdd-agent`, `no` → the coder), and without an architecture a project with a test suite gets TDD. On the TDD path, Team Mode is offered when two or more of backend/frontend/db are touched, Agent Teams is enabled and the host is Claude Code.
+Right before the plan, the Orchestrator chooses the implementer from facts and prints the rule that chose it: no test suite or `simple_fix` → the code-first `implementer-coder-agent`; otherwise the architecture's `test_first` fact (`yes` → `implementer-tdd-agent`, `no` → the coder), and without an architecture a project with a test suite gets TDD. On the TDD path, Layered Mode is offered when two or more of backend/frontend/db are touched and the host is Claude Code.
 
 ### Default: Implementer Agent
 
@@ -178,44 +179,41 @@ User reviews generated code and test coverage before the review phase. Presented
 `✅ Approve` · `✏️ Request changes` · `⏭️ Skip next` · `⛔ Stop`
 :::
 
-### Team Mode: Implementer Lead + 4 Teammates (Claude Code only, optional)
+### Layered Mode: Implementer Lead + layer agents (Claude Code only, optional)
 
-Offered only when its rule holds (TDD path, two or more of backend/frontend/db touched, Agent Teams enabled, Claude Code). The Orchestrator shows a cost warning (~$0.068 single vs ~$0.242 team) and waits for confirmation before proceeding.
+Offered only when its rule holds: the TDD path, two or more of backend/frontend/db touched, and Claude Code as the host. The Orchestrator shows a short cost note and waits for confirmation before proceeding. (This mode was called Team Mode until v9.5.0; see [Layered Mode setup](/setup/claude-code#layered-mode-no-extra-setup) for what changed.)
 
-**How it works — TDD across a team:**
+**How it works, TDD across layers:**
 
-The Lead applies the same RED → GREEN → REFACTOR discipline as the single agent, and splits across the same two Orchestrator invocations (3a plan, 3b execution), but distributes the work across specialists:
+The same RED → GREEN → REFACTOR discipline as the single agent, split across the same two phases (3a plan, 3b execution), but the Orchestrator coordinates the work across specialists with ordinary subagent calls, one stage at a time:
 
-1. **Step 3a — Lead** analyzes Architect output, scopes the layers in play, and defines four binding contracts (API, database, test, pattern) before any teammate starts. It writes `03-contracts.md` and `03-implementation-plan.md`, then stops. No teammate is spawned yet.
-2. **HITL — Plan gate** — Orchestrator-owned, same gate as the single agent. The plan carries the layer scoping and the Test Contract's full test-case list, so approving it approves the test plan too.
-3. **Step 3b — RED phase** — Lead is re-invoked, reads the approved contracts back from `03-contracts.md`, and spawns `teammate-tests-agent` first. Tests are written against the contracts before any implementation exists. All tests fail — this is correct and expected.
-4. **GREEN phase** — Lead spawns `teammate-backend-agent`, `teammate-frontend-agent`, `teammate-database-agent` in parallel. Their goal is to make the pre-existing tests pass.
-5. **REFACTOR phase** — Lead coordinates quality improvements across all layers while keeping tests green.
-6. **Lead** monitors contract compliance throughout, flags mismatches, and aggregates the final output.
+1. **Step 3a, Lead** analyzes the Architect output, scopes the layers in play and defines four binding contracts (API, database, test, pattern) before any layer agent starts. It writes `03-contracts.md` and `03-implementation-plan.md`, then stops. A contract that diverges from the Architect's output becomes a row in the plan's Risks table instead of a question the Lead cannot ask.
+2. **HITL, Plan gate**, Orchestrator-owned, the same gate as the single agent. The plan carries the layer scoping and the Test Contract's full test-case list, so approving it approves the test plan too.
+3. **RED**: the Orchestrator calls `teammate-tests-agent` alone. It reads the contracts from `03-contracts.md` and writes the tests, which all fail: that is correct and expected.
+4. **GREEN**: the Orchestrator calls `teammate-backend-agent`, `teammate-frontend-agent` and `teammate-database-agent` in one message, one call each, only for the layers in scope. Each writes code to the contract and a report, `03-layer-<layer>.md`.
+5. **VERIFY**: the Lead checks every layer against the contracts and runs the whole suite. This is the only stage that runs it, so parallel layers never share a build or a database. If something does not match, the Lead writes fix tasks to `03-verify.md`, the Orchestrator calls only the layers named, and VERIFY runs again. A layer that misses the same contract field twice stops the run for your decision.
+6. **REFACTOR**: the implementation layers improve their code in parallel, with the tests staying green.
+7. **CLOSE**: the Lead re-runs the suite and coverage, updates the ledger and writes `03-implementation.md`.
 
-The Lead's own mid-run Test Plan Gate (between RED and GREEN) still exists, but only on a standalone run. Under the Orchestrator it is skipped: a spawned subagent cannot reach the human, so that gate could never actually be answered, and the 3a plan gate covers the same ground before any cost is incurred. Test quality itself is re-checked in Phase 5.
+A review-loop or post-gate fix pass skips RED and REFACTOR: the Lead scopes the fix to the layers that own the files in question, those layers fix, and the Lead closes.
+
+The Lead's old mid-run Test Plan Gate (between RED and GREEN) no longer exists: the 3a plan gate covers the same ground before any cost is incurred. Test quality itself is re-checked in Phase 5.
 
 _Input: `02-architecture.md` + project profile_
 _Output: contracts + implementation plan → (approval) → all layer files + contract compliance report + coverage report_
-_Saved to: `.kairos/<feature_folder>/03-contracts.md` + `03-implementation-plan.md`, then project paths + `.kairos/<feature_folder>/03-implementation.md`_
+_Saved to: `.kairos/<feature_folder>/03-contracts.md` + `03-implementation-plan.md`, then project paths + `.kairos/<feature_folder>/03-layer-<layer>.md` + `03-verify.md` + `03-implementation.md`_
 
-::: warning Team Mode — Claude Code only (experimental)
-Team Mode requires **Claude Code's experimental Agent Teams feature**. Enable it by setting `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` in `.claude/settings.json`. Requires Claude Code v2.1.32+.
+::: info Layered Mode needs no setup
+It does not use Claude Code's experimental Agent Teams and needs no flag. `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is no longer read by KAIROS. The `team/` agents ship with the plugin and are not mirrored to other tools, so use the single Implementer Agent anywhere but Claude Code.
 
-Unlike the single Implementer Agent (which uses the `agent` tool for direct subagent spawning), Agent Teams run each teammate as a **separate Claude Code session** with its own context window. Teammates communicate peer-to-peer via a shared mailbox and coordinate via a shared task list — not just reporting back to the lead.
-
-| Tool | Agent Teams support | Team Mode |
-| --- | --- | --- |
-| **Claude Code v2.1.32+** | Experimental Agent Teams — separate sessions, peer messaging | ✅ |
-| **Cursor** | No inter-session coordination | ❌ |
-| **VS Code Copilot** | No inter-session coordination | ❌ |
-| **JetBrains / Codex CLI / others** | No inter-session coordination | ❌ |
-
-Use the single Implementer Agent in all non-Claude Code environments.
+| Tool | Layered Mode |
+| --- | --- |
+| **Claude Code (plugin)** | ✅ |
+| Cursor, VS Code Copilot, JetBrains, Codex CLI, OpenCode, Kimi Code | ❌ not offered |
 :::
 
-::: tip When is Team Mode worth it?
-Team Mode eliminates frontend/backend contract mismatches through binding contracts. It's worth the extra cost only for critical systems where perfect layer alignment cannot be verified manually. For the vast majority of features, the single agent is sufficient.
+::: tip When is Layered Mode worth it?
+Binding contracts reduce frontend/backend contract mismatches, and the stages cost more calls than one implementer: a lead call to plan, one to verify and one to close, plus a call per layer for each stage. The cost is not measured, so check `_usage.md` after your first runs. For the vast majority of features, the single agent is sufficient.
 :::
 
 ---
@@ -439,7 +437,7 @@ Without the ledger, information can be silently dropped between phases: a SOC2 c
 
 At pipeline end, the Orchestrator counts `🔴 open` items in `open-questions.md` and warns if any remain unresolved before shipping.
 
-> **Team Mode**: only `implementer-lead-agent` reads and writes the ledger. Teammates receive constraints through their binding contracts, not by direct ledger access.
+> **Layered Mode**: only `implementer-lead-agent` reads and writes the ledger. The layer agents receive constraints through their binding contracts, not by direct ledger access.
 
 ---
 
