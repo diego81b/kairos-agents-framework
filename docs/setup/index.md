@@ -93,7 +93,7 @@ kairos-agents-framework/
 │   ├── retrospective-agent.md      ← Lessons capture (standalone, post-pipeline)
 │   ├── improvement-advisor-agent.md ← Framework change proposals (standalone, infrequent)
 │   ├── dependency-audit-agent.md   ← Dependency + tech-debt backlog (standalone, periodic)
-│   └── team/             ← Team Mode specialists (Claude Code only)
+│   └── team/             ← Layered Mode agents (Claude Code only)
 ├── skills/               ← Shared checklists/formats reused across agents (see Skills & MCP)
 ├── commands/             ← Claude Code slash commands (/kairos:setup, /kairos:view)
 ├── .opencode/agents/     ← OpenCode mirror of the 17 core agents above (see Setup > OpenCode)

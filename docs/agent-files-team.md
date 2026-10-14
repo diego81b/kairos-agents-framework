@@ -1,7 +1,7 @@
-# Team Mode Agent Files — Copy & Use
+# Layered Mode Agent Files: Copy & Use
 
 ::: info Claude Code only
-These five agents are used exclusively in **Team Mode** — offered by the Orchestrator when a test-first change touches two or more of backend/frontend/db, and activated only after you confirm the cost. See [Team Mode setup](/setup/claude-code#how-to-activate-team-mode) for details.
+These five agents are the **Layered Mode** agents (called Team Mode until v9.5.0; the `agents/team/` folder and the agent ids keep their old names on purpose). The Orchestrator dispatches them, offers the mode when a test-first change touches two or more of backend/frontend/db, and activates it only after you confirm. They are not meant to be started on their own. See [how Layered Mode is offered](/setup/claude-code#how-layered-mode-is-offered) for details.
 :::
 
 > **How this stays in sync** — Each block is imported directly from the source file in the repository at build time. Any edit to the source agent file is automatically reflected here on the next build. No manual copy-paste between source and documentation is needed.
@@ -18,13 +18,13 @@ These five agents are used exclusively in **Team Mode** — offered by the Orche
 | [Teammate Frontend](#teammate-frontend) | `agents/team/teammate-frontend-agent.md` |
 | [Teammate Database](#teammate-database) | `agents/team/teammate-database-agent.md` |
 
-> The shared [Coding Discipline](skills/coding-discipline/SKILL.md) checklist used by Implementer Lead and all four teammates before implementation is in `skills/coding-discipline/SKILL.md`.
+> The shared [Coding Discipline](skills/coding-discipline/SKILL.md) checklist used by Implementer Lead and all four layer agents before implementation is in `skills/coding-discipline/SKILL.md`.
 
 ---
 
 ## Implementer Lead
 
-Team coordinator for complex multi-layer features. Claude Code only. Spawns parallel specialists: Tests, plus one per layer in scope.
+Lead of Layered Mode for complex multi-layer features. Claude Code only. Writes the contracts and the plan, then verifies and closes the run, while the Orchestrator dispatches the layer agents: Tests, plus one per layer in scope.
 
 <<< @/agents/team/implementer-lead-agent.md{md}
 

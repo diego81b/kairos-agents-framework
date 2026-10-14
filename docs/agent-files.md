@@ -41,7 +41,7 @@ No exceptions. A pull request that modifies an agent without a matching changelo
 | [Improvement Advisor](#improvement-advisor) | `agents/improvement-advisor-agent.md` | **You** |
 | [Dependency Audit](#dependency-audit) | `agents/dependency-audit-agent.md` | **You** |
 
-> Team Mode agent files are on a [separate page](/agent-files-team).
+> Layered Mode agent files (the lead and four layer agents, called Team Mode until v9.5.0) are on a [separate page](/agent-files-team).
 >
 > The shared [Contract Checklist](skills/contract-checklist/SKILL.md) used by Architect Agent and Implementer Lead is in `skills/contract-checklist/SKILL.md`.
 >
@@ -57,7 +57,7 @@ No exceptions. A pull request that modifies an agent without a matching changelo
 >
 > The shared [Artifact Bookkeeping](skills/artifact-bookkeeping/SKILL.md) reference — the recount and status-derivation rules used by PM, Architect, Impact Assessment, both Implementers, Code Reviewer, Security Reviewer, Test Verifier, Release Planner, and Documentation Agent, plus the per-phase required-frontmatter-fields table the Orchestrator's Artifact Contract Check validates against — is in `skills/artifact-bookkeeping/SKILL.md`.
 >
-> The shared [Coding Discipline](skills/coding-discipline/SKILL.md) checklist — scope discipline, anti-speculative-abstraction, and verifiable success criteria, applied before implementation by both Implementer agents and (Team Mode) Implementer Lead and all four teammates — is in `skills/coding-discipline/SKILL.md`.
+> The shared [Coding Discipline](skills/coding-discipline/SKILL.md) checklist — scope discipline, anti-speculative-abstraction, and verifiable success criteria, applied before implementation by both Implementer agents and (Layered Mode) Implementer Lead and all four layer agents — is in `skills/coding-discipline/SKILL.md`.
 
 ---
 

@@ -6,7 +6,7 @@ Intelligent multi-agent SDLC orchestration
 
 ## What's Included
 
-- **agents/** - 17 core agent definitions + 5 optional Team Mode specialists
+- **agents/** - 17 core agent definitions + 5 optional Layered Mode agents
 - **docs/** - Complete documentation site (VitePress)
 - **CHANGELOG.md** - Version history
 
@@ -61,7 +61,7 @@ A release means: bump versions + changelog, commit, tag `vX.Y.Z`, push.
 
 ## Files
 
-- `agents/` - Core agents + `team/` folder (Team Mode specialists)
+- `agents/` - Core agents + `team/` folder (Layered Mode agents)
 - `docs/` - VitePress documentation site
 - `CHANGELOG.md` - Version history
 - `internal/` - Internal guides (cost analysis, routing logic, provider specifics)
@@ -77,10 +77,10 @@ A release means: bump versions + changelog, commit, tag `vX.Y.Z`, push.
 
 | Mode | Cost | Works on | When to use |
 | --- | --- | --- | --- |
-| Single Agent (default) | ~$0.068/feature | Everywhere | All features |
-| Team Mode (optional) | ~$0.242/feature | Claude Code only | Offered on the TDD path when two or more of backend/frontend/db are touched |
+| Single Agent (default) | Baseline (read `_usage.md`) | Everywhere | All features |
+| Layered Mode (optional) | Not measured (read `_usage.md`) | Claude Code only | Offered on the TDD path when two or more of backend/frontend/db are touched |
 
-Team Mode activates a Lead + parallel specialists (Tests plus Backend, Frontend, Database for the layers in scope). The Orchestrator offers it only when the change spans two or more layers, Agent Teams is enabled and the host is Claude Code, and always shows a cost warning before enabling it.
+Layered Mode (called Team Mode until v9.5.0) runs a Lead plus layer agents in stages that the Orchestrator coordinates as plain subagent calls: Tests first and alone, then Backend, Frontend and Database in parallel for the layers in scope, then one verification against the contracts. It needs no flag (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is no longer needed). The Orchestrator offers it only when the change spans two or more layers and the host is Claude Code, and asks for confirmation before enabling it.
 
 ## License
 

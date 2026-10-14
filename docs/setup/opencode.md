@@ -43,8 +43,8 @@ This is what every agent body means by "Follow `[skill-name]`" — a plain relat
 `agents/` (Claude-Code-canonical) remains the source of truth. `.opencode/agents/*.md` is a derived mirror maintained by hand — any edit to an `agents/*.md` file must update its `.opencode/agents/` counterpart in the same change. If you maintain your own copy instead of pulling updates from this repo, re-copy after KAIROS updates.
 :::
 
-::: warning No Team Mode mirror
-`agents/team/*.md` (the 5 Team Mode files) are **not** mirrored here. They're not just a different frontmatter — their bodies depend on Claude Code's Agent Teams feature throughout: `implementer-lead-agent.md` requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`, spawns teammates via Claude Code's `agent` tool, and its Test Plan Gate step calls `AskUserQuestion` unconditionally with no text-menu fallback (unlike every other gate in these agents). A frontmatter-only conversion would ship a subagent that can't function. See the comparison table below.
+::: warning No Layered Mode mirror
+`agents/team/*.md` (the 5 Layered Mode files, called Team Mode until v9.5.0) are **not** mirrored here. The reason that once justified this, their dependence on Claude Code's Agent Teams feature, is gone since v9.5.0: the orchestrator now runs the mode as plain subagent calls in stages. But nobody has run Layered Mode on OpenCode, so mirroring the files is a separate decision, deferred for now. The mirrored orchestrator offers the mode only on Claude Code, so nothing in this pack asks for it. See the comparison table below.
 :::
 
 ## Step 2 — How the frontmatter was converted
@@ -180,7 +180,7 @@ Reply with your choice as plain text. This is enforced by the agent body's own i
 
 ⚠️ OpenCode subagents are invoked through its `task` tool, and its docs describe agents running "multiple units of work in parallel," but the exact concurrency semantics aren't fully documented. Treat this as roughly equivalent to Codex's parallel subagent support, but verify against current OpenCode docs before depending on it.
 
-This is also why KAIROS's Team Mode (`agents/team/*.md`) has no OpenCode mirror at all, not just an unclaimed one: `implementer-lead-agent.md` requires Claude Code's `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` flag, spawns teammates through Claude Code's own `agent` tool, and its Test Plan Gate calls `AskUserQuestion` with no fallback branch. None of that is a frontmatter difference — it's coordination logic with no OpenCode equivalent, so converting only the frontmatter would ship a subagent that fails the moment it reaches that step. If you want Team Mode's specific behavior (parallel teammates, shared contracts) on OpenCode, treat it as new work — rewrite the coordination logic against OpenCode's own `task` tool — not a port.
+KAIROS's Layered Mode (`agents/team/*.md`, a lead plus layer agents run in stages) has no OpenCode mirror yet. Its coordination no longer depends on Claude Code's Agent Teams, since the orchestrator runs it as plain subagent calls, but nobody has run it on OpenCode, and its parallel GREEN stage has not been tried against OpenCode's `task` tool. Mirroring the five files is a separate decision, and until then the mirrored orchestrator offers the mode only on Claude Code. If you want it on OpenCode, treat it as its own piece of work: mirror the files and check the stage dispatch against OpenCode's `task` tool.
 
 ## Step 7 — Save `.kairos/` outputs
 
@@ -197,7 +197,7 @@ Every KAIROS agent's own "Write to Project" step already instructs it to save it
 | Auto-delegation via `description` | ✅ Automatic | ✅ Automatic, plus manual `@agent-name` |
 | HITL built-in gate | ✅ Orchestrator-enforced, `AskUserQuestion` | ⚠️ No `AskUserQuestion` — uses each agent's existing text-menu fallback |
 | Parallel subagents | ✅ | ⚠️ `task` tool supports it per docs; exact concurrency behavior unverified — confirm against current docs |
-| Team Mode (`agents/team/`) | ✅ Native (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`) | ❌ Not shipped — coordination logic is Claude-Code-specific, see Step 6 |
+| Layered Mode (`agents/team/`) | ✅ Offered by the orchestrator, no flag needed | ❌ Not shipped (not mirrored and not run here yet), see Step 6 |
 | `.kairos/` persistence | ✅ Automatic | ✅ Automatic, same agent-level instructions |
 | Cost | Claude subscription | Any configured provider |
 

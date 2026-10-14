@@ -47,7 +47,7 @@ your-project/
 │       └── dependency-audit-agent.md       ← Standalone, periodic: dependency + tech-debt backlog
 ```
 
-`agents/team/` (Team Mode) isn't included — see the warning at the bottom of this page.
+`agents/team/` (Layered Mode) isn't included — see the warning at the bottom of this page.
 
 ## Step 2 — How subagents are loaded
 
@@ -178,6 +178,6 @@ Same reasoning/execution split as the shipped `agents/*.md` frontmatter — see 
 | `retrospective-agent` | `sonnet` | Sufficient for lessons synthesis from existing artifacts |
 | `dependency-audit-agent` | `sonnet` | Scanning and tabulation; upgrade only for large monorepos with tangled transitive trees |
 
-::: warning Team Mode not supported
-Cursor does not support KAIROS Team Mode agents (`agents/team/`). Those require Claude Code with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`.
+::: warning Layered Mode not supported
+Cursor does not run KAIROS Layered Mode (`agents/team/`, called Team Mode until v9.5.0). The orchestrator offers it only on Claude Code, and these agents are not mirrored for Cursor. Use the single implementer.
 :::

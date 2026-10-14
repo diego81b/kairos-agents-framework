@@ -166,6 +166,6 @@ Same reasoning/execution split as the shipped `agents/*.md` frontmatter — see 
 | `retrospective-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
 | `dependency-audit-agent` | `sonnet` | GPT-4o, Gemini 1.5 Pro |
 
-::: warning Team Mode not supported
-VS Code does not support KAIROS Team Mode agents (`agents/team/`). Those require Claude Code with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`.
+::: warning Layered Mode not supported
+VS Code does not run KAIROS Layered Mode (`agents/team/`, called Team Mode until v9.5.0). The orchestrator offers it only on Claude Code, and these agents are not mirrored for VS Code. Use the single implementer.
 :::

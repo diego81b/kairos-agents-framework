@@ -65,7 +65,7 @@ No install required — these ship as part of the KAIROS plugin itself, under `s
 | [`code-simplification`](/skills/code-simplification/SKILL) | REFACTOR-step checklist: what to simplify, how to confirm behavior didn't change, when to stop | `implementer-tdd-agent`, `implementer-coder-agent` (REFACTOR step) |
 | [`artifact-bookkeeping`](/skills/artifact-bookkeeping/SKILL) | Pure-arithmetic rules for tallying a Risk/Issue/Finding table by impact and deriving each phase's pass/fail status from a fixed threshold — no agent "eyeballs" a count | `pm-agent`, `architect-agent`, `impact-assessment-agent`, both implementers, `code-reviewer-agent`, `security-reviewer-agent`, `test-verifier-agent`, `qa-plan-agent`, `release-planner-agent`, `documentation-agent`, `orchestrator-agent` |
 | [`artifact-template`](/skills/artifact-template/SKILL) | The mandatory 4-line `## Summary` head block every phase artifact opens with, and the fixed column sets for any table the Risk Disposition Loop parses — so a gate is readable in seconds and no two phases spell `Mitigation/Fix` differently | every agent that writes a `.kairos/` phase artifact, plus `orchestrator-agent` (reads the Summary at each gate) |
-| [`coding-discipline`](/skills/coding-discipline/SKILL) | Pre-implementation checklist: scope discipline, no speculative abstraction, surface assumptions, trust boundaries, WHY-only comments | `implementer-tdd-agent`, `implementer-coder-agent`, `implementer-lead-agent`, all 4 teammate agents |
+| [`coding-discipline`](/skills/coding-discipline/SKILL) | Pre-implementation checklist: scope discipline, no speculative abstraction, surface assumptions, trust boundaries, WHY-only comments | `implementer-tdd-agent`, `implementer-coder-agent`, `implementer-lead-agent`, all 4 layer agents (`teammate-*-agent`) |
 | [`issue-tracker-comment`](/skills/issue-tracker-comment/SKILL) | Shared jira/glab/bitbucket commands for posting a phase's output as a comment on the originating issue — whole file, title-prefixed, or the extract body `qa-plan-agent` sends a tester (in an orchestrated run the orchestrator posts it, after the QA gate) | every phase agent's own optional tracker-comment step |
 
 These replace what used to be third-party plugin dependencies (`karpathy-guidelines` and 11 Trail of Bits plugins) — see `CHANGELOG.md` for the removal. Their guidance was folded into each consuming agent's own checklist natively (a concrete check item, an unconditional process step) rather than gated behind "if this external skill is installed."
@@ -93,11 +93,11 @@ These replace what used to be third-party plugin dependencies (`karpathy-guideli
 | `retrospective-agent` | Post | `deep-research` | — |
 | `improvement-advisor-agent` | Post | — | — |
 | `dependency-audit-agent` | Standalone | `deep-research` | — |
-| `implementer-lead-agent` | Team | — | — |
-| `teammate-backend-agent` | Team | `security-review` | — |
-| `teammate-database-agent` | Team | — | — |
-| `teammate-frontend-agent` | Team | `verify`/`run` | Chrome DevTools MCP, Playwright MCP |
-| `teammate-tests-agent` | Team | `verify`/`run` | Chrome DevTools MCP, Playwright MCP |
+| `implementer-lead-agent` | Layered | — | — |
+| `teammate-backend-agent` | Layered | `security-review` | — |
+| `teammate-database-agent` | Layered | — | — |
+| `teammate-frontend-agent` | Layered | `verify`/`run` | Chrome DevTools MCP, Playwright MCP |
+| `teammate-tests-agent` | Layered | `verify`/`run` | Chrome DevTools MCP, Playwright MCP |
 
 Every agent above also applies whichever internal (KAIROS-authored) skill from the table above fits its role — omitted here since this table tracks *optional* enhancements, and the internal skills are a native part of each agent's own process, not a bolt-on. `agent-contract` specifically is omitted from every row above for the same reason and because it applies almost universally (see the internal-skills table above for its full agent list), not per-phase.
 

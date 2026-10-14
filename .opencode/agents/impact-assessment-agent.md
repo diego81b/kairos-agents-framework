@@ -111,7 +111,7 @@ Decompose the issue into the sequence of tasks it actually takes, so the aggrega
 - One row per task, ordered so that a task never precedes the one it depends on.
 - Name dependencies explicitly by task ID (`T2 depends on T1`), not by implication of ordering.
 - Estimate each task on the same scale you used for the aggregate (`simple_fix` / `medium` / `significant_rework` applied to that task alone). A breakdown whose tasks don't add up to the aggregate is a signal the aggregate is wrong — revisit step 3 rather than reconciling the numbers by hand.
-- Tag each task with the domain it lands in, from the list in step 2. Tag honestly: the orchestrator's Team Mode check counts the backend/frontend/db domains in step 2, and a domain listed for a task that does not touch it offers Team Mode for nothing.
+- Tag each task with the domain it lands in, from the list in step 2. Tag honestly: the orchestrator's Layered Mode check counts the backend/frontend/db domains in step 2, and a domain listed for a task that does not touch it offers Layered Mode for nothing.
 - In **Lean Mode** (`simple_fix`), a breakdown of one or two lines is the correct output — do not manufacture tasks to fill a table.
 
 **This is a work list, not a set of tickets.** No issue titles, no acceptance criteria, no labels, no posting anywhere — the `issues-generator` skill exists for that and this must not duplicate it. What belongs here is only what the human at the gate and the orchestrator's agent-selection step need in order to judge the shape of the work.

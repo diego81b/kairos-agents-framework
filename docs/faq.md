@@ -26,7 +26,7 @@ A: No. The Impact Assessment measures how big the change is, and the Orchestrato
 
 **Q: Which tool do I need?**
 
-A: Claude Code gets the full experience, including the plugin, the slash commands, and Team Mode. Cursor, VS Code/Copilot, JetBrains, Codex CLI, OpenCode and Kimi Code all work, with pre-converted agent packs for the last two. Gates fall back to a printed menu wherever `AskUserQuestion` is unavailable. See [Setup](./setup/).
+A: Claude Code gets the full experience, including the plugin, the slash commands, and Layered Mode. Cursor, VS Code/Copilot, JetBrains, Codex CLI, OpenCode and Kimi Code all work, with pre-converted agent packs for the last two. Gates fall back to a printed menu wherever `AskUserQuestion` is unavailable. See [Setup](./setup/).
 
 ---
 
@@ -60,9 +60,9 @@ A: Treat it as a strong draft that still needs your review. The point of the gat
 
 ---
 
-**Q: What does Team Mode cost?**
+**Q: What does Layered Mode cost?**
 
-A: Roughly 3.5× a normal run, and it needs Claude Code with the experimental Agent Teams flag. The Orchestrator shows the cost warning and requires explicit confirmation before it activates. For most features the single implementer is the right call.
+A: It is not measured. A Layered Mode run makes more calls than a single implementer (a lead call to plan, one to verify and one to close, plus a call per layer for each stage), so expect it to use more; read `_usage.md` after a run to see what it spent. It needs Claude Code and no flag (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is no longer needed), and the Orchestrator asks for confirmation before it activates. For most features the single implementer is the right call. It was called Team Mode until v9.5.0.
 
 ---
 

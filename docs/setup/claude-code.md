@@ -27,7 +27,7 @@ claude plugin enable kairos
 
 Confirm with `claude plugin list`.
 
-This gets you the 17 core agents, the internal skills (`contract-checklist`, `coding-discipline`, etc.), and the `/kairos:setup` / `/kairos:view` / `/kairos:usage` slash commands in one shot. Agents are invoked with the `kairos:` scope — `@kairos:orchestrator-agent`, `@kairos:pm-agent` — and Team Mode agents with `@kairos:team:implementer-lead-agent`.
+This gets you the 17 core agents, the internal skills (`contract-checklist`, `coding-discipline`, etc.), and the `/kairos:setup` / `/kairos:view` / `/kairos:usage` slash commands in one shot. Agents are invoked with the `kairos:` scope — `@kairos:orchestrator-agent`, `@kairos:pm-agent` — and the Layered Mode agents with `@kairos:team:implementer-lead-agent` (the orchestrator dispatches them; you do not start them yourself).
 
 ### Option B — Manual copy
 
@@ -71,7 +71,7 @@ your-project/
 │       ├── retrospective-agent.md         ← Standalone, post-pipeline: lessons capture
 │       ├── improvement-advisor-agent.md   ← Standalone, infrequent: framework change proposals
 │       ├── dependency-audit-agent.md      ← Standalone, periodic: dependency + tech-debt backlog
-│       └── team/                      ← Team Mode specialists
+│       └── team/                      ← Layered Mode agents (folder name kept from v9.4)
 │           ├── implementer-lead-agent.md
 │           ├── teammate-tests-agent.md
 │           ├── teammate-backend-agent.md
@@ -92,7 +92,7 @@ Copy **both** `implementer-tdd-agent.md` and `implementer-coder-agent.md`. Durin
 - `implementer-tdd-agent` — **default** when the project has a test suite. Full TDD cycle (RED → GREEN → REFACTOR).
 - `implementer-coder-agent` — **code-first**. Writes the code, then the tests its plan's Test Decision calls for: it extends existing tests of the modules it touches and adds a regression test for a bug fix. Chosen for `simple_fix`, for projects with no test suite, and when the architecture says `test_first: no`.
 
-The `team/` folder (`implementer-lead-agent.md` + teammates) is only needed if you want Team Mode to be offered.
+The `team/` folder (`implementer-lead-agent.md` + the four layer agents) is only needed if you want Layered Mode to be offered.
 :::
 
 ## Step 2 — Understand how subagents are loaded
@@ -245,116 +245,80 @@ Requires the respective CLI authenticated: `jira init`, `glab auth login`, or a 
 | Orchestrator seems to vanish mid-pipeline with no error | Same root cause as above — a subagent-dispatched orchestrator dies if its parent session ends or resets. Restart the same way as above; the run resumes from the last completed phase (Step 0b of `orchestrator-agent.md`) |
 | `claude plugin install` succeeds but agents don't show up | The plugin may need explicit activation — run `claude plugin enable kairos` and confirm with `claude plugin list` |
 
-## Team Mode — additional setup
+## Layered Mode: no extra setup
 
-Team Mode activates a coordinated team of 5 specialists in place of the single implementer agent (`implementer-tdd-agent` or `implementer-coder-agent`). It uses Claude Code’s **experimental Agent Teams feature**, available only in Claude Code.
+Layered Mode replaces the single implementer (`implementer-tdd-agent` or `implementer-coder-agent`) with a lead and up to four layer agents: tests, backend, frontend and database. It needs no flag and no setting, only Claude Code and the plugin, which ships the `team/` folder with the rest.
 
-### Enable Agent Teams
+::: info Formerly Team Mode
+Until v9.5.0 this was called Team Mode and ran on Claude Code's experimental Agent Teams feature. Under the Orchestrator it could not start: the Orchestrator dispatches the lead as a subagent, and only the main conversation can create an Agent Team. The mode now runs as ordinary subagent calls that the Orchestrator coordinates. The agent ids and file names are unchanged (`kairos:team:implementer-lead-agent`, `teammate-*-agent`), so a `## KAIROS Pipeline` checklist or an `Add:` line that names them keeps working.
 
-Requires Claude Code v2.1.32 or later:
+`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is no longer needed and KAIROS no longer reads it. If it is still set in your settings nothing in KAIROS depends on it, but what Claude Code does with it while the Orchestrator dispatches named subagents has not been verified here, so you may want to remove it if you set it only for KAIROS.
+:::
 
-```bash
-claude --version
-```
+### What changed from the Agent Teams version
 
-Set the flag at whichever scope fits your workflow:
-
-**Project-level** (recommended — commits the setting to git so the whole team gets it):
-
-```json
-// .claude/settings.json in your project root
-{
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
-  }
-}
-```
-
-**Global** (all projects on this machine — developer preference):
-
-```json
-// ~/.claude/settings.json
-{
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
-  }
-}
-```
-
-**Shell session** (temporary, for testing):
-
-```bash
-export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
-claude
-```
-
-### Why Claude Code only?
-
-| Tool | Agent Teams support | Team Mode |
+| | Team Mode (v9.4 and earlier) | Layered Mode (v9.5.0) |
 | --- | --- | --- |
-| **Claude Code v2.1.32+** | Experimental Agent Teams — separate sessions, peer messaging | ✅ |
-| Cursor | No inter-session coordination | ❌ |
-| VS Code / JetBrains / others | No inter-session coordination | ❌ |
+| Coordinator | The lead, creating an Agent Team | The Orchestrator, with plain subagent calls |
+| Needs | Experimental flag, Claude Code 2.1.32 or later, an interactive main session | Claude Code with the plugin |
+| Started under the Orchestrator | No: the lead had no way to create a team | Yes |
+| Peer messaging and a shared task list | Offered; in practice teammates only messaged the lead | Not used |
+| Live progress, messaging a running teammate | Yes | No: each call returns a report on disk |
+| Fixing a contract mismatch | A message to the live teammate | A new call that reads the fix tasks from disk, in a fresh context |
+| Who runs the test suite | Every teammate | Only the lead's verify stage |
+| Running the lead on its own | Mentioned, never documented as a path | Not supported: the lead is dispatched by the Orchestrator |
 
-With Agent Teams, each teammate runs in its **own Claude Code session** with its own context window. Teammates communicate peer-to-peer via a shared mailbox and coordinate work via a shared task list — not just reporting results back to the lead. This is fundamentally different from the single `implementer-tdd-agent` or `implementer-coder-agent`, which uses the `agent` tool for direct subagent spawning within a single session.
+What it keeps from the old design: four binding contracts written before any layer starts, tests before code (RED before GREEN), owned paths per layer, the layers working in parallel, and one compliance check against the contracts.
 
-### How to activate Team Mode
+What it costs is not measured. A run is one `opus` lead call to plan, one to verify and one to close (more for each fix round), plus one `haiku` call per layer for each stage. The old "3.5 times" figure predicted a mode that never ran, so it is gone. Read `_usage.md` after the first runs to see what your project pays.
 
-Team Mode is never activated automatically. Right before the implementation plan, when the TDD path was chosen, two or more of backend/frontend/db are touched, Agent Teams is enabled and the host is Claude Code, the Orchestrator offers it: it shows a cost warning and asks for confirmation (the same happens when an issue checklist or an `Add:` override names `implementer-lead-agent`):
+### How Layered Mode is offered
 
-```
-⚠️  TEAM MODE — COST WARNING
-
-Single Agent:  ~$0.068/feature  (implementer-tdd-agent)
-Team Mode:     ~$0.242/feature  (3.5× more — Claude Code only, experimental)
-
-Why offered:   <layers in domains>, Agent Teams enabled
-Team spawns:   Lead + Tests + one teammate per layer in scope (Agent Teams)
-```
-
-then a three-option prompt: **Confirm Team Mode**, **Single agent**, **Cancel pipeline**.
-
-### What the Lead spawns and when
-
-The Implementer Lead applies real TDD across the team in three sequential phases:
+It is never started automatically. Right before the implementation plan, when the TDD path was chosen, two or more of backend/frontend/db are touched and the host is Claude Code, the Orchestrator offers it with a short cost note and asks for confirmation. The same question appears when an issue checklist or an `Add:` override names `implementer-lead-agent`:
 
 ```
-Implementer Lead
-│
-├── RED phase ──► teammate-tests-agent      (spawned first, alone)
-│                  Writes all tests before any implementation.
-│                  All tests fail — this is correct.
-│
-│   [HITL: test plan gate — you review the test suite here]
-│
-├── GREEN phase ─► teammate-backend-agent    ┌
-│                  teammate-frontend-agent   ├── spawned in parallel,
-│                  teammate-database-agent   ┘   only for layers in scope
-│                  Goal: make the pre-existing tests pass.
-│
-└── REFACTOR ───► all three teammates        (quality improvements,
-                                         tests must stay green)
+⚠️  LAYERED MODE
+
+Single agent:  implementer-tdd-agent, one call per step
+Layered Mode:  Lead + Tests + one agent per layer in scope, in stages
+               (cost not measured — read _usage.md after the run)
+
+Why offered:   <layers in domains>
+Worth it for:  changes where the layers must agree on binding contracts.
 ```
 
-### Verify Agent Teams is enabled
+then a three-option prompt: **Confirm Layered Mode**, **Single agent**, **Cancel pipeline**.
 
-Check that `Claude Code v2.1.32+` is installed and the env var is set:
+### Stages
 
-```bash
-claude --version
+```
+3a  Lead (opus)    reads the design, writes the four contracts and the plan   → plan gate (you approve)
+3b  RED            tests agent      writes the failing tests, alone
+    GREEN          backend / frontend / database agents, in parallel, only the layers in scope
+    VERIFY         lead             checks every layer against the contracts and runs the whole suite
+    FIX            only the layers VERIFY named, then VERIFY again
+    REFACTOR       the implementation layers, in parallel, tests stay green
+    CLOSE          lead             re-runs the suite, updates the ledger, writes 03-implementation.md
 ```
 
-You can also verify the setting is active by looking at `.claude/settings.json`:
+A review-loop or post-gate fix pass skips RED and REFACTOR: the lead scopes the fix to the layers that own the files in question, those layers fix, and the lead closes.
 
-```json
-{
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
-  }
-}
-```
+Four rules keep the parallel part safe:
 
-Without this flag, the Lead cannot create a team and Team Mode will not work.
+- **One runner of the suite.** The GREEN and REFACTOR layers write code to the contract and run static checks on their own files at most. Only the lead's VERIFY and CLOSE stages run the test suite, a build or a migration, so three agents in one worktree never trample each other's output. RED runs alone, so the tests agent may run its own new tests to confirm they fail.
+- **One writer of shared state.** Only the lead writes the ledger and the contracts. Each layer agent writes its own report, `03-layer-<layer>.md`, and the lead writes `03-verify.md`; the Orchestrator keeps `run.md`.
+- **Handoff on disk.** Contracts, fix tasks and cross-domain requests travel as files in the feature folder, not pasted into prompts. A layer that needs a change in another layer's files says so in its report, and the lead routes it.
+- **At most two repeats per contract field.** A layer that misses the same field twice stops the run for your decision instead of being asked a third time.
+
+Contract mismatches found while the lead writes the contracts appear as rows in the plan's `## Risks` table, so you resolve them at the plan gate with the same Accept, Mitigate now, Escalate and Defer options as any other row. Escalate sends the work back to the architect.
+
+### Where Layered Mode runs
+
+| Host | Layered Mode |
+| --- | --- |
+| **Claude Code plugin** | Yes. The Orchestrator coordinates the stages above. |
+| OpenCode, Kimi Code, Cursor, VS Code, JetBrains, Codex | Not offered. The `team/` agents are not mirrored there, and the Orchestrator offers the mode only on Claude Code. Use the single implementer. |
+| **kairos-cli** (the v10 runner, under analysis, no code yet) | Planned, not released. A runner schedules waves natively, so it needs no Agent Teams: the same stages (contracts first, RED before GREEN, parallel GREEN per layer, one verify) are what its dispatcher would run. Its analysis lists the old Team Mode as not ported, and that stays true of Agent Teams. |
 
 ---
 
@@ -369,11 +333,12 @@ You ──► Orchestrator
          │           or
          │          implementer-coder-agent (code-first)
          │           or
-         │          Implementer Lead-agent (Team Mode)
-         │           ├── teammate-tests-agent    [HITL: test plan gate]
+         │          Implementer Lead-agent (Layered Mode)
+         │           ├── teammate-tests-agent    [RED, alone]
          │           ├── teammate-backend-agent  ┌
-         │           ├── teammate-frontend-agent ├── parallel
-         │           └── teammate-database-agent ┘
+         │           ├── teammate-frontend-agent ├── GREEN, parallel
+         │           ├── teammate-database-agent ┘
+         │           └── lead verifies, layers refactor, lead closes
          ├─[HITL]─► Code Reviewer         → .kairos/04-review.md + .md
          ├─[HITL]─► Test Verifier         → .kairos/05-test-verification.md + .md
          └─[HITL]─► Release Planner       → .kairos/06-deployment-plan.md + .md
@@ -396,7 +361,7 @@ Claude Code picks a subagent's model in this order: the `model` parameter of the
    pm-agent: haiku
    code-reviewer-agent: opus
    ```
-   It has three limits. It holds aliases only (`opus`, `sonnet`, `haiku`, `fable`), because the per-call parameter takes neither `inherit` nor a full model ID; a line with anything else is reported and ignored. It applies only to agents the orchestrator dispatches: `impact-assessment`, `bug-triage`, `pm`, `architect`, both implementers, `code-reviewer`, `security-reviewer`, `test-verifier`, `qa-plan`, `release-planner` and `documentation`. The orchestrator itself, the agents you start yourself (`context-extractor`, `retrospective`, `improvement-advisor`, `dependency-audit`) and Team Mode teammates keep their frontmatter model. And it is Claude Code only: OpenCode and Kimi Code ignore it (their own model settings are on their setup pages).
+   It has three limits. It holds aliases only (`opus`, `sonnet`, `haiku`, `fable`), because the per-call parameter takes neither `inherit` nor a full model ID; a line with anything else is reported and ignored. It applies only to agents the orchestrator dispatches: `impact-assessment`, `bug-triage`, `pm`, `architect`, both implementers, `code-reviewer`, `security-reviewer`, `test-verifier`, `qa-plan`, `release-planner` and `documentation`. The orchestrator itself and the agents you start yourself (`context-extractor`, `retrospective`, `improvement-advisor`, `dependency-audit`) keep their frontmatter model. Since v9.5.0 the Layered Mode lead and layer agents are dispatched by the orchestrator, so a line such as `teammate-backend-agent: sonnet` applies to them too. And it is Claude Code only: OpenCode and Kimi Code ignore it (their own model settings are on their setup pages).
 2. **Edit the `model:` frontmatter** in your `.claude/agents/` copies. This is the way to get `inherit`, a full model ID (e.g. `claude-opus-5-5`), or a different model for the agents option 1 does not reach. Downside: your edits are local forks, so re-apply them after re-copying updated KAIROS agents.
 3. **Global subagent model** — `CLAUDE_CODE_SUBAGENT_MODEL` in `settings.json` is only the fallback for a subagent that has no `model:` of its own. Every KAIROS agent declares one, so by itself the variable changes nothing. Add `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1` to make it override both the frontmatter and the per-call parameter (which also switches `.kairos/.models` off):
    ```json
@@ -424,7 +389,7 @@ Claude Code accepts short aliases that always resolve to the latest model in eac
 |-------|------------|--------|
 | `sonnet` | Latest Sonnet | The 10 execution agents — good balance of quality and speed |
 | `opus` | Latest Opus | Orchestrator and the 6 other reasoning-heavy agents (architect, context extractor, impact assessment, security reviewer, improvement advisor, bug triage) |
-| `haiku` | Latest Haiku | Team Mode teammates — fast and cost-efficient |
+| `haiku` | Latest Haiku | Layered Mode layer agents — fast and cost-efficient |
 
 ### Per-agent defaults
 
@@ -450,9 +415,9 @@ These are the tiers `agents/*.md` actually ships with — same split as "Customi
 | `retrospective-agent` | `sonnet` | Sufficient for lessons synthesis from existing artifacts |
 | `dependency-audit-agent` | `sonnet` | Scanning and tabulation; upgrade only for large monorepos with tangled transitive trees |
 
-### Team Mode agents
+### Layered Mode agents
 
 | Agent | Model | Notes |
 |-------|-------|-------|
-| `implementer-lead-agent` | `opus` | Coordinates teammates — same tier as implementer |
+| `implementer-lead-agent` | `opus` | Writes the contracts, verifies each layer against them, closes the pass: three or more calls per run |
 | `teammate-*-agent` (×4) | `haiku` | Scoped, single-responsibility tasks — optimised for speed and cost |

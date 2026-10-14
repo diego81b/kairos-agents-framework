@@ -63,19 +63,19 @@ The two `pre` rows differ. Context Extractor is standalone: you launch it yourse
 
 The other four sit outside this table entirely, all invoked directly by you rather than scheduled by the pipeline. **Bug Triage** is the entry point when what you have is a defect rather than a feature: it reproduces, finds the root cause, and recommends where the fix re-enters the pipeline. It is also a standalone agent the Orchestrator may dispatch itself — when your input reads as a bug report and no triage exists, it offers to run it and then gates the result like any phase artifact. **Dependency Audit** runs every few months outside any feature, turning dependencies and accumulated debt into a prioritized backlog at `.kairos/_tech-debt.md`. **Retrospective Agent** distills a finished feature's own artifacts into lessons, appended to the project-root `.kairos/_lessons.md`; **Improvement Advisor** reads that file back every few features and proposes framework changes as ADR records, never editing an agent file itself. See [All Agents](./agents) for all four.
 
-### Team Mode — optional extension (Claude Code only)
+### Layered Mode: optional extension (Claude Code only)
 
-For complex multi-layer features, the Orchestrator offers **Team Mode** when the TDD path was chosen, two or more of backend/frontend/db are touched, Agent Teams is enabled and the host is Claude Code. On your confirmation it replaces the single Implementer Agent with a coordinated team:
+For complex multi-layer features, the Orchestrator offers **Layered Mode** when the TDD path was chosen, two or more of backend/frontend/db are touched and the host is Claude Code. On your confirmation it replaces the single Implementer Agent with a lead and up to four layer agents, which the Orchestrator runs in stages (tests first and alone, then the layers in parallel, then one verification against the contracts):
 
 | Agent | Role |
 | --- | --- |
-| **Implementer Lead** | Creates binding contracts, spawns and monitors parallel teammates for the layers in scope |
+| **Implementer Lead** | Creates binding contracts, verifies every layer against them and runs the full test suite |
 | **Teammate Tests** | Generates full test suite (RED phase first) |
 | **Teammate Backend** | Implements APIs per contract |
 | **Teammate Frontend** | Implements UI per contract |
 | **Teammate Database** | Creates schema and migrations per contract |
 
-Team Mode is ~3.5× more expensive (~$0.242 vs ~$0.068 per feature) and available only in Claude Code. The technical reason: Team Mode requires one agent to spawn other agents programmatically at runtime — Claude Code supports this via the `agent` tool; Cursor, VS Code, JetBrains and other tools do not. The Orchestrator shows a cost warning and requires explicit confirmation before activating it.
+A Layered Mode run makes more calls than a single implementer (one lead call to plan, one to verify and one to close, plus a call per layer for each stage); what that costs is not measured, so read `_usage.md` after the first runs. It is available only in Claude Code. The Orchestrator coordinates plain subagent calls, with no Agent Teams, no peer messaging and no live progress, and `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is no longer needed. It asks for confirmation before activating the mode. It was called Team Mode until v9.5.0.
 
 ---
 
@@ -110,7 +110,7 @@ Not every task needs the full pipeline, and you don't pick agents from a menu. T
 | Decided | Agents |
 |---|---|
 | **At the start** | `pm-agent`, `architect-agent`, whether code is written at all, `code-reviewer-agent` |
-| **Right before the plan** | which implementer: `implementer-tdd-agent`, the code-first `implementer-coder-agent`, or Team Mode (offered with its ~3.5× cost) |
+| **Right before the plan** | which implementer: `implementer-tdd-agent`, the code-first `implementer-coder-agent`, or Layered Mode (offered, with a note that its cost is not measured) |
 | **At the implementation gate** | `test-verifier-agent` (the diff has a test file), `security-reviewer-agent` |
 | **At the review gate** | `qa-plan-agent`, `release-planner-agent`, `documentation-agent` |
 
@@ -159,7 +159,7 @@ agents/
 ├── retrospective-agent.md       ← Standalone, post-pipeline: lessons capture
 ├── improvement-advisor-agent.md ← Standalone, infrequent: framework change proposals (ADRs)
 ├── dependency-audit-agent.md    ← Standalone, periodic: dependency + tech-debt backlog
-└── team/                        ← Team Mode specialists
+└── team/                        ← Layered Mode agents (lead + layer agents)
     ├── implementer-lead-agent.md
     ├── teammate-tests-agent.md
     ├── teammate-backend-agent.md
