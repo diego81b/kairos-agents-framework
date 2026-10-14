@@ -29,7 +29,7 @@ Two formats are read:
 
 - no test suite in the project, or effort `simple_fix` → `implementer-coder-agent`;
 - otherwise the architecture's `test_first` fact decides: `yes` → `implementer-tdd-agent`, `no` → `implementer-coder-agent`. Without an architecture, a project with a test suite gets `implementer-tdd-agent`;
-- on the TDD path, Team Mode (`implementer-lead-agent`) is offered when two or more of backend/frontend/db are touched, `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is set and you are in Claude Code. You still confirm its ~3.5× cost.
+- on the TDD path, Layered Mode (`implementer-lead-agent`) is offered when two or more of backend/frontend/db are touched and you are in Claude Code. No flag is needed, and you still confirm it; what it costs is not measured, so read `_usage.md` after a run.
 
 `implementer-coder-agent` is **code-first**, not code-only: it writes the code, then adds or updates tests where the project has them. When the modules it touches already have tests it must extend them, and it may skip tests only with a written reason in the plan.
 
@@ -38,7 +38,7 @@ An agent runs only when its rule fires **and** its area is selected (see [Areas]
 Each decision taken during the run is printed at the gate before it, with the rule that fired. Reply there to change it (`add security-reviewer`, `skip release-planner`): the correction holds for the rest of the run and is logged in `_tracking.md`. At the Start Gate the same choice is a button, **Change the pipeline**, which lists the agents that can be added or skipped with their current state.
 
 ::: info When architect is skipped
-Skipping `architect-agent` when the rule calls for it is allowed. The orchestrator says what is lost: the Behaviour Delta that test verification and the QA plan read, the threat-model rows that can trigger the security review, and the first full pass over the ledger. The implementer and Team Mode decisions then fall back to `00b-impact.md` and the project files.
+Skipping `architect-agent` when the rule calls for it is allowed. The orchestrator says what is lost: the Behaviour Delta that test verification and the QA plan read, the threat-model rows that can trigger the security review, and the first full pass over the ledger. The implementer and Layered Mode decisions then fall back to `00b-impact.md` and the project files.
 
 Two of those facts, the threat-model rows and the Behaviour Delta, are then absent by design, not unknown: they count as none, and the security and documentation rules are decided by their other conditions (the domains, the constraints, a contract change). Without that, every `simple_fix`, which never has an architecture, would run the security review and a documentation draft. At the implementation gate the orchestrator also compares the domains with the files the implementation actually wrote, so an `auth` or `integrations` file the impact assessment did not list still starts the security review. A fact that should exist and does not (an impact assessment that failed, an artifact written by an older version) still counts toward running the agent.
 :::
@@ -67,7 +67,7 @@ Add: security-reviewer-agent
 
 **`Areas:`** takes `all`, or any of `analysis`, `development`, `review`, `delivery` (`analisi` and `sviluppo` work too). See [Areas](#areas). With the line present the orchestrator does not ask which areas to run.
 
-**`Auto-fix:`** takes a number: how many times the agents may fix their own problems before stopping to ask you. It covers the review wave: code review, security review and test verification run together, and the agents may retry while code review reports a serious problem or test verification a gap. Security findings always wait for you. `0` means always ask. Without the line, `simple_fix` and `medium` get 1 and `significant_rework` asks you at the start. The ceiling is 5, or 2 when Team Mode runs, because each Team Mode fix is a whole team run.
+**`Auto-fix:`** takes a number: how many times the agents may fix their own problems before stopping to ask you. It covers the review wave: code review, security review and test verification run together, and the agents may retry while code review reports a serious problem or test verification a gap. Security findings always wait for you. `0` means always ask. Without the line, `simple_fix` and `medium` get 1 and `significant_rework` asks you at the start. The ceiling is 5, or 2 when Layered Mode runs, because each Layered Mode fix is a lead scope call, a call per layer in scope and a lead close.
 
 **`Skip:`** and **`Add:`** take a comma-separated list of agent names. A skipped agent never runs, whatever its rule says. An added agent runs in its normal place in the pipeline, even when its rule would not fire. Naming an implementer in `Add:` (for example `implementer-coder-agent`) forces that implementer.
 
@@ -251,7 +251,7 @@ Paste the block as your reply at the orchestrator's start gate. It is applied as
 | 2 | `architect-agent` | System design, API contracts, DB schema, and the facts that choose the implementer |
 | 3 | `implementer-tdd-agent` | Test-first code generation (plan gate + code gate) |
 | 3 | `implementer-coder-agent` | Code-first generation: code, then the tests the project and the touched modules call for |
-| 3 | `implementer-lead-agent` | Team Mode: lead + parallel specialists per touched layer (Claude Code only, ~3.5× cost) |
+| 3 | `implementer-lead-agent` | Layered Mode: lead plus a layer agent per touched layer, run in stages by the orchestrator (Claude Code only, cost not measured) |
 | 4 | `code-reviewer-agent` | Standards, security, performance review |
 | 4b | `security-reviewer-agent` | Adversarial security review — IDOR, auth, injection, secrets, data exposure |
 | 5 | `test-verifier-agent` | Test coverage and assertion quality |

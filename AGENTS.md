@@ -9,7 +9,7 @@ KAIROS is an intelligent multi-agent SDLC orchestration framework, distributed a
 runtime beyond the documentation site build. The deliverables are:
 
 - **`agents/`** — the framework artifact itself: 17 core AI agent definition files
-  (Markdown + YAML frontmatter) plus 5 optional Team Mode agents in `agents/team/`.
+  (Markdown + YAML frontmatter) plus 5 optional Layered Mode agents in `agents/team/` (the folder name is the v9.4 one, kept on purpose).
 - **`docs/`** — a VitePress site that documents the framework and exposes the agent
   files to users (published at https://kairos-agents.netlify.app).
 - **`.opencode/agents/`** — a hand-maintained mirror of the 17 core agent files,
@@ -55,8 +55,9 @@ they need credentials, deployed environments, and continuous presence a terminal
 does not have. `release-planner-agent` produces a plan and stops there by design.
 
 The orchestrator (`orchestrator-agent.md`) routes between phases and enforces the HITL
-gates. Team Mode (`agents/team/`) replaces phase 3 with a lead agent spawning 4 parallel
-specialists; it requires Claude Code with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`.
+gates. Layered Mode (`agents/team/`, called Team Mode until v9.5.0) replaces phase 3 with a
+lead and up to 4 layer agents, which the orchestrator runs in stages as plain subagent calls;
+it is Claude Code only and needs no flag (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is no longer needed).
 
 ## Build and Development Commands
 
@@ -76,7 +77,7 @@ any change to `docs/`, `agents/`, or `skills/` (agent files are embedded in the 
 
 ## Repository Layout
 
-- `agents/` — 17 core pipeline agents (canonical source) + `team/` (5 Team Mode agents, Claude Code only).
+- `agents/` — 17 core pipeline agents (canonical source) + `team/` (5 Layered Mode agents, Claude Code only).
 - `.opencode/agents/` — OpenCode mirror of the 17 core agents (derived, kept in sync by hand).
 - `.kimi-code/agents/` — Kimi Code mirror of the 17 core agents (derived, kept in sync by hand).
 - `docs/` — VitePress site. Config: `docs/.vitepress/config.js` (nav, sidebar, `srcDir: '..'`).
@@ -149,10 +150,11 @@ mirror is kept in sync by hand, on purpose.
 - Before committing, diff the two directories' bodies (strip frontmatter from each side
   and compare) to confirm nothing drifted.
 
-**`agents/team/*.md` is explicitly out of scope for this mirror.** Team Mode's
-coordination logic (the Agent Teams flag, the `agent` tool for spawning, an unconditional
-`AskUserQuestion` call with no fallback in `implementer-lead-agent.md`) is
-Claude-Code-specific; a frontmatter-only port ships a non-functional agent.
+**`agents/team/*.md` is explicitly out of scope for this mirror.** The Agent Teams
+dependence that once justified this is gone since v9.5.0 (Layered Mode is plain subagent
+calls coordinated by the orchestrator), but nobody has run Layered Mode on OpenCode, so
+mirroring is a separate decision. The orchestrator offers the mode only on Claude Code.
+See `docs/setup/opencode.md`'s "No Layered Mode mirror" note before changing this.
 
 ## Kimi Code Mirror Sync
 
@@ -179,8 +181,8 @@ mirror: no conversion script, kept in sync by hand, on purpose.
   and compare) to confirm nothing drifted.
 
 **`agents/team/*.md` is explicitly out of scope for this mirror too** — same rationale
-as the OpenCode exclusion: Team Mode's coordination logic is Claude-Code-specific, and
-a frontmatter-only port ships a non-functional agent.
+as the OpenCode exclusion: deferred, because nobody has run Layered Mode on Kimi Code. See
+`docs/setup/kimi-code.md`'s "No Layered Mode mirror" note before changing this.
 
 ## Docs Site Conventions
 

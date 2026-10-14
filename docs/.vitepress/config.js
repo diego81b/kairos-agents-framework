@@ -44,7 +44,7 @@ export default defineConfig({
         items: [
           { text: 'All Agents', link: '/agents' },
           { text: 'Agent Files (copy)', link: '/agent-files' },
-          { text: 'Team Mode Files (copy)', link: '/agent-files-team' }
+          { text: 'Layered Mode Files (copy)', link: '/agent-files-team' }
         ]
       },
       {
@@ -177,11 +177,11 @@ export default defineConfig({
         ]
       },
       {
-        text: 'Team Mode (optional)',
+        text: 'Layered Mode (optional)',
         collapsed: false,
         items: [
           {
-            text: 'Team Files (copy)',
+            text: 'Layered Mode Files (copy)',
             link: '/agent-files-team',
             collapsed: true,
             items: [

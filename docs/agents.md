@@ -1,6 +1,6 @@
 # The KAIROS Agents
 
-KAIROS orchestrates a core pipeline of 17 specialized AI agents, plus an optional team of 5 specialists for Team Mode. Two agents run before the main pipeline: Context Extractor, standalone and launched by you, and Impact Assessment, which the Orchestrator dispatches at every run (or reuses when you already ran it yourself). Bug Triage is the entry point when what you have is a defect rather than a feature — run directly by you, or offered by the Orchestrator at its Bug-Input Check and dispatched from there; the numbered core agents run in sequence coordinated by the Orchestrator, which derives which of them run from facts, including an optional Phase 6b (Documentation Agent). Three more agents — Retrospective, Improvement Advisor, and Dependency Audit — are standalone and run after work stops or outside any feature entirely, never invoked by the Orchestrator. Team Mode agents are Claude Code only, offered by the Orchestrator when a test-first change spans two or more layers, and activated only after you confirm the cost.
+KAIROS orchestrates a core pipeline of 17 specialized AI agents, plus 5 optional agents for Layered Mode (a lead and four layer agents). Two agents run before the main pipeline: Context Extractor, standalone and launched by you, and Impact Assessment, which the Orchestrator dispatches at every run (or reuses when you already ran it yourself). Bug Triage is the entry point when what you have is a defect rather than a feature — run directly by you, or offered by the Orchestrator at its Bug-Input Check and dispatched from there; the numbered core agents run in sequence coordinated by the Orchestrator, which derives which of them run from facts, including an optional Phase 6b (Documentation Agent). Three more agents — Retrospective, Improvement Advisor, and Dependency Audit — are standalone and run after work stops or outside any feature entirely, never invoked by the Orchestrator. Layered Mode agents are Claude Code only, dispatched by the Orchestrator, offered when a test-first change spans two or more layers, and activated only after you confirm.
 
 ::: tip Copy agents directly from the documentation
 Need the raw agent definition to paste into your tool? Go to **[Agent Files](/agent-files)** — every agent is embedded as a ready-to-copy code block, auto-synced from the source files.
@@ -113,23 +113,25 @@ The Orchestrator chooses it, right before the plan, for a `simple_fix`, for a pr
 
 ---
 
-## Implementer Team — Team Mode (Claude Code only, optional)
+## Implementer Lead and Layer Agents: Layered Mode (Claude Code only, optional)
 
-For complex multi-layer features, the Orchestrator can activate a coordinated team of specialists instead of the single Implementer Agent. It **offers** Team Mode when the TDD path was chosen, two or more of backend/frontend/db are touched, Agent Teams is enabled and the host is Claude Code — and shows a cost warning (~$0.242 vs ~$0.068) that you must confirm before proceeding.
+For complex multi-layer features, the Orchestrator can run the implementation in stages, across a lead and up to four layer agents, instead of the single Implementer Agent. It **offers** Layered Mode when the TDD path was chosen, two or more of backend/frontend/db are touched and the host is Claude Code, and asks you to confirm before proceeding. What it costs is not measured; read `_usage.md` after the first runs. (Until v9.5.0 this was called Team Mode.)
 
-**Why Claude Code only?** Team Mode uses Claude Code's **experimental Agent Teams feature** (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`, requires v2.1.32+). Each teammate runs as a separate Claude Code session with its own context window; teammates communicate peer-to-peer via a shared mailbox and coordinate via a shared task list. Other tools (Cursor, VS Code, JetBrains, Codex CLI) have no equivalent inter-session coordination mechanism.
+**Why Claude Code only?** Because nobody has run it elsewhere. The Orchestrator coordinates each stage as an ordinary subagent call, with no Agent Teams, no peer messaging, no shared task list and no live progress: every agent hands its work to the next through files in the feature folder, and `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is no longer needed. The agents are not mirrored to OpenCode or Kimi Code (a separate decision, deferred), and the Orchestrator offers the mode only on Claude Code. See the [stages of Layered Mode](/setup/claude-code#stages) for the detail.
 
-The [Implementer Lead](/agents/team/implementer-lead-agent) acts as coordinator (not a coder). It creates binding contracts (API, database, test, pattern) and spawns parallel teammates — Tests always, plus Backend, Frontend and Database only for the layers in scope:
+The [Implementer Lead](/agents/team/implementer-lead-agent) acts as coordinator of the contracts (not a coder). It creates binding contracts (API, database, test, pattern) and verifies the layers against them, while the Orchestrator dispatches the layer agents: Tests always, plus Backend, Frontend and Database only for the layers in scope.
 
 ### [Implementer Lead](/agents/team/implementer-lead-agent)
 
-Team coordinator — applies the full TDD discipline across specialized teammates. Defines four binding contracts (API, database, test, pattern) before anyone starts. Then orchestrates three distinct phases:
+Contract owner and verifier, applying the full TDD discipline across the layer agents. Defines four binding contracts (API, database, test, pattern) before anyone starts, and is the only agent that writes the ledger and the contracts. The Orchestrator then runs the stages:
 
-- **RED** — spawns `teammate-tests-agent` first; tests are written against the contracts before any implementation exists. Presents the test plan to the user (HITL gate) before proceeding.
-- **GREEN** — spawns `teammate-backend-agent`, `teammate-frontend-agent`, `teammate-database-agent` in parallel; their goal is to make the pre-existing tests pass.
-- **REFACTOR** — coordinates quality improvements across all layers while keeping tests green.
+- **RED**: `teammate-tests-agent` runs first and alone; tests are written against the contracts before any implementation exists. The step 3a plan gate has already covered the test plan.
+- **GREEN**: `teammate-backend-agent`, `teammate-frontend-agent`, `teammate-database-agent` run in parallel, one call per layer in scope; their goal is to write code to the contract so the pre-existing tests pass. They run static checks at most, never the full suite.
+- **VERIFY**: the lead checks every layer against the contracts and runs the full test suite, writing `03-verify.md`. Layers it names get a **FIX** call, then VERIFY runs again.
+- **REFACTOR**: the implementation layers improve quality while keeping tests green.
+- **CLOSE**: the lead re-verifies, updates the ledger and writes `03-implementation.md` last. Only VERIFY and CLOSE run the full suite.
 
-Monitors contract compliance throughout, flags mismatches, and aggregates the final output. Does not write code itself.
+Does not write code itself, and is dispatched by the Orchestrator: running it on its own is not supported.
 
 ::: tip Optional enhancements
 **Skills:** `coding-discipline` (internal)

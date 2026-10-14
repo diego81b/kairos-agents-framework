@@ -4,7 +4,7 @@ description: Engineering-discipline checklist for writing new code — scope con
 
 # Coding Discipline
 
-Shared reference for `implementer-tdd-agent`, `implementer-coder-agent`, `implementer-lead-agent`, and the four teammate agents (`teammate-backend-agent`, `teammate-frontend-agent`, `teammate-database-agent`, `teammate-tests-agent`). Applied at the start of implementation, before any file is written — complements [`code-simplification`](../code-simplification/SKILL.md), which applies later, at the REFACTOR step once code already exists.
+Shared reference for `implementer-tdd-agent`, `implementer-coder-agent`, `implementer-lead-agent`, and the four Layered Mode layer agents (`teammate-backend-agent`, `teammate-frontend-agent`, `teammate-database-agent`, `teammate-tests-agent`). Applied at the start of implementation, before any file is written — complements [`code-simplification`](../code-simplification/SKILL.md), which applies later, at the REFACTOR step once code already exists.
 
 ## Principles
 

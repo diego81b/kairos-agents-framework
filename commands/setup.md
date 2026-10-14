@@ -18,7 +18,7 @@ Every core agent ships with a `model:` in its frontmatter (`opus` or `sonnet`). 
 | Reasoning | `architect-agent`, `impact-assessment-agent`, `security-reviewer-agent`, `bug-triage-agent` | `opus` |
 | Execution | `pm-agent`, `implementer-tdd-agent`, `implementer-coder-agent`, `code-reviewer-agent`, `test-verifier-agent`, `qa-plan-agent`, `release-planner-agent`, `documentation-agent` | `sonnet` |
 
-Not covered, frontmatter only: `orchestrator-agent` (the session's own model), the agents you start yourself (`context-extractor-agent`, `retrospective-agent`, `improvement-advisor-agent`, `dependency-audit-agent`), and the Team Mode files in `agents/team/`. This command writes no line for them; the orchestrator would honor a hand-written `implementer-lead-agent` line, but the teammates the lead spawns are out of its reach.
+Not covered, frontmatter only: `orchestrator-agent` (the session's own model), the agents you start yourself (`context-extractor-agent`, `retrospective-agent`, `improvement-advisor-agent`, `dependency-audit-agent`), and the Layered Mode files in `agents/team/`, which keep their frontmatter models (`opus` for the lead, `haiku` for the layer agents). This command writes no line for them. The orchestrator dispatches the lead and each layer agent itself, so a hand-written line in a `models` file (`implementer-lead-agent`, `teammate-backend-agent` and so on) does apply to them.
 
 ## Step 1 — Look at what exists
 
@@ -62,7 +62,7 @@ Print the models in effect, reading the three files again: agent → model, the 
 
 - The orchestrator reads the files before every dispatch, so a run in progress picks up an edit at its next call.
 - It is Claude Code only. OpenCode and Kimi Code ignore them (their own model settings are on their setup pages).
-- They cover only the agents in the tier map. The orchestrator and the agents started by hand keep their frontmatter model.
+- This command writes lines only for the agents in the tier map. The orchestrator and the agents started by hand keep their frontmatter model, and so do the Layered Mode agents unless a line for them is added by hand.
 - The project file is meant to be committed, so the team gets the same models; the home file is only this user's. `docs/customizing.md` lists every setting and the order the files are read in.
 - `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1` in `settings.json` overrides these files.
 
@@ -92,7 +92,7 @@ Options:
 
 **If option 2:** ask which model (`opus`, `sonnet`, `haiku`, `inherit`, or a full model ID) and which scope (project `.claude/settings.json` — committed, shared with the team; or global `~/.claude/settings.json` — this machine only). Read the chosen file if it exists, merge `"env": { "CLAUDE_CODE_SUBAGENT_MODEL": "<model>", "CLAUDE_CODE_SUBAGENT_MODEL_FORCE": "1" }` preserving every existing key, write it back, confirm to the user, and STOP here.
 
-**If option 1:** locate the newest plugin cache agents directory, e.g. with Bash `ls -d ~/.claude/plugins/cache/kairos/kairos/*/agents | sort -V | tail -1`. Copy the 17 core agent files (NOT `team/`) into `.claude/agents/`. Then, in every copied file, rewrite each `@kairos:<name>` call to `@<name>` for the 17 core agent names only — leave any `@kairos:team:*` reference untouched (Team Mode still resolves through the plugin). Continue to C.
+**If option 1:** locate the newest plugin cache agents directory, e.g. with Bash `ls -d ~/.claude/plugins/cache/kairos/kairos/*/agents | sort -V | tail -1`. Copy the 17 core agent files (NOT `team/`) into `.claude/agents/`. Then, in every copied file, rewrite each `@kairos:<name>` call to `@<name>` for the 17 core agent names only — leave any `@kairos:team:*` reference untouched (Layered Mode still resolves through the plugin). Continue to C.
 
 ### C — Choose the model strategy
 
