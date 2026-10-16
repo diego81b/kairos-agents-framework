@@ -31,6 +31,10 @@ Not done on purpose: handing a half-finished issue to another developer when `.k
 - **`agents/orchestrator-agent.md`**, **`docs/workflow.md`**: `ledger/run.md` gains `manual_pipeline` (`pending` until the hand-picked pipeline is saved or printed), restored on resume.
 - **`.opencode/agents/`**, **`.kimi-code/agents/`**: bodies synced for the seven changed agents; the `documentation-agent` description now mentions the summary step.
 
+### Fixed
+
+- **`agents/orchestrator-agent.md`**, **`docs/workflow.md`**, **`docs/setup/templates.md`**, **`.opencode/agents/`**, **`.kimi-code/agents/`**: **Decide each step** no longer lets the run take off before the first agent question (reported on v9.5.0, on a bug report). The bug triage and the impact assessment belong to no area and ran before the start gate: a lone yes or no for the triage, then the triage and the assessment back to back, with the first question about the other agents only afterwards. The orchestrator now names both in one block before the first of them, and the triage gate stops instead of continuing on its own, so you read the triage before the assessment starts.
+
 
 Team Mode could not start under the orchestrator. The orchestrator dispatches `implementer-lead-agent` through its `Agent` tool, so the lead ran as a subagent, and a subagent cannot create an Agent Team: only the main session can. In a real run the orchestrator reported the mode as unable to start, the pipeline fell back to one TDD implementer in nine waves, and the human had already confirmed a cost warning for a mode that could not run.
 
