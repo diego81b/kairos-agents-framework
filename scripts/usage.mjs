@@ -7,7 +7,9 @@
 //
 //   node usage.mjs                         latest session of this project, all its agents
 //   node usage.mjs --feature <folder>      every session, only the agents dispatched for that feature,
-//                                          then the primary session of each of those sessions (a session total)
+//                                          then the primary session of each of those sessions (a session total).
+//                                          Repeat it for each name the folder had before a rename: a dispatch
+//                                          prompt carries the name the folder had when the agent was called.
 //   node usage.mjs --session <id>          one session
 //   node usage.mjs --feature <folder> --write <file>
 //                                          write the report to <file> (rewritten whole each time)
@@ -29,7 +31,9 @@ const value = (name) => {
   return i >= 0 ? args[i + 1] : undefined
 }
 
-const feature = value('feature')
+const values = (name) => args.flatMap((a, i) => (a === `--${name}` && args[i + 1] !== undefined ? [args[i + 1]] : []))
+const features = values('feature')
+const feature = features[0]
 const sessionArg = value('session')
 const asJson = flag('json')
 const writeTo = value('write')
@@ -192,7 +196,7 @@ for (const s of chosen) {
     if (!t || !t.turns) continue
     const fm = /feature[ _]folder:\s*`?([^\s`]+)/i.exec(t.firstUser)
     const featureFolder = fm ? fm[1] : null
-    if (feature && featureFolder !== feature) continue
+    if (feature && !features.includes(featureFolder)) continue
     if (since && !Number.isNaN(since) && t.first !== null && t.first < since) continue
     rows.push({ session: s.id, agent: agentType, description: meta.description || '', feature: featureFolder, ...summarize(t, agentType) })
   }
