@@ -376,7 +376,7 @@ Never rewrite an existing row's `Category` cell — it is set once by whoever cr
 
 **`decisions.md`** — Add implementation decisions (patterns chosen, dependencies added, deviations from architecture spec with justification). The table has six columns, `ID | Decision | Phase | Rationale | Constraint impact | Supersedes`; if it still has five (written before v8.4.0), add the `Supersedes` column first, with `—` in every existing row. Leave `Supersedes` as `—` on every row you add: only the orchestrator fills it, when a human accepts a decision conflict at the gate. A change of course is a new row, never an edit of an old one.
 
-**`open-questions.md`** — Answer any questions you can from implementation findings. Add new questions raised during coding.
+**`open-questions.md`** — Answer any questions you can from implementation findings. Add new questions raised during coding. Word each so a person holding only that line can answer it ([`artifact-template`](../skills/artifact-template/SKILL.md) §6): name the file, test or flow, say what is undecided and what each answer changes, and keep local ids (`T5`, `AC-n`, `C`, `Q`) in parentheses as a trace, never as the sentence.
 
 Freshly-surfaced Phase-0 Risks table rows are written by the orchestrator's Risk Disposition Loop when orchestrator-invoked (sourced from the human's per-row choice) — do not also write them here in that case. When running standalone, write them yourself as before.
 

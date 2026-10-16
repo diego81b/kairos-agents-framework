@@ -6,7 +6,31 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
-## v9.5.0 — October 14, 2026
+## v9.6.0 — October 16, 2026
+
+Six complaints from real runs, one release. The impact assessment started on every run, including runs that only review code that already exists, so a run's cost and first question were not in the person's hands. There was no way to say what a run is for ("analyse this issue now, build it later") except typing area names. Choosing every agent by hand was possible only through typed `add`/`skip` replies and was never saved where a colleague could find it. Escalate filed a question and made the person answer it in a second session. Questions put to a person cited internal ids ("Q2: dove vive T5 (consegna G13 dopo la dispose dello scope)?") that only the artifact explains. And the end-of-run project summary was composed by the orchestrator, the one agent that should not also write documents.
+
+One rule runs through all of it and was fixed by the maintainer: **a pipeline that already exists wins over anything the person types.** A saved `## KAIROS Pipeline` section, a resumed run and a hand-picked pipeline all beat a phrase in the prompt.
+
+Not done on purpose: handing a half-finished issue to another developer when `.kairos/` is gitignored. The analysis is kept in a local, unpublished note under `internal/` for a later release. Not measured: none of the new rules has run on a real run yet, and the phrase table is a first cut.
+
+### Added
+
+- **`agents/orchestrator-agent.md`**, **`docs/setup/templates.md`**, **`docs/workflow.md`**: run intent. Phrases in the prompt that starts a run answer the area question in advance: `analizziamo`/`analyse` covers analysis, `rendi ready` covers analysis with `pm-agent` and `architect-agent` forced on, `implementiamo` covers all areas, `finalizziamo`/`wrap up` covers review. The start gate names the phrase that fired. A phrase is a per-run intent and is never offered for saving.
+- **`agents/orchestrator-agent.md`**, **`docs/setup/templates.md`**, **`docs/workflow.md`**: **Choose the pipeline myself**. One dialog with a group per area lets you tick the agents, the impact assessment among them. The pipeline is exactly your selection and is saved to the issue as a checklist without asking (GitLab and Bitbucket). On Jira the block goes in as a comment and is printed paste-ready, because the plugin cannot write a Jira description. A failed write prints the block and never stops the run.
+- **`agents/orchestrator-agent.md`**, **`agents/pm-agent.md`**, **`agents/impact-assessment-agent.md`**, **`docs/workflow.md`**: an Escalate asks one follow-up in the same gate: up to two alternatives from the row's own mitigation, **Keep it open and go on**, **Stop here**, or your own words. An answer settles the row now (Mitigate now with your answer in its note, or Accept) instead of a second session. A kept-open row still holds `Escalate`, so the stop signals that read it keep firing.
+- **`skills/artifact-template/SKILL.md`**, **`agents/pm-agent.md`**, **`agents/architect-agent.md`**, **`agents/impact-assessment-agent.md`**, **`agents/implementer-tdd-agent.md`**, **`agents/implementer-coder-agent.md`**, **`agents/documentation-agent.md`**: new §6 "Rows a person answers". A row opens with what is undecided in product or code words, offers two or three alternatives with their cost, and carries internal ids (`T5`, `G13`, `AC-2`) only as a trace in parentheses. The orchestrator resolves an id it cannot place from the reports it holds before it asks.
+- **`agents/documentation-agent.md`**, **`docs/agents.md`**, **`docs/agent-files.md`**: `step: summary`. The agent drafts the project summary from each report's `## Summary` and the ledger, redacts security detail, proposes a target path from the project's own docs layout and writes the draft inside `.kairos/` only.
+
+### Changed
+
+- **`agents/orchestrator-agent.md`**, **`docs/setup/templates.md`**, **`docs/workflow.md`**, **`docs/agents.md`**: `impact-assessment-agent` is started only when a fact is needed: a derived run that covers analysis or development, or a pipeline that names it. A run limited to review and delivery reads the effort from an `Effort:` line, else the issue's `size:` label, else `medium`, derives the domains from the changed files and says so at the start gate. `documentation-agent` is not derived there, and the gate says how to add it. No size label is set when no size was measured.
+- **`agents/orchestrator-agent.md`**, **`docs/setup/templates.md`**, **`docs/workflow.md`**: the area question's options are now **All areas**, **Choose the pipeline myself** and **Decide each step**. Area names typed in the free field still work. A phrase of the intent table is ignored, with one line, when a pipeline already exists.
+- **`agents/orchestrator-agent.md`**, **`agents/pm-agent.md`**, **`agents/impact-assessment-agent.md`**: an escalated row no longer flips the gate's recommendation to Request changes. The recommendation follows the rows and your answer.
+- **`agents/orchestrator-agent.md`**, **`docs/workflow.md`**: the Step 10d project summary is drafted by `documentation-agent` and no longer composed by the orchestrator. The orchestrator keeps the gate and the cleanup question. The summary ends with a `## Target` line, and a different path is a Request changes.
+- **`agents/orchestrator-agent.md`**, **`docs/workflow.md`**: `ledger/run.md` gains `manual_pipeline` (`pending` until the hand-picked pipeline is saved or printed), restored on resume.
+- **`.opencode/agents/`**, **`.kimi-code/agents/`**: bodies synced for the seven changed agents; the `documentation-agent` description now mentions the summary step.
+
 
 Team Mode could not start under the orchestrator. The orchestrator dispatches `implementer-lead-agent` through its `Agent` tool, so the lead ran as a subagent, and a subagent cannot create an Agent Team: only the main session can. In a real run the orchestrator reported the mode as unable to start, the pipeline fell back to one TDD implementer in nine waves, and the human had already confirmed a cost warning for a mode that could not run.
 
