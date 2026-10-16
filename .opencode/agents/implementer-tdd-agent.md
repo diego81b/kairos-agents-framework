@@ -423,6 +423,8 @@ Never rewrite an existing row's `Category` cell — it is set once by whoever cr
 | QN | (question you couldn't resolve) | implementer-tdd | 🔴 open | — | — |
 ```
 
+Word each new question so a person holding only that line can answer it ([`artifact-template`](../skills/artifact-template/SKILL.md) §6): name the file, test or flow, say what is undecided and what each answer changes, and keep local ids (`T5`, `AC-n`, `C`, `Q`) in parentheses as a trace, never as the sentence.
+
 Freshly-surfaced Phase-0 Risks table rows are written by the orchestrator's Risk Disposition Loop when orchestrator-invoked (sourced from the human's per-row choice) — do not also write them here in that case. When running standalone, write them yourself as before.
 
 If this is a multi-wave run (`status: partial`), update the ledger at the end of each wave, not just the final wave.

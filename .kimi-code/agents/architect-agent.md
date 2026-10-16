@@ -348,6 +348,8 @@ Then add any new architectural constraints (e.g. "Redis required in infrastructu
 | QN | (new question) | architect | 🔴 open | — | — |
 ```
 
+Word each new question so a person holding only that line can answer it ([`artifact-template`](../skills/artifact-template/SKILL.md) §6): name the endpoint, table, file or flow, say what is undecided and what each answer changes, and keep local ids (`AC-n`, `C`, `D`, `Q`) in parentheses as a trace, never as the sentence.
+
 Do not skip this step. An unanswered constraint left `🔴 open` without acknowledgement will be visible to every downstream agent.
 
 ### 3. Open in Editor

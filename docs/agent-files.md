@@ -167,7 +167,7 @@ Deployment planning — rollback procedures, monitoring, canary strategy.
 
 ## Documentation Agent
 
-Optional Phase 6b, runs after Release Planner. Feature-facing documentation (README, API reference, CHANGELOG) in the target project — the second agent, after the Phase 3 implementer, permitted to write outside `.kairos/`, scoped strictly to documentation files. Also writes, verbatim and only after the Orchestrator's own gate, the project summary and the QA plan file.
+Optional Phase 6b, runs after Release Planner. Feature-facing documentation (README, API reference, CHANGELOG) in the target project — the second agent, after the Phase 3 implementer, permitted to write outside `.kairos/`, scoped strictly to documentation files. Also drafts the end-of-run project summary inside `.kairos/` (`step: summary`), and writes that summary and the QA plan file verbatim, only after the Orchestrator's own gate.
 
 <<< @/agents/documentation-agent.md{md}
 
