@@ -6,6 +6,18 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v9.6.1 — October 17, 2026
+
+Three misses reported by the kairos-cli runner, which drives the orchestrator on Haiku: the two Step 0e dispatches ignored the `models` setting, one run in five ignored `manual-qa`, and one run in five skipped an agent the issue had added. The causes are read from the orchestrator text and the reports, not reproduced: each rule existed but sat far from the place a smaller model acts, or left the order of checks to the reader. No behaviour changes on a model that already followed them.
+
+### Fixed
+
+- **`agents/orchestrator-agent.md`** (and both mirrors): the `models` setting now applies to the first two dispatches of a run. **Model override** lived under Calling Subagents, after the Step 0e dispatches of `bug-triage-agent` and `impact-assessment-agent`, which never pointed at it, so both ran on their own `model:`. A new Hard Constraint 6 names the rule for every Agent call and both dispatch sites repeat it.
+- **`agents/orchestrator-agent.md`** (and both mirrors): `manual-qa` is read with a command at the gate that needs it, not recalled, and a value is compared after trimming spaces and line endings and ignoring case. A file saved on Windows ends in `\r\n` and `Yes` is a natural thing to type, and either made a valid file read as unusable. The question is no longer asked when the file holds an answer.
+- **`agents/orchestrator-agent.md`** (and both mirrors): an agent named in `Add:` runs at its decision point whatever its rule says. The Decision Announcement now decides each agent in a fixed order (skipped, added, then the row and the area) and the review wave checks that every added reviewer is in its call list, so `test-verifier-agent` is no longer dropped on a rule that did not fire.
+
+---
+
 ## v9.6.0 — October 16, 2026
 
 Six complaints from real runs, one release. The impact assessment started on every run, including runs that only review code that already exists, so a run's cost and first question were not in the person's hands. There was no way to say what a run is for ("analyse this issue now, build it later") except typing area names. Choosing every agent by hand was possible only through typed `add`/`skip` replies and was never saved where a colleague could find it. Escalate filed a question and made the person answer it in a second session. Questions put to a person cited internal ids ("Q2: dove vive T5 (consegna G13 dopo la dispose dello scope)?") that only the artifact explains. And the end-of-run project summary was composed by the orchestrator, the one agent that should not also write documents.
