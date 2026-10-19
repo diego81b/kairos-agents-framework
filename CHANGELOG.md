@@ -6,6 +6,17 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v9.6.2 — October 19, 2026
+
+An `Add:` line that arrives in the invocation prompt was not applied in 4 runs of 5. The kairos-cli runner starts the orchestrator on Haiku with the issue text and its `## KAIROS Pipeline` section in the prompt, on a fixture with no tracker remote. The five launch prompts are identical (read from the session transcripts); in four runs `run.md` holds `add: []` and the log calls `test-verifier-agent` a caller proposal that was not applied, so the 9.6.1 fix to the order of the Decision Announcement never saw the override. The cause is read from the text and from those artifacts, and has two parts. The Caller-supplied selection check matched an `Add:` line as a list of agents dictated by the caller, and the only text that let a pasted block count (Template Parsing) covered a reply at the Start Gate, not the prompt. And Step 0d, the one place that reads a section, runs only when the input names an issue reference (the model decided that per run, three runs yes, two no), and when its tracker read failed it said the section was unknown, which three runs repeated while the section sat in their own prompt. One run applied the block on its own, so the behaviour is reachable; the text did not ask for it. Not measured: no run has used the new rule, and the same Step 0e line gave 4 runs of 5 applying the override on the 9.5.0 discount fixture, so the model's reading of it varies with the fixture.
+
+### Fixed
+
+- **`agents/orchestrator-agent.md`** (and both mirrors): a `## KAIROS Pipeline` override block carried in the invocation prompt is the issue's own section, not a caller's list. A new **Inline section** step runs first in Step 0e, with or without an issue reference and whether or not the tracker could be read, and applies the block's `Add:`, `Skip:`, `Effort:`, `Size:`, `Areas:`, `Epic:` and Auto-fix lines as an issue's section would. The Start Gate prints `📋 ## KAIROS Pipeline found in the prompt`. A section read from the tracker wins, an unknown line under the heading is reported and dropped, and an inline section makes no fast start and sets no `corrected`. An agent list written as a sentence by the caller, with no such heading, is still a caller proposal that nothing applies without the human, and the Important Notes rule "never take an agent list from a caller" is unchanged apart from a pointer to the new step.
+- **`agents/orchestrator-agent.md`** (and both mirrors): the message printed when the tracker read fails now says the prompt's section is used when there is one, instead of saying the Start Gate will not know it.
+
+---
+
 ## v9.6.1 — October 17, 2026
 
 Three misses reported by the kairos-cli runner, which drives the orchestrator on Haiku: the two Step 0e dispatches ignored the `models` setting, one run in five ignored `manual-qa`, and one run in five skipped an agent the issue had added. The causes are read from the orchestrator text and the reports, not reproduced: each rule existed but sat far from the place a smaller model acts, or left the order of checks to the reader. No behaviour changes on a model that already followed them.
