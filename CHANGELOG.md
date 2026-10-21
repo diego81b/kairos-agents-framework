@@ -6,6 +6,17 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v9.6.3 — October 21, 2026
+
+A Layered Mode run on a downstream project sat for about 70 minutes between RED and GREEN. `teammate-tests-agent` finished at 12:52 and delivered its report with `SubagentHandback`, but the host kept its call open ("1 shell still running") and the orchestrator waited for a completion notice that did not come, as the v9.1.0 rule tells it to, until the person said it looked stuck. The agent's transcript shows four foreground test runs with a timeout and no `run_in_background`, so the shell that held the call is not identified; pipes into `head` and `tail` and the child processes of `dotnet test` and `npx craco` are the candidates. The parallel part of the stage worked: backend and frontend GREEN started in the same second. Not measured: one run, one agent.
+
+### Fixed
+
+- **`agents/orchestrator-agent.md`** (and both mirrors): a `[Subagent hand-back]` is now enough to close the call when the host holds it open. With the hand-back received, no completion notice after the two bookkeeping calls (or a `continue` from the person), a report with a final `status`, no test runner or build process working in the worktree and no file changing in `git status`, the orchestrator removes the `in_flight` entry, logs `returned by hand-back` and goes on instead of waiting or asking. Any other case, a `partial` report, a live process or no hand-back, keeps the question about whether the agent was stopped.
+- **`agents/team/teammate-tests-agent.md`**: the RED run of its own tests is foreground, non-watch and with a timeout, never piped into `head` or `tail` (the output goes to a file that it reads), and it checks that none of its processes is left before it reports.
+
+---
+
 ## v9.6.2 — October 19, 2026
 
 An `Add:` line that arrives in the invocation prompt was not applied in 4 runs of 5. The kairos-cli runner starts the orchestrator on Haiku with the issue text and its `## KAIROS Pipeline` section in the prompt, on a fixture with no tracker remote. The five launch prompts are identical (read from the session transcripts); in four runs `run.md` holds `add: []` and the log calls `test-verifier-agent` a caller proposal that was not applied, so the 9.6.1 fix to the order of the Decision Announcement never saw the override. The cause is read from the text and from those artifacts, and has two parts. The Caller-supplied selection check matched an `Add:` line as a list of agents dictated by the caller, and the only text that let a pasted block count (Template Parsing) covered a reply at the Start Gate, not the prompt. And Step 0d, the one place that reads a section, runs only when the input names an issue reference (the model decided that per run, three runs yes, two no), and when its tracker read failed it said the section was unknown, which three runs repeated while the section sat in their own prompt. One run applied the block on its own, so the behaviour is reachable; the text did not ask for it. Not measured: no run has used the new rule, and the same Step 0e line gave 4 runs of 5 applying the override on the 9.5.0 discount fixture, so the model's reading of it varies with the fixture.
