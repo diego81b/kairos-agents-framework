@@ -85,7 +85,7 @@ For EACH api_contract endpoint:
    - Database transaction rollback
    - Service timeouts
 
-When the suite is written and you run alone (`step: red`), run **only your own new test files** once, to confirm each test fails for the right reason: the missing behaviour, not a syntax error, a bad import or a broken fixture. A test that cannot fail yet for the right reason goes in your report's `## Notes`. Do not run the whole suite, and do not start the application.
+When the suite is written and you run alone (`step: red`), run **only your own new test files** once, to confirm each test fails for the right reason: the missing behaviour, not a syntax error, a bad import or a broken fixture. A test that cannot fail yet for the right reason goes in your report's `## Notes`. Do not run the whole suite, and do not start the application. Run each command in the foreground, never with `run_in_background`, in a non-watch mode and with a timeout, and never pipe the runner into `head` or `tail`: send its output to a file in your scratchpad or a temp folder and read the file, because a pipe that closes early leaves the runner's child processes alive and the host keeps your call open after you report. Before you write the report, check that no process you started is still running and stop any that is.
 
 ### GREEN Phase
 
