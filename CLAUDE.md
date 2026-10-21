@@ -820,9 +820,9 @@ rule alone stalled the run for about 70 minutes. `teammate-tests-agent` finished
 `SubagentHandback` with a `complete` report, and its call stayed open with "1 shell still running";
 GREEN started at 14:02, when the human said it looked stuck and the orchestrator checked by hand
 before going on. Read from the agent's transcript: all four of its test runs were foreground, with a
-`timeout`, no watch mode and no `run_in_background`, and each returned its output, so the shell that
-held the call open is not identified (the pipes ending in `head` or `tail` and the child processes of
-`dotnet test` and `npx craco` are candidates, unverified). A hand-back is the agent's last message:
+`timeout`, no watch mode and no `run_in_background`, and each returned its output. The shell that held
+the call open was found later, in the same transcript (see v9.6.4 below), and it was not a test run.
+A hand-back is the agent's last message:
 it has stopped writing, and what keeps the call open is the host's cleanup, which a person cannot
 see and the orchestrator cannot wait out. The orchestrator now closes the entry itself when three
 things hold: a `[Subagent hand-back]` for that agent arrived, its report carries a final `status`
@@ -831,10 +831,31 @@ holds no work and does not count). The `continue` that used to trigger the quest
 two bookkeeping calls without a notification, are the moments it checks. Anything else keeps the old
 rule, so an agent that is still writing is never given a second writer. The log line says `returned by
 hand-back`, so a later reader can count how often the host left a call open. Not changed: the cause
-on the host side, and the wording of the wait line. The tests agent also stops piping its test runs
-through `head` and `tail`: it writes the output to a file and reads that, and it checks that none of
-its own processes is left before it reports, which removes the most likely source without relying on
-the host. Not measured: one run, one agent; read later `_tracking.md` logs for `returned by hand-back`.
+on the host side, and the wording of the wait line. Not measured: one run, one agent; read later
+`_tracking.md` logs for `returned by hand-back`.
+
+v9.6.4 corrects v9.6.3 on two points, both read from the same run's transcripts after the person
+reported that the tests agent still ended blocked. First, the cause. At 12:47 the tests agent ran a
+shell command that held a stray heredoc and a `cat > file` with no input, so `cat` waited on stdin
+forever; the host moved it to the background after the default 120 s timeout (`Command did not
+complete within its 120s timeout and was moved to the background`), the agent wrote "the shell command
+hung on a stray heredoc", edited the file with another tool and went on, and never stopped it. That
+shell is the "1 shell still running": the host reported the agent's completion as `status: completed`
+with the summary `is waiting on its own background work` and a note that the result may be interim.
+The v9.6.3 text (pipes into `head` and `tail`, child processes of the runners) named the wrong
+candidates and the rule on the tests agent's test runs was removed. Second, the orchestrator rule:
+the completion notice was in its context, so v9.6.3's trigger (no notice after two calls, or a
+`continue`) did not fire, and the orchestrator read the summary as a reason to wait. The rule now
+counts such an interim notice as one of the triggers, with the same three checks (final report, no
+test or build process working in the worktree, `git status` stable), because the hand-back already
+carried the final report. The four layer agents gain a short shell-hygiene paragraph: create files
+with Write and Edit, never `cat >` or a heredoc; give a command that may run past two minutes an
+explicit `timeout` (up to 600000 ms); and treat a command the host moved to the background as hung,
+not as work in progress, naming it in the report's `## Notes`. The agents have no way to stop a
+backgrounded shell (no `TaskStop`), so prevention is the only lever on their side; the orchestrator
+names the leftover shell in its one line so the person can stop it from the host's task list. Not
+measured: one run; `implementer-lead-agent` is not given the paragraph because it ran no such command
+here, which is a gap if its transcripts show the same.
 
 `architect-agent` gains a **Behaviour Delta** section for the same epic's other finding:
 every defect `qa-plan-agent` found late in those two issues was an observable change on a flow

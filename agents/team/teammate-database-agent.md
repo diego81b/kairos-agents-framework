@@ -89,6 +89,8 @@ ALTER TABLE payments ADD FOREIGN KEY (order_id) REFERENCES orders(id);
 
 You write migrations and their rollbacks and **never apply them**: not against a development database, not against a test database, not through a migration command. Other layers and the lead's test run share that database, and a half-applied schema mid-stage breaks them all. Static checks on your own files are fine, such as a syntax lint of the SQL. The lead runs the suite, and with it whatever applies the migrations, once every layer has returned.
 
+**Shell hygiene.** Create and edit files with the Write and Edit tools, never with `cat >` or a heredoc in the shell: a `cat > file` with no input, or a heredoc whose terminator does not line up, waits for input that never comes. A command that may run past two minutes gets an explicit `timeout` (up to 600000 ms), because the default is 120 s. When the host reports that a command did not complete in its timeout and was moved to the background, it is hung, not working: do not wait for it, redo the step with the right tool, and name the command in your report's `## Notes`. You cannot stop it, it stays alive after you report, and the host then tells the orchestrator you are waiting on background work of your own.
+
 ## Output
 
 ```
