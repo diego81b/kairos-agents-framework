@@ -815,6 +815,27 @@ same worktree and ledger breaks the single-writer rule, so the orchestrator asks
 agent was stopped. Treating the hand-back as the return was rejected: it is still a report
 delivered before the call has ended, the exact case the rule above was written for.
 
+v9.6.3 narrows that rejection with a check, after a Layered Mode run on a downstream project where the
+rule alone stalled the run for about 70 minutes. `teammate-tests-agent` finished RED at 12:52, called
+`SubagentHandback` with a `complete` report, and its call stayed open with "1 shell still running";
+GREEN started at 14:02, when the human said it looked stuck and the orchestrator checked by hand
+before going on. Read from the agent's transcript: all four of its test runs were foreground, with a
+`timeout`, no watch mode and no `run_in_background`, and each returned its output, so the shell that
+held the call open is not identified (the pipes ending in `head` or `tail` and the child processes of
+`dotnet test` and `npx craco` are candidates, unverified). A hand-back is the agent's last message:
+it has stopped writing, and what keeps the call open is the host's cleanup, which a person cannot
+see and the orchestrator cannot wait out. The orchestrator now closes the entry itself when three
+things hold: a `[Subagent hand-back]` for that agent arrived, its report carries a final `status`
+(not `partial`), and no test runner or build process is working against the worktree (an idle leftover
+holds no work and does not count). The `continue` that used to trigger the question to the human, or
+two bookkeeping calls without a notification, are the moments it checks. Anything else keeps the old
+rule, so an agent that is still writing is never given a second writer. The log line says `returned by
+hand-back`, so a later reader can count how often the host left a call open. Not changed: the cause
+on the host side, and the wording of the wait line. The tests agent also stops piping its test runs
+through `head` and `tail`: it writes the output to a file and reads that, and it checks that none of
+its own processes is left before it reports, which removes the most likely source without relying on
+the host. Not measured: one run, one agent; read later `_tracking.md` logs for `returned by hand-back`.
+
 `architect-agent` gains a **Behaviour Delta** section for the same epic's other finding:
 every defect `qa-plan-agent` found late in those two issues was an observable change on a flow
 that had already shipped. A cap rejection the operator never saw, a cap counted in keys
