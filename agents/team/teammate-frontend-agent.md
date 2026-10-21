@@ -113,6 +113,8 @@ function handleResponse(status, body) {
 
 Other layers write to the same worktree while you do, so you run **no test suite, no build that writes shared output and no dev server** (it would share a port with the app under test). Static checks on your own files are fine: a type check without emit, the linter, the formatter. The lead runs the whole suite once every layer has returned and attributes any failure to the layer that owns the file, so a red test you could not see is not yours to chase here.
 
+**Shell hygiene.** Create and edit files with the Write and Edit tools, never with `cat >` or a heredoc in the shell: a `cat > file` with no input, or a heredoc whose terminator does not line up, waits for input that never comes. A command that may run past two minutes gets an explicit `timeout` (up to 600000 ms), because the default is 120 s. When the host reports that a command did not complete in its timeout and was moved to the background, it is hung, not working: do not wait for it, redo the step with the right tool, and name the command in your report's `## Notes`. You cannot stop it, it stays alive after you report, and the host then tells the orchestrator you are waiting on background work of your own.
+
 ## Output
 
 ```
