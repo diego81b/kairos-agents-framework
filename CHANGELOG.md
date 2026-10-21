@@ -6,6 +6,17 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v9.6.4 — October 21, 2026
+
+v9.6.3 did not stop `teammate-tests-agent` from ending blocked. Reading the same run again, with the person's report that it still happens, found a different cause and a gap in the v9.6.3 rule. At 12:47 the agent ran a shell command with a stray heredoc and a `cat > file` with no input; `cat` waited on stdin forever, the host moved the command to the background after its default 120 s timeout, and the agent edited the file another way and went on without stopping it. That shell is the "1 shell still running": the host reported the agent as `completed` with the summary "waiting on its own background work" and a note that the result may be interim. The orchestrator had that notice in its context, so the v9.6.3 trigger (no notice, or a `continue`) never fired and it waited on the summary's wording. The pipes and test runners named in v9.6.3 were not involved. Not measured: one run.
+
+### Fixed
+
+- **`agents/orchestrator-agent.md`** (and both mirrors): a completion notice marked interim (summary "waiting on its own background work", note that the agent stopped with background work still running) now counts as a trigger of **Hand-back without a return**, next to "no notice after two calls" and a `continue`. With the hand-back received, a report with a final `status`, no test runner or build process working in the worktree and `git status` stable, the orchestrator treats the call as returned, logs `returned by hand-back` and names the leftover shell in its line so the person can stop it.
+- **`agents/team/teammate-tests-agent.md`**, **`teammate-backend-agent.md`**, **`teammate-frontend-agent.md`**, **`teammate-database-agent.md`**: a **Shell hygiene** paragraph. Files are created with Write and Edit, never with `cat >` or a heredoc; a command that may pass two minutes gets an explicit `timeout`; a command the host moved to the background is a hung command, not work, and goes in the report's `## Notes`. The v9.6.3 rule about piping test output through `head` and `tail` is removed from the tests agent, since it named the wrong cause.
+
+---
+
 ## v9.6.3 — October 21, 2026
 
 A Layered Mode run on a downstream project sat for about 70 minutes between RED and GREEN. `teammate-tests-agent` finished at 12:52 and delivered its report with `SubagentHandback`, but the host kept its call open ("1 shell still running") and the orchestrator waited for a completion notice that did not come, as the v9.1.0 rule tells it to, until the person said it looked stuck. The agent's transcript shows four foreground test runs with a timeout and no `run_in_background`, so the shell that held the call is not identified; pipes into `head` and `tail` and the child processes of `dotnet test` and `npx craco` are the candidates. The parallel part of the stage worked: backend and frontend GREEN started in the same second. Not measured: one run, one agent.
