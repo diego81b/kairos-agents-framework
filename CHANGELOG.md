@@ -6,6 +6,17 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v9.7.0 — October 23, 2026
+
+A run on a child issue cut from an earlier design run started from nothing: the design lived in a folder with no issue key, the child got a folder of its own, and nothing connected the two. The impact assessment measured again what the design already said. A new `Analysis:` line points the child's run at the design.
+
+### Added
+
+- **`agents/orchestrator-agent.md`** (and both mirrors): an `Analysis: <folder>` key in the `## KAIROS Pipeline` override block, read in an inline section and in a checklist too. When the folder exists on this machine, every agent of the run is given the paths of its `01-requirements.md`, `02-architecture.md`, `00b-impact.md` and `ledger/`, read-only, and the impact assessment is told to measure this issue's slice starting from them. The line adds no skip and no agent, sets no `corrected`, and a missing folder prints one line and runs as before. The Start Gate shows the folder, and `run.md` keeps it as `analysis_ref`, so a resume restores it.
+- **`docs/setup/templates.md`**, **`docs/workflow.md`**, **`docs/overview.md`**: the `Analysis:` key, with what it does and what it does not do.
+
+---
+
 ## v9.6.4 — October 21, 2026
 
 v9.6.3 did not stop `teammate-tests-agent` from ending blocked. Reading the same run again, with the person's report that it still happens, found a different cause and a gap in the v9.6.3 rule. At 12:47 the agent ran a shell command with a stray heredoc and a `cat > file` with no input; `cat` waited on stdin forever, the host moved the command to the background after its default 120 s timeout, and the agent edited the file another way and went on without stopping it. That shell is the "1 shell still running": the host reported the agent as `completed` with the summary "waiting on its own background work" and a note that the result may be interim. The orchestrator had that notice in its context, so the v9.6.3 trigger (no notice, or a `continue`) never fired and it waited on the summary's wording. The pipes and test runners named in v9.6.3 were not involved. Not measured: one run.
