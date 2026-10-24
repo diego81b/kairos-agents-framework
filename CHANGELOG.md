@@ -15,6 +15,11 @@ A run on a child issue cut from an earlier design run started from nothing: the 
 - **`agents/orchestrator-agent.md`** (and both mirrors): an `Analysis: <folder>` key in the `## KAIROS Pipeline` override block, read in an inline section and in a checklist too. When the folder exists on this machine, every agent of the run is given the paths of its `01-requirements.md`, `02-architecture.md`, `00b-impact.md` and `ledger/`, read-only, and the impact assessment is told to measure this issue's slice starting from them. The line adds no skip and no agent, sets no `corrected`, and a missing folder prints one line and runs as before. The Start Gate shows the folder, and `run.md` keeps it as `analysis_ref`, so a resume restores it.
 - **`docs/setup/templates.md`**, **`docs/workflow.md`**, **`docs/overview.md`**: the `Analysis:` key, with what it does and what it does not do.
 
+### Changed
+
+- **`.claude/CLAUDE.md`**: a size budget for `agents/orchestrator-agent.md`. The file went from 58 KB to 252 KB in two months and is read on every turn, so it now stays at or under 252,000 bytes: a change that adds text removes at least as much, and deterministic rules move to the kairos-cli runner instead of into new code here.
+- **`README.md`**: the line on `internal/` now says it holds local, unpublished notes. The cost, routing and provider guides it named were removed as out of date.
+
 ---
 
 ## v9.6.4 — October 21, 2026
