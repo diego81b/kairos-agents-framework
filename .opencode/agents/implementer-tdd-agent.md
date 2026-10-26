@@ -109,11 +109,12 @@ Produce a plan with (trim per Lean Mode above when applicable):
 
 #### Wave Splitting (mandatory when plan is large)
 
-Count `files_to_create + files_to_modify`:
+Estimate the output of every file in the plan, test files included, in tokens: lines you will write × 12. A new file counts all its lines; a modified file counts only the lines it adds or changes, never the lines it keeps. Write the figure in the `Est. tokens` column of the file tables and sum it per wave in `## Waves`.
 
-- If total ≤ 6 files: single wave, proceed normally.
-- If total > 6 files: split into waves of ≤ 6 files each, ordered by dependency (tests → code → integration). The plan MUST include a `waves` array. Each wave is executed as a separate run (PHASES 1–6 per wave). After each wave, write status `partial` and stop. The next invocation resumes from `next_wave`. When `02-architecture.md`'s Selected Option names a UC, each wave states which UC it serves — a multi-wave run is exactly where technical decisions accumulate and functional intent drifts; restating it per wave is the checkpoint that catches that before it compounds.
-- Hard cap: 6 files per wave. Do not exceed even if "they're small". Output token cap, not file size, is the bottleneck.
+- If the total is ≤ 10,000 tokens and ≤ 12 files: single wave, proceed normally.
+- Otherwise split into waves of ≤ 10,000 tokens and ≤ 12 files each, ordered by dependency (tests → code → integration). The plan MUST include a `waves` array. Each wave is executed as a separate run (PHASES 1–6 per wave). After each wave, write status `partial` and stop. The next invocation resumes from `next_wave`. When `02-architecture.md`'s Selected Option names a UC, each wave states which UC it serves — a multi-wave run is exactly where technical decisions accumulate and functional intent drifts; restating it per wave is the checkpoint that catches that before it compounds.
+- A file whose estimate alone exceeds 10,000 tokens takes a wave of its own and a `medium` row in `## Risks`; never split one file across two waves.
+- Hard cap: 10,000 estimated tokens per wave. Do not lower an estimate to fit. Output token cap, not file count or file size, is the bottleneck.
 
 If you ever feel pressure to "just finish it in one run" past the cap: STOP. Write checkpoint, return `status: partial`. Hallucinated continuations are the failure mode this rule exists to prevent.
 
@@ -142,15 +143,16 @@ Brief description of the implementation strategy.
 
 ## Files to Create
 
-| Path | Purpose | Exports |
-|------|---------|---------|
-| src/payments/stripe.service.js | Stripe integration service | createCharge, refund |
+| Path | Purpose | Exports | Est. tokens |
+|------|---------|---------|-------------|
+| __tests__/stripe.service.test.js | tests for the Stripe service | — | 1800 |
+| src/payments/stripe.service.js | Stripe integration service | createCharge, refund | 2400 |
 
 ## Files to Modify
 
-| Path | Changes |
-|------|---------|
-| src/app.js | register /payments router |
+| Path | Changes | Est. tokens |
+|------|---------|-------------|
+| src/app.js | register /payments router | 100 |
 
 ## Test Cases
 
@@ -187,13 +189,13 @@ Infer a reasonable impact level (`critical`/`high`/`medium`/`low`) per risk from
 
 ## Waves
 
-| Wave | UC | Files |
-|------|----|-------|
-| 1 | UC-1 | __tests__/stripe.service.test.js, src/payments/stripe.service.js |
-| 2 | UC-1 | src/payments/refund.service.js, src/app.js |
+| Wave | UC | Files | Est. tokens |
+|------|----|-------|-------------|
+| 1 | UC-1 | __tests__/stripe.service.test.js, src/payments/stripe.service.js | 4200 |
+| 2 | UC-1 | src/payments/refund.service.js, src/app.js | 2600 |
 ```
 
-`UC` column: copy the ID(s) from `02-architecture.md`'s Selected Option. Omit the column entirely when that file names no UC.
+`UC` column: copy the ID(s) from `02-architecture.md`'s Selected Option. Omit the column entirely when that file names no UC. `Est. tokens` is the sum of the wave's files.
 
 #### Phase 0 Checkpoint
 
@@ -458,7 +460,7 @@ These skills and MCP tools enhance this agent when installed. KAIROS works fully
 - TDD cycle must be REAL (not simulated)
 - Coverage >80% required
 - Files are written via the `write` tool. The Markdown output is metadata only — never embed file contents.
-- Hard cap: 6 files per wave. Anything more must be split. Never produce a "compact" single run by truncating.
+- Hard cap: 10,000 estimated tokens and 12 files per wave. Anything more must be split. Never produce a "compact" single run by truncating.
 - Always run `git status --short` after writing and include raw output in the `## Git Status` block.
 - If `git status` shows zero changes, return `status: blocked`. Do not lie about success.
 - Hallucinated tool calls (text that looks like a tool call but is not) = silent failure. If you start producing output that resembles a tool call inside prose, stop and emit a real `write` tool call instead.
