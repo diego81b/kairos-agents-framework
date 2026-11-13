@@ -52,7 +52,7 @@ Each subagent:
 | 3 | **Implementer Agent** | Implementation plan → TDD cycle (tests first, then code) — **default when the project has a test suite**; a code-first variant (code, then the tests the project calls for) runs for `simple_fix`, for projects without a suite, and when the design says `test_first: no` | Code + `03-implementation.md` |
 | 4 | **Code Reviewer** | Standards, security, performance, contract compliance | `04-review.md` |
 | 4b | **Security Reviewer** _(optional)_ | Adversarial security pass — IDOR, auth, injection, secrets, data exposure | `04b-security-review.md` |
-| 5 | **Test Verifier** | Coverage adequacy (>80%), edge cases, assertion quality | `05-test-verification.md` |
+| 5 | **Test Verifier** | Coverage reported (threshold only if declared), over-testing, assertion quality | `05-test-verification.md` |
 | 5b | **QA Plan Agent** *(optional)* | Manual & exploratory cases, regression retest list, test data/environment, UAT sign-off | `05b-qa-plan.md` |
 | 6 | **Release Planner** | Deployment steps, rollback strategy, monitoring thresholds | `06-deployment-plan.md` |
 | 6b | **Documentation Agent** _(optional)_ | Feature-facing docs in the target project — README, API reference, CHANGELOG | `06b-documentation.md` |
@@ -116,7 +116,7 @@ Not every task needs the full pipeline, and you don't pick agents from a menu. T
 
 Before the first agent runs, the **Start Gate** shows the derived pipeline, the rule behind each agent, the effort and the auto-fix budget, and asks one question: start, change the pipeline, request changes, or stop. Every later decision is printed at the gate before it, with the rule that fired. A free-text reply at any of those gates is a correction (`skip release-planner`, `add security-reviewer`, `effort medium`): it holds for the rest of the run and is logged in `_tracking.md`. In IDEs without the interactive prompt (Cursor, JetBrains/Copilot, Codex CLI, OpenCode) the same gate is printed as a typed menu.
 
-If the issue already contains a `## KAIROS Pipeline` section, the Orchestrator reads it first and starts without asking: you already decided, so it only prints what is about to run. An override block (`Size:`, `Effort:`, `Epic:`, `Areas:`, `Auto-fix:`, `Skip:`, `Add:`) is applied on top of the derivation, and an older checklist still wins over it. The one question a run still asks before any code is read is which **areas** it covers (analysis, development, review, delivery; the default is all, one click), because what a run is for is your intent, not a fact in the code.
+If the issue already contains a `## KAIROS Pipeline` section, the Orchestrator reads it first and starts without asking: you already decided, so it only prints what is about to run. An override block (`Size:`, `Effort:`, `Epic:`, `Analysis:`, `Areas:`, `Auto-fix:`, `Skip:`, `Add:`) is applied on top of the derivation, and an older checklist still wins over it. The one question a run still asks before any code is read is which **areas** it covers (analysis, development, review, delivery; the default is all, one click), because what a run is for is your intent, not a fact in the code.
 
 The full rule table and override examples (hotfix, security-sensitive, refactor, docs-only) are in [Pipeline Templates](./setup/templates).
 
@@ -127,7 +127,7 @@ The full rule table and override examples (hotfix, security-sensitive, refactor,
 A typical KAIROS feature run produces:
 
 - ✅ Code following your project's existing patterns, reviewed at a gate before it lands
-- ✅ Comprehensive test suite with coverage >80% _(when using `implementer-tdd-agent`)_
+- ✅ Test suite sized to the acceptance criteria, coverage reported _(when using `implementer-tdd-agent`)_
 - ✅ Architecture decision record with sound API contracts _(via pre-contract checklist gate)_
 - ✅ Code review report (security, performance, standards)
 - ✅ Adversarial security report with exploitable findings and attack scenarios _(when using `security-reviewer-agent`)_

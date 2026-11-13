@@ -139,7 +139,7 @@ Does not write code itself, and is dispatched by the Orchestrator: running it on
 
 ### [Teammate Tests](/agents/team/teammate-tests-agent)
 
-Test specialist — generates the full test suite following the RED phase of TDD (failing tests first). Covers happy paths, error cases, edge cases, and integration tests. Target: >80% coverage.
+Test specialist — generates the full test suite following the RED phase of TDD (failing tests first). Covers happy paths, error cases, edge cases, and integration tests. No fixed coverage target.
 
 ::: tip Optional enhancements
 **Skills:** `coding-discipline` (internal), `verify` / `run` (built-in)  
@@ -202,7 +202,7 @@ Output is a single `04b-security-review.md`: frontmatter (status, finding counts
 
 ## [Test Verifier](/agents/test-verifier-agent)
 
-Verifies test quality, checks that coverage is >80%, validates assertion quality, and ensures edge cases are covered. Blocks progression if test quality is insufficient. Runs in the review wave and is the only reviewer there that executes the test suite. Reads the architecture's Behaviour Delta, when there is one, to check that the new user-visible behaviour on shipped flows is actually tested.
+Verifies test quality, reports coverage (a threshold fails only when the project or a constraint declares one), flags redundant tests, validates assertion quality, and ensures edge cases are covered. Blocks progression if test quality is insufficient. Runs in the review wave and is the only reviewer there that executes the test suite. Reads the architecture's Behaviour Delta, when there is one, to check that the new user-visible behaviour on shipped flows is actually tested.
 
 ::: tip Optional enhancements
 **Skills:** `verify` / `run` (built-in)  

@@ -7,8 +7,8 @@ KAIROS has four places where you can change how it behaves, from the narrowest t
 | I want to | Use | Who sees it |
 |-----------|-----|-------------|
 | change the pipeline for one issue (size, effort, areas, agents to add or skip, auto-fix) | the `## KAIROS Pipeline` block in the issue, see [Pipeline Templates](/setup/templates) | everyone who opens the issue |
-| set the models, the QA plan folder or the manual QA answer for the whole team | `.kairos-cfg/` in the project, committed | the team |
-| use my own models in every project | `~/.kairos-cfg/models` | only me |
+| set the models, the QA plan folder or the manual QA answer for the whole team | `.kairos-cfg/config` in the project, committed | the team |
+| use my own models in every project | `model.` lines in `~/.kairos-cfg/config` | only me |
 | answer a question once and keep the answer on this machine | nothing to do: KAIROS asks when it needs the answer and stores it in `.kairos/` | only this machine |
 | spend fewer tokens per run | Claude Code's auto-compact window, see [Keeping token use down](#keeping-token-use-down) | whoever sets it, in their own Claude Code settings |
 | change what an agent does (its rules, wording, limits) | fork the agent file, see [Changing an agent](#changing-an-agent) | whoever has the fork |
@@ -17,45 +17,57 @@ KAIROS has four places where you can change how it behaves, from the narrowest t
 
 `.kairos/` is where a run works. It holds the feature folders, the ledger, the tracking file and the answers KAIROS asks for once. The first run offers to add it to `.gitignore`, and you should accept: its artifacts can carry security findings and other internal detail.
 
-`.kairos-cfg/` is where you configure. It holds only the settings below, one file each, and it is meant to be committed. KAIROS never writes it, `/kairos:setup` is the only thing that does, and the Gitignore check leaves it alone because the check only looks for `.kairos/`.
+`.kairos-cfg/` is where you configure. It holds one file, `config`, with one `key: value` line per setting, and it is meant to be committed. KAIROS never writes it, `/kairos:setup` is the only thing that does, and the Gitignore check leaves it alone because the check only looks for `.kairos/`.
 
-There is a `.kairos-cfg/` in the project and one in your home directory (`~` on macOS and Linux, `%USERPROFILE%` on Windows). The home one holds only `models`: where a QA plan is saved and whether a person verifies by hand are facts about one project, so a personal default for them would be wrong in the next repository.
+There is a `.kairos-cfg/` in the project and one in your home directory (`~` on macOS and Linux, `%USERPROFILE%` on Windows). The home one holds only the `model.` lines: where a QA plan is saved and whether a person verifies by hand are facts about one project, so a personal default for them would be wrong in the next repository.
 
-**Never put a secret in either folder.** A project `.kairos-cfg/` ends up in git and a home one is a plain file. No setting needs a credential: API keys and tokens stay in your operating system's keychain or in your tool's own login. KAIROS reads the three files named here and ignores everything else in the folder.
+**Never put a secret in either folder.** A project `.kairos-cfg/` ends up in git and a home one is a plain file. No setting needs a credential: API keys and tokens stay in your operating system's keychain or in your tool's own login. KAIROS reads only `config` and the older files named below, and ignores everything else in the folder and any key it does not know.
 
 ## Settings
 
-| File | Project | Home | What it holds |
-|------|---------|------|---------------|
-| `models` | yes | yes | one `<agent>: <alias>` line per agent, aliases `opus`, `sonnet`, `haiku`, `fable` |
+`.kairos-cfg/config` is a plain text file: one `key: value` per line, blank lines and lines starting with `#` ignored.
+
+```
+# .kairos-cfg/config
+model.pm-agent: haiku
+model.architect-agent: opus
+manual-qa: yes
+qa-dir: docs/qa-plans/
+```
+
+| Key | Project | Home | What it holds |
+|-----|---------|------|---------------|
+| `model.<agent>` | yes | yes | the model for one agent, aliases `opus`, `sonnet`, `haiku`, `fable` |
 | `manual-qa` | yes | no | `yes` or `no`: does a person verify features by hand in this project |
 | `qa-dir` | yes | no | where QA plans are written in the repository, relative to the project root, never absolute and never containing `..` |
 
-A file with a value KAIROS cannot use (an unknown alias, `maybe` in `manual-qa`, an absolute path) is reported once in one line and ignored, so the next place in the order below applies.
+A new setting is one more line in this file and one more row in this table, never a new file.
 
-### Which file wins
+A line with a value KAIROS cannot use (an unknown alias, `maybe` in `manual-qa`, an absolute path) is reported once in one line and ignored, so the next place in the order below applies.
 
-For each setting the first match wins. For `models` the lookup runs per agent, so one line in the project file changes one agent and leaves the others to the next file.
+### Which place wins
 
-| Setting | Order |
-|---------|-------|
-| `models` | `.kairos-cfg/models` in the project, then `.kairos/.models`, then `~/.kairos-cfg/models`, then the agent's own `model:` |
-| `manual-qa` | `.kairos-cfg/manual-qa`, then `.kairos/.manual-qa`, then the question |
-| `qa-dir` | `.kairos-cfg/qa-dir`, then `.kairos/.qa-dir`, then the question |
+For each key the first match wins. For `model.<agent>` the lookup runs per agent, so one line in the project file changes one agent and leaves the others to the next place.
 
-The project beats your home folder, so a team that commits `models` overrides your personal preference for the agents it names. Commit `models` only when the team means it, and leave it out when cost is each person's own choice.
+| Key | Order |
+|-----|-------|
+| `model.<agent>` | `.kairos-cfg/config` in the project, then `.kairos-cfg/models`, then `.kairos/.models`, then `~/.kairos-cfg/config`, then `~/.kairos-cfg/models`, then the agent's own `model:` |
+| `manual-qa` | `.kairos-cfg/config`, then `.kairos-cfg/manual-qa`, then `.kairos/.manual-qa`, then the question |
+| `qa-dir` | `.kairos-cfg/config`, then `.kairos-cfg/qa-dir`, then `.kairos/.qa-dir`, then the question |
+
+The project beats your home folder, so a team that commits `model.` lines overrides your personal preference for the agents they name. Commit them only when the team means it, and leave them out when cost is each person's own choice.
 
 The Start Gate prints the model lines in effect with the place each came from (`pm-agent haiku (project)`, `code-reviewer-agent opus (user)`), so you never have to work it out.
 
-### Files from before v9.3.0
+### Files from before v9.8.0
 
-KAIROS 9.3.0 moved the settings, and the old places keep working, the same way the v8.4.0 ledger move did: the old path is read and nothing has to be migrated. The orchestrator never moves or rewrites a file of yours. When both exist the new one wins, so a stale `.kairos/.models` can no longer override a project file someone just committed. Answers KAIROS asks for itself (`manual-qa`, `qa-dir`) are still stored in `.kairos/`, which is local to the machine; to share one with the team, copy its value into `.kairos-cfg/` and the question stops being asked.
+Until 9.8.0 each setting had a file of its own (`.kairos-cfg/models`, `.kairos-cfg/manual-qa`, `.kairos-cfg/qa-dir` and, before 9.3.0, `.kairos/.models`, `.kairos/.manual-qa`, `.kairos/.qa-dir`). They keep working, the same way the v8.4.0 ledger move did: the old path is read and nothing has to be migrated. The orchestrator never moves or rewrites a file of yours. `config` wins over every older file, so a stale one cannot override what the team committed. A `models` file keeps its own format, `<agent>: <alias>` without the `model.` prefix. Answers KAIROS asks for itself (`manual-qa`, `qa-dir`) are still stored in `.kairos/`, which is local to the machine; to share one with the team, add it to `.kairos-cfg/config` and the question stops being asked.
 
-`/kairos:setup` is the one thing that moves a file. It asks whether the models are for the project or for you, writes the right file, and when it replaces a project choice it removes the old `.kairos/.models` so the old lines cannot come back.
+`/kairos:setup` is the one thing that writes the folder. It asks whether the models are for the project or for you, replaces only the `model.` lines of the right `config` (every other line stays), and removes the older model files at that scope so their lines cannot come back.
 
 ## Which hosts read what
 
-`models` works on Claude Code only, because it depends on the Agent call taking a model parameter. OpenCode and Kimi Code ignore it and the Start Gate says so; their own model settings are on their [setup pages](/setup/). `manual-qa` and `qa-dir` are read by the orchestrator on every host.
+The `model.` lines work on Claude Code only, because it depends on the Agent call taking a model parameter. OpenCode and Kimi Code ignore it and the Start Gate says so; their own model settings are on their [setup pages](/setup/). `manual-qa` and `qa-dir` are read by the orchestrator on every host.
 
 ## Keeping token use down
 
