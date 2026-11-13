@@ -107,7 +107,7 @@ Establish three facts first, each with its evidence:
 Then decide, taking the first rule that applies:
 - **No suite** → no tests. Name how the change will be verified instead (build, type check, running the app, a manual step) — PHASE 2 records it for `qa-plan-agent`.
 - **Bug fix** → a regression test that fails without the fix and passes with it, in the file that already covers the broken code, or next to it following the project's convention.
-- **Touched modules already have tests** → extend those tests to cover the behaviour this change adds or alters. This is not optional: existing tests on a module are the project telling you how that module is verified.
+- **Touched modules already have tests** → extend those tests to cover the behaviour this change adds or alters, and no more: never to raise the module's coverage, and assert what a caller observes, not how the code is built. This is not optional: existing tests on a module are the project telling you how that module is verified.
 - **Touched modules have no tests** → add tests for the new or changed behaviour when the project's own conventions give a place to put them. You may skip them only with a written reason that names what makes a test impractical here (pure layout or styling, configuration only, code reachable only through an external system the suite cannot stand up). "Not needed", "small change" and time are never reasons.
 
 A skipped test is listed in the plan's Summary under **Needs your attention**, so the human sees it at the plan gate rather than discovering it at review.

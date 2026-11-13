@@ -14,7 +14,7 @@ There are no benchmark numbers here. Development speed depends on your codebase,
 | Every risk, issue, and finding is dispositioned one by one | The Risk Disposition Loop, which resolves each row before the whole-artifact gate is shown |
 | Acceptance criteria carry stable `AC-n` IDs, assigned once and never renumbered | `pm-agent`, read by every later phase and mapped to tests by `test-verifier-agent` |
 | Tests are written before the code, and the RED phase is actually observed | `implementer-tdd-agent`, re-checked afterwards by `test-verifier-agent`'s TDD reality check |
-| Coverage stays above 80%, with assertions that would fail if the behaviour broke | `test-verifier-agent`, which grades assertion strength and determinism rather than counting lines |
+| Tests sized to the acceptance criteria, with assertions that would fail if the behaviour broke | `test-verifier-agent`, which grades assertion strength and determinism rather than counting lines |
 | Findings come with evidence at `file:line`, never with an unsupported verdict | The `analysis-discipline` skill, applied by every reviewing agent |
 | Security is reviewed adversarially, with attack scenarios and real severity | `security-reviewer-agent`, optional and recommended for auth, payments, and write endpoints |
 | What automated tests cannot check is planned, not assumed | `qa-plan-agent` — manual and exploratory cases, regression retest list, UAT sign-off per `AC-n` |

@@ -141,10 +141,9 @@ State 2 is **never your judgment call**. It requires a `VERIFICATION` row that a
 A criterion in state 2 is not verified yet, only routed: `qa-plan-agent` (Phase 5b) writes the case and its setup, and its UAT Sign-off is where the `AC-n` gets accepted. When 5b does not run, the `VERIFICATION` row stays `🔴 open` and `release-planner-agent`'s final accounting puts it in front of a human before release — that is the net, and it is why state 2 is safe to exclude from the loop.
 
 #### 2. Coverage Adequacy
-- Line coverage ≥ 80%?
-- Branch coverage ≥ 75%?
-- Function coverage ≥ 90%?
-- Identify uncovered lines and classify each: dead code, unreachable, missing test, or intentional.
+- Report line, branch and function coverage. A percentage is a finding only when a `constraints.md` row declares one; the project's own configured threshold counts as declared.
+- Identify uncovered lines and classify each: dead code, unreachable, missing test, or intentional. `missing test` is an Issue only when the line carries behaviour an `AC-n` or a Risks row names; logic nobody asked to protect is `intentional`.
+- Over-testing: tests that assert the same behaviour twice, or that assert structure (call order, private helpers, mock wiring) instead of what a caller observes, are `low` Issues to merge or drop, since each one raises the cost of the next change.
 
 #### 3. Assertion Strength
 Flag tests where:

@@ -32,7 +32,7 @@ A: Claude Code gets the full experience, including the plugin, the slash command
 
 **Q: Can I customize agents?**
 
-A: Some things are settings, the rest means editing a file. Models, the folder QA plans are saved in and whether a person verifies by hand are settings, kept in a `.kairos-cfg/` folder in the project (committed, shared with the team) or in your home directory; one issue's pipeline is a block in the issue. [Customizing KAIROS](/customizing) lists every one and which wins. How an agent behaves (its rules, wording, limits) has no setting: the agent files are Markdown, so edit them to match your team's patterns, libraries, or standards. If you edit a file in `agents/`, mirror the same body change into `.opencode/agents/` and `.kimi-code/agents/`, which are maintained by hand on purpose. Never put a secret in `.kairos-cfg/`: it is committed.
+A: Some things are settings, the rest means editing a file. Models, the folder QA plans are saved in and whether a person verifies by hand are settings, kept as lines of one `config` file in a `.kairos-cfg/` folder in the project (committed, shared with the team) or, for models, in your home directory; one issue's pipeline is a block in the issue. [Customizing KAIROS](/customizing) lists every one and which wins. How an agent behaves (its rules, wording, limits) has no setting: the agent files are Markdown, so edit them to match your team's patterns, libraries, or standards. If you edit a file in `agents/`, mirror the same body change into `.opencode/agents/` and `.kimi-code/agents/`, which are maintained by hand on purpose. Never put a secret in `.kairos-cfg/`: it is committed.
 
 ---
 

@@ -25,7 +25,7 @@ features:
     details: Works with Claude Code, Cursor IDE, GitHub Copilot, Amazon CodeWhisperer, JetBrains, VS Code, OpenCode, and Kimi Code.
   - icon: ✅
     title: Reviewable Output, Not a Black Box
-    details: "Every run produces code plus a written trail of what was checked, on disk in .kairos/ and reviewable like any other file. With the TDD implementer: tests above 80% coverage and a deployment plan. With the code-first implementer: code, plus the tests the project already calls for."
+    details: "Every run produces code plus a written trail of what was checked, on disk in .kairos/ and reviewable like any other file. With the TDD implementer: tests sized to the acceptance criteria and a deployment plan. With the code-first implementer: code, plus the tests the project already calls for."
   - icon: 🌍
     title: Open Source (AGPL-3.0)
     details: Fork it, customize agents for your team's patterns and standards.

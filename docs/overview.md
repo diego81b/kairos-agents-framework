@@ -52,7 +52,7 @@ Each subagent:
 | 3 | **Implementer Agent** | Implementation plan → TDD cycle (tests first, then code) — **default when the project has a test suite**; a code-first variant (code, then the tests the project calls for) runs for `simple_fix`, for projects without a suite, and when the design says `test_first: no` | Code + `03-implementation.md` |
 | 4 | **Code Reviewer** | Standards, security, performance, contract compliance | `04-review.md` |
 | 4b | **Security Reviewer** _(optional)_ | Adversarial security pass — IDOR, auth, injection, secrets, data exposure | `04b-security-review.md` |
-| 5 | **Test Verifier** | Coverage adequacy (>80%), edge cases, assertion quality | `05-test-verification.md` |
+| 5 | **Test Verifier** | Coverage reported (threshold only if declared), over-testing, assertion quality | `05-test-verification.md` |
 | 5b | **QA Plan Agent** *(optional)* | Manual & exploratory cases, regression retest list, test data/environment, UAT sign-off | `05b-qa-plan.md` |
 | 6 | **Release Planner** | Deployment steps, rollback strategy, monitoring thresholds | `06-deployment-plan.md` |
 | 6b | **Documentation Agent** _(optional)_ | Feature-facing docs in the target project — README, API reference, CHANGELOG | `06b-documentation.md` |
@@ -127,7 +127,7 @@ The full rule table and override examples (hotfix, security-sensitive, refactor,
 A typical KAIROS feature run produces:
 
 - ✅ Code following your project's existing patterns, reviewed at a gate before it lands
-- ✅ Comprehensive test suite with coverage >80% _(when using `implementer-tdd-agent`)_
+- ✅ Test suite sized to the acceptance criteria, coverage reported _(when using `implementer-tdd-agent`)_
 - ✅ Architecture decision record with sound API contracts _(via pre-contract checklist gate)_
 - ✅ Code review report (security, performance, standards)
 - ✅ Adversarial security report with exploitable findings and attack scenarios _(when using `security-reviewer-agent`)_
