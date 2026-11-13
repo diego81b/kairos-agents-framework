@@ -135,24 +135,29 @@ function readTranscript(file) {
   return { total, models, turns: byResponse.size, first, last, firstUser, agentSetting, peak }
 }
 
-// What the model should have been: the `models` files first, in the order the orchestrator reads them
-// (project .kairos-cfg/models, then .kairos/.models, then ~/.kairos-cfg/models), then the agent's own
-// `model:` frontmatter. The first file naming an agent wins; an alias outside the four is ignored.
+// What the model should have been: the model settings first, in the order the orchestrator reads them
+// (project .kairos-cfg/config, project .kairos-cfg/models, .kairos/.models, ~/.kairos-cfg/config, then
+// ~/.kairos-cfg/models), then the agent's own `model:` frontmatter. The first source naming an agent wins;
+// an alias outside the four is ignored. `config` holds `model.<agent>: <alias>`; a `models` file holds
+// `<agent>: <alias>`.
 const MODEL_FILES = [
+  { file: path.join(process.cwd(), '.kairos-cfg', 'config'), source: '.kairos-cfg/config', keyed: true },
   { file: path.join(process.cwd(), '.kairos-cfg', 'models'), source: '.kairos-cfg/models' },
   { file: path.join(process.cwd(), '.kairos', '.models'), source: '.kairos/.models' },
+  { file: path.join(os.homedir(), '.kairos-cfg', 'config'), source: '~/.kairos-cfg/config', keyed: true },
   { file: path.join(os.homedir(), '.kairos-cfg', 'models'), source: '~/.kairos-cfg/models' }
 ]
 const ALIASES = new Set(['opus', 'sonnet', 'haiku', 'fable'])
 function readModelsFiles() {
   const map = new Map()
-  for (const { file, source } of MODEL_FILES) {
+  for (const { file, source, keyed } of MODEL_FILES) {
     let text
     try { text = fs.readFileSync(file, 'utf8') } catch { continue }
+    const pattern = keyed ? /^model\.([\w:-]+)\s*:\s*(\w+)$/ : /^([\w:-]+)\s*:\s*(\w+)$/
     for (const raw of text.split('\n')) {
       const line = raw.trim()
       if (!line || line.startsWith('#')) continue
-      const m = /^([\w:-]+)\s*:\s*(\w+)$/.exec(line)
+      const m = pattern.exec(line)
       if (m && ALIASES.has(m[2].toLowerCase()) && !map.has(m[1])) map.set(m[1], { alias: m[2].toLowerCase(), source })
     }
   }

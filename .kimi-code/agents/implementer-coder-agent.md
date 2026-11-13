@@ -105,7 +105,7 @@ Establish three facts first, each with its evidence:
 Then decide, taking the first rule that applies:
 - **No suite** → no tests. Name how the change will be verified instead (build, type check, running the app, a manual step) — PHASE 2 records it for `qa-plan-agent`.
 - **Bug fix** → a regression test that fails without the fix and passes with it, in the file that already covers the broken code, or next to it following the project's convention.
-- **Touched modules already have tests** → extend those tests to cover the behaviour this change adds or alters. This is not optional: existing tests on a module are the project telling you how that module is verified.
+- **Touched modules already have tests** → extend those tests to cover the behaviour this change adds or alters, and no more: never to raise the module's coverage, and assert what a caller observes, not how the code is built. This is not optional: existing tests on a module are the project telling you how that module is verified.
 - **Touched modules have no tests** → add tests for the new or changed behaviour when the project's own conventions give a place to put them. You may skip them only with a written reason that names what makes a test impractical here (pure layout or styling, configuration only, code reachable only through an external system the suite cannot stand up). "Not needed", "small change" and time are never reasons.
 
 A skipped test is listed in the plan's Summary under **Needs your attention**, so the human sees it at the plan gate rather than discovering it at review.
@@ -114,11 +114,12 @@ A skipped test is listed in the plan's Summary under **Needs your attention**, s
 
 #### Wave Splitting (mandatory when plan is large)
 
-Count `files_to_create + files_to_modify`:
+Estimate the output of every file in the plan, test files included, in tokens: lines you will write × 12. A new file counts all its lines; a modified file counts only the lines it adds or changes, never the lines it keeps. Write the figure in the `Est. tokens` column of the file tables and sum it per wave in `## Waves`.
 
-- If total ≤ 6 files: single wave, proceed normally.
-- If total > 6 files: split into waves of ≤ 6 files each, ordered by dependency. The plan MUST include a `waves` array. Each wave is executed as a separate run. After each wave, write status `partial` and stop. The next invocation resumes from `next_wave`.
-- Hard cap: 6 files per wave. Output token cap, not file size, is the bottleneck.
+- If the total is ≤ 10,000 tokens and ≤ 12 files: single wave, proceed normally.
+- Otherwise split into waves of ≤ 10,000 tokens and ≤ 12 files each, ordered by dependency. The plan MUST include a `waves` array. Each wave is executed as a separate run. After each wave, write status `partial` and stop. The next invocation resumes from `next_wave`.
+- A file whose estimate alone exceeds 10,000 tokens takes a wave of its own and a `medium` row in `## Risks`; never split one file across two waves.
+- Hard cap: 10,000 estimated tokens per wave. Do not lower an estimate to fit. Output token cap, not file count or file size, is the bottleneck.
 
 If you ever feel pressure to "just finish it in one run" past the cap: STOP. Write checkpoint, return `status: partial`. Hallucinated continuations are the failure mode this rule exists to prevent.
 
@@ -147,15 +148,16 @@ Brief description of the implementation strategy.
 
 ## Files to Create
 
-| Path | Purpose | Exports |
-|------|---------|---------|
-| src/payments/stripe.service.js | Stripe integration service | createCharge, refund |
+| Path | Purpose | Exports | Est. tokens |
+|------|---------|---------|-------------|
+| src/payments/stripe.service.js | Stripe integration service | createCharge, refund | 2400 |
 
 ## Files to Modify
 
-| Path | Changes |
-|------|---------|
-| src/app.js | register /payments router |
+| Path | Changes | Est. tokens |
+|------|---------|-------------|
+| src/payments/payment.service.test.js | extend with the refund path | 600 |
+| src/app.js | register /payments router | 100 |
 
 ## Dependencies
 
@@ -186,10 +188,12 @@ Infer a reasonable impact level (`critical`/`high`/`medium`/`low`) per risk from
 
 ## Waves
 
-| Wave | Files |
-|------|-------|
-| 1 | src/payments/stripe.service.js, src/app.js |
+| Wave | Files | Est. tokens |
+|------|-------|-------------|
+| 1 | src/payments/stripe.service.js, src/payments/payment.service.test.js, src/app.js | 3100 |
 ```
+
+`Est. tokens` is the sum of the wave's files.
 
 #### Phase 0 Checkpoint
 
@@ -409,7 +413,7 @@ These skills and MCP tools enhance this agent when installed. KAIROS works fully
 - Where the modules you touch already have tests, extending them is part of the change, not an extra
 - Skipping tests needs a written reason in the plan; "small change" is not one
 - Files are written via the `write` tool. The Markdown output is metadata only — never embed file contents.
-- Hard cap: 6 files per wave. Anything more must be split. Never produce a "compact" single run by truncating.
+- Hard cap: 10,000 estimated tokens and 12 files per wave. Anything more must be split. Never produce a "compact" single run by truncating.
 - Always run `git status --short` after writing and include raw output in the `## Git Status` block.
 - If `git status` shows zero changes, return `status: blocked`. Do not lie about success.
 - Hallucinated tool calls (text that looks like a tool call but is not) = silent failure. If you start producing output that resembles a tool call inside prose, stop and emit a real `write` tool call instead.

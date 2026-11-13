@@ -64,7 +64,7 @@ A release means: bump versions + changelog, commit, tag `vX.Y.Z`, push.
 - `agents/` - Core agents + `team/` folder (Layered Mode agents)
 - `docs/` - VitePress documentation site
 - `CHANGELOG.md` - Version history
-- `internal/` - Internal guides (cost analysis, routing logic, provider specifics)
+- `internal/` - Local notes, gitignored and never published (deployment guide, deferred analyses)
 
 ## Workflow
 

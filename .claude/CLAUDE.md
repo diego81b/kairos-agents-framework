@@ -97,3 +97,16 @@ Every file in `agents/` (the 17 core pipeline agents, **not** `agents/team/`) al
 - Before committing, diff the two directories' bodies (strip frontmatter from each side and compare) to confirm nothing drifted.
 
 **`agents/team/*.md` is explicitly out of scope for this mirror too** — same status as the OpenCode exclusion above (deferred, not run there). See `docs/setup/kimi-code.md`'s "No Layered Mode mirror" note before changing this.
+
+## Orchestrator Size Budget
+
+`agents/orchestrator-agent.md` grew from 58 KB (v7.4.0, 2026-08-27) to 252 KB (v9.7.0, 2026-10-23), about 4 KB a day, and it is loaded into every turn of every run. The rules in it that small models miss are the ones buried deepest. Until the kairos-cli runner replaces it, the file does not grow.
+
+**Rule: the file stays at or under 252,000 bytes** (`wc -c agents/orchestrator-agent.md`). The budget is a ceiling, not a target.
+
+- A change that adds text to `agents/orchestrator-agent.md` must remove or shorten at least as much elsewhere in the same file, and the commit says what went.
+- Prefer, in this order: delete a rule the derivation made redundant; shorten a paragraph that restates another; fix the rule where it already is. A new paragraph is the last resort.
+- New behaviour goes into the agent it belongs to, not into the orchestrator, unless the orchestrator is the only one that can act on it (gates, dispatch, ledger writes, `run.md`).
+- Over budget is allowed only for a fix that stops a real failure and has no shorter form. Say so in the CHANGELOG entry and lower the next change's allowance by the same amount.
+- Do not add code to this repo to make the file shorter. The deterministic rules (derivation, resume, contract check, option parsing) live in the kairos-cli runner, which already implements most of them; this file stays the readable specification and the Claude Code host.
+- The mirrors (`.opencode/agents/`, `.kimi-code/agents/`) carry the same body, so one check covers all three.

@@ -1,5 +1,5 @@
 ---
-description: Guided KAIROS model setup — pick per-tier models and write them to .kairos-cfg/models (this project or your home folder)
+description: Guided KAIROS model setup — pick per-tier models and write them to .kairos-cfg/config (this project or your home folder)
 allowed-tools: AskUserQuestion, Read, Write, Edit, Glob, Grep, Bash
 ---
 
@@ -9,48 +9,48 @@ You are configuring which models the KAIROS pipeline agents use, for this projec
 
 ## How models are chosen
 
-Every core agent ships with a `model:` in its frontmatter (`opus` or `sonnet`). The orchestrator can override it per agent by passing a `model` parameter on the call, read from the `models` files: `.kairos-cfg/models` in the project (committed, shared with the team), then the older `.kairos/.models`, then `~/.kairos-cfg/models` in the user's home directory, the first line naming an agent winning. Claude Code ranks that parameter above frontmatter, so the files work on a plugin install without touching the plugin cache and without project copies of the agents. It takes aliases only: `opus`, `sonnet`, `haiku`, `fable`. `inherit` and full model IDs are not accepted by the parameter; the Advanced path below covers them.
+Every core agent ships with a `model:` in its frontmatter (`opus` or `sonnet`). The orchestrator can override it per agent by passing a `model` parameter on the call, read from the `model.<agent>` lines of `config`: `.kairos-cfg/config` in the project (committed, shared with the team), then the files from before v9.8.0 (`.kairos-cfg/models`, `.kairos/.models`), then `~/.kairos-cfg/config` in the user's home directory, then `~/.kairos-cfg/models`, the first line naming an agent winning. Claude Code ranks that parameter above frontmatter, so the files work on a plugin install without touching the plugin cache and without project copies of the agents. It takes aliases only: `opus`, `sonnet`, `haiku`, `fable`. `inherit` and full model IDs are not accepted by the parameter; the Advanced path below covers them.
 
 ## Tier map (canonical defaults)
 
-| Tier | Agents the orchestrator dispatches (covered by the `models` files) | Shipped `model:` |
+| Tier | Agents the orchestrator dispatches (covered by the model lines) | Shipped `model:` |
 |------|------|------|
 | Reasoning | `architect-agent`, `impact-assessment-agent`, `security-reviewer-agent`, `bug-triage-agent` | `opus` |
 | Execution | `pm-agent`, `implementer-tdd-agent`, `implementer-coder-agent`, `code-reviewer-agent`, `test-verifier-agent`, `qa-plan-agent`, `release-planner-agent`, `documentation-agent` | `sonnet` |
 
-Not covered, frontmatter only: `orchestrator-agent` (the session's own model), the agents you start yourself (`context-extractor-agent`, `retrospective-agent`, `improvement-advisor-agent`, `dependency-audit-agent`), and the Layered Mode files in `agents/team/`, which keep their frontmatter models (`opus` for the lead, `haiku` for the layer agents). This command writes no line for them. The orchestrator dispatches the lead and each layer agent itself, so a hand-written line in a `models` file (`implementer-lead-agent`, `teammate-backend-agent` and so on) does apply to them.
+Not covered, frontmatter only: `orchestrator-agent` (the session's own model), the agents you start yourself (`context-extractor-agent`, `retrospective-agent`, `improvement-advisor-agent`, `dependency-audit-agent`), and the Layered Mode files in `agents/team/`, which keep their frontmatter models (`opus` for the lead, `haiku` for the layer agents). This command writes no line for them. The orchestrator dispatches the lead and each layer agent itself, so a hand-written `model.` line (`model.implementer-lead-agent`, `model.teammate-backend-agent` and so on) does apply to them.
 
 ## Step 1 — Look at what exists
 
-Read each of the three `models` files that exists and show its contents under its label: `project` (`.kairos-cfg/models`), `local` (`.kairos/.models`) and `user` (`~/.kairos-cfg/models`; resolve the home directory with Bash, `printf '%s' "${HOME:-$USERPROFILE}"`). Tell the user that applying a strategy replaces the file at the scope they choose in Step 2, so hand-written per-agent lines in it are lost, and that a `local` file is removed when the project file is written, because it would otherwise bring its old lines back.
+Read each model source that exists and show its model lines under its label: `project` (`model.` lines of `.kairos-cfg/config`, and the older `.kairos-cfg/models`), `local` (`.kairos/.models`) and `user` (`model.` lines of `~/.kairos-cfg/config`, and the older `~/.kairos-cfg/models`; resolve the home directory with Bash, `printf '%s' "${HOME:-$USERPROFILE}"`). Tell the user that applying a strategy replaces the `model.` lines at the scope they choose in Step 2 (every other line of `config` stays), so hand-written per-agent lines are lost, and that the older model files at that scope are removed, because they would otherwise bring their old lines back.
 
 ## Step 2 — Choose the scope and the strategy
 
 Ask both in one `AskUserQuestion` call. First the scope:
 
-- **Only me, every project (Recommended)** — writes `~/.kairos-cfg/models`. Nothing is committed, so it cannot change anyone else's models.
-- **This project, shared with the team** — writes `.kairos-cfg/models` in the project, which is meant to be committed. It beats each person's own file for the agents it names, so choose it only when the team means to share the models.
+- **Only me, every project (Recommended)** — writes `~/.kairos-cfg/config`. Nothing is committed, so it cannot change anyone else's models.
+- **This project, shared with the team** — writes `.kairos-cfg/config` in the project, which is meant to be committed. It beats each person's own file for the agents it names, so choose it only when the team means to share the models.
 
 Then the strategy:
 
-1. **Default (Recommended)** — reasoning = `opus`, execution = `sonnet`. As shipped, so nothing needs to be written: remove the file at the chosen scope if it exists (it only exists to differ from the defaults; for the project scope that is `.kairos-cfg/models` and `.kairos/.models`) and go to Step 4.
+1. **Default (Recommended)** — reasoning = `opus`, execution = `sonnet`. As shipped, so nothing needs to be written: remove the `model.` lines from `config` at the chosen scope (the file itself only when nothing else is left in it) and the older model files there (project: `.kairos-cfg/models` and `.kairos/.models`; home: `~/.kairos-cfg/models`), since model lines only exist to differ from the defaults, and go to Step 4.
 2. **Economy** — reasoning = `sonnet`, execution = `haiku`. Biggest token savings while keeping the two-tier split.
 3. **Custom** — ask once per tier (both questions in one `AskUserQuestion` call); accept `opus`, `sonnet`, `haiku` or `fable`.
 4. **Advanced** — you need `inherit`, a full model ID, or a model for an agent the file does not cover. Go to the Advanced path at the end and skip Steps 3-4.
 
-## Step 3 — Write the `models` file
+## Step 3 — Write the model lines
 
-Create `.kairos-cfg/` at the chosen scope if it is missing (the project root, or the home directory). Expand each tier choice into one line per covered agent (the 12 agents in the tier map) and write `.kairos-cfg/models` there. For the project scope, then remove `.kairos/.models` if it exists. Never write a key, token or password into this folder: it is committed, and no setting needs one. Never touch `.gitignore`: `.kairos-cfg/` is meant to be committed.
+Create `.kairos-cfg/` at the chosen scope if it is missing (the project root, or the home directory). Expand each tier choice into one `model.<agent>: <alias>` line per covered agent (the 12 agents in the tier map) and write them into `.kairos-cfg/config` there: read the file if it exists, drop its `model.` lines, keep every other line as it is, add the new ones, and create the file when it is missing. Then remove the older model files at that scope (project: `.kairos-cfg/models` and `.kairos/.models`; home: `~/.kairos-cfg/models`). Never write a key, token or password into this folder: it is committed, and no setting needs one. Never touch `.gitignore`: `.kairos-cfg/` is meant to be committed.
 
 ```
-# KAIROS models: one "<agent>: <alias>" line per agent. Written by /kairos:setup, safe to edit by hand.
-# Aliases only: opus, sonnet, haiku, fable. Delete a line to use that agent's own model.
+# KAIROS settings: one "key: value" line each. The model lines are written by /kairos:setup, safe to edit by hand.
+# model.<agent>: aliases only (opus, sonnet, haiku, fable). Delete a line to use that agent's own model.
 # No keys, tokens or passwords in this folder.
-architect-agent: sonnet
-impact-assessment-agent: sonnet
-security-reviewer-agent: sonnet
-bug-triage-agent: sonnet
-pm-agent: haiku
+model.architect-agent: sonnet
+model.impact-assessment-agent: sonnet
+model.security-reviewer-agent: sonnet
+model.bug-triage-agent: sonnet
+model.pm-agent: haiku
 ...
 ```
 
@@ -58,9 +58,9 @@ Preserve the file's line endings if it already existed. Never edit an agent file
 
 ## Step 4 — Report
 
-Print the models in effect, reading the three files again: agent → model, the file each line came from (`project`, `local`, `user`, or `shipped` when no file names the agent), marking each line that differs from the shipped model. A file at the other scope may still set lines the chosen strategy did not touch (a Default at the project scope leaves the user's file in force): say so by name. Then remind the user:
+Print the models in effect, reading the sources again: agent → model, where each line came from (`project`, `local`, `user`, or `shipped` when none names the agent), marking each line that differs from the shipped model. A file at the other scope may still set lines the chosen strategy did not touch (a Default at the project scope leaves the user's file in force): say so by name. Then remind the user:
 
-- The orchestrator reads the files before every dispatch, so a run in progress picks up an edit at its next call.
+- The orchestrator reads the settings before every dispatch, so a run in progress picks up an edit at its next call.
 - It is Claude Code only. OpenCode and Kimi Code ignore them (their own model settings are on their setup pages).
 - This command writes lines only for the agents in the tier map. The orchestrator and the agents started by hand keep their frontmatter model, and so do the Layered Mode agents unless a line for them is added by hand.
 - The project file is meant to be committed, so the team gets the same models; the home file is only this user's. `docs/customizing.md` lists every setting and the order the files are read in.
@@ -68,7 +68,7 @@ Print the models in effect, reading the three files again: agent → model, the 
 
 ## Advanced path — frontmatter or one global model
 
-Use this only when the user picked **Advanced**. It changes agent files or `settings.json` instead of the `models` files.
+Use this only when the user picked **Advanced**. It changes agent files or `settings.json` instead of the model lines.
 
 ### A — Detect install mode
 
@@ -87,7 +87,7 @@ Briefly explain to the user, then ask via `AskUserQuestion`:
 Options:
 
 1. **Materialize project copies (Recommended)** — copy the 17 core agents into this project's `.claude/agents/`, then set per-tier models there. Full two-tier control, including `inherit` and full model IDs.
-2. **One global subagent model** — write `CLAUDE_CODE_SUBAGENT_MODEL` and `CLAUDE_CODE_SUBAGENT_MODEL_FORCE` to `settings.json`. Coarse: every subagent (architect and security review included) runs on that single model, and the `models` files stop having any effect. Without the FORCE variable the model would only apply to agents with no `model:` of their own, which is none of ours.
+2. **One global subagent model** — write `CLAUDE_CODE_SUBAGENT_MODEL` and `CLAUDE_CODE_SUBAGENT_MODEL_FORCE` to `settings.json`. Coarse: every subagent (architect and security review included) runs on that single model, and the model lines stop having any effect. Without the FORCE variable the model would only apply to agents with no `model:` of their own, which is none of ours.
 3. **Cancel** — stop here.
 
 **If option 2:** ask which model (`opus`, `sonnet`, `haiku`, `inherit`, or a full model ID) and which scope (project `.claude/settings.json` — committed, shared with the team; or global `~/.claude/settings.json` — this machine only). Read the chosen file if it exists, merge `"env": { "CLAUDE_CODE_SUBAGENT_MODEL": "<model>", "CLAUDE_CODE_SUBAGENT_MODEL_FORCE": "1" }` preserving every existing key, write it back, confirm to the user, and STOP here.
@@ -120,4 +120,4 @@ Print the resulting 17-row table (agent → model). Then remind the user:
 
 - Project copies are local forks of the agent files: after a KAIROS update, re-copy the agents (or re-run `/kairos:setup` after materializing fresh copies) and re-apply.
 - If copies were materialized from the plugin in B, the pipeline now runs on the **project** orchestrator: invoke `@orchestrator-agent` (bare name), not `@kairos:orchestrator-agent` — the scoped plugin orchestrator would route to the plugin's agents with the shipped models.
-- A `models` file (`.kairos-cfg/models`, `.kairos/.models` or the home folder's) still outranks these frontmatter edits for the agents it names. Delete a line, or the file, if you want the frontmatter value to apply.
+- A model line (`model.<agent>` in `.kairos-cfg/config`, an older `models` file or the home folder's) still outranks these frontmatter edits for the agents it names. Delete the line if you want the frontmatter value to apply.

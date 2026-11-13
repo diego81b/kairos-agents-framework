@@ -131,7 +131,7 @@ Lean Mode does not change this rule in either direction: if an `ACCESSIBILITY` r
 
 First check whether tests are even in scope: read `03-implementation.md`'s frontmatter. If it has `tdd_verification`/`coverage_summary` fields, `implementer-tdd-agent` produced this code and tests exist — run the checks below. If it has `tests_written: yes`, `implementer-coder-agent` wrote tests after the code — run the checks below except anything about test-first order. If it has `tests_written: no` (or neither field, from an implementation written before v9.0.0), read the plan's `## Test Decision` in `03-implementation-plan.md`: when it gives a reason that holds (no suite in the project, or a stated reason a test is impractical here), mark this check `N/A — no tests by decision: <reason>` and do not let it contribute to `status: NEEDS_FIXES`; when the decision skipped tests on a module that already had tests, or gave no reason, that is an Issues row, because extending existing tests was not optional for the coder either.
 
-- Coverage >80%?
+- Coverage meets a threshold only if a constraint row or the project's config declares one (no default bar)?
 - Happy path tested?
 - Error cases tested?
 - Edge cases tested?

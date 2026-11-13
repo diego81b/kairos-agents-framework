@@ -143,7 +143,7 @@ Create the contracts needed for the layers marked in scope by Step 1b. TEST and 
 
 #### CONTRACT 1: TEST CONTRACT
 
-**Coverage target:** > 80% lines, > 85% functions
+**Coverage target:** none by default; set one only when a `constraints.md` row or the project config declares it. Tests follow the `AC-n` list and assert what a caller observes.
 
 **Happy paths**
 - POST /api/payments with valid input → 200 with client_secret
@@ -397,7 +397,7 @@ TESTS:
 5. **Write `03-verify.md`** (format below) and end with the verdict.
 
 **Verdict:**
-- `pass`: no mismatch, no failing test, coverage target met, no open request, every report `status: complete`. The orchestrator moves on to REFACTOR.
+- `pass`: no mismatch, no failing test, no declared coverage target missed, no open request, every report `status: complete`. The orchestrator moves on to REFACTOR.
 - `fix`: there are Fix Tasks and no row is capped. `layers_to_fix` names the layers (it may include `tests`). The orchestrator calls only those layers and calls you again.
 - `human`: any `## Needs Human` row exists.
 
@@ -561,7 +561,7 @@ Never rewrite an existing row's `Category` cell — it is set once by whoever cr
 **`decisions.md`** — Add lead-phase decisions. The table has six columns, `ID | Decision | Phase | Rationale | Constraint impact | Supersedes`; if it still has five (written before v8.4.0), add the `Supersedes` column first, with `—` in every existing row. Leave `Supersedes` as `—` on every row you add: only the orchestrator fills it, when a human accepts a decision conflict at the gate. A change of course is a new row, never an edit of an old one. Record:
 - Contract choices made during Step 2 (why you chose specific API shapes, error codes)
 - Any contract divergence the plan gate resolved (Step 2b)
-- Coverage targets set in the TEST CONTRACT
+- Coverage target in the TEST CONTRACT only when declared (none by default)
 
 **`open-questions.md`** — Answer questions visible from implementation findings. Add new questions raised during coordination.
 

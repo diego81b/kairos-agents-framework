@@ -71,14 +71,14 @@ Step 3 is a last resort, not the normal path — `00b-impact.md` comes from an o
 When effort is `simple_fix`, run in **Lean Mode** for the rest of this run:
 - PHASE 0 plan collapses to Approach (1-2 lines) + Files to Create/Modify + Test Cases (name + a one-clause Intent each, no `Type` column). Omit `Waves` (never triggered at this size) and the `Risks` table unless a genuine risk actually surfaces — an empty table is pure overhead at this size.
 - PHASE 1 test cases cover HAPPY PATH and ERROR CASES only. Add BOUNDARIES/EDGE/PERFORMANCE only if the architecture spec or your own read of the change gives a concrete reason — do not generate them by default.
-- Coverage bar stays >80%, but only across the test categories actually warranted above — do not manufacture boundary/edge tests just to inflate the count.
+- No coverage bar: write only the tests the categories above warrant, and never a boundary/edge test just to raise a percentage.
 - 2b Ledger Update becomes additive-only (see that section below).
 - The PHASE 0 plan file and its gate still apply unchanged — Lean Mode trims the plan's content, never the write to `03-implementation-plan.md` or the approval step.
 
 When effort is `medium`, run in **Trimmed Mode** — the Full process, two sections shorter:
 - `Waves` in the PHASE 0 plan are produced **only when the change actually spans more than one domain** (db / backend / frontend). A single-domain `medium` change has nothing to sequence, and a one-wave table is a header with no information in it.
 - PHASE 1 test categories cover HAPPY PATH, ERROR CASES, and BOUNDARIES. Add EDGE and PERFORMANCE cases only where the architecture spec, an `AC-n`, or a Risks row gives a concrete reason — not by default.
-- Everything else — the coverage bar, the RED→GREEN→REFACTOR cycle, the plan file, its gate, and the full Ledger Update — is unchanged. What shrinks here is generated volume nobody reads, never the discipline that makes the tests worth having.
+- Everything else — the RED→GREEN→REFACTOR cycle, the plan file, its gate, and the full Ledger Update — is unchanged. What shrinks here is generated volume nobody reads, never the discipline that makes the tests worth having.
 
 `test-verifier-agent` has a matching Trimmed Mode that grades against exactly these categories (see its own Effort Detection section). The two are one decision, not two: if you change the categories generated here, change what's required there in the same edit, or the verifier will flag as missing a category that was never supposed to exist.
 
@@ -109,11 +109,12 @@ Produce a plan with (trim per Lean Mode above when applicable):
 
 #### Wave Splitting (mandatory when plan is large)
 
-Count `files_to_create + files_to_modify`:
+Estimate the output of every file in the plan, test files included, in tokens: lines you will write × 12. A new file counts all its lines; a modified file counts only the lines it adds or changes, never the lines it keeps. Write the figure in the `Est. tokens` column of the file tables and sum it per wave in `## Waves`.
 
-- If total ≤ 6 files: single wave, proceed normally.
-- If total > 6 files: split into waves of ≤ 6 files each, ordered by dependency (tests → code → integration). The plan MUST include a `waves` array. Each wave is executed as a separate run (PHASES 1–6 per wave). After each wave, write status `partial` and stop. The next invocation resumes from `next_wave`. When `02-architecture.md`'s Selected Option names a UC, each wave states which UC it serves — a multi-wave run is exactly where technical decisions accumulate and functional intent drifts; restating it per wave is the checkpoint that catches that before it compounds.
-- Hard cap: 6 files per wave. Do not exceed even if "they're small". Output token cap, not file size, is the bottleneck.
+- If the total is ≤ 10,000 tokens and ≤ 12 files: single wave, proceed normally.
+- Otherwise split into waves of ≤ 10,000 tokens and ≤ 12 files each, ordered by dependency (tests → code → integration). The plan MUST include a `waves` array. Each wave is executed as a separate run (PHASES 1–6 per wave). After each wave, write status `partial` and stop. The next invocation resumes from `next_wave`. When `02-architecture.md`'s Selected Option names a UC, each wave states which UC it serves — a multi-wave run is exactly where technical decisions accumulate and functional intent drifts; restating it per wave is the checkpoint that catches that before it compounds.
+- A file whose estimate alone exceeds 10,000 tokens takes a wave of its own and a `medium` row in `## Risks`; never split one file across two waves.
+- Hard cap: 10,000 estimated tokens per wave. Do not lower an estimate to fit. Output token cap, not file count or file size, is the bottleneck.
 
 If you ever feel pressure to "just finish it in one run" past the cap: STOP. Write checkpoint, return `status: partial`. Hallucinated continuations are the failure mode this rule exists to prevent.
 
@@ -142,15 +143,16 @@ Brief description of the implementation strategy.
 
 ## Files to Create
 
-| Path | Purpose | Exports |
-|------|---------|---------|
-| src/payments/stripe.service.js | Stripe integration service | createCharge, refund |
+| Path | Purpose | Exports | Est. tokens |
+|------|---------|---------|-------------|
+| __tests__/stripe.service.test.js | tests for the Stripe service | — | 1800 |
+| src/payments/stripe.service.js | Stripe integration service | createCharge, refund | 2400 |
 
 ## Files to Modify
 
-| Path | Changes |
-|------|---------|
-| src/app.js | register /payments router |
+| Path | Changes | Est. tokens |
+|------|---------|-------------|
+| src/app.js | register /payments router | 100 |
 
 ## Test Cases
 
@@ -166,7 +168,7 @@ Brief description of the implementation strategy.
 
 1. write stripe.service.test.js (all cases RED)
 2. implement stripe.service.js (GREEN)
-3. refactor + coverage check
+3. refactor, then the full suite once
 
 ## Dependencies
 
@@ -187,13 +189,13 @@ Infer a reasonable impact level (`critical`/`high`/`medium`/`low`) per risk from
 
 ## Waves
 
-| Wave | UC | Files |
-|------|----|-------|
-| 1 | UC-1 | __tests__/stripe.service.test.js, src/payments/stripe.service.js |
-| 2 | UC-1 | src/payments/refund.service.js, src/app.js |
+| Wave | UC | Files | Est. tokens |
+|------|----|-------|-------------|
+| 1 | UC-1 | __tests__/stripe.service.test.js, src/payments/stripe.service.js | 4200 |
+| 2 | UC-1 | src/payments/refund.service.js, src/app.js | 2600 |
 ```
 
-`UC` column: copy the ID(s) from `02-architecture.md`'s Selected Option. Omit the column entirely when that file names no UC.
+`UC` column: copy the ID(s) from `02-architecture.md`'s Selected Option. Omit the column entirely when that file names no UC. `Est. tokens` is the sum of the wave's files.
 
 #### Phase 0 Checkpoint
 
@@ -224,12 +226,14 @@ Standalone runs approve or reject the whole `## Risks` table as one bundle here.
 ---
 
 ### PHASE 1: Generate Test Cases
-Create tests (Full Mode — all categories; Lean Mode — HAPPY PATH + ERROR CASES only, see Effort Detection above):
+Create tests (Full Mode — categories below, each only where an `AC-n`, the architecture or a Risks row gives a reason; Lean Mode — HAPPY PATH + ERROR CASES only, see Effort Detection above):
 - HAPPY PATH: normal usage
 - BOUNDARIES: min/max values
 - ERROR CASES: what fails
 - EDGE CASES: weird scenarios
 - PERFORMANCE: if applicable
+
+**Test budget.** Tests are a cost the project pays on every later change, so each one must earn its place. Write one test per behaviour an `AC-n` or a Risks row names, not per function or branch. Before adding one, grep for an existing test that already asserts it and extend that instead. Assert what a caller observes (return value, stored state, response), never how the code is built (call order, private helpers, mock wiring, snapshots of structure), so a refactor or a change of direction breaks the tests that should break and no others. Do not test getters, pass-through wiring, framework behaviour or code with no logic. Coverage is reported, never a target.
 
 Output: RUNNABLE test code
 Format: Using project's testing framework
@@ -239,11 +243,13 @@ Generate tests as executable code, then run the project's test command **yoursel
 
 | Stack | Command |
 |-------|---------|
-| Node + Jest | `npm test -- --coverage` |
-| Node + Vitest | `npx vitest run --coverage` |
-| Python + pytest | `pytest --cov` |
-| Go | `go test ./... -cover` |
+| Node + Jest | `npm test` |
+| Node + Vitest | `npx vitest run` |
+| Python + pytest | `pytest` |
+| Go | `go test ./...` |
 | Other | use project README / `package.json` scripts |
+
+Run only the test files this change adds or touches in PHASES 2, 4 and 5 (the runner's path or name filter); the whole suite runs once, with coverage, in PHASE 6. Waiting on the full suite after every edit is most of the time a TDD cycle costs.
 
 Paste the raw output (pass/fail counts, failing test names) into the final output's `## Test Execution — RED` section. Every test must fail for the right reason — an assertion failure on behavior that doesn't exist yet — not an import error, syntax error, or test-collection failure; the latter means the test itself is broken and must be fixed before writing any implementation.
 
@@ -262,8 +268,6 @@ Write code to PASS all tests:
 ### PHASE 4: Run Tests (GREEN)
 Re-run the same test command from PHASE 2 **yourself**. Paste the raw output into `## Test Execution — GREEN`. All tests must now pass — if any still fail, this is not GREEN; return to PHASE 3.
 
-Coverage must be >80%.
-
 Same rule as PHASE 2: if the command fails to run at all, set `green_phase_verified: unknown` and record why — never fabricate a pass.
 
 ### PHASE 5: Refactor + Verify
@@ -277,8 +281,8 @@ Improve code — including the tests written in PHASE 1, not just the implementa
 - Strip any comment that narrates the KAIROS pipeline instead of a technical WHY (coding-discipline principle 6) — tests are not exempt
 - Re-run tests after each change
 
-### PHASE 6: Measure Coverage
-Report coverage:
+### PHASE 6: Full Suite + Coverage
+Run the whole suite once with the runner's coverage flag. Report coverage (informational, never a gate):
 - Line coverage
 - Branch coverage
 - Function coverage
@@ -456,9 +460,9 @@ These skills and MCP tools enhance this agent when installed. KAIROS works fully
 - Use project's logging pattern
 - No generic code
 - TDD cycle must be REAL (not simulated)
-- Coverage >80% required
+- No fixed coverage target: tests follow the `AC-n` list and the Test budget, coverage is only reported
 - Files are written via the `write` tool. The Markdown output is metadata only — never embed file contents.
-- Hard cap: 6 files per wave. Anything more must be split. Never produce a "compact" single run by truncating.
+- Hard cap: 10,000 estimated tokens and 12 files per wave. Anything more must be split. Never produce a "compact" single run by truncating.
 - Always run `git status --short` after writing and include raw output in the `## Git Status` block.
 - If `git status` shows zero changes, return `status: blocked`. Do not lie about success.
 - Hallucinated tool calls (text that looks like a tool call but is not) = silent failure. If you start producing output that resembles a tool call inside prose, stop and emit a real `write` tool call instead.
