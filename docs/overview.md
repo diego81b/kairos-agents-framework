@@ -69,7 +69,7 @@ For complex multi-layer features, the Orchestrator offers **Layered Mode** when 
 
 | Agent | Role |
 | --- | --- |
-| **Implementer Lead** | Creates binding contracts, verifies every layer against them and runs the full test suite |
+| **Implementer Lead** | Creates binding contracts, verifies every layer against them and runs the tests (the whole suite on the first pass) |
 | **Teammate Tests** | Generates full test suite (RED phase first) |
 | **Teammate Backend** | Implements APIs per contract |
 | **Teammate Frontend** | Implements UI per contract |
@@ -177,6 +177,7 @@ skills/                          ← Shared checklists/formats reused across age
 ├── contract-checklist/SKILL.md
 ├── issue-tracker-comment/SKILL.md
 ├── migration-safety/SKILL.md
+├── test-scope/SKILL.md
 └── threat-model/SKILL.md
 
 commands/                        ← Claude Code slash commands (/kairos:setup, /kairos:view, /kairos:usage)

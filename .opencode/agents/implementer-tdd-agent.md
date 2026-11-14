@@ -233,7 +233,7 @@ Create tests (Full Mode — categories below, each only where an `AC-n`, the arc
 - EDGE CASES: weird scenarios
 - PERFORMANCE: if applicable
 
-**Test budget.** Tests are a cost the project pays on every later change, so each one must earn its place. Write one test per behaviour an `AC-n` or a Risks row names, not per function or branch. Before adding one, grep for an existing test that already asserts it and extend that instead. Assert what a caller observes (return value, stored state, response), never how the code is built (call order, private helpers, mock wiring, snapshots of structure), so a refactor or a change of direction breaks the tests that should break and no others. Do not test getters, pass-through wiring, framework behaviour or code with no logic. Coverage is reported, never a target.
+**Test budget.** Tests are a cost the project pays on every later change, so each one must earn its place. Write one test per behaviour an `AC-n` or a Risks row names, not per function or branch. Before adding one, grep for an existing test that already asserts it and extend that instead. Assert what a caller observes (return value, stored state, response), never how the code is built (call order, private helpers, mock wiring, snapshots of structure), so a refactor or a change of direction breaks the tests that should break and no others. Do not test getters, pass-through wiring, framework behaviour or code with no logic. Coverage is reported, never a target. Write tests that are cheap to run, by the rules of [`test-scope`](../skills/test-scope/SKILL.md) §7: the lowest level that can see the outcome, expensive setup once per file, no real waiting, parameterize instead of copying, one behaviour at one level, tests that run alone.
 
 Output: RUNNABLE test code
 Format: Using project's testing framework
@@ -249,7 +249,7 @@ Generate tests as executable code, then run the project's test command **yoursel
 | Go | `go test ./...` |
 | Other | use project README / `package.json` scripts |
 
-Run only the test files this change adds or touches in PHASES 2, 4 and 5 (the runner's path or name filter); the whole suite runs once, with coverage, in PHASE 6. Waiting on the full suite after every edit is most of the time a TDD cycle costs.
+Run only the test files this change adds or touches in PHASES 2, 4 and 5 (the runner's path or name filter); which rung PHASE 6 runs follows [`test-scope`](../skills/test-scope/SKILL.md) §2. Waiting on the full suite after every edit is most of the time a TDD cycle costs.
 
 Paste the raw output (pass/fail counts, failing test names) into the final output's `## Test Execution — RED` section. Every test must fail for the right reason — an assertion failure on behavior that doesn't exist yet — not an import error, syntax error, or test-collection failure; the latter means the test itself is broken and must be fixed before writing any implementation.
 
@@ -282,7 +282,7 @@ Improve code — including the tests written in PHASE 1, not just the implementa
 - Re-run tests after each change
 
 ### PHASE 6: Full Suite + Coverage
-Run the whole suite once with the runner's coverage flag. Report coverage (informational, never a gate):
+Run the rung [`test-scope`](../skills/test-scope/SKILL.md) §2 gives this pass. The last planned wave runs the whole suite once with the runner's coverage flag; an earlier planned wave runs the test files it touched and any other pass runs the related tests (§3); neither writes coverage of its own, and both carry `coverage_summary` forward from the earlier `03-implementation.md` (`unknown` when there is none), never a partial number. Open `## Test Execution — GREEN` with the line `scope: <rung>` (§6). Report coverage (informational, never a gate):
 - Line coverage
 - Branch coverage
 - Function coverage
