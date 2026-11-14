@@ -309,10 +309,35 @@ Answered at the combined review gate. Gaps and issues you mark **Mitigate now** 
 :::
 
 ::: tip Skips re-running tests on a clean first pass
-`implementer-tdd-agent` already executes the test suite twice (RED and GREEN) and reports coverage in `03-implementation.md`. On the first test-verifier invocation for a feature — no prior `05-test-verification.md`, and GREEN shows a clean pass — Test Verifier reuses those results instead of re-running the suite. The static audit (comprehensiveness, assertion strength, determinism, hygiene, mocking, TDD reality check) always runs in full regardless; only the redundant command re-run is skipped. Any loop re-check, recheck after a fix pass, or standalone invocation always re-executes.
+`implementer-tdd-agent` already executes the test suite twice (RED and GREEN) and reports coverage in `03-implementation.md`. On the first test-verifier invocation for a feature — no prior `05-test-verification.md`, and GREEN shows a clean pass — Test Verifier reuses those results instead of re-running the suite. The static audit (comprehensiveness, assertion strength, determinism, hygiene, mocking, TDD reality check) always runs in full regardless; only the redundant command re-run is skipped. Any loop re-check, recheck after a fix pass, or standalone invocation always re-executes, at the rung [Test Scope](#test-scope) gives.
 :::
 
 ---
+
+## Test Scope
+
+Until v9.7.1 every stop ran the whole suite: the implementer once, Test Verifier on every recheck, the Layered Mode lead at verify and again at close. On a project whose suite takes 25 minutes, a run with fix passes waited for it three to five times. Now each agent picks the cheapest run that can still catch what it is checking, in three rungs:
+
+1. **Files**: only the test files the change adds or touches.
+2. **Related**: those, plus the tests that exercise the changed production files. The agent uses the runner's own option (`--findRelatedTests` in Jest, `related` in Vitest, the matching test modules in pytest, the changed packages in Go) or the project's `test-changed` command, see [Customizing](/customizing).
+3. **Full**: the whole suite, with coverage.
+
+| Agent | Runs the full suite | Runs less |
+|-------|---------------------|-----------|
+| Implementer, test-first | once, in the last planned wave | earlier waves: files. A fix pass or a loop iteration: related |
+| Implementer, code-first | never, unless a change to shared configuration forces it (Test Verifier owns the full run on this path) | always related |
+| Test Verifier | its first run when no full run exists to reuse, and the review loop's final pass | every other recheck: related, over the files the fix pass wrote |
+| Layered Mode lead | verify and close of the first pass | a fix round, a loop iteration or a post-gate fix pass: related |
+
+A run goes to the full suite whatever the rung when the change reaches something no test imports directly (a manifest or lockfile, build or test configuration, a shared helper, fixture or setup file, a migration), when the runner has no related selection and the tests cannot be matched by import or name, and when `test-changed: off`.
+
+A related run measures only part of the code, so it never judges coverage. Test Verifier carries `coverage_summary` over from the last full run, writes `scope: targeted` in `execution`, and says in the report where the numbers came from. The loop's final pass runs the full suite and replaces them.
+
+**What this leaves open.** After a fix pass outside a review loop, in a `simple_fix` (no Test Verifier) and when the code-first implementer wrote no test file (so Test Verifier does not run), the related tests are the last test run before you merge. Keep the whole suite in CI.
+
+**Writing tests that are cheap to run.** Both implementers carry the rules in their test budget: assert at the lowest level that can see the outcome, create expensive setup once per file and not once per test, never wait on a real clock or network (fake the timer, fake the call), parameterize instead of copying a test, test one behaviour at one level, and keep end-to-end tests for what no lower level can see. Test Verifier flags a concrete violation (a real sleep, an application or database started in every test, the same behaviour asserted at three levels) as a `medium` issue under its Hygiene check.
+
+Not measured: the rungs and the triggers come from reading where the suite ran in the agent files and from one report of a 25 minute run, and no run has used them yet. Read `scope: targeted` in the next `05-test-verification-recheck.md` files, and look for a defect that reached the final pass and a related run missed.
 
 ## Phase 5b: QA Plan (QA Plan Agent) — optional
 

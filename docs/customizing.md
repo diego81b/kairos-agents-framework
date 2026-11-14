@@ -7,7 +7,7 @@ KAIROS has four places where you can change how it behaves, from the narrowest t
 | I want to | Use | Who sees it |
 |-----------|-----|-------------|
 | change the pipeline for one issue (size, effort, areas, agents to add or skip, auto-fix) | the `## KAIROS Pipeline` block in the issue, see [Pipeline Templates](/setup/templates) | everyone who opens the issue |
-| set the models, the QA plan folder or the manual QA answer for the whole team | `.kairos-cfg/config` in the project, committed | the team |
+| set the models, the QA plan folder, the manual QA answer or the related-tests command for the whole team | `.kairos-cfg/config` in the project, committed | the team |
 | use my own models in every project | `model.` lines in `~/.kairos-cfg/config` | only me |
 | answer a question once and keep the answer on this machine | nothing to do: KAIROS asks when it needs the answer and stores it in `.kairos/` | only this machine |
 | spend fewer tokens per run | Claude Code's auto-compact window, see [Keeping token use down](#keeping-token-use-down) | whoever sets it, in their own Claude Code settings |
@@ -33,6 +33,7 @@ model.pm-agent: haiku
 model.architect-agent: opus
 manual-qa: yes
 qa-dir: docs/qa-plans/
+test-changed: npm test -- --findRelatedTests {files}
 ```
 
 | Key | Project | Home | What it holds |
@@ -40,6 +41,7 @@ qa-dir: docs/qa-plans/
 | `model.<agent>` | yes | yes | the model for one agent, aliases `opus`, `sonnet`, `haiku`, `fable` |
 | `manual-qa` | yes | no | `yes` or `no`: does a person verify features by hand in this project |
 | `qa-dir` | yes | no | where QA plans are written in the repository, relative to the project root, never absolute and never containing `..` |
+| `test-changed` | yes | no | the project's own command for running only the tests related to some files, with `{files}` standing for the changed files (`npm test -- --findRelatedTests {files}`); or `off`, which makes every check run the whole suite. See [Test scope](/workflow#test-scope) |
 
 A new setting is one more line in this file and one more row in this table, never a new file.
 
@@ -54,20 +56,21 @@ For each key the first match wins. For `model.<agent>` the lookup runs per agent
 | `model.<agent>` | `.kairos-cfg/config` in the project, then `.kairos-cfg/models`, then `.kairos/.models`, then `~/.kairos-cfg/config`, then `~/.kairos-cfg/models`, then the agent's own `model:` |
 | `manual-qa` | `.kairos-cfg/config`, then `.kairos-cfg/manual-qa`, then `.kairos/.manual-qa`, then the question |
 | `qa-dir` | `.kairos-cfg/config`, then `.kairos-cfg/qa-dir`, then `.kairos/.qa-dir`, then the question |
+| `test-changed` | `.kairos-cfg/config`, then the runner's own related-tests option (Jest, Vitest, pytest, Go), then the test files the change touches. It is never asked |
 
 The project beats your home folder, so a team that commits `model.` lines overrides your personal preference for the agents they name. Commit them only when the team means it, and leave them out when cost is each person's own choice.
 
 The Start Gate prints the model lines in effect with the place each came from (`pm-agent haiku (project)`, `code-reviewer-agent opus (user)`), so you never have to work it out.
 
-### Files from before v9.8.0
+### Files from before v9.7.0
 
-Until 9.8.0 each setting had a file of its own (`.kairos-cfg/models`, `.kairos-cfg/manual-qa`, `.kairos-cfg/qa-dir` and, before 9.3.0, `.kairos/.models`, `.kairos/.manual-qa`, `.kairos/.qa-dir`). They keep working, the same way the v8.4.0 ledger move did: the old path is read and nothing has to be migrated. The orchestrator never moves or rewrites a file of yours. `config` wins over every older file, so a stale one cannot override what the team committed. A `models` file keeps its own format, `<agent>: <alias>` without the `model.` prefix. Answers KAIROS asks for itself (`manual-qa`, `qa-dir`) are still stored in `.kairos/`, which is local to the machine; to share one with the team, add it to `.kairos-cfg/config` and the question stops being asked.
+Until 9.7.0 each setting had a file of its own (`.kairos-cfg/models`, `.kairos-cfg/manual-qa`, `.kairos-cfg/qa-dir` and, before 9.3.0, `.kairos/.models`, `.kairos/.manual-qa`, `.kairos/.qa-dir`). They keep working, the same way the v8.4.0 ledger move did: the old path is read and nothing has to be migrated. The orchestrator never moves or rewrites a file of yours. `config` wins over every older file, so a stale one cannot override what the team committed. A `models` file keeps its own format, `<agent>: <alias>` without the `model.` prefix. Answers KAIROS asks for itself (`manual-qa`, `qa-dir`) are still stored in `.kairos/`, which is local to the machine; to share one with the team, add it to `.kairos-cfg/config` and the question stops being asked.
 
 `/kairos:setup` is the one thing that writes the folder. It asks whether the models are for the project or for you, replaces only the `model.` lines of the right `config` (every other line stays), and removes the older model files at that scope so their lines cannot come back.
 
 ## Which hosts read what
 
-The `model.` lines work on Claude Code only, because it depends on the Agent call taking a model parameter. OpenCode and Kimi Code ignore it and the Start Gate says so; their own model settings are on their [setup pages](/setup/). `manual-qa` and `qa-dir` are read by the orchestrator on every host.
+The `model.` lines work on Claude Code only, because it depends on the Agent call taking a model parameter. OpenCode and Kimi Code ignore it and the Start Gate says so; their own model settings are on their [setup pages](/setup/). `manual-qa` and `qa-dir` are read by the orchestrator on every host. `test-changed` is read by the agents that run tests (both implementers, Test Verifier and the Layered Mode lead), not by the orchestrator, and also on every host.
 
 ## Keeping token use down
 

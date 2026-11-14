@@ -127,9 +127,9 @@ Contract owner and verifier, applying the full TDD discipline across the layer a
 
 - **RED**: `teammate-tests-agent` runs first and alone; tests are written against the contracts before any implementation exists. The step 3a plan gate has already covered the test plan.
 - **GREEN**: `teammate-backend-agent`, `teammate-frontend-agent`, `teammate-database-agent` run in parallel, one call per layer in scope; their goal is to write code to the contract so the pre-existing tests pass. They run static checks at most, never the full suite.
-- **VERIFY**: the lead checks every layer against the contracts and runs the full test suite, writing `03-verify.md`. Layers it names get a **FIX** call, then VERIFY runs again.
+- **VERIFY**: the lead checks every layer against the contracts and runs the whole test suite (related tests only on a later round), writing `03-verify.md`. Layers it names get a **FIX** call, then VERIFY runs again.
 - **REFACTOR**: the implementation layers improve quality while keeping tests green.
-- **CLOSE**: the lead re-verifies, updates the ledger and writes `03-implementation.md` last. Only VERIFY and CLOSE run the full suite.
+- **CLOSE**: the lead re-verifies, updates the ledger and writes `03-implementation.md` last. Only VERIFY (round 0) and the CLOSE of the first pass run the full suite; every other run is limited to the related tests, see [Test Scope](/workflow#test-scope).
 
 Does not write code itself, and is dispatched by the Orchestrator: running it on its own is not supported.
 
@@ -202,7 +202,7 @@ Output is a single `04b-security-review.md`: frontmatter (status, finding counts
 
 ## [Test Verifier](/agents/test-verifier-agent)
 
-Verifies test quality, reports coverage (a threshold fails only when the project or a constraint declares one), flags redundant tests, validates assertion quality, and ensures edge cases are covered. Blocks progression if test quality is insufficient. Runs in the review wave and is the only reviewer there that executes the test suite. Reads the architecture's Behaviour Delta, when there is one, to check that the new user-visible behaviour on shipped flows is actually tested.
+Verifies test quality, reports coverage (a threshold fails only when the project or a constraint declares one), flags redundant tests, validates assertion quality, and ensures edge cases are covered. Blocks progression if test quality is insufficient. Runs in the review wave and is the only reviewer there that executes the test suite. It runs the whole suite on its first run and on the loop's final pass, and only the tests related to the fix on a recheck, see [Test Scope](/workflow#test-scope). Reads the architecture's Behaviour Delta, when there is one, to check that the new user-visible behaviour on shipped flows is actually tested.
 
 ::: tip Optional enhancements
 **Skills:** `verify` / `run` (built-in)  

@@ -21,7 +21,7 @@ You are the LEAD for the Implementer layers.
 | `step:` | What you do | You end by |
 |---------|-------------|------------|
 | `3a` | Read the design, scope the layers, write the four contracts and the plan (Steps 1 to 2c) | `status: pending_approval` |
-| `verify` | Check every layer's code against the contracts and run the whole test suite (Step 3) | `03-verify.md` with a `verdict` |
+| `verify` | Check every layer's code against the contracts and run the tests at the rung `test-scope` gives (Step 3) | `03-verify.md` with a `verdict` |
 | `scope` | Turn a review finding list into per-layer fix tasks (Step 4) | `03-verify.md` with a `verdict` |
 | `close` | Re-run the suite, update the ledger, write `03-implementation.md` (Step 5) | `03-implementation.md` and a `verdict` |
 
@@ -390,7 +390,7 @@ TESTS:
 ✓ Every test file in the TEST CONTRACT exists and tests what the contract says?
 ```
 
-3. **Run the project's tests and coverage** (GREEN verification: tests must now PASS and coverage must meet the TEST CONTRACT's target). Attribute each failure to the layer that owns the file where the fix belongs, by the owned paths in the plan and `## File Ownership Overrides`. A test that contradicts a contract is the `tests` layer's fault: the contract wins.
+3. **Run the project's tests and coverage** (GREEN verification: tests must now PASS and coverage must meet the TEST CONTRACT's target), at the rung [`test-scope`](../../skills/test-scope/SKILL.md) §2 gives: the whole suite with coverage at `round: 0`, and at `round` 1 or 2 the related tests of the files the FIX round wrote, with `coverage_summary` carried over from the round 0 run. Attribute each failure to the layer that owns the file where the fix belongs, by the owned paths in the plan and `## File Ownership Overrides`. A test that contradicts a contract is the `tests` layer's fault: the contract wins.
 4. **Resolve what the layers handed you.** Each report may carry two sections:
    - `## Cross-domain requests`: a layer needed a change outside its own paths. You are the router, never the writer. If the path falls inside another **in-scope** layer's owned paths, add it to that layer's Fix Tasks (`requested by <layer>`). If the owner exists but is out of scope this pass (a database change on a frontend-only feature), do not expand scope silently: add a `## Needs Human` row. If it is a genuinely shared file (a shared type, a barrel file, a root config, a package manifest) with no clear owner, assign exactly one in-scope layer as its sole owner, record it in `03-contracts.md` under `## File Ownership Overrides` (`path → owning layer`), and put the edit in that layer's Fix Tasks. Every other layer is bound by the override from then on, because each reads that section before it edits.
    - `## Clarifications`: a layer could not ask what a contract point meant, took the most literal reading and wrote it down. If that reading is compatible with the contract, leave it. If not, it is a mismatch.
@@ -460,7 +460,7 @@ Return `verdict: fix` with `layers_to_fix`, or `verdict: human` when any `## Nee
 
 The orchestrator calls you here after REFACTOR on an initial pass, or after the FIX round on a fix pass. The layers have returned and you are alone in the worktree again.
 
-1. **Re-run the full test suite and coverage.** On an initial pass REFACTOR touched every in-scope implementation layer, so check compliance for all of them. On a fix pass check only the layers named in `layers_to_fix` of the last `03-verify.md`.
+1. **Re-run the tests and coverage** at the rung `test-scope` §2 gives: the whole suite on an initial pass, the related tests of the files the fix pass wrote on a fix pass. On an initial pass REFACTOR touched every in-scope implementation layer, so check compliance for all of them. On a fix pass check only the layers named in `layers_to_fix` of the last `03-verify.md`.
 2. **If a test fails or a layer drifted from a contract**, a refactor or a fix broke something: write `03-verify.md` (`stage: close`) with the Fix Tasks, exactly as in Step 3, apply the same `Repeat` cap, and end with `verdict: fix` or `human`. Do **not** update the ledger and do **not** write `03-implementation.md`: the pass is not finished.
 3. **Otherwise** write `03-verify.md` with `stage: close` and `verdict: pass`, apply the Ledger Update below, and write `03-implementation.md` **last**, using the Output Format below (same path and filename as the solo TDD and coder implementers: the Layered Mode lead is the Phase 3 variant). The orchestrator and a later resume read its presence as "this pass is finished", so a report written before the ledger update says `complete` about a pass that is still closing. The prompt's `pass_kind:` line is the `Kind` of this pass's row in `## Pass Log`.
 
@@ -571,7 +571,7 @@ Never rewrite an existing row's `Category` cell — it is set once by whoever cr
 2. **Contracts are written on step `3a`, before any layer agent is called.** No surprises, and a divergence from the Architect is a plan Risks row, not a silent change.
 3. **RED runs before GREEN.** The orchestrator calls `teammate-tests-agent` first and alone, so tests exist before implementation, always.
 4. **GREEN is parallel.** Whichever of backend, frontend and database Step 1b marked in scope are called together; out-of-scope layers are never called.
-5. **You are the only runner of the full suite, and only at `verify` and `close`.** The layers run no suite, no build into shared output and no migration, so parallel layers never share state.
+5. **You are the only runner of the full suite, and only at `verify` round 0 and at the `close` of an initial pass; every other run is the related rung.** The layers run no suite, no build into shared output and no migration, so parallel layers never share state.
 6. **REFACTOR only after `verify` returned `pass`.** All tests must pass first.
 7. **Verify against the contracts at every `verify` and `close`.** The contract wins over a layer's reading of it.
 8. **Only the lead touches the ledger and `03-contracts.md`.** Layer agents never read or write `ledger/` files; constraints flow to them through the contracts only.
