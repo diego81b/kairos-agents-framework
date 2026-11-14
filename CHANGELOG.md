@@ -6,6 +6,33 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v9.7.1 — November 14, 2026
+
+A project reported a 25 minute wait for its tests, caused less by how many tests the agents wrote than by how they wrote them, and by a suite that ran in full at every stop: the TDD implementer once, Test Verifier on every recheck, the Layered Mode lead at verify and again at close. The agents now pick how much of the suite to run from what the change touched, and write tests that are cheap to run.
+
+### Added
+
+- **`skills/test-scope/SKILL.md`**: a shared reference for the three rungs (the test files the change touches, the tests related to the changed files, the whole suite), which stage owns the full run, the triggers that force a full run (a manifest, lockfile, build or test configuration, a shared helper or fixture, a migration, a runner with no related selection), the runner defaults for Jest, Vitest, pytest and Go, how a targeted run reports coverage, and six rules for writing tests that are cheap to run. It is read by the agents that run tests, never launched by hand.
+- **`.kairos-cfg/config`**: a `test-changed` key, project only: the project's own command for running the tests related to some files, with `{files}` standing for them, or `off` to run the whole suite at every stop. The agents read it; the orchestrator ignores it, as it ignores any key it does not know.
+- **`docs/workflow.md`**: a Test Scope section with the rungs, the owner of each full run, what a related run leaves open, and what has not been measured.
+
+### Changed
+
+- **`agents/implementer-tdd-agent.md`** (and both mirrors): PHASE 6 runs the whole suite with coverage only in the last planned wave. An earlier planned wave runs the test files it touched, any other pass runs the related tests, and neither writes a partial coverage number: both carry `coverage_summary` forward. The Test budget adds the rules for tests that are cheap to run, and the `## Test Execution — GREEN` section opens with a `scope:` line.
+- **`agents/implementer-coder-agent.md`** (and both mirrors): runs the related tests, not the whole suite, because Test Verifier owns the full run on this path and a second one repeated it. Its report states the scope it ran, and the tests it writes follow the same cost rules.
+- **`agents/test-verifier-agent.md`** (and both mirrors): the whole suite runs on the first invocation with no run to reuse, on a standalone invocation and when the prompt says `final_pass: true`. A loop re-check or a recheck after a fix pass runs the tests related to the files the latest pass wrote, copies `coverage_summary` from the latest full run and writes `execution.scope: targeted`. Reusing the implementer's run now also requires that run to be of the whole suite. The Hygiene check gains a `medium` Cost item for a concrete real sleep, real network call, per-test application or database start, or one behaviour asserted at three levels.
+- **`agents/orchestrator-agent.md`** (and both mirrors): the review loop's final pass is dispatched with `final_pass: true`, so Test Verifier can tell it from an iteration re-check. The sentence was shortened at the same time: the file is 29 bytes smaller and stays under its budget.
+- **`agents/team/implementer-lead-agent.md`**: `verify` round 0 and the `close` of the first pass run the whole suite. A later verify round, a loop iteration and a post-gate fix pass run the related tests. This file has no mirror.
+- **`docs/customizing.md`**, **`docs/agents.md`**, **`docs/overview.md`**, **`docs/skills-mcp.md`**, **`CLAUDE.md`**: the new key, the changed suite runs and the new skill.
+
+### Fixed
+
+- **`agents/orchestrator-agent.md`** (and both mirrors), **`commands/setup.md`**, **`docs/customizing.md`**: the text said the single `config` file replaced the older files in 9.8.0. It shipped in 9.7.0; the references now say so.
+
+What this leaves open: a related run can miss a test that reaches the changed code without an import (dynamic loading, runtime registration, a data file). After a fix pass outside a review loop, in a `simple_fix`, and when the code-first implementer wrote no test file, the related tests are the last test run before merge, so keep the whole suite in CI. On OpenCode and Kimi Code, copy `skills/` again into `.opencode/skills/` or `.kimi-code/skills/` so the new skill resolves. Not measured: no run has used the rungs. The runner defaults come from the runners' documentation and were not run here.
+
+---
+
 ## v9.7.0 — October 23, 2026
 
 A run on a child issue cut from an earlier design run started from nothing: the design lived in a folder with no issue key, the child got a folder of its own, and nothing connected the two. The impact assessment measured again what the design already said. A new `Analysis:` line points the child's run at the design.

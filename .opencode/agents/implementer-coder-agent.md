@@ -236,7 +236,7 @@ Write code to fulfil the approved plan:
 ### PHASE 2: Tests
 Carry out the approved `## Test Decision`, after the code exists — this is the difference from `implementer-tdd-agent`, which writes the test first:
 - Write or update exactly the tests the decision names, in the project's own test framework, location and naming convention. For a bug fix, confirm the regression test fails with the fix reverted and passes with it; say in `## Test Execution` how you checked.
-- Run the project's suite (at least the files covering what you touched) and paste the command and its result into `## Test Execution`. A failure you caused is yours to fix before this phase ends; a failure that was already there is reported as pre-existing, never hidden.
+- Run the tests at the rung [`test-scope`](../skills/test-scope/SKILL.md) §2 gives this agent (the related tests, not the whole suite: Test Verifier owns the full run on this path) and paste the command and its result into `## Test Execution`, opening it with `scope: <rung>` (§6). Write the tests cheap to run, by the rules of §7. A failure you caused is yours to fix before this phase ends; a failure that was already there is reported as pre-existing, never hidden.
 - When the decision was no tests, run what the project does have (build, type check, lint, starting the app) and record in `## Test Execution` how the change was verified instead. `qa-plan-agent` reads that section.
 - Never introduce a test framework the project does not already use: that is a project decision, not an implementation detail.
 

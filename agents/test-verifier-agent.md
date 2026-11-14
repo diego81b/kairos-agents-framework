@@ -86,12 +86,12 @@ Any other effort value, or Full Mode implementer output (categories beyond happy
 
 **Reuse-fresh-execution check** (do this before running anything): skip re-execution and reuse the implementer's own results instead when ALL of these hold:
 - Orchestrator-invoked (pipeline mode — `feature_folder` and the ledger are present; standalone invocations always re-execute, see below).
-- No `.kairos/<feature_folder>/05-test-verification*.md` exists yet (check with `ls`) — its absence means this is the first test-verifier invocation for this feature. Nothing writes to source between the implementer's GREEN run and here on a first pass (`code-reviewer-agent` is read-only). Its presence means test-verifier already ran once before, so this invocation is a review loop re-check, the loop's final pass, a recheck after a fix pass, or a manual re-run — code may have changed since; always re-execute in that case, no exceptions.
-- `03-implementation.md`'s frontmatter has a `coverage_summary` block and its `## Test Execution — GREEN` section shows a clean pass with real numbers (not `unknown`, not missing) — this only exists on the TDD path.
+- No `.kairos/<feature_folder>/05-test-verification*.md` exists yet (check with `ls`) — its absence means this is the first test-verifier invocation for this feature. Nothing writes to source between the implementer's GREEN run and here on a first pass (`code-reviewer-agent` is read-only). Its presence means test-verifier already ran once before, so this invocation is a review loop re-check, the loop's final pass, a recheck after a fix pass, or a manual re-run — code may have changed since; always re-execute in that case, at the rung the Scope rule below gives.
+- `03-implementation.md`'s frontmatter has a `coverage_summary` block and its `## Test Execution — GREEN` section shows a clean pass of the whole suite (`scope: full`) with real numbers (not `unknown`, not missing) — this only exists on the TDD path.
 
 When all three hold: populate your own `execution` and `coverage_summary` frontmatter directly from `03-implementation.md`'s GREEN section and `coverage_summary` field — do not shell out. State in the report body that execution was reused, not re-run, and why: `## Test Execution` → "reused implementer's GREEN-phase run from `03-implementation.md` — first pass, nothing has touched the code since." This changes nothing about PHASE 1's static audit below — it still runs in full; only the redundant re-run of a command the implementer already executed twice (RED and GREEN) is skipped.
 
-Otherwise (any condition fails), run the project's test+coverage command and capture raw output. Detect framework from project files:
+Otherwise (any condition fails), **Scope rule** ([`test-scope`](../skills/test-scope/SKILL.md)): the full suite runs on the first invocation that has no run to reuse, on any invocation whose prompt states `final_pass: true`, and on a standalone invocation. Any other later invocation (a loop re-check, a recheck after a fix pass, a manual re-run) runs the related rung over the files the latest pass wrote (the `## Files Written` rows of `03-implementation.md` whose `Pass` is the latest), unless a trigger in `test-scope` §2 forces the full suite. On a related run copy `coverage_summary` from the latest full run on record, set `execution.scope: targeted`, and say in `## Test Execution` which file the numbers come from and why this run was narrower; with no full run on record, run the full suite. A full run executes the project's test+coverage command and captures raw output. Detect framework from project files:
 
 | Stack | Command |
 |-------|---------|
@@ -171,6 +171,8 @@ Hard fail on any of:
 - Console noise (`console.log` in test body) not behind a debug flag.
 - Duplicate test names in same describe block.
 
+**Cost** (rated `medium`, never a hard fail): only a concrete instance you can cite by `file:line` counts: a real sleep or timer wait, a real network or third-party call, an application, server or database started in every test instead of once per file, or the same behaviour asserted at three levels. Judge by [`test-scope`](../skills/test-scope/SKILL.md) §7. A suite that is merely large is not an issue.
+
 #### 6. Mocking Discipline
 - Is the SUT itself mocked? (anti-pattern — flag as `high`).
 - Are external boundaries (HTTP, DB, FS, clock) mocked consistently?
@@ -206,6 +208,7 @@ One file: `05-test-verification.md`. YAML frontmatter carries only what the orch
 phase: test-verify
 status: NEEDS_FIXES   # or READY
 execution:
+  scope: full   # full|targeted: targeted carries coverage_summary over from the last full run
   framework: jest   # jest|vitest|pytest|go|...
   command: "npm test -- --coverage"
   exit_code: 0
