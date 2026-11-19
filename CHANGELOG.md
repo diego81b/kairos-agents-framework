@@ -6,6 +6,27 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v9.8.0 — November 19, 2026
+
+A quick fix often started with the area question (all areas, choose myself, decide each step) before anything else, and for a bug report that came before the bug triage, the one step that says whether the fix is contained. The question now comes after the triage, and a quick fix runs the minimum a person expects: development, code review and, when tests were written, the test review.
+
+### Added
+
+- **`skills/orchestrator-resume`**, **`skills/orchestrator-run-choices`**, **`skills/orchestrator-writeback`**, **`skills/orchestrator-layered`**, **`skills/orchestrator-closeout`**: five skills that hold, unchanged, the orchestrator sections that fire in some runs only (resume and new run, the manual pipeline and deciding agent by agent and the two project settings, the issue write-back, Layered Mode, the close-out).
+- **`agents/orchestrator-agent.md`** (and both mirrors): Run Intent phrases `fix rapido`, `fix veloce`, `esegui un fix rapido` and `quick fix` set the run to `development` and `review`.
+
+### Changed
+
+- **`agents/orchestrator-agent.md`** (and both mirrors): the area question is asked after the bug triage gate, not before it. A triage approved with a `quick-fix` entry answers the question with `development` and `review`, named at the start gate and never saved. A saved pipeline still wins over any phrase.
+- **`agents/orchestrator-agent.md`** (and both mirrors): `test-verifier-agent` runs on a `simple_fix` whenever the implementer wrote a test file, because a small fix can regress other code. It skips the acceptance-criteria mapping when no requirements exist. `Add: test-verifier-agent` still forces it when no test was written.
+- **`agents/orchestrator-agent.md`** (and both mirrors): 52 KB smaller (252 KB to 199.6 KB). Each moved section leaves a one-paragraph stub that says when to read its skill; behaviour is unchanged. The size ceiling in `.claude/CLAUDE.md` is now 220,000 bytes.
+- **`docs/overview.md`**, **`docs/skills-mcp.md`**: the five new skills.
+- **`docs/setup/templates.md`**, **`docs/workflow.md`**, **`docs/use-cases.md`**, **`docs/faq.md`**, **`CLAUDE.md`**: the new order, the phrase, and the short path with `Add: implementer-tdd-agent` alone, since the test review follows from the tests it writes.
+
+What this leaves open: no run has used the new order, the phrase or the split file. The split depends on the orchestrator reading a skill at each stub, which a weaker model may skip. A quick fix that writes tests now costs one more agent call.
+
+---
+
 ## v9.7.1 — November 14, 2026
 
 A project reported a 25 minute wait for its tests, caused less by how many tests the agents wrote than by how they wrote them, and by a suite that ran in full at every stop: the TDD implementer once, Test Verifier on every recheck, the Layered Mode lead at verify and again at close. The agents now pick how much of the suite to run from what the change touched, and write tests that are cheap to run.

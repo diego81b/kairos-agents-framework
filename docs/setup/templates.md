@@ -90,7 +90,7 @@ A run does not always need the whole pipeline. The agents belong to four areas, 
 | `review` | `code-reviewer-agent`, `security-reviewer-agent`, `test-verifier-agent` |
 | `delivery` | `qa-plan-agent`, `release-planner-agent`, `documentation-agent` |
 
-The orchestrator asks once, at the start, unless an `Areas:` line, a phrase in your prompt (see [Saying what the run is for](#saying-what-the-run-is-for)) or `decide each step` already answers it: **All areas** (the default, one click), **Choose the pipeline myself** or **Decide each step**. Inside the areas the rules above still decide each agent. To limit the run to some areas, type their names in the question's free field or reply at the start gate: `only analysis`, `solo sviluppo`, `add review`, `skip delivery` or `all areas`. Add `decide each step` to the same reply to keep those areas and be asked about each agent (`analysis, decide each step`).
+When your input reads as a bug report, the bug triage comes first and this question after it: the triage is the fact that says whether the fix is contained. A triage that recommends a `quick-fix` answers the question for you (`development` and `review`, announced at the start gate, `all areas` to change it). Otherwise the orchestrator asks once, at the start, unless an `Areas:` line, a phrase in your prompt (see [Saying what the run is for](#saying-what-the-run-is-for)) or `decide each step` already answers it: **All areas** (the default, one click), **Choose the pipeline myself** or **Decide each step**. Inside the areas the rules above still decide each agent. To limit the run to some areas, type their names in the question's free field or reply at the start gate: `only analysis`, `solo sviluppo`, `add review`, `skip delivery` or `all areas`. Add `decide each step` to the same reply to keep those areas and be asked about each agent (`analysis, decide each step`).
 
 #### Saying what the run is for
 
@@ -102,6 +102,7 @@ Four phrases in the prompt that starts the run answer the area question in advan
 | `rendi ready`, `rendiamo ready`, `make ready`, `make it ready` | `analysis`, with `pm-agent` and `architect-agent` forced on, because a ready issue has requirements and a design |
 | `implementiamo`, `implementa`, `sviluppiamo`, `implement` | all areas (no question asked) |
 | `finalizziamo`, `finalizza`, `chiudiamo la issue`, `finalize`, `wrap up` | `review` (add `delivery` at the start gate to extend it) |
+| `fix rapido`, `fix veloce`, `esegui un fix rapido`, `quick fix` | `development` and `review`: the implementer, the code review and, when tests were written, the test review |
 
 A phrase chooses areas and nothing else: the rules still decide the agents inside them (add `decide each step` to the prompt to be asked about each one instead), and `finalizziamo` never closes or comments on the tracker issue. A phrase is a per-run intent and is never offered for saving, because an `Areas: analysis` line in the issue would turn the next run, started with `implementiamo`, into a run that analyses only. A first cut, not measured on real runs: the table is the whole list, and a phrase it does not hold matches nothing, so the question is asked as before. To analyse now and build later, use the phrase; to keep the choice, pick the pipeline by hand or add an `Areas:` line.
 
@@ -223,16 +224,16 @@ Add: pm-agent, documentation-agent
 
 ### Short path with stronger tests
 
-A `simple_fix` runs code-first with no requirements, no architecture and no plan gate, and skips `test-verifier-agent`. For a bug fix in a project that wants a regression test written first and reviewed, keep the short path and add the two agents:
+A `simple_fix` runs code-first with no requirements, no architecture and no plan gate. `test-verifier-agent` runs whenever the implementer wrote a test file, since v9.8.0: a small fix can regress other code, and the test review checks the new test and the existing ones. For a bug fix in a project that wants the regression test written first, keep the short path and add the TDD implementer:
 
 ```markdown
 ## KAIROS Pipeline
 
 Effort: simple_fix
-Add: implementer-tdd-agent, test-verifier-agent
+Add: implementer-tdd-agent
 ```
 
-An implementer named in `Add:` beats the `simple_fix` rule, so `implementer-tdd-agent` runs test-first in its combined step (plan and code in one run, Lean Mode). `test-verifier-agent` runs at the implementation gate as usual, without an acceptance-criteria list to map tests against, because no `pm-agent` ran. Without these two lines `implementer-coder-agent` already requires a regression test that fails without the fix and checks that by reverting the fix, so add them only when the order (test first) or the test review matters to you. The lines belong to one issue or one run: there is no project-wide setting.
+An implementer named in `Add:` beats the `simple_fix` rule, so `implementer-tdd-agent` runs test-first in its combined step (plan and code in one run, Lean Mode). `test-verifier-agent` follows from the test files the TDD implementer writes, without an acceptance-criteria list to map tests against, because no `pm-agent` ran. Without this line `implementer-coder-agent` already requires a regression test that fails without the fix and checks that by reverting the fix, so add it only when the order (test first) matters to you. The lines belong to one issue or one run: there is no project-wide setting.
 
 ::: info Prerequisites are not in the list
 `context-extractor-agent` still runs only when you start it. `impact-assessment-agent` is started by the orchestrator on every derived run that covers analysis or development, and on a manual pipeline only when you tick it; if you already ran it yourself, the orchestrator reuses its `00b-impact.md`. `bug-triage-agent` is offered when the request reads as a bug report.

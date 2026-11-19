@@ -177,6 +177,11 @@ skills/                          ← Shared checklists/formats reused across age
 ├── contract-checklist/SKILL.md
 ├── issue-tracker-comment/SKILL.md
 ├── migration-safety/SKILL.md
+├── orchestrator-closeout/SKILL.md
+├── orchestrator-layered/SKILL.md
+├── orchestrator-resume/SKILL.md
+├── orchestrator-run-choices/SKILL.md
+├── orchestrator-writeback/SKILL.md
 ├── test-scope/SKILL.md
 └── threat-model/SKILL.md
 
