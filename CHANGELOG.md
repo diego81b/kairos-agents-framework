@@ -20,6 +20,7 @@ A quick fix often started with the area question (all areas, choose myself, deci
 - **`agents/orchestrator-agent.md`** (and both mirrors): the area question is asked after the bug triage gate, not before it. A triage approved with a `quick-fix` entry answers the question with `development` and `review`, named at the start gate and never saved. A saved pipeline still wins over any phrase.
 - **`agents/orchestrator-agent.md`** (and both mirrors): `test-verifier-agent` runs on a `simple_fix` whenever the implementer wrote a test file, because a small fix can regress other code. It skips the acceptance-criteria mapping when no requirements exist. `Add: test-verifier-agent` still forces it when no test was written.
 - **`agents/orchestrator-agent.md`** (and both mirrors): 52 KB smaller (252 KB to 199.6 KB). Each moved section leaves a one-paragraph stub that says when to read its skill; behaviour is unchanged. The size ceiling in `.claude/CLAUDE.md` is now 220,000 bytes.
+- **`agents/orchestrator-agent.md`** (and both mirrors): six explanatory sentences that carried no rule removed (636 bytes, now 199.0 KB): a past-run anecdote and the reasons behind three existing rules. Behaviour is unchanged.
 - **`docs/overview.md`**, **`docs/skills-mcp.md`**: the five new skills.
 - **`docs/setup/templates.md`**, **`docs/workflow.md`**, **`docs/use-cases.md`**, **`docs/faq.md`**, **`CLAUDE.md`**: the new order, the phrase, and the short path with `Add: implementer-tdd-agent` alone, since the test review follows from the tests it writes.
 
