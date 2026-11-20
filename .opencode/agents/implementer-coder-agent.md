@@ -69,7 +69,7 @@ Before PHASE 0, determine effort, in this priority order:
 When effort is `simple_fix`, run in **Lean Mode** for the rest of this run:
 - PHASE 0 plan collapses to Approach (1-2 lines) + Files to Create/Modify + Test Decision (its facts and decision in two or three lines — never omitted, because a small fix on a tested module still owes its test). Omit `Waves` (never triggered at this size) and the `Risks` table unless a genuine risk actually surfaces — an empty table is pure overhead at this size.
 - 2b Ledger Update becomes additive-only (see that section below).
-- The PHASE 0 plan file and its gate still apply unchanged — Lean Mode trims the plan's content, never the write to `03-implementation-plan.md` or the approval step.
+- The PHASE 0 plan file is written unchanged — Lean Mode trims the plan's content, never the write to `03-implementation-plan.md`. The approval step belongs to the 3a/3b split; a `step: 3ab` run skips it (see Input Modes).
 
 When effort is `medium`, run in **Trimmed Mode** — the Full process, one section shorter:
 - `Waves` in the PHASE 0 plan are produced **only when the change actually spans more than one domain** (db / backend / frontend). A single-domain `medium` change has nothing to sequence, and a one-wave table is a header with no information in it.

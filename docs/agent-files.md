@@ -9,12 +9,12 @@ This page embeds the **raw content of every KAIROS agent file**. Click the copy 
 
 Format:
 ```
-## [vX.Y.Z] — YYYY-MM-DD
+## vX.Y.Z — Month D, YYYY
 
 ### Changed
-- `agents/<filename>.md` — describe what changed and why
+- **`agents/<filename>.md`** — describe the user-visible effect of the change
 ```
-No exceptions. A pull request that modifies an agent without a matching changelog entry will be rejected.
+No exceptions. A pull request that modifies an agent without a matching changelog entry will be rejected. The same change also lands in the agent's two hand-kept mirrors, `.opencode/agents/` and `.kimi-code/agents/`, with the body byte for byte identical.
 :::
 
 ---
@@ -24,13 +24,13 @@ No exceptions. A pull request that modifies an agent without a matching changelo
 | Agent | File | Started by |
 |---|---|---|
 | [Context Extractor](#context-extractor) | `agents/context-extractor-agent.md` | **You** |
-| [Impact Assessment](#impact-assessment) | `agents/impact-assessment-agent.md` | Orchestrator at Step 0e, or **you** beforehand (its output is then reused) |
+| [Impact Assessment](#impact-assessment) | `agents/impact-assessment-agent.md` | Orchestrator at Step 0e, when the run covers analysis or development, or **you** beforehand (its output is then reused) |
 | [Bug Triage](#bug-triage) | `agents/bug-triage-agent.md` | **You**, or the Orchestrator at its Bug-Input Check |
-| [Orchestrator](#orchestrator) | `agents/orchestrator-agent.md` | **You** (drives the pipeline rows) |
+| [Orchestrator](#orchestrator) | `agents/orchestrator-agent.md` | **You** (derives the pipeline from facts and drives it) |
 | [PM Agent](#pm-agent) | `agents/pm-agent.md` | Orchestrator |
 | [Architect Agent](#architect-agent) | `agents/architect-agent.md` | Orchestrator |
-| [Implementer Agent — TDD](#implementer-tdd-agent) | `agents/implementer-tdd-agent.md` | Orchestrator |
-| [Implementer Agent — Code First](#implementer-coder-agent) | `agents/implementer-coder-agent.md` | Orchestrator |
+| [Implementer Agent — TDD](#implementer-agent-—-tdd) | `agents/implementer-tdd-agent.md` | Orchestrator |
+| [Implementer Agent — Code First](#implementer-agent-—-code-first) | `agents/implementer-coder-agent.md` | Orchestrator |
 | [Code Reviewer](#code-reviewer) | `agents/code-reviewer-agent.md` | Orchestrator |
 | [Security Reviewer](#security-reviewer) | `agents/security-reviewer-agent.md` | Orchestrator |
 | [Test Verifier](#test-verifier) | `agents/test-verifier-agent.md` | Orchestrator |
@@ -58,6 +58,12 @@ No exceptions. A pull request that modifies an agent without a matching changelo
 > The shared [Artifact Bookkeeping](skills/artifact-bookkeeping/SKILL.md) reference — the recount and status-derivation rules used by PM, Architect, Impact Assessment, both Implementers, Code Reviewer, Security Reviewer, Test Verifier, Release Planner, and Documentation Agent, plus the per-phase required-frontmatter-fields table the Orchestrator's Artifact Contract Check validates against — is in `skills/artifact-bookkeeping/SKILL.md`.
 >
 > The shared [Coding Discipline](skills/coding-discipline/SKILL.md) checklist — scope discipline, anti-speculative-abstraction, and verifiable success criteria, applied before implementation by both Implementer agents and (Layered Mode) Implementer Lead and all four layer agents — is in `skills/coding-discipline/SKILL.md`.
+>
+> The shared [Agent Contract](skills/agent-contract/SKILL.md) (the missing-input error format every phase agent uses), [Artifact Template](skills/artifact-template/SKILL.md) (the `## Summary` head block and the table columns the Risk Disposition Loop parses) and [Issue Tracker Comment](skills/issue-tracker-comment/SKILL.md) (the optional post-to-tracker step) are read by most agents.
+>
+> The shared [Test Scope](skills/test-scope/SKILL.md) skill — how much of the test suite to run at each stop, which stage owns the full run, and the `test-changed` setting — is read by both Implementers, Test Verifier and the Layered Mode lead. The shared [Issue Text](skills/issue-text/SKILL.md) skill — the layout of `_issues.md`, the text PM and Architect write when a run stops after analysis — is read by those two agents.
+>
+> Five `orchestrator-*` skills (`-resume`, `-run-choices`, `-writeback`, `-layered`, `-closeout`) hold the parts of the orchestrator that fire in some runs only, each left in the agent as a stub that says when to read the skill. Only the orchestrator reads them.
 
 ---
 

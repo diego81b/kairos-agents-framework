@@ -37,7 +37,7 @@ mkdir -p .opencode/skills
 cp -r path/to/kairos/skills/* .opencode/skills/
 ```
 
-This is what every agent body means by "Follow `[skill-name]`" — a plain relative file link the agent reads with its own `Read` tool, not a host-specific feature, so it works the same way regardless of whether OpenCode has its own native skill-discovery mechanism. Skipping this step doesn't break agent invocation itself; it breaks the specific step that links to a skill (e.g. `architect-agent`'s Pre-Contract Resolution, or every agent's optional Issue Tracker Comment step, which links to `issue-tracker-comment`) — the agent will report it can't find the file when it tries to read it.
+This is what every agent body means by "Follow `[skill-name]`" — a plain relative file link the agent reads with its own `Read` tool, not a host-specific feature, so it works the same way regardless of whether OpenCode has its own native skill-discovery mechanism. Do not skip this step. The orchestrator links to five `orchestrator-*` skills that it reads in many runs (resume, run choices, write-back, Layered Mode, close-out), and every phase agent opens its Input Validation with `agent-contract` and writes its artifact through `artifact-template`. Without `skills/` the orchestrator and every phase agent report that they cannot find the file, not just two optional steps.
 
 ::: tip Keep `agents/` as source of truth
 `agents/` (Claude-Code-canonical) remains the source of truth. `.opencode/agents/*.md` is a derived mirror maintained by hand — any edit to an `agents/*.md` file must update its `.opencode/agents/` counterpart in the same change. If you maintain your own copy instead of pulling updates from this repo, re-copy after KAIROS updates.
@@ -55,8 +55,8 @@ The mapping below is what actually produced the files in `.opencode/agents/` —
 |---|---|---|
 | `name:` | *(none)* | No `name` field exists — the agent id is the filename. Filenames stay identical (`pm-agent.md` → `.opencode/agents/pm-agent.md`). |
 | `description:` | `description:` | Direct copy. |
-| `tools: CSV` | `permission: { edit, bash }` | Agents whose `tools:` includes `Write`/`Edit`/`Bash` get `edit: allow, bash: ask` — OpenCode's `edit` permission covers its `write`, `edit`, and `apply_patch` tools together (confirmed against `opencode.ai/docs/tools/`), so it's the single key that governs the KAIROS "Write to Project" step. Read-only agents (`impact-assessment-agent`, `security-reviewer-agent` — `tools: Read, Grep, Glob, AskUserQuestion`, no write/exec access) get `edit: deny, bash: deny`. `read`/`grep`/`glob` are left at OpenCode's default (`allow`) since KAIROS never restricts them. `bash: ask` is a conservative default — agents that shell out repeatedly (e.g. `implementer-tdd-agent` running a test runner in a loop) will prompt on every call; loosen to `bash: allow` yourself if that's too noisy for your workflow. |
-| `model: sonnet\|opus\|haiku` | `model: provider/model-id` | Provider-prefixed: `anthropic/claude-sonnet-5`, `anthropic/claude-opus-5`, `anthropic/claude-haiku-4-5-20251001`. Treat these as an example, not the only option — pick whatever provider/model you have configured. |
+| `tools: CSV` | `permission: { edit, bash }` | Agents whose `tools:` includes `Write`/`Edit`/`Bash` get `edit: allow, bash: ask` — OpenCode's `edit` permission covers its `write`, `edit`, and `apply_patch` tools together (confirmed against `opencode.ai/docs/tools/`), so it's the single key that governs the KAIROS "Write to Project" step. Agents with `Write` but no `Bash` (`context-extractor-agent`, `documentation-agent`) get `edit: allow, bash: deny`. Read-only agents (`impact-assessment-agent`, `security-reviewer-agent` — `tools: Read, Grep, Glob, AskUserQuestion`, no write/exec access) get `edit: deny, bash: deny`; the orchestrator writes their artifacts. `read`/`grep`/`glob` are left at OpenCode's default (`allow`) since KAIROS never restricts them. `bash: ask` is a conservative default — agents that shell out repeatedly (e.g. `implementer-tdd-agent` running a test runner in a loop) will prompt on every call; loosen to `bash: allow` yourself if that's too noisy for your workflow. |
+| `model: sonnet\|opus` | `model: provider/model-id` | Provider-prefixed: `anthropic/claude-sonnet-5` for `sonnet`, `anthropic/claude-opus-5` for `opus`. Every mirrored agent uses one of the two; only the unmirrored `agents/team/` layer agents declare `haiku`. Treat these as an example, not the only option — pick whatever provider/model you have configured. |
 | *(none)* | `mode: primary\|subagent` | `orchestrator-agent` → `primary` (the one you invoke directly); every other agent → `subagent`. |
 | `tools: ..., Agent` (orchestrator-agent only) | *(no equivalent — omitted)* | Claude Code's `orchestrator-agent.md` lists `Agent` in its `tools:` so it can invoke `@kairos:*` subagents itself (Claude Code's Task-style delegation tool — a spawned subagent otherwise has no way to call another subagent, regardless of what else is in its `tools:` list). OpenCode has no matching permission key because `mode: primary` already gives a primary agent full delegation over subagent-mode agents by design — don't add a `permission` entry for this when re-deriving the mirror, its absence here is intentional, not a missed conversion step. |
 | `tools: ..., mcp__<server>__*` | `permission: { "<server>_*": allow }` | Claude Code grants a whole MCP server with `mcp__<server>__*` (e.g. `mcp__playwright__*`); OpenCode registers MCP tools under a `<server>_` prefix (single underscore, no `mcp__` wrapper — per `opencode.ai/docs/mcp-servers/`), and `permission` keys are matched as wildcard patterns against the tool name (per `opencode.ai/docs/permissions/`), so `"playwright_*": allow` is the equivalent grant. This is inferred from OpenCode's docs rather than tested against a live install — verify against current docs before relying on it. Currently only `test-verifier-agent` declares MCP tools (`chrome-devtools`, `playwright` — see [Skills & MCP Enhancements](../skills-mcp.md)); the server must still be configured in your `opencode.json` `mcp` block, this permission key only controls whether the agent is allowed to call it. |
@@ -101,6 +101,7 @@ OpenCode is a gateway to many providers, and hardcoding one `provider/model-id` 
     // Reasoning tier (canonical model: opus)
     "orchestrator-agent":        { "model": "{env:KAIROS_STRONG_MODEL}" },
     "architect-agent":           { "model": "{env:KAIROS_STRONG_MODEL}" },
+    "bug-triage-agent":          { "model": "{env:KAIROS_STRONG_MODEL}" },
     "context-extractor-agent":   { "model": "{env:KAIROS_STRONG_MODEL}" },
     "impact-assessment-agent":   { "model": "{env:KAIROS_STRONG_MODEL}" },
     "security-reviewer-agent":   { "model": "{env:KAIROS_STRONG_MODEL}" },
@@ -114,7 +115,8 @@ OpenCode is a gateway to many providers, and hardcoding one `provider/model-id` 
     "qa-plan-agent":             { "model": "{env:KAIROS_FAST_MODEL}" },
     "release-planner-agent":     { "model": "{env:KAIROS_FAST_MODEL}" },
     "documentation-agent":       { "model": "{env:KAIROS_FAST_MODEL}" },
-    "retrospective-agent":       { "model": "{env:KAIROS_FAST_MODEL}" }
+    "retrospective-agent":       { "model": "{env:KAIROS_FAST_MODEL}" },
+    "dependency-audit-agent":    { "model": "{env:KAIROS_FAST_MODEL}" }
   }
 }
 ```
@@ -126,7 +128,7 @@ export KAIROS_STRONG_MODEL="anthropic/claude-opus-5"     # any configured provid
 export KAIROS_FAST_MODEL="openai/gpt-5-mini"             # e.g. a cheaper tier entirely
 ```
 
-This preserves KAIROS's two-tier split (6 reasoning agents vs 8 execution agents) while letting each tier point at any provider OpenCode can reach — including mixing providers across tiers. To flatten costs further, point both tiers at the same small model; to max out quality, point both at your strongest. Global fallback: the top-level `model` key in `opencode.json` applies to agents with no per-agent `model:` anywhere.
+This preserves KAIROS's two-tier split (7 reasoning agents vs 10 execution agents) while letting each tier point at any provider OpenCode can reach — including mixing providers across tiers. To flatten costs further, point both tiers at the same small model; to max out quality, point both at your strongest. Global fallback: the top-level `model` key in `opencode.json` applies to agents with no per-agent `model:` anywhere.
 
 ## Step 3 — Add `AGENTS.md` for KAIROS context
 
@@ -139,11 +141,12 @@ Unlike Codex, OpenCode's `AGENTS.md` support is native (not a convention borrowe
 This project uses the KAIROS multi-agent development framework.
 Agent definitions are in `agents/` (Markdown, canonical) and `.opencode/agents/` (OpenCode copies).
 
-Always follow the KAIROS workflow sequence:
-pm-agent → architect-agent → implementer-tdd-agent (TDD) OR implementer-coder-agent (code-first) → code-reviewer-agent → test-verifier-agent → qa-plan-agent → release-planner-agent
+Start every feature through `orchestrator-agent`, with the feature request and no agent list.
+It derives which agents run from the facts of the change and asks you at its Start Gate;
+never run the pipeline by hand in a fixed order, because most runs skip some agents.
 
-After each phase, present the output and wait for explicit approval (✅ / ✏️ / ⛔) before proceeding.
-Save each approved output to `.kairos/<feature_folder>/0X-*.md`.
+Wait for the orchestrator's gate (Approve / Request changes / Skip next / Stop pipeline) before any agent is called.
+Each approved output is saved under `.kairos/<feature_folder>/`.
 ```
 
 If your project already has a `CLAUDE.md`, write a dedicated `AGENTS.md` rather than relying on OpenCode's Claude-Code fallback — the fallback is a last resort in its lookup order and skipped entirely once a project `AGENTS.md` exists.
@@ -156,25 +159,26 @@ Run OpenCode in your project directory:
 opencode
 ```
 
-Invoke an agent explicitly with `@agent-name`:
+Select `orchestrator-agent` as the primary agent (it ships with `mode: primary`; OpenCode's agent docs describe switching primary agents in the TUI, which this page has not run) and give it the request, with no agent list:
 
 ```
-@pm-agent Help me implement Stripe payments using the KAIROS framework.
+Add Stripe payments to the checkout, issue #42
 ```
 
-Or prompt the primary agent (`orchestrator-agent`, if configured `mode: primary`) and let it delegate based on each subagent's `description`, the same way Claude Code's auto-delegation works.
+The orchestrator derives the agents, shows its Start Gate and calls the subagents itself. Typing `@pm-agent` or another subagent name starts that one agent outside the pipeline: no Start Gate, no ledger, no derived selection. Use it only for a standalone agent such as `context-extractor-agent` or `retrospective-agent`.
 
 ## Step 5 — HITL checkpoints
 
 OpenCode has no `AskUserQuestion` tool, so every gated agent falls back to its text-menu branch:
 
 ```
-✅ Approve — continue to Architect Agent
+✅ Approve — continue to the next agent
 ✏️  Request changes — specify what to adjust
-⛔ Stop
+⏭️  Skip next — skip the next agent
+⛔ Stop pipeline
 ```
 
-Reply with your choice as plain text. This is enforced by the agent body's own instructions, not by OpenCode itself — there's no separate mechanism forcing a stop, so don't skip reading the menu before replying.
+The orchestrator's gate has four lines; the standalone agents print three (no Skip next). Three gates continue on their own when no check finds anything to decide (the bug triage, the requirements, the last wave of Phase 3) and print what they accepted; `every gate` brings the question back. Reply with your choice as plain text. This is enforced by the agent body's own instructions, not by OpenCode itself — there's no separate mechanism forcing a stop, so don't skip reading the menu before replying.
 
 ## Step 6 — Parallel review (optional)
 
@@ -184,7 +188,9 @@ KAIROS's Layered Mode (`agents/team/*.md`, a lead plus layer agents run in stage
 
 ## Step 7 — Save `.kairos/` outputs
 
-Every KAIROS agent's own "Write to Project" step already instructs it to save its output to `.kairos/<feature_folder>/0X-*.md` — no extra prompting needed, as long as `permission.edit` isn't set to `deny` or `ask` in a way that blocks the write.
+Every agent that can write has its own "Write to Project" step that saves its output to `.kairos/<feature_folder>/0X-*.md`, so no extra prompting is needed as long as `permission.edit` isn't set to `deny` or `ask` in a way that blocks the write. The two read-only agents (`impact-assessment-agent`, `security-reviewer-agent`) cannot write, so the orchestrator writes their artifacts, and it alone writes `ledger/run.md` and `_tracking.md`.
+
+Three project settings work here like on every host: `manual-qa`, `qa-dir` and `test-changed` (see [Customizing KAIROS](/customizing)). The `model.` lines do not: use the `opencode.json` mechanism of Step 2b.
 
 ## Feature comparison vs Claude Code
 

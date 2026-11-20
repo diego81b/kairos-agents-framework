@@ -20,9 +20,12 @@ VS Code detects `.md` files in `.claude/agents/` following the Claude sub-agents
 VS Code uses `.agent.md` extension, but also detects plain `.md` files in `.github/agents/`:
 
 ```bash
-mkdir -p .github/agents
-copy agents\*.md .github\agents\
+mkdir -p .github/agents .github/skills
+cp path/to/kairos/agents/*.md .github/agents/
+cp -r path/to/kairos/skills/* .github/skills/
 ```
+
+Copy the `skills/` folder too. Agent bodies link to their shared skills as `../skills/<name>/SKILL.md`, a path resolved from the agent file's own folder, so from `.github/agents/` it lands in `.github/skills/`. The orchestrator reads five `orchestrator-*` skills in many runs and every phase agent opens with `agent-contract` and writes through `artifact-template`: without the folder they fail. If you use `.claude/agents/` instead, copy the skills to `.claude/skills/`.
 
 Or use `.claude/agents/` if you already have Claude Code set up.
 
@@ -53,72 +56,56 @@ your-project/
 
 ## Step 2 — Agent file format
 
-VS Code native `.agent.md` format supports additional fields beyond Claude's format:
+The shipped files use Claude's frontmatter, which VS Code reads as it is:
 
 ```yaml
 ---
-name: PM Agent
-description: Collects and structures requirements. Use at the START of a new feature.
-tools: ['read', 'edit', 'search']
+name: pm-agent
+description: "Analyzes feature requirements and elicits constraints. Use when you have a vague feature request that needs structured analysis."
+tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion
 model: sonnet
-handoffs:
-  - label: "✅ Continue to Architecture"
-    agent: architect-agent
-    prompt: "Design the architecture for the requirements above."
-    send: false
-  - label: "⛔ Stop here"
-    agent: ""
 ---
 ```
 
-The `handoffs` field implements the **HITL pattern natively**: after the PM Agent responds, VS Code shows buttons `✅ Continue to Architecture` and `⛔ Stop here`. Selecting one switches context to the next agent with pre-filled prompt — no manual copy-paste needed.
+VS Code's native `.agent.md` format adds fields beyond Claude's, among them `handoffs`, which shows buttons that switch to another agent with a pre-filled prompt (Step 3).
 
-VS Code maps Claude tool names automatically:
+VS Code maps Claude tool names to its own:
 
 | Claude tools | VS Code equivalent |
 |-------------|--------------------|
-| `read_file` | `read` |
-| `write_file` | `edit` |
-| `bash` | `execute` (shell) |
+| `Read`, `Grep`, `Glob` | `read`, `search` |
+| `Write`, `Edit` | `edit` |
+| `Bash` | `execute` (shell) |
 
-## Step 3 — Configure handoffs for HITL
+## Step 3 — Handoffs (optional, standalone agents only)
 
-Add `handoffs` to each KAIROS agent file to create the HITL gate chain:
+Do not wire a handoff chain between the pipeline agents. The orchestrator owns the gates and the dispatch, and it derives each agent at the point in the run where its facts exist, so a hardwired `pm-agent → architect-agent → ...` chain would bypass the Start Gate and the derivation, and most runs skip some of those agents.
 
-**`pm-agent.agent.md`** excerpt:
+A handoff is useful for a standalone agent that hands its result to the orchestrator. For example, in `context-extractor-agent.agent.md`:
+
 ```yaml
 handoffs:
-  - label: "✅ Approve → Architecture"
-    agent: architect-agent
-    prompt: "Design the architecture for these requirements: {output}"
-    send: false
-  - label: "✏️ Request changes"
-    agent: pm-agent
-    prompt: "Revise the requirements based on this feedback: "
+  - label: "Start the KAIROS run with this context"
+    agent: orchestrator-agent
+    prompt: "Run the pipeline for the issue above. Reuse 00-context.md."
     send: false
 ```
-
-Repeat for each agent in the chain, pointing to the next phase.
 
 ## Step 4 — Start a KAIROS session
 
-Open Copilot Chat, select the **Orchestrator** agent from the dropdown (or type `@orchestrator`), and prompt:
+Open a new Copilot Chat, select the **Orchestrator** agent from the dropdown, and give it the request with no agent list:
 
 ```
-Help me implement [your feature] using the KAIROS framework
+Add Stripe payments to the checkout, issue #42
 ```
 
-The orchestrator delegates to PM Agent. After PM Agent responds, the handoff buttons appear — select `✅ Approve → Architecture` to continue.
+Start it from a fresh chat with the Orchestrator selected, not by mentioning it inside a conversation already in progress, where it would run as a subagent of that chat (this page has not run that case). The orchestrator measures the change, derives which agents run, shows its Start Gate and dispatches the subagents itself. VS Code has no `AskUserQuestion`, so its gates use the text menu (Approve / Request changes / Skip next / Stop pipeline); reply as plain text. Three gates continue on their own when no check finds anything to decide (the bug triage, the requirements, the last wave of Phase 3) and print what they accepted; `every gate` brings the question back.
 
 ## Step 5 — `.kairos/` persistence
 
-VS Code agents with `edit` in their `tools` list can write files. Add to each agent's instructions:
+Each agent whose `tools` include `Write` or `Edit` saves its own output to `.kairos/<feature_folder>/` through its "Write to Project" step, with no extra instructions. The two read-only agents (`impact-assessment-agent`, `security-reviewer-agent`) cannot write, so the orchestrator writes their artifacts, and it alone writes `ledger/run.md` and `_tracking.md`.
 
-```markdown
-After the user approves, save the output to `.kairos/<feature_folder>/01-requirements.md`.
-```
-
-Or save manually by copying the Markdown output from the chat after each approved phase.
+Three project settings (`manual-qa`, `qa-dir`, `test-changed`) work here like on every host; see [Customizing KAIROS](/customizing). The `model.` lines do not, because VS Code takes the model from each agent's `model:` field.
 
 ## Feature comparison vs Claude Code
 
@@ -127,8 +114,8 @@ Or save manually by copying the Markdown output from the chat after each approve
 | Native subagent format | ✅ `.claude/agents/` | ✅ `.github/agents/*.agent.md` |
 | Context isolation per agent | ✅ | ✅ |
 | Auto-delegation via `description` | ✅ | ✅ |
-| HITL built-in gate | ✅ Orchestrator-enforced | ✅ Via `handoffs` buttons |
-| `.kairos/` persistence | ✅ Automatic | ⚠️ Via agent instructions or manual |
+| HITL built-in gate | ✅ Orchestrator-enforced, `AskUserQuestion` | ⚠️ Orchestrator-enforced, text-menu gates (no `AskUserQuestion`); `handoffs` only for standalone agents |
+| `.kairos/` persistence | ✅ Automatic | ✅ Via each agent's own Write step when `edit` is in its `tools` |
 | Claude format compatibility | ✅ Native | ✅ Reads `.claude/agents/*.md` |
 
 ## Troubleshooting
@@ -138,7 +125,8 @@ Or save manually by copying the Markdown output from the chat after each approve
 | Agents not in dropdown | Check `.github/agents/` has `.agent.md` files with valid frontmatter |
 | Handoff buttons not appearing | Verify `handoffs:` is in agent frontmatter and `agent` tool is in `tools:` |
 | Wrong agent format | Plain `.md` files work in `.github/agents/` but `.agent.md` unlocks full features |
-| `.kairos/` not written | Add `edit` to agent `tools:` and explicit instruction to write the file |
+| `.kairos/` not written | Check that `edit` (`Write`/`Edit` in the shipped files) is in the agent's `tools:`; the two read-only agents never write, the orchestrator does it for them |
+| An agent reports it can't find `../skills/<name>/SKILL.md` | Copy `skills/` into `.github/skills/` (or `.claude/skills/`), see Step 1 |
 
 ## Suggested Models
 

@@ -2,7 +2,7 @@
 
 KAIROS agents declare **optional enhancements** via skills and MCP tools. The framework works fully without them — all enhancements are additive only. No skill or MCP is a hard dependency.
 
-KAIROS does not recommend or depend on any third-party Skill marketplace. Every enhancement below is either an Anthropic-authored Claude Code built-in, an internal skill authored and shipped as part of the KAIROS plugin itself (auto-installed with `claude plugin install kairos`, same as every agent file), or an MCP server.
+KAIROS does not recommend or depend on any third-party Skill marketplace. Every enhancement below is either an Anthropic-authored Claude Code built-in, an internal skill authored and shipped as part of the KAIROS plugin itself (installed with the plugin, same as every agent file), or an MCP server.
 
 ---
 
@@ -42,21 +42,13 @@ No install required — these ship with Claude Code.
 | `verify` / `run` | Actually executes the project (build, test, run) to confirm a change works, instead of trusting a static read of the code | `implementer-tdd-agent`, `implementer-coder-agent`, `test-verifier-agent`, `teammate-tests-agent`, `teammate-frontend-agent`, `release-planner-agent` |
 | `deep-research` | Multi-source investigation pattern for open-ended questions, before committing to an answer | `context-extractor-agent`, `impact-assessment-agent`, `pm-agent`, `architect-agent`, `retrospective-agent` |
 
-### User-installed skills
-
-Not shipped with Claude Code and not part of the KAIROS plugin — a personal or third-party skill the user installs themselves. KAIROS never requires it.
-
-| Skill | What it does | Agents that benefit |
-|-------|---------------|---------------------|
-| `issues-generator` | Drafts GitHub/GitLab issue text from a requirement, in either an implementation-ready or an outcome-driven mode | `pm-agent` |
-
 ### Internal (KAIROS-authored) skills
 
-No install required — these ship as part of the KAIROS plugin itself, under `skills/` in this repo, and are auto-installed together with the agent files by `claude plugin install kairos`. Each row links to the actual `SKILL.md` — open it to see the full checklist, not just the summary below.
+No install required — these ship as part of the KAIROS plugin itself, under `skills/` in this repo, and are installed together with the agent files by `claude plugin install kairos@kairos-agents-framework`. A manual copy of `agents/` needs the `skills/` folder beside it, because agents read a skill by the relative link `../skills/<name>/SKILL.md`. Each row links to the actual `SKILL.md` — open it to see the full checklist, not just the summary below.
 
 | Skill | What it enforces | Agents that use it |
 |-------|-------------------|---------------------|
-| [`agent-contract`](/skills/agent-contract/SKILL) | One shared `🚨 AGENT ERROR` format for a missing required input, instead of nine agents each inventing their own wording | `pm-agent`, `architect-agent`, `impact-assessment-agent`, `code-reviewer-agent`, `security-reviewer-agent`, `test-verifier-agent`, `qa-plan-agent`, `release-planner-agent`, `documentation-agent`, `retrospective-agent` |
+| [`agent-contract`](/skills/agent-contract/SKILL) | One shared `🚨 AGENT ERROR` format for a missing required input, instead of every phase agent inventing its own wording | `pm-agent`, `architect-agent`, `impact-assessment-agent`, `bug-triage-agent`, `code-reviewer-agent`, `security-reviewer-agent`, `test-verifier-agent`, `qa-plan-agent`, `release-planner-agent`, `documentation-agent`, `retrospective-agent`, `dependency-audit-agent` |
 | [`analysis-discipline`](/skills/analysis-discipline/SKILL) | Review-side counterpart of `coding-discipline`: evidence-backed findings, restraint on low-value nitpicks, scope-bounded investigation, brief direct pushback when the evidence contradicts the requested approach, and a sweep of the same defect class across the enclosing unit before any finding is recorded, pre-existing occurrences included | `context-extractor-agent`, `impact-assessment-agent`, `bug-triage-agent`, `pm-agent`, `architect-agent`, `code-reviewer-agent`, `security-reviewer-agent`, `test-verifier-agent`, `qa-plan-agent`, `dependency-audit-agent` |
 | [`constraint-taxonomy`](/skills/constraint-taxonomy/SKILL) | The closed `Category` vocabulary of `ledger/constraints.md`, written once at row creation and never rewritten, plus the reader/writer/gating rules that let a review section run only when its obligation was declared upstream — an obligation is never inferred from the code | every agent that creates or updates a constraint row, plus `code-reviewer-agent` (Accessibility), `security-reviewer-agent` (Compliance & Privacy) and `qa-plan-agent` (Cross-Environment Verification), which are gated on it |
 | [`contract-checklist`](/skills/contract-checklist/SKILL) | 9 questions to resolve before finalizing any API/DB contract — entity lifecycle, IDOR risk, idempotency, delete behavior, pagination, error shape | `architect-agent`, `implementer-lead-agent` |
@@ -64,9 +56,15 @@ No install required — these ship as part of the KAIROS plugin itself, under `s
 | [`migration-safety`](/skills/migration-safety/SKILL) | Expand/contract sequencing, lock duration at production row counts, idempotent and restartable backfill, reversibility, what a code rollback does to data already written in the new shape, ordering against the code deploy | `architect-agent` (when the data model changes), `release-planner-agent` (rollback strategy) |
 | [`code-simplification`](/skills/code-simplification/SKILL) | REFACTOR-step checklist: what to simplify, how to confirm behavior didn't change, when to stop | `implementer-tdd-agent`, `implementer-coder-agent` (REFACTOR step) |
 | [`test-scope`](/skills/test-scope/SKILL) | How much of the suite to run at each stop: test files, related tests or the whole suite, which stage owns the full run, how a targeted run reports coverage, the `test-changed` setting, and the rules for writing tests that are cheap to run | `implementer-tdd-agent`, `implementer-coder-agent`, `test-verifier-agent`, `implementer-lead-agent` |
-| [`artifact-bookkeeping`](/skills/artifact-bookkeeping/SKILL) | Pure-arithmetic rules for tallying a Risk/Issue/Finding table by impact and deriving each phase's pass/fail status from a fixed threshold — no agent "eyeballs" a count | `pm-agent`, `architect-agent`, `impact-assessment-agent`, both implementers, `code-reviewer-agent`, `security-reviewer-agent`, `test-verifier-agent`, `qa-plan-agent`, `release-planner-agent`, `documentation-agent`, `orchestrator-agent` |
+| [`issue-text`](/skills/issue-text/SKILL) | The layout of `_issues.md`: title, goal, acceptance criteria copied word for word, design notes in full when an architect ran, dependencies by title. Text for a person to paste, never a way to file issues | `pm-agent`, `architect-agent` |
+| [`orchestrator-resume`](/skills/orchestrator-resume/SKILL) | Resume and new-run rules of Step 0b: archive a finished run, pick the resume point from `in_flight`, restore the run settings, migrate older folders. Moved out of the orchestrator, read only when the folder holds a `run.md` | `orchestrator-agent` |
+| [`orchestrator-run-choices`](/skills/orchestrator-run-choices/SKILL) | The manual pipeline dialog, deciding agent by agent, and the once-per-project Manual QA and QA directory settings. Read where the orchestrator names each one | `orchestrator-agent` |
+| [`orchestrator-writeback`](/skills/orchestrator-writeback/SKILL) | Saving a pipeline correction into the tracker issue as a `## KAIROS Pipeline` section, with the mandatory mode and the paste-ready fallback. Read only when there is a correction to save | `orchestrator-agent` |
+| [`orchestrator-layered`](/skills/orchestrator-layered/SKILL) | The Layered Mode offer and its stage runner (RED, GREEN, VERIFY, FIX, REFACTOR, CLOSE). Claude Code only. Read only when the implementer decision reaches Layered Mode | `orchestrator-agent` |
+| [`orchestrator-closeout`](/skills/orchestrator-closeout/SKILL) | Step 10 sub-steps: finalize `_tracking.md`, present, the cleanup gate and the project summary. Read when the last phase gate resolves | `orchestrator-agent` |
+| [`artifact-bookkeeping`](/skills/artifact-bookkeeping/SKILL) | Pure-arithmetic rules for tallying a Risk/Issue/Finding table by impact and deriving each phase's pass/fail status from a fixed threshold — no agent "eyeballs" a count | `pm-agent`, `architect-agent`, `impact-assessment-agent`, `bug-triage-agent`, both implementers, `implementer-lead-agent`, `code-reviewer-agent`, `security-reviewer-agent`, `test-verifier-agent`, `qa-plan-agent`, `release-planner-agent`, `documentation-agent`, `dependency-audit-agent`, `orchestrator-agent` |
 | [`artifact-template`](/skills/artifact-template/SKILL) | The mandatory 4-line `## Summary` head block every phase artifact opens with, and the fixed column sets for any table the Risk Disposition Loop parses — so a gate is readable in seconds and no two phases spell `Mitigation/Fix` differently | every agent that writes a `.kairos/` phase artifact, plus `orchestrator-agent` (reads the Summary at each gate) |
-| [`coding-discipline`](/skills/coding-discipline/SKILL) | Pre-implementation checklist: scope discipline, no speculative abstraction, surface assumptions, trust boundaries, WHY-only comments | `implementer-tdd-agent`, `implementer-coder-agent`, `implementer-lead-agent`, all 4 layer agents (`teammate-*-agent`) |
+| [`coding-discipline`](/skills/coding-discipline/SKILL) | Pre-implementation checklist: scope discipline, no speculative abstraction, surface assumptions, trust boundaries, WHY-only comments | `implementer-tdd-agent`, `implementer-coder-agent`, `implementer-lead-agent`, all 4 layer agents (`teammate-*-agent`), and `code-reviewer-agent`, which grades a diff against it |
 | [`issue-tracker-comment`](/skills/issue-tracker-comment/SKILL) | Shared jira/glab/bitbucket commands for posting a phase's output as a comment on the originating issue — whole file, title-prefixed, or the extract body `qa-plan-agent` sends a tester (in an orchestrated run the orchestrator posts it, after the QA gate) | every phase agent's own optional tracker-comment step |
 
 These replace what used to be third-party plugin dependencies (`karpathy-guidelines` and 11 Trail of Bits plugins) — see `CHANGELOG.md` for the removal. Their guidance was folded into each consuming agent's own checklist natively (a concrete check item, an unconditional process step) rather than gated behind "if this external skill is installed."
@@ -81,13 +79,13 @@ These replace what used to be third-party plugin dependencies (`karpathy-guideli
 | `context-extractor-agent` | Pre | `deep-research` | — |
 | `impact-assessment-agent` | Pre | `deep-research` | — |
 | `bug-triage-agent` | Pre (bugs) | `deep-research` | — |
-| `pm-agent` | 1 | `deep-research`, `issues-generator` | — |
+| `pm-agent` | 1 | `deep-research` | — |
 | `architect-agent` | 2 | `deep-research` | — |
-| `implementer-tdd-agent` | 3a | `verify`/`run` | — |
-| `implementer-coder-agent` | 3b | `verify`/`run` | — |
-| `code-reviewer-agent` | 4 | `code-review`, `security-review` | — |
-| `security-reviewer-agent` | 4 | `security-review` | — |
-| `test-verifier-agent` | 5 | `verify`/`run` | Chrome DevTools MCP, Playwright MCP |
+| `implementer-tdd-agent` | 3 | `verify`/`run` | — |
+| `implementer-coder-agent` | 3 | `verify`/`run` | — |
+| `code-reviewer-agent` | 4 (review wave) | `code-review` | — |
+| `security-reviewer-agent` | 4.5 (review wave) | `security-review` | — |
+| `test-verifier-agent` | 5 (review wave) | `verify` | Chrome DevTools MCP, Playwright MCP |
 | `qa-plan-agent` | 5b | — | Chrome DevTools MCP (optional) |
 | `release-planner-agent` | 6 | `verify`/`run` | — |
 | `documentation-agent` | 6b | — | — |

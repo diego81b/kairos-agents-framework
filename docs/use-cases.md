@@ -86,10 +86,10 @@ At `medium`, the `auth` domain makes the architect's rule fire, and it makes the
 ## KAIROS Pipeline
 
 Effort: simple_fix
-Add: implementer-tdd-agent, test-verifier-agent
+Add: implementer-tdd-agent
 ```
 
-`Effort: simple_fix` keeps the short path. An implementer named in `Add:` beats the `simple_fix` rule, so `implementer-tdd-agent` runs test-first in its combined step. `test-verifier-agent` runs at the implementation gate, which a bare `simple_fix` skips. There is no acceptance-criteria list to map tests against, because no `pm-agent` ran. Without these two lines the code-first implementer already requires a regression test that fails without the fix, so add them only when the order or the test review matters to you. The details are in [Pipeline Templates](/setup/templates#short-path-with-stronger-tests).
+`Effort: simple_fix` keeps the short path. An implementer named in `Add:` beats the `simple_fix` rule, so `implementer-tdd-agent` runs test-first in its combined step. `test-verifier-agent` runs at the implementation gate whenever a test file was written, `simple_fix` included. There is no acceptance-criteria list to map tests against, because no `pm-agent` ran. Without the `Add:` line the code-first implementer already requires a regression test that fails without the fix, so add it only when the order (test first) matters to you. The details are in [Pipeline Templates](/setup/templates#short-path-with-stronger-tests).
 
 ---
 
