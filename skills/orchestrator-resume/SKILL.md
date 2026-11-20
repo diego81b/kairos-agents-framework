@@ -1,5 +1,5 @@
 ---
-description: Resume and new-run rules for orchestrator-agent Step 0b: archiving a finished run, the in_flight check that picks the resume point, restoring run settings, and migrating folders written by older versions. Read when the feature folder already holds a ledger/run.md or the human chose Start a new run.
+description: "Resume and new-run rules for orchestrator-agent Step 0b: archiving a finished run, the in_flight check that picks the resume point, restoring run settings, and migrating folders written by older versions. Read when the feature folder already holds a ledger/run.md or the human chose Start a new run."
 ---
 
 # Orchestrator: resume

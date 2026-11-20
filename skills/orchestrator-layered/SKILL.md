@@ -1,5 +1,5 @@
 ---
-description: Layered Mode for orchestrator-agent: the offer (cost warning and question) and the stage runner (RED, GREEN, VERIFY, FIX, REFACTOR, CLOSE) that replaces the single Step 3b call. Claude Code only. Read when the implementer decision reaches Layered Mode or implementer-lead-agent is the implementer.
+description: "Layered Mode for orchestrator-agent: the offer (cost warning and question) and the stage runner (RED, GREEN, VERIFY, FIX, REFACTOR, CLOSE) that replaces the single Step 3b call. Claude Code only. Read when the implementer decision reaches Layered Mode or implementer-lead-agent is the implementer."
 ---
 
 # Orchestrator: layered

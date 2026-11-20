@@ -1,5 +1,5 @@
 ---
-description: Issue Write-back for orchestrator-agent: saving the human's pipeline correction into the tracker issue as a ## KAIROS Pipeline section, with the mandatory mode of the manual pipeline and the paste-ready fallback. Read when the run has an issue reference and a correction to save.
+description: "Issue Write-back for orchestrator-agent: saving the human's pipeline correction into the tracker issue as a ## KAIROS Pipeline section, with the mandatory mode of the manual pipeline and the paste-ready fallback. Read when the run has an issue reference and a correction to save."
 ---
 
 # Orchestrator: writeback

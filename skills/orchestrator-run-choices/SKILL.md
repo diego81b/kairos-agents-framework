@@ -1,5 +1,5 @@
 ---
-description: Run-setup choices for orchestrator-agent that fire in some runs only: the manual pipeline dialog, deciding agent by agent, and the once-per-project Manual QA and QA directory settings. Read at the point orchestrator-agent names each one.
+description: "Run-setup choices for orchestrator-agent that fire in some runs only: the manual pipeline dialog, deciding agent by agent, and the once-per-project Manual QA and QA directory settings. Read at the point orchestrator-agent names each one."
 ---
 
 # Orchestrator: run choices

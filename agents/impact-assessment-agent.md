@@ -112,7 +112,7 @@ Decompose the issue into the sequence of tasks it actually takes, so the aggrega
 - Tag each task with the domain it lands in, from the list in step 2. Tag honestly: the orchestrator's Layered Mode check counts the backend/frontend/db domains in step 2, and a domain listed for a task that does not touch it offers Layered Mode for nothing.
 - In **Lean Mode** (`simple_fix`), a breakdown of one or two lines is the correct output — do not manufacture tasks to fill a table.
 
-**This is a work list, not a set of tickets.** No issue titles, no acceptance criteria, no labels, no posting anywhere — the `issues-generator` skill exists for that and this must not duplicate it. What belongs here is only what the human at the gate and the orchestrator's agent-selection step need in order to judge the shape of the work.
+**This is a work list, not a set of tickets.** No issue titles, no acceptance criteria, no labels, no posting anywhere — issue text, when a run asks for it, is the `_issues.md` that `pm-agent` or `architect-agent` writes, and this must not duplicate it. What belongs here is only what the human at the gate and the orchestrator's agent-selection step need in order to judge the shape of the work.
 
 ### 4. Map Existing Reusable Assets
 List what already exists that the implementer can use directly, with real file paths:
