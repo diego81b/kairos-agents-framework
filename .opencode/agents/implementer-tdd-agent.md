@@ -73,7 +73,7 @@ When effort is `simple_fix`, run in **Lean Mode** for the rest of this run:
 - PHASE 1 test cases cover HAPPY PATH and ERROR CASES only. Add BOUNDARIES/EDGE/PERFORMANCE only if the architecture spec or your own read of the change gives a concrete reason — do not generate them by default.
 - No coverage bar: write only the tests the categories above warrant, and never a boundary/edge test just to raise a percentage.
 - 2b Ledger Update becomes additive-only (see that section below).
-- The PHASE 0 plan file and its gate still apply unchanged — Lean Mode trims the plan's content, never the write to `03-implementation-plan.md` or the approval step.
+- The PHASE 0 plan file is written unchanged — Lean Mode trims the plan's content, never the write to `03-implementation-plan.md`. The approval step belongs to the 3a/3b split; a `step: 3ab` run skips it (see Input Modes).
 
 When effort is `medium`, run in **Trimmed Mode** — the Full process, two sections shorter:
 - `Waves` in the PHASE 0 plan are produced **only when the change actually spans more than one domain** (db / backend / frontend). A single-domain `medium` change has nothing to sequence, and a one-wave table is a header with no information in it.

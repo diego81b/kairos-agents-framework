@@ -21,7 +21,7 @@ Two formats are read:
 | `architect-agent` | analysis | at the start | effort is `significant_rework`, or `medium` and the change touches `db` or `auth` or changes a contract. Backend and frontend both changing is not a rule: with no contract change the design is two layers edited |
 | an implementer | development | at the start (whether), before the plan (which) | the issue asks for code. A spike or an analysis-only issue writes none |
 | `code-reviewer-agent` | review | at the start | an implementer runs |
-| `test-verifier-agent` | review | at the implementation gate | the implementation wrote or changed a test file, and effort is not `simple_fix` (with no `pm-agent` there is no acceptance-criteria list to map tests against, and code review already reads the tests) |
+| `test-verifier-agent` | review | at the implementation gate | the implementation wrote or changed a test file, at any effort. In a `simple_fix` there is no `pm-agent`, so it skips the acceptance-criteria mapping and reviews the tests only |
 | `security-reviewer-agent` | review | at the implementation gate | the change touches `auth` or `integrations`, a `SECURITY`/`PRIVACY`/`COMPLIANCE` constraint exists, or the architecture's threat model produced rows |
 | `qa-plan-agent` | delivery | at the review gate | the project verifies features by hand (asked once per project, at this gate, and only when something below fires) and something is left for a person: no tests were written, an acceptance criterion went to manual verification, or the change touches the frontend. A `VERIFICATION` constraint triggers it in any project |
 | `release-planner-agent` | delivery | at the review gate | the change ships a migration, a new environment variable or configuration key, a deployment or CI file, or a dependency change |
@@ -65,9 +65,9 @@ Add: security-reviewer-agent
 
 **`Effort:`** takes `simple_fix`, `medium`, or `significant_rework` and replaces the effort `impact-assessment-agent` measured. It says how big the change is: the orchestrator passes it to every agent, and it decides whether they run a short, trimmed, or full process, as well as the derivation rules above. It does not change the size: the start gate shows the size as measured and the effort you forced, side by side. A bug triage can raise the effort (`full-pipeline` on a change the impact assessment called `simple_fix` makes it `medium`) but never lowers it: when the triage says `quick-fix` and the impact assessment measures `medium` or more, the run keeps the larger effort and the start gate says so. An `Effort: simple_fix` line is how you take the triage's word instead.
 
-**`Epic:`** names the epic this issue belongs to (`PROJ-10`, `&5`). Without the line the orchestrator reads the epic from the tracker when the CLI exposes one (GitLab epics, Jira parent). It decides where the QA plan goes: with an epic, the plan is one cumulative file for the whole epic (see [Phase 5b](/workflow#phase-5b-qa-plan-qa-plan-agent-optional)). Bitbucket Issues has no epics, so there the line is the only source.
+**`Epic:`** names the epic this issue belongs to (`PROJ-10`, `&5`). Without the line the orchestrator reads the epic from the tracker when the CLI exposes one (GitLab epics, Jira parent). It decides where the QA plan goes: with an epic, the plan is one cumulative file for the whole epic (see [Phase 5b](/workflow#phase-5b-qa-plan-qa-plan-agent-—-optional)). Bitbucket Issues has no epics, so there the line is the only source.
 
-**`Analysis:`** names the folder under `.kairos/` of an earlier analysis run that this issue was cut from (`Analysis: feature_toolkit-return-waste`). A design run ends with an epic and child issues, and each child gets a folder of its own, so without this line the child's run does not know the design exists. With it, the orchestrator gives every agent the paths of that folder's `01-requirements.md`, `02-architecture.md`, `00b-impact.md` and `ledger/`, and the agents read what their phase builds on instead of redoing it. The impact assessment starts from them too, so it does not measure again what the design already says. The line only points: it adds no `Skip:`, so which agents run is still derived from the facts (a medium child still gets `pm-agent` and `architect-agent` unless you skip them), and nobody writes into the analysis folder. The value is a folder name, with no path separators. `.kairos/` is local and gitignored, so a colleague's machine may not have the folder: the orchestrator says so in one line and runs as if the line were absent.
+**`Analysis:`** names the folder under `.kairos/` of an earlier analysis run that this issue was cut from (`Analysis: feature_toolkit-return-waste`). A design run ends with an epic and child issues, and each child gets a folder of its own, so without this line the child's run does not know the design exists. With it, the orchestrator gives every agent the paths of that folder's `01-requirements.md`, `02-architecture.md`, `00b-impact.md` and `ledger/`, and the agents read what their phase builds on instead of redoing it. The impact assessment starts from them too, so it does not measure again what the design already says. The line only points: it adds no `Skip:`, so which agents run is still derived from the facts (a medium child still gets `pm-agent` unless you skip it, and `architect-agent` when it touches a contract, db or auth), and nobody writes into the analysis folder. The value is a folder name, with no path separators. `.kairos/` is local and gitignored, so a colleague's machine may not have the folder: the orchestrator says so in one line and runs as if the line were absent.
 
 **`Areas:`** takes `all`, or any of `analysis`, `development`, `review`, `delivery` (`analisi` and `sviluppo` work too). See [Areas](#areas). With the line present the orchestrator does not ask which areas to run.
 
@@ -90,20 +90,24 @@ A run does not always need the whole pipeline. The agents belong to four areas, 
 | `review` | `code-reviewer-agent`, `security-reviewer-agent`, `test-verifier-agent` |
 | `delivery` | `qa-plan-agent`, `release-planner-agent`, `documentation-agent` |
 
-The orchestrator asks once, at the start, unless an `Areas:` line, a phrase in your prompt (see [Saying what the run is for](#saying-what-the-run-is-for)) or `decide each step` already answers it: **All areas** (the default, one click), **Choose the pipeline myself** or **Decide each step**. Inside the areas the rules above still decide each agent. To limit the run to some areas, type their names in the question's free field or reply at the start gate: `only analysis`, `solo sviluppo`, `add review`, `skip delivery` or `all areas`. Add `decide each step` to the same reply to keep those areas and be asked about each agent (`analysis, decide each step`).
+When your input reads as a bug report, the bug triage comes first and this question after it: the triage is the fact that says whether the fix is contained. A triage that recommends a `quick-fix` answers the question for you (`development` and `review`, announced at the start gate, `all areas` to change it). Otherwise the orchestrator asks once, at the start, unless an `Areas:` line, a phrase in your prompt (see [Saying what the run is for](#saying-what-the-run-is-for)) or `decide each step` already answers it: **All areas** (the default, one click), **Choose the pipeline myself** or **Decide each step**. Inside the areas the rules above still decide each agent. To limit the run to some areas, type their names in the question's free field or reply at the start gate: `only analysis`, `solo sviluppo`, `add review`, `skip delivery` or `all areas`. Add `decide each step` to the same reply to keep those areas and be asked about each agent (`analysis, decide each step`).
 
 #### Saying what the run is for
 
-Four phrases in the prompt that starts the run answer the area question in advance. They are matched as whole words, in the text you typed to start the run and nowhere else (never the issue text), and the start gate names the phrase that fired and what it set:
+A few phrases in the prompt that starts the run answer the area question in advance. They are matched as whole words, in the text you typed to start the run and nowhere else (never the issue text), and the start gate names the phrase that fired and what it set:
 
 | You write | The run covers |
 |---|---|
 | `analizziamo`, `analizza`, `analyze`, `analyse` | `analysis` |
-| `rendi ready`, `rendiamo ready`, `make ready`, `make it ready` | `analysis`, with `pm-agent` and `architect-agent` forced on, because a ready issue has requirements and a design |
+| `rendi ready`, `rendere ready`, `rendiamo ready`, `make ready`, `make it ready` | `analysis`, with `pm-agent` and `architect-agent` forced on, because a ready issue has requirements and a design |
 | `implementiamo`, `implementa`, `sviluppiamo`, `implement` | all areas (no question asked) |
-| `finalizziamo`, `finalizza`, `chiudiamo la issue`, `finalize`, `wrap up` | `review` (add `delivery` at the start gate to extend it) |
+| `finalizziamo`, `finalizza`, `chiudiamo la issue`, `chiudi la issue`, `finalize`, `wrap up` | `review` (add `delivery` at the start gate to extend it) |
+| `fix rapido`, `fix veloce`, `esegui un fix rapido`, `quick fix` | `development` and `review`: the implementer, the code review and, when tests were written, the test review |
+| `scrivi le issue`, `scrivi le issues`, `scrivere le issue`, `write the issues`, `write issues` | `analysis`, with `pm-agent` forced on: the run ends with `_issues.md`, text you paste into a tracker (see below) |
 
-A phrase chooses areas and nothing else: the rules still decide the agents inside them (add `decide each step` to the prompt to be asked about each one instead), and `finalizziamo` never closes or comments on the tracker issue. A phrase is a per-run intent and is never offered for saving, because an `Areas: analysis` line in the issue would turn the next run, started with `implementiamo`, into a run that analyses only. A first cut, not measured on real runs: the table is the whole list, and a phrase it does not hold matches nothing, so the question is asked as before. To analyse now and build later, use the phrase; to keep the choice, pick the pipeline by hand or add an `Areas:` line.
+A phrase chooses areas, and agents only where its row says so (`rendi ready` and `scrivi le issue` force `pm-agent`, `rendi ready` also `architect-agent`): the rules still decide the other agents inside the areas (add `decide each step` to the prompt to be asked about each one instead), and `finalizziamo` never closes or comments on the tracker issue. A phrase is a per-run intent and is never offered for saving, because an `Areas: analysis` line in the issue would turn the next run, started with `implementiamo`, into a run that analyses only. A first cut, not measured on real runs: the table is the whole list, and a phrase it does not hold matches nothing, so the question is asked as before. To analyse now and build later, use the phrase; to keep the choice, pick the pipeline by hand or add an `Areas:` line.
+
+A run that covers analysis and no development ends with `_issues.md` in the feature folder: text you paste into your tracker, one issue per slice of the requirements or one issue. KAIROS creates nothing on the tracker. `scrivi le issue` is the phrase made for it: it forces the requirements step, which is the PM's language, and leaves the architect to the rules, so a team lead who also wants the design adds `architect-agent` from **Change the pipeline**. `analizziamo` and `rendi ready` write the file too, but only when `pm-agent` or `architect-agent` runs, which on a small issue it does not. The issues carry no `Size:`, `Effort:`, `Areas:` or `Skip:` line, since each issue's own run measures them. To start a run on one of those issues from the same machine with the analysis behind it, add a `## KAIROS Pipeline` section to its description holding `Analysis: <folder>` (see [Workflow](/workflow#proposed-issues)); any such section makes that run a fast start, with the pipeline printed and no area question.
 
 #### Choosing the pipeline by hand
 
@@ -121,13 +125,13 @@ Two things to know. `review` or `delivery` without `development` has no implemen
 
 | Size | Criteria | Effort |
 |------|----------|--------|
-| `XS` | 1 file, no new endpoint, no schema change, no auth impact | `simple_fix` |
+| `XS` | 1 production file, no new endpoint, no schema change, no auth impact | `simple_fix` |
 | `S` | 2 files, same limits | `simple_fix` |
 | `M` | 3-6 files, at most 1 new or modified endpoint, schema change possible, no auth redesign | `medium` |
 | `L` | 7-10 files, 2-3 new or modified endpoints, schema change possible, no auth redesign | `medium` |
-| `XL` | more than 10 files, a new subsystem or domain, auth changes or schema migrations | `significant_rework` |
+| `XL` | more than 10 files, a new subsystem or domain, auth changes, schema migrations or cross-domain impact | `significant_rework` |
 
-As with the effort, a criterion of a higher level wins over the file count: a new endpoint, a schema change or an auth impact never leaves a change at `XS` or `S`. Only the effort decides how thorough each agent is; the size is a label for people, so nothing branches on it.
+Only production files count: tests, docs, lockfiles and generated files follow a change, they do not size it, and when the facts fit two adjacent sizes the smaller wins. As with the effort, a criterion of a higher level wins over the file count: a new endpoint, a schema change or an auth impact never leaves a change at `XS` or `S`. Only the effort decides how thorough each agent is; the size is a label for people, so nothing branches on it.
 
 The start gate shows the size next to the effort. When you confirm it on a run that started from an issue, the orchestrator sets a `size:<value>` label on that issue, replacing any `size:` label already there, so the tracker can group an epic's issues by size. Where there is no tracker CLI, or the tracker has no labels (Bitbucket Issues), the label is skipped without a message and the run continues. A run that has no impact assessment (a checklist that does not name it, or a run limited to review and delivery) has no measured size and sets no label. It reads an existing `size:` label of the issue only as a fallback for the effort, never ahead of a measurement.
 
@@ -145,7 +149,7 @@ With no correction there is nothing to save and the question is not asked: the n
 
 ## Checklist Templates (older format)
 
-Issues written before v9.0.0 carry a checklist, and so do issues saved by the manual pipeline. It still works, and it wins over the derivation: the checked agents run and no other agent does, the orchestrator starts `impact-assessment-agent` only when the checklist names it, and it asks once whether to use the checklist or derive the pipeline instead.
+Issues written before v9.0.0 carry a checklist, and so do issues saved by the manual pipeline. It still works, and it wins over the derivation: the checked agents run and no other agent does, the orchestrator starts `impact-assessment-agent` only when the checklist names it, and it asks nothing about it: the checklist is used as written. Type `derive` in the prompt to drop it and derive the pipeline instead.
 
 ```markdown
 ## KAIROS Pipeline
@@ -223,16 +227,16 @@ Add: pm-agent, documentation-agent
 
 ### Short path with stronger tests
 
-A `simple_fix` runs code-first with no requirements, no architecture and no plan gate, and skips `test-verifier-agent`. For a bug fix in a project that wants a regression test written first and reviewed, keep the short path and add the two agents:
+A `simple_fix` runs code-first with no requirements, no architecture and no plan gate. `test-verifier-agent` runs whenever the implementer wrote a test file, since v9.8.0: a small fix can regress other code, and the test review checks the new test and the existing ones. For a bug fix in a project that wants the regression test written first, keep the short path and add the TDD implementer:
 
 ```markdown
 ## KAIROS Pipeline
 
 Effort: simple_fix
-Add: implementer-tdd-agent, test-verifier-agent
+Add: implementer-tdd-agent
 ```
 
-An implementer named in `Add:` beats the `simple_fix` rule, so `implementer-tdd-agent` runs test-first in its combined step (plan and code in one run, Lean Mode). `test-verifier-agent` runs at the implementation gate as usual, without an acceptance-criteria list to map tests against, because no `pm-agent` ran. Without these two lines `implementer-coder-agent` already requires a regression test that fails without the fix and checks that by reverting the fix, so add them only when the order (test first) or the test review matters to you. The lines belong to one issue or one run: there is no project-wide setting.
+An implementer named in `Add:` beats the `simple_fix` rule, so `implementer-tdd-agent` runs test-first in its combined step (plan and code in one run, Lean Mode). `test-verifier-agent` follows from the test files the TDD implementer writes, without an acceptance-criteria list to map tests against, because no `pm-agent` ran. Without this line `implementer-coder-agent` already requires a regression test that fails without the fix and checks that by reverting the fix, so add it only when the order (test first) matters to you. The lines belong to one issue or one run: there is no project-wide setting.
 
 ::: info Prerequisites are not in the list
 `context-extractor-agent` still runs only when you start it. `impact-assessment-agent` is started by the orchestrator on every derived run that covers analysis or development, and on a manual pipeline only when you tick it; if you already ran it yourself, the orchestrator reuses its `00b-impact.md`. `bug-triage-agent` is offered when the request reads as a bug report.

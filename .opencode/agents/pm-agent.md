@@ -158,6 +158,11 @@ Where does this connect?
 What existing systems involved?
 API contracts needed?
 
+### 8. Issue Text (only when no development follows; runs in Lean Mode too)
+Applies when `ledger/run.md` holds `areas` without `development`, or the prompt asks for issues (`scrivi le issue`, `write the issues`), and `architect-agent` is not in `active_agents` of `ledger/run.md`; with no `run.md`, the prompt decides. Otherwise skip it: either development follows, or the architect writes the file later and overwrites any earlier one.
+
+Once the criteria and `## Slices` are settled, write `.kairos/<feature_folder>/_issues.md` in the layout [`issue-text`](../skills/issue-text/SKILL.md) fixes: one issue per row of `## Slices` when it has two or more rows, one issue otherwise, criteria copied word for word with their `AC-n`, no Design notes (no design exists yet). The file is text for the person to paste where they like; nothing posts it and nothing reads it back.
+
 ## Output Format
 
 Output a single Markdown file with a YAML frontmatter header. Frontmatter carries only what the orchestrator branches on; everything else is prose/tables in the body — no JSON. Nothing in this pipeline parses these files programmatically; every consumer is either another agent reading it as text or a human at a gate, so raw prose/tables serve both better than escaped JSON strings.
@@ -172,7 +177,7 @@ risk_counts: { critical: 0, high: 1, medium: 2, low: 1 }
 # PM Analysis — <feature_folder>
 
 ## Summary
-**What:** <what this analysis covers, one line>
+**What:** <what this analysis covers, one line; when step 8 wrote `_issues.md`, add its path and the number of issues>
 **Decision:** <the scope boundary set — what's in and what's explicitly out — or `none — analysis only`>
 **Needs your attention:** <IDs of `critical`/`high` Risks rows, e.g. `R2 — see Risks`; `nothing above medium` if none>
 **Open:** <ledger IDs of the questions this phase leaves open, e.g. `Q3, Q7 — see ledger/open-questions.md`; `none` when it leaves none>
@@ -351,7 +356,6 @@ These skills and MCP tools enhance this agent when installed. KAIROS works fully
 
 **Skills** — invoke via `Skill` tool when available:
 - `deep-research` — research domain constraints or technology tradeoffs before finalizing requirements
-- `issues-generator` (user-installed, not built-in) — convert requirements into structured issues
 
 ## Important Notes
 - You have FRESH context (no parent conversation)

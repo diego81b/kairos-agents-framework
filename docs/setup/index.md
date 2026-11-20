@@ -8,11 +8,9 @@ Each file in `agents/` is a Markdown document with a YAML frontmatter header:
 
 ```markdown
 ---
-name: PM Agent
-description: Collects and structures requirements. Use at the START of a new feature.
-tools:
-  - read_file
-  - write_file
+name: pm-agent
+description: "Analyzes feature requirements and elicits constraints. Use when you have a vague feature request that needs structured analysis."
+tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion
 model: sonnet
 ---
 
@@ -25,7 +23,7 @@ The fields that matter:
 | Field | Purpose |
 |-------|---------|
 | `name` | How the agent is referenced in the UI |
-| `description` | Drives **automatic invocation** — the AI reads this to decide when to delegate |
+| `description` | Tells the host what the agent is for, so it can be picked for delegation. Inside a KAIROS run the orchestrator does not read it: it derives every agent from facts and its own rules |
 | `tools` | What file/shell operations the subagent can run |
 | `model` | Which LLM powers this agent (can differ per agent) |
 
@@ -49,11 +47,13 @@ JetBrains support is in public preview — functionality may change.
 
 ## What "HITL pipeline" means
 
-HITL = Human-in-the-Loop. After each phase, the agent:
+HITL = Human-in-the-Loop. At each gate the orchestrator:
 
-1. Presents its output to you
-2. Asks: `✅ Approve / ✏️ Request changes / ⛔ Stop`
-3. Waits for your explicit choice before calling the next agent
+1. Prints the artifact's five-line `## Summary` block
+2. Walks the risk rows one by one (Accept, Mitigate now, Escalate, Refute premise)
+3. Asks: **Approve**, **Request changes**, **Skip next** or **Stop pipeline**, and waits for your choice before calling the next agent
+
+Three gates continue on their own when no check finds anything to decide: the bug triage, the requirements and the last wave of Phase 3. They print what they accepted for you, and `every gate` brings the question back. Gates that write outside `.kairos/` (the documentation draft, the QA plan) always ask.
 
 This is automatic in Claude Code (defined in `agents/orchestrator-agent.md`). In other tools you enforce it manually by reading the output and deciding when to continue.
 
@@ -65,9 +65,9 @@ Every agent that opens its own output file for you (either standalone or via the
 
 Regardless of the tool, three rules apply when **you** (the calling session) start a KAIROS run:
 
-1. **Invoke the orchestrator with the bare feature request only.** Never pre-select phases or agents in the invocation prompt — the orchestrator derives every agent from facts and you confirm or correct the result at its Start Gate. A caller-supplied list is shown there as an unconfirmed proposal and applied only if you say so, never treated as authorization.
-2. **Never launch the orchestrator backgrounded or detached — and never invoke it by name inside an existing conversation.** Every phase ends at a HITL gate that needs a live human. Where `AskUserQuestion` is unavailable (including Claude Code spawned subagents), gates degrade to the text-menu fallback — and a backgrounded run has nobody reading it, so the pipeline would hang or silently skip gates. In Claude Code specifically, `@agent-name`/"use the X agent" typed mid-chat degrades gates the same way an explicit background launch does — both dispatch through the `Agent` tool as a subagent, which unconditionally loses `AskUserQuestion`. Start the session with the orchestrator as its **primary** agent instead; see the [Claude Code setup guide](/setup/claude-code#step-3-start-a-kairos-session) for the exact command.
-3. **Run the standalone agents yourself, if you want them.** `context-extractor-agent` runs before the pipeline; `retrospective-agent` and `improvement-advisor-agent` run after work stops. The orchestrator never auto-invokes any of the three. `impact-assessment-agent` is different: the orchestrator dispatches it at every run, and reuses its `00b-impact.md` if you already ran it yourself.
+1. **Invoke the orchestrator with the feature request, and no agent list.** Never pre-select agents in the invocation prompt — the orchestrator derives every agent from facts and you confirm or correct the result at its Start Gate. A caller-supplied list is shown there as an unconfirmed proposal and applied only if you say so, never treated as authorization. What the prompt may carry: a Run Intent phrase (`analizziamo`, `implementiamo`, `scrivi le issue`, see [Templates](./templates)), `decide each step`, and an issue's own `## KAIROS Pipeline` section pasted with its override lines.
+2. **Never launch the orchestrator backgrounded or detached — and never invoke it by name inside an existing conversation.** Every phase ends at a HITL gate that needs a live human. Where `AskUserQuestion` is unavailable (including Claude Code spawned subagents), gates degrade to the text-menu fallback — and a backgrounded run has nobody reading it, so the pipeline would hang or silently skip gates. In Claude Code specifically, `@agent-name`/"use the X agent" typed mid-chat degrades gates the same way an explicit background launch does — both dispatch through the `Agent` tool as a subagent, which unconditionally loses `AskUserQuestion`. Start the session with the orchestrator as its **primary** agent instead; see the [Claude Code setup guide](/setup/claude-code#step-3-—-start-a-kairos-session) for the exact command.
+3. **Run the standalone agents yourself, if you want them.** `context-extractor-agent` runs before the pipeline; `retrospective-agent` and `improvement-advisor-agent` run after work stops. The orchestrator never auto-invokes any of the three. Two agents are different: the orchestrator dispatches `bug-triage-agent` when the input reads as a bug report, and `impact-assessment-agent` whenever the run covers analysis or development (a review-and-delivery-only run reads the change from git instead). It reuses an existing `00b-impact.md` if you already ran it yourself.
 
 ## Where the files come from
 
@@ -95,7 +95,8 @@ kairos-agents-framework/
 │   ├── dependency-audit-agent.md   ← Dependency + tech-debt backlog (standalone, periodic)
 │   └── team/             ← Layered Mode agents (Claude Code only)
 ├── skills/               ← Shared checklists/formats reused across agents (see Skills & MCP)
-├── commands/             ← Claude Code slash commands (/kairos:setup, /kairos:view)
+├── commands/             ← Claude Code slash commands (/kairos:setup, /kairos:view, /kairos:usage)
+├── scripts/              ← usage.mjs, the script behind /kairos:usage (the repo's only code)
 ├── .opencode/agents/     ← OpenCode mirror of the 17 core agents above (see Setup > OpenCode)
 └── .kimi-code/agents/    ← Kimi Code mirror of the 17 core agents above (see Setup > Kimi Code)
 ```

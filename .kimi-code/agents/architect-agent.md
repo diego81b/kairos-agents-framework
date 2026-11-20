@@ -170,6 +170,12 @@ For selected option:
 - Error codes (how to fail)
 - Error handling (pattern to use)
 
+### 7. Issue Text (only when no development follows; runs in Lean Mode too)
+
+Run this when no code will be written from this design: `.kairos/<feature_folder>/ledger/run.md`, when it exists, holds an `areas` line that lists areas without `development`, or the invocation prompt asks for issues. Standalone there is no `run.md`, so only the prompt decides. In every other case skip it: an empty file is not a finding. Skip it too when step 2b wrote a `Premise refutation:` row, because the design is for a scenario that cannot occur.
+
+Write `.kairos/<feature_folder>/_issues.md`, laid out exactly as [`issue-text`](../skills/issue-text/SKILL.md) fixes it, with the Design notes filled in: one issue per row of `01-requirements.md`'s `## Slices` table when it has two or more rows, one issue otherwise. A file `pm-agent` wrote earlier in the run is yours to overwrite. The text is for a person to paste where they like. You create nothing on any tracker, and the `## Summary` block's `What:` line names the path and the number of issues.
+
 ## Output Format
 
 One file, `02-architecture.md`: a YAML frontmatter block holding the handful of machine-checkable fields the orchestrator branches on, then the design doc itself as the Markdown body. Everything tabular or narrative (the full data model, every API contract, the option comparison) lives in the body, as Markdown tables and prose, not as nested data. A schema with 40 columns across 12 tables renders as a readable set of Markdown tables in seconds; the same data as nested JSON is what makes review unreadable — which is exactly why the body is Markdown and the frontmatter stays minimal.
@@ -192,7 +198,7 @@ threat_rows: 0
 # Architecture — <feature title>
 
 ## Summary
-**What:** <what this design covers, one line>
+**What:** <what this design covers, one line; when step 7 wrote `_issues.md`, add its path and the number of issues>
 **Decision:** <the selected option, one clause>
 **Needs your attention:** <IDs of `critical`/`high` Risks rows, e.g. `R1, R3 — see Risks`; `nothing above medium` if none; name the Promptable Gaps table here too when `promptable: no`>
 **Open:** <ledger IDs of the questions this phase leaves open, e.g. `Q3, Q7 — see ledger/open-questions.md`; `none` when it leaves none>

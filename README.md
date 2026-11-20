@@ -7,6 +7,8 @@ Intelligent multi-agent SDLC orchestration
 ## What's Included
 
 - **agents/** - 17 core agent definitions + 5 optional Layered Mode agents
+- **skills/** - shared skills the agents read (checklists, artifact rules, test scope, issue text, the orchestrator's branch-only sections)
+- **commands/** - Claude Code slash commands: `/kairos:setup`, `/kairos:view`, `/kairos:usage`
 - **docs/** - Complete documentation site (VitePress)
 - **CHANGELOG.md** - Version history
 
@@ -14,7 +16,7 @@ Intelligent multi-agent SDLC orchestration
 
 KAIROS agents declare optional enhancements via skills and MCP tools. The framework works fully without them — enhancements are additive only.
 
-KAIROS does not depend on or recommend any third-party skill plugin — coding-discipline and security-review heuristics ship natively as part of this plugin's own `skills/` directory, installed automatically with KAIROS itself.
+KAIROS does not depend on or recommend any third-party skill plugin — the coding-discipline, analysis-discipline and threat-model checklists, and the security review itself (`security-reviewer-agent`), ship natively as part of this plugin, installed automatically with KAIROS itself.
 
 **Recommended installs:**
 - [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp) — behavioral verification for test agents (42.8k stars)
@@ -31,15 +33,15 @@ See [Skills & MCP Enhancements](docs/skills-mcp.md) for the full map and install
    ```
    Or copy `agents/` into `.claude/agents/` manually — see [Claude Code setup](docs/setup/claude-code.md) for both paths and other tools.
 2. Start Claude Code with the orchestrator as the session's **primary** agent — not by naming it inside an already-open chat: `claude --agent kairos:orchestrator-agent` (plugin install) or `claude --agent orchestrator-agent` (manual copy)
-3. Describe the feature you want — the Orchestrator coordinates the pipeline automatically
+3. Describe the feature you want — the Orchestrator measures the change, derives which agents run, and asks you to confirm at its Start Gate
 
 ## Invocation Contract
 
-When starting a KAIROS run, invoke the orchestrator with the **bare feature request only**:
+When starting a KAIROS run, invoke the orchestrator with the **feature request, and no agent list**:
 
-- **Never pre-select phases or agents in the invocation prompt.** The orchestrator derives every agent from facts and you confirm or correct the result at its Start Gate — a caller-supplied list is shown there as an unconfirmed proposal and applied only if you say so, never treated as authorization.
+- **Never pre-select agents in the invocation prompt.** The orchestrator derives every agent from facts and you confirm or correct the result at its Start Gate — a caller-supplied list is shown there as an unconfirmed proposal and applied only if you say so, never treated as authorization. The prompt may carry what the run is for (`analizziamo`, `implementiamo`, `scrivi le issue`, `quick fix`, which narrow the areas of the pipeline, not its agents) and an issue's own `## KAIROS Pipeline` section; a pipeline already saved in the issue or in an unfinished run wins over both. See [Pipeline Templates](docs/setup/templates.md).
 - **Never launch the orchestrator backgrounded or detached — and never invoke it by name inside an existing conversation.** Every phase ends at a HITL gate that needs a live human. In Claude Code, a spawned subagent has no `AskUserQuestion`, so gates degrade to the text-menu fallback — and this applies just as much to `@kairos:orchestrator-agent`/"use the orchestrator agent" typed mid-chat as to an explicit background launch, since both dispatch through the same `Agent` tool as a subagent. Start the session with the orchestrator as its **primary** agent instead — `claude --agent kairos:orchestrator-agent` (plugin install) or `claude --agent orchestrator-agent` (copied into `.claude/agents/`) — never as something you call from within another session. `--agent` is a startup flag only; to switch mid-session, exit (`Ctrl+D` / `/exit`) and relaunch with it.
-- **Run `context-extractor-agent` yourself if you want it.** It is invoked directly by you, before the orchestrator — the orchestrator never auto-invokes it. `impact-assessment-agent` is dispatched by the orchestrator at every run; if you already ran it standalone, its `00b-impact.md` is reused.
+- **Run `context-extractor-agent` yourself if you want it.** It is invoked directly by you, before the orchestrator — the orchestrator never auto-invokes it. `impact-assessment-agent` is dispatched by the orchestrator whenever the run covers analysis or development, because the derivation reads its facts; if you already ran it standalone, its `00b-impact.md` is reused.
 
 ## Documentation Website
 
@@ -52,16 +54,16 @@ npm run docs:preview # preview the production build locally
 
 ## Deployment
 
-The documentation site deploys automatically:
+The documentation site is hosted on **Netlify** and deploys only from a version tag: `.github/workflows/deploy-docs.yml` posts the deploy hook on any `v*` tag push, and `netlify.toml` holds the build. A push to `main` or `develop` deploys nothing.
 
-1. **Vercel** (primary) — auto-deploys on push to `main`
-2. **Netlify** — triggered via deploy hook on `v*` tags
-
-A release means: bump versions + changelog, commit, tag `vX.Y.Z`, push.
+A release means: bump `package.json` and `.claude-plugin/plugin.json` together, add the changelog entry, commit, tag `vX.Y.Z`, push.
 
 ## Files
 
 - `agents/` - Core agents + `team/` folder (Layered Mode agents)
+- `skills/` - Shared skills the agents read, published with the plugin
+- `commands/` - Claude Code slash commands
+- `.opencode/agents/` and `.kimi-code/agents/` - Hand-kept mirrors of the 17 core agents for OpenCode and Kimi Code
 - `docs/` - VitePress documentation site
 - `CHANGELOG.md` - Version history
 - `internal/` - Local notes, gitignored and never published (deployment guide, deferred analyses)
@@ -71,7 +73,7 @@ A release means: bump versions + changelog, commit, tag `vX.Y.Z`, push.
 1. **Edit docs** → modify files in `docs/`
 2. **Preview locally** → `npm run docs:dev`
 3. **Build** → `npm run docs:build`
-4. **Deploy** → Git push (Vercel/Netlify auto-deploy)
+4. **Deploy** → tag `vX.Y.Z` and push the tag
 
 ## Implementation Modes
 
