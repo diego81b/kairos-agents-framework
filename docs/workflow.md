@@ -205,11 +205,15 @@ The same RED → GREEN → REFACTOR discipline as the single agent, split across
 2. **HITL, Plan gate**, Orchestrator-owned, the same gate as the single agent. The plan carries the layer scoping and the Test Contract's full test-case list, so approving it approves the test plan too.
 3. **RED**: the Orchestrator calls `teammate-tests-agent` alone. It reads the contracts from `03-contracts.md` and writes the tests, which all fail: that is correct and expected.
 4. **GREEN**: the Orchestrator calls `teammate-backend-agent`, `teammate-frontend-agent` and `teammate-database-agent` in one message, one call each, only for the layers in scope. Each writes code to the contract and a report, `03-layer-<layer>.md`.
-5. **VERIFY**: the Lead checks every layer against the contracts and runs the whole suite. This is the only stage that runs it, so parallel layers never share a build or a database. If something does not match, the Lead writes fix tasks to `03-verify.md`, the Orchestrator calls only the layers named, and VERIFY runs again. A layer that misses the same contract field twice stops the run for your decision.
+5. **VERIFY**: the Lead checks every layer against the contracts and runs the tests related to the files the layers wrote, not the whole suite (see [Test Scope](#test-scope)). Before any run it checks that the test environment can run them at all: a database the tests need and cannot reach stops the stage with one question to you instead of a long run of failures. The Lead is the only agent that runs tests at this point, so parallel layers never share a build or a database. If something does not match, the Lead writes fix tasks to `03-verify.md`, the Orchestrator calls only the layers named, and VERIFY runs again. A layer that misses the same contract field twice stops the run for your decision.
 6. **REFACTOR**: the implementation layers improve their code in parallel, with the tests staying green.
-7. **CLOSE**: the Lead re-runs the suite and coverage, updates the ledger and writes `03-implementation.md`.
+7. **CLOSE**: the Lead re-runs the tests, updates the ledger and writes `03-implementation.md`. The close of the last planned wave is the one place the whole suite runs, with coverage.
 
-A review-loop or post-gate fix pass skips RED and REFACTOR: the Lead scopes the fix to the layers that own the files in question, those layers fix, and the Lead closes.
+A review-loop or post-gate fix pass skips RED and REFACTOR: the Lead scopes the fix to the layers that own the files in question, those layers fix, and the Lead closes with the related tests only.
+
+**Tests are written for the minimum the contract needs.** The Tests agent writes one test per behaviour an `AC-n` or a plan risk names, extends the tests the project already has before it adds a file, asserts what a caller observes, and keeps each test cheap to run (no sleep, expensive setup once, parameterized inputs). There is no coverage target unless a constraint or the project config declares one.
+
+**What you see while it runs.** Claude Code starts every agent call in the background, so the Orchestrator's turn ends right after it dispatches a stage and nothing else prints until the call returns. The line it prints says which stage and round is running, which wave, which agents were called and when they started, plus how long the same stage took last time when `_usage.md` has it. A stage is long on purpose (the Lead's verify and close are Opus calls, the backend layer can run for half an hour): if the line stays on screen far past that figure, reply `continue` and the Orchestrator checks the call before it does anything else.
 
 The Lead's old mid-run Test Plan Gate (between RED and GREEN) no longer exists: the 3a plan gate covers the same ground before any cost is incurred. Test quality itself is re-checked in Phase 5.
 
@@ -329,7 +333,7 @@ Answered at the combined review gate. Gaps and issues you mark **Mitigate now** 
 
 ## Test Scope
 
-Until v9.7.1 every stop ran the whole suite: the implementer once, Test Verifier on every recheck, the Layered Mode lead at verify and again at close. On a project whose suite takes 25 minutes, a run with fix passes waited for it three to five times. Now each agent picks the cheapest run that can still catch what it is checking, in three rungs:
+Until v9.7.1 every stop ran the whole suite: the implementer once, Test Verifier on every recheck, the Layered Mode lead at verify and again at close (until v9.8.1 the lead still did). On a project whose suite takes 25 minutes, a run with fix passes waited for it three to five times. Now each agent picks the cheapest run that can still catch what it is checking, in three rungs:
 
 1. **Files**: only the test files the change adds or touches.
 2. **Related**: those, plus the tests that exercise the changed production files. The agent uses the runner's own option (`--findRelatedTests` in Jest, `related` in Vitest, the matching test modules in pytest, the changed packages in Go) or the project's `test-changed` command, see [Customizing](/customizing).
@@ -340,7 +344,7 @@ Until v9.7.1 every stop ran the whole suite: the implementer once, Test Verifier
 | Implementer, test-first | once, in the last planned wave | earlier waves: files. A fix pass or a loop iteration: related |
 | Implementer, code-first | never, unless a change to shared configuration forces it (Test Verifier owns the full run on this path) | always related |
 | Test Verifier | its first run when no full run exists to reuse, and the review loop's final pass | every other recheck: related, over the files the fix pass wrote |
-| Layered Mode lead | verify and close of the first pass | a fix round, a loop iteration or a post-gate fix pass: related |
+| Layered Mode lead | the close of the last planned wave of the first pass (a plan with one wave has one) | every other verify and close: related, including a fix round, a loop iteration and a post-gate fix pass |
 
 A run goes to the full suite whatever the rung when the change reaches something no test imports directly (a manifest or lockfile, build or test configuration, a shared helper, fixture or setup file, a migration), when the runner has no related selection and the tests cannot be matched by import or name, and when `test-changed: off`.
 

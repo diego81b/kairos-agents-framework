@@ -32,7 +32,7 @@ Lead of Layered Mode for complex multi-layer features. Claude Code only. Writes 
 
 ## Teammate Tests
 
-RED phase specialist — writes the full test suite before any implementation exists.
+RED phase specialist — writes the minimum tests the contract needs before any implementation exists.
 
 <<< @/agents/team/teammate-tests-agent.md{md}
 

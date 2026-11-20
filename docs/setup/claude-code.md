@@ -313,7 +313,7 @@ A review-loop or post-gate fix pass skips RED and REFACTOR: the lead scopes the 
 
 Four rules keep the parallel part safe:
 
-- **One runner of the suite.** The GREEN and REFACTOR layers write code to the contract and run static checks on their own files at most. Only the lead's VERIFY and CLOSE stages run the test suite, a build or a migration, so three agents in one worktree never trample each other's output. RED runs alone, so the tests agent may run its own new tests to confirm they fail.
+- **One runner of the suite.** The GREEN and REFACTOR layers write code to the contract and run static checks on their own files at most. Only the lead's VERIFY and CLOSE stages run tests, a build or a migration, so three agents in one worktree never trample each other's output; the whole suite runs once, at the close of the last planned wave, and every other run is the related tests. RED runs alone, so the tests agent may run its own new tests to confirm they fail.
 - **One writer of shared state.** Only the lead writes the ledger and the contracts. Each layer agent writes its own report, `03-layer-<layer>.md`, and the lead writes `03-verify.md`; the Orchestrator keeps `run.md`.
 - **Handoff on disk.** Contracts, fix tasks and cross-domain requests travel as files in the feature folder, not pasted into prompts. A layer that needs a change in another layer's files says so in its report, and the lead routes it.
 - **At most two repeats per contract field.** A layer that misses the same field twice stops the run for your decision instead of being asked a third time.

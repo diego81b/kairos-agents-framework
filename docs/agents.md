@@ -131,9 +131,9 @@ Contract owner and verifier, applying the full TDD discipline across the layer a
 
 - **RED**: `teammate-tests-agent` runs first and alone; tests are written against the contracts before any implementation exists. The step 3a plan gate has already covered the test plan.
 - **GREEN**: `teammate-backend-agent`, `teammate-frontend-agent`, `teammate-database-agent` run in parallel, one call per layer in scope; their goal is to write code to the contract so the pre-existing tests pass. They run static checks at most, never the full suite.
-- **VERIFY**: the lead checks every layer against the contracts and runs the whole test suite (related tests only on a later round), writing `03-verify.md`. Layers it names get a **FIX** call, then VERIFY runs again.
+- **VERIFY**: the lead checks every layer against the contracts and runs the tests related to what the layers wrote, after confirming the test environment can run them (an unreachable test database stops the stage with a question to you), writing `03-verify.md`. Layers it names get a **FIX** call, then VERIFY runs again.
 - **REFACTOR**: the implementation layers improve quality while keeping tests green.
-- **CLOSE**: the lead re-verifies, updates the ledger and writes `03-implementation.md` last. Only VERIFY (round 0) and the CLOSE of the first pass run the full suite; every other run is limited to the related tests, see [Test Scope](/workflow#test-scope).
+- **CLOSE**: the lead re-verifies, updates the ledger and writes `03-implementation.md` last. Only the CLOSE of the last planned wave of the first pass runs the full suite; every other run is limited to the related tests, see [Test Scope](/workflow#test-scope).
 
 Does not write code itself, and is dispatched by the Orchestrator: running it on its own is not supported.
 
@@ -143,7 +143,7 @@ Does not write code itself, and is dispatched by the Orchestrator: running it on
 
 ### [Teammate Tests](/agents/team/teammate-tests-agent)
 
-Test specialist — generates the full test suite following the RED phase of TDD (failing tests first). Covers happy paths, error cases, edge cases, and integration tests. No fixed coverage target.
+Test specialist — writes the tests of the RED phase of TDD (failing tests first), one per behaviour an acceptance criterion or plan risk names, extending the project's existing tests before adding files, and cheap to run. No fixed coverage target.
 
 ::: tip Optional enhancements
 **Skills:** `coding-discipline` (internal), `verify` / `run` (built-in)  
