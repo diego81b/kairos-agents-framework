@@ -3,7 +3,7 @@
 KAIROS is a **Human-in-the-Loop (HITL)** pipeline. Every phase produces a concrete artifact that the user validates before the next phase begins, except three gates that continue on their own when nothing needs a decision (see [Gates that continue on their own](#gates-that-continue-on-their-own)). The AI does the work; the human controls the gate.
 
 ::: warning Gates only work if the orchestrator is your primary agent
-Every gate below is an interactive `AskUserQuestion` prompt — **but only when the orchestrator runs as the session's primary agent** (`claude --agent orchestrator-agent`, started at launch). Typing `@orchestrator-agent` or "use the orchestrator" inside an already-open chat dispatches it as a subagent instead, which unconditionally loses `AskUserQuestion` — every gate below silently degrades to a text menu, and the orchestrator dies if the parent session ends mid-pipeline. See [Claude Code setup](/setup/claude-code#step-3-start-a-kairos-session) for the full explanation.
+Every gate below is an interactive `AskUserQuestion` prompt — **but only when the orchestrator runs as the session's primary agent** (`claude --agent orchestrator-agent`, started at launch). Typing `@orchestrator-agent` or "use the orchestrator" inside an already-open chat dispatches it as a subagent instead, which unconditionally loses `AskUserQuestion` — every gate below silently degrades to a text menu, and the orchestrator dies if the parent session ends mid-pipeline. See [Claude Code setup](/setup/claude-code#step-3-—-start-a-kairos-session) for the full explanation.
 :::
 
 **The pipeline, phase by phase:**
@@ -13,7 +13,7 @@ Every gate below is an interactive `AskUserQuestion` prompt — **but only when 
 | 0 | Orchestrator + Impact Assessment (+ optional Context Extractor) | `00b-impact.md` + derived pipeline | Start gate |
 | 1 | PM Agent | `01-requirements.md` | ✅ / ✏️ / ⏭️ / ⛔ |
 | 2 | Architect Agent | `02-architecture.md` | ✅ / ✏️ / ⏭️ / ⛔ |
-| 3 | Implementer (test-first, code-first, or Layered Mode) | Code + `03-implementation.md` | Plan gate, then ✅ / ✏️ / ⏭️ / ⛔ |
+| 3 | Implementer (test-first, code-first, or Layered Mode) | Code + `03-implementation.md` | Plan gate (none in a `simple_fix`), then ✅ / ✏️ / ⏭️ / ⛔ |
 | 4 | Code Reviewer (review wave) | `04-review.md` | one combined review gate ✅ / ✏️ / ⏭️ / ⛔ |
 | 4b | Security Reviewer *(optional, review wave)* | `04b-security-review.md` | same gate |
 | 5 | Test Verifier (review wave) | `05-test-verification.md` | same gate |
@@ -76,7 +76,7 @@ Every phase writes a single Markdown file: a small YAML frontmatter header carry
 - **Choosing the pipeline by hand**: `Choose the pipeline myself` opens one dialog with a group per area, so you tick the agents yourself, the impact assessment among them. The pipeline is exactly your selection, no rule adds or drops an agent, and the effort is the assessment's when you ticked it, else `medium`. A run that has an issue saves it there as a checklist without asking, with every agent listed ticked or not, because a hand-picked pipeline is a decision no rule can rebuild. On Jira, where the plugin cannot write the description, the block goes in as a comment and is printed paste-ready. See [Pipeline Templates](/setup/templates#choosing-the-pipeline-by-hand)
 - **Deciding agent by agent**: the same question has a third answer, `Decide each step`, for a run where you want the last word on every agent and not only on the areas. It covers all four areas and changes how the rules are used: at the start gate, at the implementation gate and at the review gate the Orchestrator still applies its rules, prints what they say, and then asks which agents of that point should run, with the rules' answer marked as the recommended one. You tick the agents that run. The start gate asks about the requirements and the design; the code review is asked at the implementation gate, with the test verification and the security review, because its rule depends on code being written. An agent you tick against the rules, or leave out against them, is stored as an `Add:` or `Skip:` override, so the issue write-back can offer to save it. The question is asked even at a gate that would otherwise continue on its own, because the question is the stop. The implementer is not part of it: which one runs still follows the design, and `Add: <implementer>` forces another. Write `decide each step` in the prompt that starts the run to answer the area question in advance, or reply it at the start gate to switch it on mid-way, and reply `derive` to go back to the rules. It is a second setting and not an area: next to a phrase of the table or to area names it keeps those areas and adds the questions (`analizziamo e decidi tu ogni step` asks about each agent of an analysis). It is never asked when the pipeline is already decided. An issue that carries a `## KAIROS Pipeline` section (an override block or a checklist) starts without it, and a `decide each step` in the prompt does not override the section: the orchestrator says so in one line and goes on, so to decide agent by agent on that issue edit its section. Choosing **All areas** (reply `full`) is final too: no agent question is asked later, at any gate. Two agents belong to no area and run before the start gate: the bug triage, when your input reads as a bug report, and the impact assessment, which the rules need. In this mode the Orchestrator names them in one block before the first of them, and the triage gate always stops, so you read the triage before the assessment starts.
 - **One issue, one folder.** A folder is found by the issue reference, not by the slug (a reworded prompt for the same issue lands in the same folder), and a second folder is never offered for an issue, because it would split the ledger into two copies that drift apart. A large issue built slice by slice is one run per slice in that folder: on a finished run choose **Start a new run**, and the Orchestrator archives the finished run's reports under `runs/run-<k>/` (with a snapshot of its tracking file and settings), keeps the ledger and the triage, rebuilds the impact assessment for the new slice and tells every agent where the earlier runs are. The tracking file stays one file, with a `new run` line in its log. A folder with only a context, impact or triage file is reused, not resumed. A run left `in_progress` or `stopped` resumes **without questions** and says where it restarts; the one thing it never skips is a gate the earlier session had open, which is shown again
-- If the invocation prompt already dictates an agent list, the Orchestrator shows it at the start gate as a proposal and applies it only if you say so
+- If the invocation prompt already dictates an agent list, the Orchestrator shows it at the start gate as a proposal and applies it only if you say so. The one exception is the format of the issue's own section: a `## KAIROS Pipeline` heading in the prompt with override lines under it (`Add:`, `Skip:`, `Size:`, `Effort:`, `Areas:`, `Epic:`, `Analysis:`, `Auto-fix:`) is read as that section, printed at the start gate so a miss is visible, and applied for this run only. A section read from the tracker wins over it, and it never makes a fast start
 - The Orchestrator saves the run's settings to `ledger/run.md` and creates `_tracking.md`, the one file it keeps open in your editor for the rest of the run (see [Tracking File](#tracking-file))
 - **Size label** (only when the run started from an issue and you confirmed the start gate): the Orchestrator sets a `size:<XS|S|M|L|XL>` label on the issue, replacing an earlier `size:` label, so the tracker can group an epic's issues by size. Skipped without a message where there is no tracker CLI or no labels, and when no size was measured (the impact assessment did not run). See [Pipeline Templates](/setup/templates#size)
 - **Issue write-back** (only when the run started from an issue and you corrected something at the start gate): the Orchestrator offers to save the correction to the issue as an override block, never touching the rest of the description. On Jira, or with no tracker CLI, it prints a paste-ready block instead. A pipeline you picked by hand is saved without the question (see [Choosing the pipeline by hand](/setup/templates#choosing-the-pipeline-by-hand)). See [Pipeline Templates](/setup/templates#saving-corrections-to-the-issue)
@@ -99,6 +99,7 @@ No menu: each agent runs because a rule fired on a fact, and the gate before it 
 - Break down the feature into scope, constraints, and risks
 - Identify edge cases and integration points
 - Define acceptance criteria — trigger and observable outcome, verifiable by the developer in their own environment; the setup a heavier check needs is Phase 5b's, and the criterion still keeps its `AC-n`
+- **Issue text**, only when no development follows and no architect runs: it writes `_issues.md`, paste-ready issues in product words. See [Proposed Issues](#proposed-issues).
 
 _Input: feature description + project context_
 _Output: a single Markdown file — frontmatter (status, counts) + body (scope, constraints, risks, success criteria) — see "Artifact Format" above_
@@ -119,6 +120,8 @@ User reviews requirements, constraints and risks before any design work begins. 
 - Define error handling and integration patterns
 - **Behaviour Delta** — only when the change alters what a user of an already-shipped flow can observe (`N/A` otherwise): for each affected flow, what the user sees before and after, including on any new rejection or limit, and every new limit recorded as a constraint with its unit named ("400 lock keys per request, about 200 rows at 2 keys per row"). Test Verifier and QA Plan read it as input. It exists because the late findings in real runs were all of this kind: a rejection the operator never saw, a cap answered in rows but enforced in keys
 
+- **Issue text**, only when no development follows: it writes `_issues.md`, paste-ready issues that add the design notes. See [Proposed Issues](#proposed-issues).
+
 _Input: `01-requirements.md`_
 _Output: a single Markdown file — frontmatter (selected option, table/error-code counts) + design doc body (full data model, API contracts, tech choices) — see "Artifact Format" above_
 _Saved to: `.kairos/<feature_folder>/02-architecture.md`_
@@ -128,6 +131,16 @@ User reviews the selected design option and API contracts (in `02-architecture.m
 
 `✅ Approve` · `✏️ Request changes` · `⏭️ Skip next` · `⛔ Stop`
 :::
+
+### Proposed Issues
+
+KAIROS does not create issues on a tracker. When a run covers analysis and no development, so what you take away is the analysis, the last analysis agent that ran writes `.kairos/<feature_folder>/_issues.md`: `architect-agent` when it ran, `pm-agent` when it did not. The file holds one issue for each row of the requirements' `## Slices` table when it has two or more rows, one issue otherwise. Each issue has a title, a goal, what is out of scope, the acceptance criteria copied word for word from the requirements (the `AC-n` id stays in parentheses, so a later run can map tests to it), design notes written out in full when an architect ran (`.kairos/` is local and a colleague cannot open it), and what it depends on, by title. It carries no size, effort, areas or skip line: each issue's own run measures its own. The last line names every criterion no issue holds and why, so nothing falls out unseen.
+
+To get it, say `scrivi le issue` or `write the issues`: the run covers analysis only and the requirements step always runs, so a PM or team lead gets the text without an architect, and a team lead who wants the design as well adds `architect-agent` from **Change the pipeline**. `analizziamo` is unchanged: it derives its agents from the size of the change, so on a small issue neither writer runs and there is no `_issues.md`.
+
+The Summary of the agent that wrote the file names its path and how many issues it holds, and the gate prints that Summary, so the path is on screen at the end of the analysis. Copy the text to the tracker, a document or an email; KAIROS never reads it back. The cleanup at the end of the run never deletes it. To start a run on one of the new issues from the same machine with the analysis behind it, add a `## KAIROS Pipeline` section to its description holding the line `Analysis: <folder>`. A section of any kind makes that run a fast start: it prints the pipeline and starts without the area question. The folder is local, so a colleague on another machine gets the design notes from the issue text and not from this link.
+
+Slices are runs of one issue by design. Whether they become several issues is your call, and the file only offers the text. Not measured: no run has used it, and it is one layout with no choice of mode.
 
 ---
 
@@ -139,7 +152,7 @@ Right before the plan, the Orchestrator chooses the implementer from facts and p
 
 Works everywhere (Claude Code, API, local models). Recommended for all features.
 
-This phase has **two HITL checkpoints** — a plan gate before any file is written, and a code gate after TDD is complete. Each checkpoint ends one Orchestrator invocation of the implementer and starts the next: the plan gate is not a pause inside a single run, it is the boundary between step 3a and step 3b.
+This phase has **two HITL checkpoints** — a plan gate before any file is written, and a code gate after the code is complete. Each checkpoint ends one Orchestrator invocation of the implementer and starts the next: the plan gate is not a pause inside a single run, it is the boundary between step 3a and step 3b. A `simple_fix` is the exception: the implementer runs once, writes `03-implementation-plan.md` for the record, goes straight on to the code and meets you at the code gate only, because a change measured that small has no plan worth a separate stop (an older checklist template keeps the split).
 
 **Step 3a — Implementation Plan (no files written yet)**
 - Analyse existing codebase patterns via `grep`
@@ -167,7 +180,7 @@ User reviews the implementation plan (files, test cases, approach) **before any 
 
 The plan is a first-class artifact like every other phase output: written to disk unconditionally, opened in the editor (the one gate that still opens its artifact automatically, because it is the last one before source files change), and gated by the Orchestrator — never buried in the implementer's own transcript. Its `Risks` table goes through the same row-by-row Risk Disposition Loop as any other phase. Presented via `AskUserQuestion`, not a printed menu.
 
-`✅ Approve plan` · `✏️ Revise plan` · `⏭️ Skip next` · `⛔ Stop`
+`✅ Approve` · `✏️ Request changes` · `⏭️ Skip next` · `⛔ Stop pipeline` — Request changes re-runs the plan step with your feedback, and Approve is recommended unless the plan carries a `critical` or `high` risk
 :::
 
 ::: tip Waves continue on their own unless something needs you
@@ -252,7 +265,7 @@ Answered at the combined review gate, together with 4b and 5. `NEEDS_FIXES` issu
 :::
 
 ::: tip Effort modes — Lean, Trimmed, Full
-Every phase agent reads `effort` in the same priority order: the orchestrator's invocation prompt first (a human confirmed it at the Effort Check), then `00b-impact.md`, then its own inference as a last resort.
+Every phase agent reads `effort` in the same priority order: the orchestrator's invocation prompt first (you saw it at the Start Gate), then `00b-impact.md`, then its own inference as a last resort.
 
 **Lean Mode** (`simple_fix`) — here, Architecture Compliance and Performance collapse to a one-line N/A unless the diff actually adds an endpoint/schema/integration point or touches a loop/query/hot path; the dependency-changelog check only runs when a dependency version actually changed. Correctness, Security, Simplicity, and Standards always run in full — those are what actually catch bugs on a small diff.
 
@@ -265,7 +278,7 @@ Every phase agent reads `effort` in the same priority order: the orchestrator's 
 
 ## Phase 4b: Security Review — optional (Security Reviewer)
 
-Adversarial pass — the agent asks "how do I break this" rather than checking compliance boxes. Only runs when explicitly selected. Read-only agent (`model: opus`).
+Adversarial pass — the agent asks "how do I break this" rather than checking compliance boxes. The Orchestrator decides it at the implementation gate: it runs when `auth` or `integrations` is among the touched domains, when the ledger holds a `SECURITY`, `PRIVACY` or `COMPLIANCE` constraint, or when the architect's threat model left rows. Without an architect it also compares the domains with the files actually written. `add security-reviewer-agent` forces it. Read-only agent (`model: opus`).
 
 - **Authorization and IDOR** — including nested payload mutations (a PUT on parent A that can silently modify a child belonging to parent B)
 - **Authentication** on sensitive endpoints
@@ -283,11 +296,11 @@ _Saved to: `.kairos/<feature_folder>/04b-security-review.md`_ (written by the Or
 ::: info HITL checkpoint
 Answered at the combined review gate. Findings you mark **Mitigate now** join the wave's single fix pass; none of them is ever retried automatically. Presented via `AskUserQuestion`, not a printed menu.
 
-`✅ Approve` · `✏️ Request fixes` · `⏭️ Skip next` · `⛔ Stop`
+`✅ Approve` · `✏️ Request changes` · `⏭️ Skip next` · `⛔ Stop`
 :::
 
 ::: tip When to add the Security Reviewer
-Select `security-reviewer-agent` whenever the feature touches: authentication or authorization, user-owned data, payment flows, or any write endpoint. KAIROS's own flagship example (PCI-DSS Stripe payments) is a clear case.
+The rule above fires on its own for authentication, authorization and external integrations (a payment provider is one), and for any change under a declared `SECURITY`, `PRIVACY` or `COMPLIANCE` constraint. KAIROS's own flagship example (PCI-DSS Stripe payments) is a clear case. For user-owned data or a write endpoint the rule may not fire: say `add security-reviewer-agent` at the implementation gate when you want the review anyway.
 :::
 
 ---
@@ -309,7 +322,7 @@ Answered at the combined review gate. Gaps and issues you mark **Mitigate now** 
 :::
 
 ::: tip Skips re-running tests on a clean first pass
-`implementer-tdd-agent` already executes the test suite twice (RED and GREEN) and reports coverage in `03-implementation.md`. On the first test-verifier invocation for a feature — no prior `05-test-verification.md`, and GREEN shows a clean pass — Test Verifier reuses those results instead of re-running the suite. The static audit (comprehensiveness, assertion strength, determinism, hygiene, mocking, TDD reality check) always runs in full regardless; only the redundant command re-run is skipped. Any loop re-check, recheck after a fix pass, or standalone invocation always re-executes, at the rung [Test Scope](#test-scope) gives.
+`implementer-tdd-agent` runs the whole suite once, in its last planned wave, and reports coverage in `03-implementation.md`. On the first test-verifier invocation for a feature — no prior `05-test-verification.md`, and that run shows a clean pass of the whole suite — Test Verifier reuses those results instead of re-running it. The static audit (comprehensiveness, assertion strength, determinism, hygiene, mocking, TDD reality check) always runs in full regardless; only the redundant command re-run is skipped. Any loop re-check, recheck after a fix pass, or standalone invocation always re-executes, at the rung [Test Scope](#test-scope) gives.
 :::
 
 ---
@@ -391,7 +404,7 @@ _Output: a single Markdown file — frontmatter (rollback/monitoring summary) + 
 _Saved to: `.kairos/<feature_folder>/06-deployment-plan.md`_
 
 ::: info HITL checkpoint
-User approves the deployment runbook (`06-deployment-plan.md`). This is the final checkpoint of the numbered pipeline — approval closes this KAIROS run (Phases 1–6, or 1–6b if `documentation-agent` was also selected). It does not preclude running `retrospective-agent` afterward — a separate, standalone, non-orchestrated follow-up invoked directly by the user whenever they consider the feature done. Presented via `AskUserQuestion`, not a printed menu.
+User approves the deployment runbook (`06-deployment-plan.md`). This is the last gate of the numbered pipeline when `documentation-agent` does not run; approval then closes the phases and the Orchestrator moves to the [close-out](#tracking-file): it finalizes `_tracking.md`, offers to delete the phase reports and offers a project summary. It does not preclude running `retrospective-agent` afterward, a separate standalone follow-up you invoke directly whenever you consider the feature done. Presented via `AskUserQuestion`, not a printed menu.
 
 `✅ Approve` · `✏️ Request changes` · `⛔ Stop`
 :::
@@ -486,13 +499,13 @@ A scope change is listed when a decision in `ledger/decisions.md` opens with `Sc
 
 Gates no longer open each report in the editor. The gate prints the report's path; reply `open` (or `apri`) and the Orchestrator opens it and shows the same gate again. The implementation plan is the one exception and still opens automatically.
 
-At the end of the run the Orchestrator finalizes the file: Files Changed, the risks you chose to ship with, and the constraints still open. In Claude Code the model and token table is in a file of its own, `_usage.md` (see [Usage](#usage-model-and-tokens-per-agent)). It then offers to delete the phase reports it now summarizes; the ledger and `_tracking.md` are never deleted. Last, it offers a sanitized copy of the summary inside the project, because `.kairos/` may be gitignored. `documentation-agent` drafts it (`step: summary`), the Orchestrator no longer composes it: the agent reads each report's `## Summary`, the ledger and the implementation's file list, never `_tracking.md`, redacts what should not leave `.kairos/` (a security finding becomes its category and a takeaway that cannot be exploited, never an attack path), and writes `.kairos/<feature_folder>/_project-summary.md`. It ends the draft with a `## Target` line: the path it proposes, taken from where the project already keeps its documentation, or `docs/kairos-summaries/<feature_folder>.md` when nothing points elsewhere. The copy has its own gate, and the Orchestrator owns it: it prints the path (reply `open` to read it) and asks Approve, Request changes or Stop, and a different path is a Request changes. Only after Approve does it call `documentation-agent` again to check that the target is a documentation file and write it. Nothing reaches the project before you approve. Folders from before v8.5.0 have a `_recap.md` written only at the end: a finished one is left as it is, and a resumed one gets a `_tracking.md` on first touch, with the old audit-log lines copied into its log.
+At the end of the run the Orchestrator finalizes the file: Files Changed, the risks you chose to ship with, and the constraints still open. In Claude Code the model and token table is in a file of its own, `_usage.md` (see [Usage](#usage-model-and-tokens-per-agent)). It then offers to delete the phase reports it now summarizes; the ledger, `_tracking.md` and `_issues.md` are never deleted. Last, it offers a sanitized copy of the summary inside the project, because `.kairos/` may be gitignored. `documentation-agent` drafts it (`step: summary`), the Orchestrator no longer composes it: the agent reads each report's `## Summary`, the ledger and the implementation's file list, never `_tracking.md`, redacts what should not leave `.kairos/` (a security finding becomes its category and a takeaway that cannot be exploited, never an attack path), and writes `.kairos/<feature_folder>/_project-summary.md`. It ends the draft with a `## Target` line: the path it proposes, taken from where the project already keeps its documentation, or `docs/kairos-summaries/<feature_folder>.md` when nothing points elsewhere. The copy has its own gate, and the Orchestrator owns it: it prints the path (reply `open` to read it) and asks Approve, Request changes or Stop, and a different path is a Request changes. Only after Approve does it call `documentation-agent` again to check that the target is a documentation file and write it. Nothing reaches the project before you approve. Folders from before v8.5.0 have a `_recap.md` written only at the end: a finished one is left as it is, and a resumed one gets a `_tracking.md` on first touch, with the old audit-log lines copied into its log.
 
 ---
 
 ## Issue Tracker Integration
 
-KAIROS supports **Jira**, **GitLab Issues**, and **Bitbucket Issues**. Provide an issue reference at the start of your request — each agent will post its validated output as a comment, building the full pipeline trace in the ticket history.
+KAIROS supports **Jira**, **GitLab Issues**, and **Bitbucket Issues**. Provide an issue reference at the start of your request and the Orchestrator reads the issue first (a saved `## KAIROS Pipeline` section there is a saved decision, see [Templates](/setup/templates)). Each phase agent then has an optional step that posts its validated output as a comment, building the pipeline trace in the ticket history; with no `jira` or `glab` on the machine the step prints a paste-ready comment instead of failing. The Orchestrator itself writes to the tracker in three narrow cases only: the `size:` label it sets when you confirm the Start Gate, the `## KAIROS Pipeline` section when you choose to save a pipeline, and the QA plan comment after you approve the plan. It never closes or transitions an issue.
 
 | Tracker | Reference format | Example |
 |---------|-----------------|--------|
@@ -512,7 +525,7 @@ glab issue note 42 --message "## PM Analysis\n\n..."
 curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issues/42/comments" \
   -u "${BITBUCKET_USER}:${BITBUCKET_TOKEN}" \
   -H "Content-Type: application/json" \
-  -d '{"content":{"raw":"## PM Analysis\n\n..."}}"
+  -d '{"content":{"raw":"## PM Analysis\n\n..."}}'
 ```
 
 ---
@@ -526,11 +539,13 @@ If any agent reports issues during its phase, the Orchestrator:
 3. Provides recommendations based on severity
 4. Continues to the next step when appropriate
 
+After the third consecutive retry of the same agent on the same issue with no progress, it says so before asking again and suggests skipping the step, stopping the pipeline or rephrasing the input. It is a nudge, not a cap: you can still retry.
+
 ---
 
 ## Final Output
 
-After all phases complete, the Orchestrator finalizes `_tracking.md` (see [Tracking File](#tracking-file)) and presents a consolidated summary:
+After the last active phase resolves, the Orchestrator finalizes `_tracking.md` (see [Tracking File](#tracking-file)) and presents a consolidated summary. A section appears only for an agent that ran in this run, because [which agents run is derived](/setup/templates) and not fixed:
 
 ```
 ANALYSIS (from PM Agent):
@@ -540,9 +555,12 @@ ARCHITECTURE (from Architect Agent):
   - Design Option Selected, Technology Choices
   - Integration Points, Database Changes, API Contracts
 
-IMPLEMENTATION (from Implementer Agent):
-  - Code Files Generated, Test Files Generated
-  - Coverage Report, TDD Verification
+PLAN (from the Phase 3a implementer, gated before any code was written):
+  - Files to Create / Modify, Test Cases, Waves, Risks dispositioned
+
+IMPLEMENTATION (TDD, code-first or Layered Mode):
+  - Code Files Generated, Test Files Generated or Test Decision
+  - Coverage Report, TDD Verification, Contract Compliance (Layered Mode)
 
 QUALITY (from Code Reviewer):
   - Standards Compliance, Security Check
@@ -561,13 +579,16 @@ TEST QUALITY (from Test Verifier):
 DEPLOYMENT (from Release Planner):
   - Deployment Steps, Risk Mitigation
   - Rollback Strategy, Monitoring Plan
+
+DOCUMENTATION (from Documentation Agent):
+  - Docs Touched, Documentation Gaps (if any)
+
+RUN METRICS (this run only):
+  - Review wave outcome, fix passes, waves continued automatically, open ledger questions
 ```
 
-::: tip Every KAIROS run produces
-- Production-ready code
-- Test suite sized to the acceptance criteria
-- Quality assurance report
-- Deployment plan with rollback procedure
+::: tip What a run produces depends on what it covered
+A run that covers every area ends with code, tests, review reports and a deployment plan. A run narrowed to `analysis` ends with `01-requirements.md` and `02-architecture.md` (or, for `scrivi le issue`, with `_issues.md`) and writes no code. The Orchestrator names the areas that did not run in the summary, and a later run can pick them up. Every run, whatever it covered, leaves `_tracking.md` with the status, the alignment with the issue's `AC-n` and the log of what you decided.
 :::
 
 ---

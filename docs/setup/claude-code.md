@@ -1,6 +1,6 @@
 # Claude Code Setup
 
-Claude Code is the **recommended tool** for KAIROS. It is the only tool with native subagent support: each agent runs in an isolated context with its own model, tools list, and memory — exactly as KAIROS is designed.
+Claude Code is the **recommended tool** for KAIROS. Each agent runs in an isolated context with its own model and tools list, and the orchestrator can ask you questions at every gate (`AskUserQuestion`) when it runs as the session's primary agent — exactly as KAIROS is designed. Layered Mode and the `/kairos:*` commands exist only here.
 
 ## Prerequisites
 
@@ -40,7 +40,7 @@ cp path/to/kairos/agents/*.md .claude/agents/
 cp path/to/kairos/agents/team/*.md .claude/agents/team/
 ```
 
-This copies **agents only**. If you also want the internal skills or the `/kairos:setup` / `/kairos:view` commands, copy those directories too (`scripts/` as well, for `/kairos:usage`):
+This copies **agents only**. The agents read the shared skills by relative link, so copy `skills/` too. For the `/kairos:setup` / `/kairos:view` / `/kairos:usage` commands, copy `commands/` as well. `/kairos:usage` also needs `scripts/usage.mjs` and Node 18 or later, and the command file calls it through `${CLAUDE_PLUGIN_ROOT}`, which only a plugin install defines: with a manual copy, run `node path/to/kairos/scripts/usage.mjs` yourself.
 
 ```bash
 cp -r path/to/kairos/skills .claude/skills
@@ -101,16 +101,14 @@ When Claude Code starts, it reads every `.md` file in `.claude/agents/` and pars
 
 ```yaml
 ---
-name: PM Agent
-description: Collects and structures requirements. Use at the START of a new feature.
-tools:
-  - read_file
-  - write_file
+name: pm-agent
+description: "Analyzes feature requirements and elicits constraints. Use when you have a vague feature request that needs structured analysis."
+tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion
 model: sonnet
 ---
 ```
 
-The `description` field is critical: the **orchestrator** reads all descriptions and decides automatically which subagent to delegate to, without you needing to say `@pm-agent`.
+The `description` field tells Claude Code what the agent is for, so it can pick it when you ask for it in a normal chat. Inside a KAIROS run the orchestrator does not read descriptions: it derives each agent from facts and its own rules, and you confirm or correct the result at the Start Gate.
 
 ## Step 3 — Start a KAIROS session
 
@@ -144,46 +142,54 @@ Once the session opens with the orchestrator as primary, just type your request:
 Help me add [your feature] using the KAIROS framework
 ```
 
-The orchestrator reads the task and begins delegating to the appropriate subagent starting with the PM Agent.
+The orchestrator reads the task and, if it reads as a bug report, has the bug triage reproduce it first. When the run covers analysis or development it then measures the change with the impact assessment, and shows the **Start Gate**: the pipeline it derived from those facts, the effort and the review loop in plain words. You start it, change it or stop it. Only then does the first pipeline agent run, usually `pm-agent` when the change is big enough to need requirements. Agents are never picked from a menu: every one is derived from facts, and you correct the result in free text or with **Change the pipeline**.
+
+To say what the run is for, add a phrase to the request: `analizziamo` (analysis only), `scrivi le issue` (analysis, with `pm-agent`, ending in text you paste into your tracker), `implementiamo` (full pipeline), `finalizziamo` (review of a change already made). See [Templates](./templates) for the full list.
 
 ## Step 4 — The HITL loop in practice
 
-After each phase you will see output like:
+After each phase the orchestrator walks the artifact's risk rows one by one (Accept, Mitigate now, Escalate, Refute premise), then prints the artifact's short `## Summary` block and asks for a decision:
 
 ```
-## PM Agent — Requirements Output
+## Summary
+**What:** Requirements for Stripe payments: 6 acceptance criteria, 2 constraints
+**Decision:** hosted checkout page, no card data stored by us
+**Needs your attention:** R2 — see Risks
+**Open:** Q1 — see ledger
+**Next:** architect-agent
 
-{
-  "feature": "...",
-  "user_stories": [...],
-  "acceptance_criteria": [...],
-  ...
-}
-
-✅ Approve and continue to Architecture
-✏️  Request changes (describe what to fix)
-⛔  Stop here
+Approve · Request changes · Skip next · Stop pipeline
 ```
 
-**You must choose before the orchestrator proceeds.** This is the HITL checkpoint — it prevents downstream agents from working on bad requirements.
+**You must choose before the orchestrator proceeds.** This is the HITL checkpoint: it keeps downstream agents from working on bad input. Reply `open` to see the full artifact in your editor, and the same gate comes back.
 
-Validated output is saved automatically to `.kairos/01-requirements.md`.
+Three gates continue on their own when nothing needs a decision: the bug triage, the requirements and the last wave of Phase 3. They print what they accepted for you, and `every gate` in free text brings the question back. Gates that write outside `.kairos/` (the documentation draft, the QA plan) always ask.
+
+Each artifact is saved as soon as the agent finishes, before the gate: `.kairos/<feature_folder>/01-requirements.md` for this one.
 
 ## Step 5 — Check `.kairos/` outputs
 
-After each approved phase, a single Markdown file is written — a small YAML frontmatter header (status, counts) followed by the human-readable report body (data model, issues, findings, runbook):
+Each phase writes a single Markdown file: a small YAML frontmatter header (status, counts) followed by the human-readable report body (data model, issues, findings, runbook). One folder per issue, named after the issue key (`issue-42_add-stripe`), or `feature_<slug>` when the run has no issue:
 
 ```
 .kairos/
-├── 01-requirements.md         ← after PM Agent approval
-├── 02-architecture.md         ← after Architect approval
-├── 03-implementation.md       ← after Implementer approval
-├── 04-review.md               ← after Code Reviewer approval
-├── 05-test-verification.md    ← after Test Verifier approval
-└── 06-deployment-plan.md      ← after Release Planner approval
+└── issue-42_add-stripe/
+    ├── _tracking.md                 ← where the run is, open questions, one log line per gate: keep this tab open
+    ├── 00b-impact.md                ← impact assessment (size, effort, domains)
+    ├── 01-requirements.md           ← pm-agent
+    ├── 02-architecture.md           ← architect-agent
+    ├── 03-implementation-plan.md    ← implementer plan (gate before any source file changes)
+    ├── 03-implementation.md         ← implementer
+    ├── 04-review.md                 ← code-reviewer-agent
+    ├── 04b-security-review.md       ← security-reviewer-agent, when it runs
+    ├── 05-test-verification.md      ← test-verifier-agent
+    ├── 05b-qa-plan.md               ← qa-plan-agent, when a person verifies by hand
+    ├── 06-deployment-plan.md        ← release-planner-agent
+    ├── _issues.md                   ← only an analysis-only run: issue text to paste into your tracker
+    └── ledger/                      ← constraints, decisions, open questions, run.md
 ```
 
-These files are the audit trail of the session. You can commit them to git to track what was decided and why.
+Which of these exist depends on the run: a small fix has no `01`, `02` or `06`. The orchestrator creates the folder itself and offers once per project to add `.kairos/` to `.gitignore`; these files are the audit trail, and you can commit them if you want what was decided and why in git.
 
 ## Optional — Viewing a phase artifact as HTML
 
@@ -215,7 +221,7 @@ Help me implement PROJ-42 using the KAIROS framework
 Help me implement issue #42 using the KAIROS framework
 ```
 
-Each agent posts its validated output as a comment after your approval:
+Each phase agent offers to post its validated output as a comment (optional, after your approval). These are the commands behind it:
 
 ```bash
 # Jira (jira-cli — https://github.com/ankitpokhrel/jira-cli)
@@ -228,7 +234,7 @@ glab issue note 42 --message "$(cat .kairos/issue-42_my-feature/01-requirements.
 curl -X POST "https://api.bitbucket.org/2.0/repositories/{workspace}/{repo}/issues/42/comments" \
   -u "${BITBUCKET_USER}:${BITBUCKET_TOKEN}" \
   -H "Content-Type: application/json" \
-  -d '{"content":{"raw":"..."}}"
+  -d '{"content":{"raw":"..."}}'
 ```
 
 Requires the respective CLI authenticated: `jira init`, `glab auth login`, or a Bitbucket app password in `BITBUCKET_TOKEN`.
@@ -239,10 +245,10 @@ Requires the respective CLI authenticated: `jira init`, `glab auth login`, or a 
 |---------|-----|
 | Agent not found | Check `.claude/agents/` exists and contains `.md` files with valid YAML frontmatter |
 | Wrong model used | Check the model lines the Start Gate printed and the file each came from (`.kairos-cfg/config`, an older `models` file or `~/.kairos-cfg/config`; they outrank frontmatter for agents the orchestrator dispatches), then the agent's `model:` frontmatter. `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1` in `settings.json` overrides both |
-| Orchestrator not delegating | The `description:` field must clearly describe when to use the agent |
-| `.kairos/` not created | The implementer-tdd-agent or implementer-coder-agent creates it on first write — ensure `write_file` is in its `tools:` list |
+| Orchestrator not calling an agent you expected | It derives agents from facts, not from descriptions. Read the Start Gate's `✅`/`⏭️` lines for the rule that decided it, then use **Change the pipeline** (or `add <agent>` in free text) to force it. A saved `## KAIROS Pipeline` section in the issue wins over the derivation |
+| `.kairos/` not created | The orchestrator creates `.kairos/<feature_folder>/` at the start of a run with its `Write` and `Bash` tools. If nothing appears, the session probably did not start with the orchestrator as primary agent (see Step 3), or the run stopped at the Start Gate |
 | Gates keep degrading to a text menu / `AskUserQuestion` unavailable | The orchestrator is running as a subagent, not as the session's primary agent — it was invoked by name (`@orchestrator-agent` / `@kairos:orchestrator-agent`) inside an existing chat instead of at startup. Exit and relaunch with `claude --agent kairos:orchestrator-agent` (plugin) or `claude --agent orchestrator-agent` (manual copy) — see Step 3 |
-| Orchestrator seems to vanish mid-pipeline with no error | Same root cause as above — a subagent-dispatched orchestrator dies if its parent session ends or resets. Restart the same way as above; the run resumes from the last completed phase (Step 0b of `orchestrator-agent.md`) |
+| Orchestrator seems to vanish mid-pipeline with no error | Same root cause as above — a subagent-dispatched orchestrator dies if its parent session ends or resets. Restart the same way as above; start the same issue again and the run resumes from `ledger/run.md` (an interrupted agent is re-invoked, a gate left open is shown again) |
 | `claude plugin install` succeeds but agents don't show up | The plugin may need explicit activation — run `claude plugin enable kairos` and confirm with `claude plugin list` |
 
 ## Layered Mode: no extra setup
@@ -277,17 +283,19 @@ What it costs is not measured. A run is one `opus` lead call to plan, one to ver
 It is never started automatically. Right before the implementation plan, when the TDD path was chosen, two or more of backend/frontend/db are touched and the host is Claude Code, the Orchestrator offers it with a short cost note and asks for confirmation. The same question appears when an issue checklist or an `Add:` override names `implementer-lead-agent`:
 
 ```
-⚠️  LAYERED MODE
+⚠️  LAYERED MODE — COST WARNING
 
-Single agent:  implementer-tdd-agent, one call per step
-Layered Mode:  Lead + Tests + one agent per layer in scope, in stages
-               (cost not measured — read _usage.md after the run)
+Single Agent:  one implementer run (implementer-tdd-agent)
+Layered Mode:  more calls than that, several of them on opus (Claude Code only)
 
 Why offered:   <layers in domains>
+Calls:         lead plan, tests RED, one call per layer in scope for GREEN, lead verify,
+               REFACTOR, lead close, plus a fix round for every contract mismatch found.
+Cost:          not measured. Read _usage.md after the run.
 Worth it for:  changes where the layers must agree on binding contracts.
 ```
 
-then a three-option prompt: **Confirm Layered Mode**, **Single agent**, **Cancel pipeline**.
+then a three-option prompt: **Confirm Layered Mode**, **Single agent**, **Cancel pipeline**. Confirming lowers the review loop's retries to 2 if they were higher.
 
 ### Stages
 
@@ -318,7 +326,7 @@ Contract mismatches found while the lead writes the contracts appear as rows in 
 | --- | --- |
 | **Claude Code plugin** | Yes. The Orchestrator coordinates the stages above. |
 | OpenCode, Kimi Code, Cursor, VS Code, JetBrains, Codex | Not offered. The `team/` agents are not mirrored there, and the Orchestrator offers the mode only on Claude Code. Use the single implementer. |
-| **kairos-cli** (the v10 runner, under analysis, no code yet) | Planned, not released. A runner schedules waves natively, so it needs no Agent Teams: the same stages (contracts first, RED before GREEN, parallel GREEN per layer, one verify) are what its dispatcher would run. Its analysis lists the old Team Mode as not ported, and that stays true of Agent Teams. |
+| **kairos-cli** (the v10 runner, a separate project) | Not part of this repository, and Layered Mode there is a separate decision. A runner schedules waves natively, so it needs no Agent Teams: the same stages (contracts first, RED before GREEN, parallel GREEN per layer, one verify) are what its dispatcher would run. |
 
 ---
 
@@ -327,24 +335,34 @@ Contract mismatches found while the lead writes the contracts appear as rows in 
 ```
 You ──► Orchestrator
          │
-         ├─[HITL]─► PM Agent              → .kairos/01-requirements.md
-         ├─[HITL]─► Architect Agent       → .kairos/02-architecture.md + .md
-         ├─[HITL]─► implementer-tdd-agent    → .kairos/03-implementation.md
+         ├─ bug-triage-agent (bug reports only)        → 00c-bug-triage.md
+         ├─ impact-assessment-agent (analysis or code) → 00b-impact.md
+         ├─[Start Gate]─ the pipeline derived from those facts: you confirm or change it
+         │
+         ├─[gate]─► pm-agent                  → 01-requirements.md
+         ├─[gate]─► architect-agent           → 02-architecture.md
+         ├─[gate]─► implementer plan          → 03-implementation-plan.md
+         ├─[gate]─► implementer-tdd-agent     → 03-implementation.md
          │           or
          │          implementer-coder-agent (code-first)
          │           or
-         │          Implementer Lead-agent (Layered Mode)
+         │          implementer-lead-agent (Layered Mode)
          │           ├── teammate-tests-agent    [RED, alone]
          │           ├── teammate-backend-agent  ┌
          │           ├── teammate-frontend-agent ├── GREEN, parallel
          │           ├── teammate-database-agent ┘
          │           └── lead verifies, layers refactor, lead closes
-         ├─[HITL]─► Code Reviewer         → .kairos/04-review.md + .md
-         ├─[HITL]─► Test Verifier         → .kairos/05-test-verification.md + .md
-         └─[HITL]─► Release Planner       → .kairos/06-deployment-plan.md + .md
+         ├─[one gate]─► review wave, in parallel
+         │           ├── code-reviewer-agent      → 04-review.md
+         │           ├── security-reviewer-agent  → 04b-security-review.md (when derived)
+         │           └── test-verifier-agent      → 05-test-verification.md (when tests were written)
+         │           then one fix pass and a recheck, until nothing blocks
+         ├─[gate]─► qa-plan-agent (optional)          → 05b-qa-plan.md
+         ├─[gate]─► release-planner-agent             → 06-deployment-plan.md
+         └─[gate]─► documentation-agent (optional)    → 06b-documentation.md
 ```
 
-Each `[HITL]` gate is a pause where **you** review and approve before the next agent runs.
+Each `[gate]` is a pause where **you** review and decide before the next agent runs, except the three that continue on their own when nothing needs a decision. Which agents run at all is derived from the change: a `simple_fix` goes from the impact assessment to the code-first implementer and the code review, and skips the rest. All files land in `.kairos/<feature_folder>/`.
 
 ---
 
@@ -383,7 +401,7 @@ Claude Code's `effort:` agent-frontmatter field (`low`, `medium`, `high`, `xhigh
 
 ## Suggested Models
 
-Claude Code accepts short aliases that always resolve to the latest model in each family, or full versioned IDs (e.g. `claude-sonnet-4-6`) to pin a specific release.
+Claude Code accepts short aliases that always resolve to the latest model in each family, or full versioned IDs (e.g. `claude-sonnet-5-5`) to pin a specific release.
 
 | Alias | Resolves to | Use for |
 |-------|------------|--------|

@@ -106,8 +106,8 @@ export default defineConfig({
               { text: 'Orchestrator', link: '/agent-files#orchestrator' },
               { text: 'PM Agent', link: '/agent-files#pm-agent' },
               { text: 'Architect Agent', link: '/agent-files#architect-agent' },
-              { text: 'Implementer Agent — TDD', link: '/agent-files#implementer-tdd-agent' },
-              { text: 'Implementer Agent — Code First', link: '/agent-files#implementer-coder-agent' },
+              { text: 'Implementer Agent — TDD', link: '/agent-files#implementer-agent-—-tdd' },
+              { text: 'Implementer Agent — Code First', link: '/agent-files#implementer-agent-—-code-first' },
               { text: 'Code Reviewer', link: '/agent-files#code-reviewer' },
               { text: 'Security Reviewer', link: '/agent-files#security-reviewer' },
               { text: 'Test Verifier', link: '/agent-files#test-verifier' },
@@ -165,7 +165,20 @@ export default defineConfig({
           { text: 'Artifact Bookkeeping', link: '/skills/artifact-bookkeeping/SKILL' },
           { text: 'Artifact Template', link: '/skills/artifact-template/SKILL' },
           { text: 'Coding Discipline', link: '/skills/coding-discipline/SKILL' },
-          { text: 'Issue Tracker Comment', link: '/skills/issue-tracker-comment/SKILL' }
+          { text: 'Test Scope', link: '/skills/test-scope/SKILL' },
+          { text: 'Issue Text', link: '/skills/issue-text/SKILL' },
+          { text: 'Issue Tracker Comment', link: '/skills/issue-tracker-comment/SKILL' },
+          {
+            text: 'Orchestrator skills',
+            collapsed: true,
+            items: [
+              { text: 'Resume', link: '/skills/orchestrator-resume/SKILL' },
+              { text: 'Run Choices', link: '/skills/orchestrator-run-choices/SKILL' },
+              { text: 'Write-back', link: '/skills/orchestrator-writeback/SKILL' },
+              { text: 'Layered Mode', link: '/skills/orchestrator-layered/SKILL' },
+              { text: 'Close-out', link: '/skills/orchestrator-closeout/SKILL' }
+            ]
+          }
         ]
       },
       {
@@ -173,7 +186,8 @@ export default defineConfig({
         collapsed: false,
         items: [
           { text: '/kairos:setup', link: '/commands/setup' },
-          { text: '/kairos:view', link: '/commands/view' }
+          { text: '/kairos:view', link: '/commands/view' },
+          { text: '/kairos:usage', link: '/commands/usage' }
         ]
       },
       {

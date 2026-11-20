@@ -41,8 +41,8 @@ The mapping below is what actually produced the files in `.kimi-code/agents/` �
 | `name:` | `name:` | Direct copy — supported natively (it would default to the kebab-case filename anyway). |
 | `description:` | `description:` | Direct copy — Kimi Code's main agent reads it for auto-delegation, same as Claude Code. |
 | `tools: CSV` | `tools:` CSV | Direct copy — Kimi Code accepts the comma-separated form, and every tool KAIROS lists (`Read`, `Write`, `Edit`, `Bash`, `Grep`, `Glob`, `AskUserQuestion`, `Agent`) exists under the same name. `orchestrator-agent.md` is the one file that lists `Agent` — it needs it to invoke `@kairos:*` subagents itself; every other agent stays a leaf and never lists it. |
-| `model: opus` | `model_preference: primary` | **Symbolic** — resolves to your session's main model (`default_model` in `config.toml`, e.g. a Kimi K-series model). Used for the 6 reasoning-heavy agents: `orchestrator`, `architect`, `context-extractor`, `impact-assessment`, `security-reviewer`, `improvement-advisor`. |
-| `model: sonnet` | `model_preference: secondary` | **Symbolic** — resolves to `[secondary_model] model` in `config.toml` (typically a cheaper Kimi model). Used for the 9 execution agents: `pm`, `implementer-tdd`, `implementer-coder`, `code-reviewer`, `test-verifier`, `qa-plan`, `release-planner`, `documentation`, `retrospective`. |
+| `model: opus` | `model_preference: primary` | **Symbolic** — resolves to your session's main model (`default_model` in `config.toml`, e.g. a Kimi K-series model). Used for the 7 reasoning-heavy agents: `orchestrator`, `architect`, `bug-triage`, `context-extractor`, `impact-assessment`, `security-reviewer`, `improvement-advisor`. |
+| `model: sonnet` | `model_preference: secondary` | **Symbolic** — resolves to `[secondary_model] model` in `config.toml` (typically a cheaper Kimi model). Used for the 10 execution agents: `pm`, `implementer-tdd`, `implementer-coder`, `code-reviewer`, `test-verifier`, `qa-plan`, `release-planner`, `documentation`, `retrospective`, `dependency-audit`. |
 | `mcp__<server>__*` (in `tools:`) | `mcp__<server>__*` | Direct copy — Kimi Code uses the same `mcp__<server>__<tool>` naming as Claude Code, and matches a bare `mcp__<server>__*` as a glob for the whole server. Note a *bare* `mcp__<server>` (no trailing `__*`) matches nothing in Kimi Code — always keep the wildcard suffix. Currently only `test-verifier-agent` declares MCP tools (`chrome-devtools`, `playwright` — see [Skills & MCP Enhancements](../skills-mcp.md)); the server still needs to be configured on the Kimi Code side (see its [MCP docs](https://www.kimi.com/code/docs/en/kimi-code-cli/customization/mcp.html)) for the grant to do anything. |
 
 One fully worked example — `pm-agent.md`:
@@ -104,11 +104,12 @@ Kimi Code reads `AGENTS.md` natively from the project root (also `.kimi-code/AGE
 This project uses the KAIROS multi-agent development framework.
 Agent definitions are in `agents/` (Markdown, canonical) and `.kimi-code/agents/` (Kimi Code copies).
 
-Always follow the KAIROS workflow sequence:
-pm-agent → architect-agent → implementer-tdd-agent (TDD) OR implementer-coder-agent (code-first) → code-reviewer-agent → test-verifier-agent → qa-plan-agent → release-planner-agent
+Start every feature through `orchestrator-agent`, with the feature request and no agent list.
+It derives which agents run from the facts of the change and asks you at its Start Gate;
+never run the pipeline by hand in a fixed order, because most runs skip some agents.
 
-After each phase, present the output and wait for explicit approval (✅ / ✏️ / ⛔) before proceeding.
-Save each approved output to `.kairos/<feature_folder>/0X-*.md`.
+Wait for the orchestrator's gate (Approve / Request changes / Skip next / Stop pipeline) before any agent is called.
+Each approved output is saved under `.kairos/<feature_folder>/`.
 ```
 
 ## Step 5 — Start a KAIROS session
@@ -119,7 +120,7 @@ Run Kimi Code with the orchestrator as the main agent:
 kimi --agent orchestrator-agent
 ```
 
-Or start a default session and let it delegate: the main agent discovers the 16 custom agents automatically and routes to them based on each agent's `description`, the same way Claude Code's auto-delegation works. You can also name an agent explicitly in conversation ("use pm-agent to analyze this feature request"), or bind one file for a single launch with `kimi --agent-file path/to/agent.md`.
+Give it the request with no agent list: it derives the agents, shows its Start Gate and dispatches the subagents itself. A default session also discovers the 17 custom agents and can route to them by `description`, but that bypasses the Start Gate, the ledger and the derived selection, so use it only for a standalone agent (`context-extractor-agent`, `retrospective-agent`). To bind one file for a single launch, use `kimi --agent-file path/to/agent.md`.
 
 The orchestrator is bound at session creation and restored on resume (`kimi --continue` / `--session`) — no flag needed on resume, and none is allowed.
 
@@ -128,17 +129,18 @@ The orchestrator is bound at session creation and restored on resume (`kimi --co
 Kimi Code has a native `AskUserQuestion` tool, so every gated agent takes its **primary branch** — the interactive approval dialog, same as Claude Code:
 
 ```
-Implementation ready — how do you want to proceed?
-❯ Approve implementation (Recommended)
+Requirements ready — how do you want to proceed?
+❯ Approve (Recommended)
   Request changes
-  Stop
+  Skip next
+  Stop pipeline
 ```
 
-The text-menu fallback in each agent body (for Cursor, Codex CLI, OpenCode, …) is never needed here. One caveat straight from the orchestrator's own Hard Constraints: HITL gates require a live human, so don't run the orchestrator inside backgrounded/detached or scheduled executions — the gate would hang or be silently bypassed. Interactive TUI sessions are the supported mode.
+Three gates continue on their own when no check finds anything to decide (the bug triage, the requirements, the last wave of Phase 3) and print what they accepted; `every gate` brings the question back. The text-menu fallback in each agent body (for Cursor, Codex CLI, OpenCode, …) is never needed here. One caveat straight from the orchestrator's own Hard Constraints: HITL gates require a live human, so don't run the orchestrator inside backgrounded/detached or scheduled executions — the gate would hang or be silently bypassed. Interactive TUI sessions are the supported mode.
 
 ## Step 7 — Copy the shared skills
 
-Several agent bodies link to a shared skill file relative to their own location — e.g. `architect-agent` works through [`contract-checklist`](../skills/contract-checklist/SKILL.md) before defining API contracts, and most agents' optional Issue Tracker Comment step follows [`issue-tracker-comment`](../skills/issue-tracker-comment/SKILL.md). That path is resolved from wherever the agent file actually lives, not from this repo's root — so from `.kimi-code/agents/architect-agent.md`, `../skills/contract-checklist/SKILL.md` resolves to `.kimi-code/skills/contract-checklist/SKILL.md`, not the top-level `skills/`. Kimi Code discovers skills from `.kimi-code/skills/` (project) or `~/.kimi-code/skills/` (user) — copy the whole shared skills folder there:
+Agent bodies link to shared skill files relative to their own location. The orchestrator reads five `orchestrator-*` skills in many runs, every phase agent opens with [`agent-contract`](../skills/agent-contract/SKILL.md) and writes through [`artifact-template`](../skills/artifact-template/SKILL.md), and `architect-agent` works through [`contract-checklist`](../skills/contract-checklist/SKILL.md) before defining API contracts. Without the folder the orchestrator and the phase agents fail, so this step is required. That path is resolved from wherever the agent file actually lives, not from this repo's root — so from `.kimi-code/agents/architect-agent.md`, `../skills/contract-checklist/SKILL.md` resolves to `.kimi-code/skills/contract-checklist/SKILL.md`, not the top-level `skills/`. Kimi Code discovers skills from `.kimi-code/skills/` (project) or `~/.kimi-code/skills/` (user) — copy the whole shared skills folder there:
 
 ```bash
 mkdir -p .kimi-code/skills
@@ -153,7 +155,9 @@ Kimi Code's `Agent` tool dispatches subagents and `AgentSwarm` runs them in para
 
 ## Step 9 — Save `.kairos/` outputs
 
-Every KAIROS agent's own "Write to Project" step already instructs it to save its output to `.kairos/<feature_folder>/0X-*.md` — no extra prompting needed; the pack's `tools:` lists include `Write` everywhere the canonical files do.
+Every agent that can write has its own "Write to Project" step that saves its output to `.kairos/<feature_folder>/0X-*.md`; the pack's `tools:` lists include `Write` everywhere the canonical files do. The two read-only agents (`impact-assessment-agent`, `security-reviewer-agent`) have no `Write`, so the orchestrator writes their artifacts, and it alone writes `ledger/run.md` and `_tracking.md`.
+
+Three project settings work here like on every host: `manual-qa`, `qa-dir` and `test-changed` (see [Customizing KAIROS](/customizing)). The `model.` lines do not: use Step 3.
 
 ## Note on `${VAR}` placeholders in agent bodies
 
@@ -167,7 +171,7 @@ Kimi Code renders agent bodies as templates, substituting `${var}` placeholders 
 | Context isolation per agent | ✅ | ✅ Each subagent call is a fresh context |
 | Agent file format | Markdown + YAML frontmatter | Markdown + YAML frontmatter — accepts Claude-Code-style `name`/`description`/`tools:` CSV directly |
 | Tool access model | `tools:` CSV allowlist | `tools:` / `disallowedTools:` (CSV or YAML list), plus global `[tools]` switch in `config.toml` |
-| Per-agent model | `model: opus\|sonnet\|haiku` (concrete alias) | `model_preference: primary\|secondary` (symbolic → your configured Kimi models; experimental flag required for `secondary`) |
+| Per-agent model | `model: opus\|sonnet` (concrete alias) | `model_preference: primary\|secondary` (symbolic → your configured Kimi models; experimental flag required for `secondary`) |
 | Auto-delegation via `description` | ✅ Automatic | ✅ Automatic, plus `kimi --agent <name>` to bind the main agent at launch |
 | HITL built-in gate | ✅ Orchestrator-enforced, `AskUserQuestion` | ✅ **Native `AskUserQuestion`** — same primary branch as Claude Code |
 | Parallel subagents | ✅ | ✅ `Agent` / `AgentSwarm`, foreground or background |

@@ -10,16 +10,16 @@ There are no benchmark numbers here. Development speed depends on your codebase,
 
 | Guarantee | Enforced by |
 |---|---|
-| No phase advances without a human decision | The Orchestrator's gate after every active phase — Approve, Request changes, Skip next, Stop |
+| No phase advances unseen | The Orchestrator's gate after every active phase: Approve, Request changes, Skip next, Stop pipeline. Three gates continue on their own, and only when no check found anything to decide; each prints what it accepted for you |
 | Every risk, issue, and finding is dispositioned one by one | The Risk Disposition Loop, which resolves each row before the whole-artifact gate is shown |
 | Acceptance criteria carry stable `AC-n` IDs, assigned once and never renumbered | `pm-agent`, read by every later phase and mapped to tests by `test-verifier-agent` |
-| Tests are written before the code, and the RED phase is actually observed | `implementer-tdd-agent`, re-checked afterwards by `test-verifier-agent`'s TDD reality check |
+| On the TDD path, tests are written before the code and the RED phase is actually observed | `implementer-tdd-agent`, re-checked afterwards by `test-verifier-agent`'s TDD reality check. The Orchestrator chooses this path when the project has a test suite and the design can be stated as tests first; otherwise `implementer-coder-agent` writes the code and the tests the touched modules call for |
 | Tests sized to the acceptance criteria, with assertions that would fail if the behaviour broke | `test-verifier-agent`, which grades assertion strength and determinism rather than counting lines |
 | Findings come with evidence at `file:line`, never with an unsupported verdict | The `analysis-discipline` skill, applied by every reviewing agent |
-| Security is reviewed adversarially, with attack scenarios and real severity | `security-reviewer-agent`, optional and recommended for auth, payments, and write endpoints |
-| What automated tests cannot check is planned, not assumed | `qa-plan-agent` — manual and exploratory cases, regression retest list, UAT sign-off per `AC-n` |
+| Security is reviewed adversarially, with attack scenarios and real severity | `security-reviewer-agent`, which the Orchestrator runs when the change touches `auth` or `integrations`, when a `SECURITY`, `PRIVACY` or `COMPLIANCE` constraint was declared, or when the design carries threat-model rows. You can add or skip it at the gate that decides it |
+| What automated tests cannot check is planned, not assumed | `qa-plan-agent` (optional, when a person verifies by hand): manual and exploratory cases, regression retest list, UAT sign-off per `AC-n` |
 | Constraints, decisions, and open questions reach a terminal state before release | The ledger, re-walked in full at `architect-agent` and again at `release-planner-agent` |
-| Every decision is on disk, reviewable like any other file | `.kairos/<feature>/` — one Markdown artifact per phase plus the ledger, committed with the branch |
+| Every decision is on disk, reviewable like any other file | `.kairos/<feature>/`: one Markdown artifact per phase, the ledger and `_tracking.md`. The folder is local and gitignored by default (the Orchestrator asks once per project); keep it, or commit the sanitized project summary it offers at the end of a run |
 
 None of these is a claim about output quality in the abstract. Each one is a mechanism you can read in the agent file that implements it.
 
@@ -46,4 +46,4 @@ Track these per feature over four to six weeks, with and without KAIROS, and com
 | Unresolved questions at release | 🔴 rows left in `ledger/open-questions.md` when the feature ships |
 | Escaped defects by phase | Which gate could have caught the defect, read back from the artifacts |
 
-The last three come straight out of the artifacts KAIROS already writes, so they cost nothing extra to collect.
+The last three come straight out of the files KAIROS already writes, so they cost nothing extra to collect. Answer the cleanup question at the end of a run with **Keep everything** if you want `05-test-verification.md` and the phase reports later: `_tracking.md`, which is never deleted, keeps the `AC-n` alignment, the open questions and constraints, and a log line for every gate with the rows you dispositioned against the recommendation.

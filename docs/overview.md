@@ -59,7 +59,7 @@ Each subagent:
 
 All output files are saved to `.kairos/<feature-folder>/` — one subfolder per feature, named from the issue reference (e.g. `PROJ-42_add-stripe-payments`). Each phase writes a single Markdown file: a small YAML frontmatter header carrying only what the Orchestrator branches on — a verdict, the tallies its status rules threshold, and a loop signal where a loop exists — followed by the human-readable report (data model, issues, findings, runbook) — see the [Workflow](/workflow) page for why.
 
-The two `pre` rows differ. Context Extractor is standalone: you launch it yourself before the run, and the Orchestrator only reads the `00-context.md` it leaves on disk. Impact Assessment is started by the Orchestrator at every run, because the pipeline is derived from its facts; if you already ran it yourself, its `00b-impact.md` is reused. Counting Context Extractor, five of the seventeen agents are yours to start; the twelve others are the Orchestrator's.
+The two `pre` rows differ. Context Extractor is standalone: you launch it yourself before the run, and the Orchestrator only reads the `00-context.md` it leaves on disk. Impact Assessment is started by the Orchestrator whenever the run covers analysis or development, because the pipeline is derived from its facts (a run that only reviews or delivers reads the change from git instead); if you already ran it yourself, its `00b-impact.md` is reused. Counting Context Extractor, five of the seventeen agents are yours to start; the twelve others are the Orchestrator's.
 
 The other four sit outside this table entirely, all invoked directly by you rather than scheduled by the pipeline. **Bug Triage** is the entry point when what you have is a defect rather than a feature: it reproduces, finds the root cause, and recommends where the fix re-enters the pipeline. It is also a standalone agent the Orchestrator may dispatch itself — when your input reads as a bug report and no triage exists, it offers to run it and then gates the result like any phase artifact. **Dependency Audit** runs every few months outside any feature, turning dependencies and accumulated debt into a prioritized backlog at `.kairos/_tech-debt.md`. **Retrospective Agent** distills a finished feature's own artifacts into lessons, appended to the project-root `.kairos/_lessons.md`; **Improvement Advisor** reads that file back every few features and proposes framework changes as ADR records, never editing an agent file itself. See [All Agents](./agents) for all four.
 
@@ -175,6 +175,7 @@ skills/                          ← Shared checklists/formats reused across age
 ├── coding-discipline/SKILL.md
 ├── constraint-taxonomy/SKILL.md
 ├── contract-checklist/SKILL.md
+├── issue-text/SKILL.md
 ├── issue-tracker-comment/SKILL.md
 ├── migration-safety/SKILL.md
 ├── orchestrator-closeout/SKILL.md

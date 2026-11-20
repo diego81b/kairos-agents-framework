@@ -32,13 +32,13 @@ A: Claude Code gets the full experience, including the plugin, the slash command
 
 **Q: Can I customize agents?**
 
-A: Some things are settings, the rest means editing a file. Models, the folder QA plans are saved in and whether a person verifies by hand are settings, kept as lines of one `config` file in a `.kairos-cfg/` folder in the project (committed, shared with the team) or, for models, in your home directory; one issue's pipeline is a block in the issue. [Customizing KAIROS](/customizing) lists every one and which wins. How an agent behaves (its rules, wording, limits) has no setting: the agent files are Markdown, so edit them to match your team's patterns, libraries, or standards. If you edit a file in `agents/`, mirror the same body change into `.opencode/agents/` and `.kimi-code/agents/`, which are maintained by hand on purpose. Never put a secret in `.kairos-cfg/`: it is committed.
+A: Some things are settings, the rest means editing a file. Models, the folder QA plans are saved in, whether a person verifies by hand and how much of the test suite the agents run (`test-changed`) are settings, kept as lines of one `config` file in a `.kairos-cfg/` folder in the project (committed, shared with the team) or, for models, in your home directory; one issue's pipeline is a block in the issue. [Customizing KAIROS](/customizing) lists every one and which wins. How an agent behaves (its rules, wording, limits) has no setting: the agent files are Markdown, so edit them to match your team's patterns, libraries, or standards. If you edit a file in `agents/`, mirror the same body change into `.opencode/agents/` and `.kimi-code/agents/`, which are maintained by hand on purpose. Never put a secret in `.kairos-cfg/`: it is committed.
 
 ---
 
 **Q: Where does the output go?**
 
-A: Into `.kairos/<feature-folder>/` in your project — one Markdown file per phase, plus a `ledger/` with the living constraints, decisions, and open questions. Three files sit at the project root instead, because they outlive any single feature: `_lessons.md`, `_tech-debt.md`, and `decisions/ADR-*.md`. Nothing is written outside `.kairos/` except code from the implementer, documentation from the Documentation Agent, and a single `.kairos/` line the Orchestrator appends to your `.gitignore` once, after you say yes.
+A: Into `.kairos/<feature-folder>/` in your project — one Markdown file per phase, plus a `ledger/` with the living constraints, decisions, and open questions. Four things sit at the project root instead, because they outlive any single feature: `_lessons.md`, `_tech-debt.md`, `_qa-regression.md` (the catalogue of manual QA cases) and `decisions/ADR-*.md`. Nothing is written outside `.kairos/` except code from the implementer, documentation from the Documentation Agent, and a single `.kairos/` line the Orchestrator appends to your `.gitignore` once, after you say yes.
 
 ---
 
@@ -99,3 +99,9 @@ A: No. Inside the review wave none of them writes the ledger: each returns its u
 **Q: I build a big issue one slice at a time. Do I get a folder per slice?**
 
 A: No. An issue has one folder and one ledger. When the folder already holds a finished run, the Orchestrator offers **Start a new run**: it moves the finished run's reports to `runs/run-<k>/`, keeps the ledger (so decisions and constraints carry over), the triage and the tracking log, and starts the next slice fresh. Criteria that belong to a slice not built yet show as `later` in the tracking file and in the test verification, never as gaps. See [Tracking File](/workflow#tracking-file).
+
+---
+
+**Q: Does a run need an issue? Can KAIROS create issues?**
+
+A: A run needs no issue: describe what you want in the prompt and it works from the text, in a `feature_<slug>` folder. The size label, a saved pipeline and the QA comment need an issue reference, so without one they are skipped. KAIROS does not create issues on a tracker. Say `scrivi le issue` (or `write the issues`): the run covers analysis only, the requirements step runs whatever the size, and the run ends with `_issues.md` in the feature folder, one issue per slice or one issue, as text you copy into your tracker or anywhere else. It needs no architect, so a PM gets it in product words; a team lead who wants the design notes too adds `architect-agent` from **Change the pipeline**. See [Proposed Issues](/workflow#proposed-issues).
