@@ -6,6 +6,13 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v9.8.2 — November 24, 2026
+
+### Changed
+
+- **`agents/orchestrator-agent.md`** (mirrored in `.opencode/agents/orchestrator-agent.md` and `.kimi-code/agents/orchestrator-agent.md`): the Bug-Input Check reads a `Cause` or `Causa` field from the bug input. With `known` or `nota`, **Continue without it** is the recommended option. The triage offer is still made, and the area question still follows.
+- **`docs/workflow.md`** and **`docs/setup/templates.md`**: the field and its values are stated once, as KAIROS's own contract, so any author, human or skill, has one target.
+
 ## v9.8.1 — November 20, 2026
 
 A real Layered Mode run (issue 714 of a downstream project) took 7h15 of wall time for 2h38 of agent time and read as always pending. Two causes were in the text: the line printed at each stage said nothing about what was running, and the lead ran the whole suite against a test database that did not answer (522 failures in 13m47, all one connection error, then a 7m02 rerun). The Layered Mode test part also ignored the budget the TDD implementer and Test Verifier already follow: the lead ran the whole suite at verify and again at close, and the tests agent wrote a full per-endpoint set with an 80% coverage floor that contradicted the lead's own "no coverage target by default". Not measured: no run has used any of this; read the stage times in `_usage.md` and the `scope:` lines of the next Layered Mode runs.
