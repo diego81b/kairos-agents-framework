@@ -6,6 +6,31 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v9.8.2 — November 24, 2026
+
+### Changed
+
+- **`agents/orchestrator-agent.md`** (mirrored in `.opencode/agents/orchestrator-agent.md` and `.kimi-code/agents/orchestrator-agent.md`): the Bug-Input Check reads a `Cause` or `Causa` field from the bug input. With `known` or `nota`, **Continue without it** is the recommended option. The triage offer is still made, and the area question still follows.
+- **`docs/workflow.md`** and **`docs/setup/templates.md`**: the field and its values are stated once, as KAIROS's own contract, so any author, human or skill, has one target.
+
+## v9.8.1 — November 20, 2026
+
+A real Layered Mode run (issue 714 of a downstream project) took 7h15 of wall time for 2h38 of agent time and read as always pending. Two causes were in the text: the line printed at each stage said nothing about what was running, and the lead ran the whole suite against a test database that did not answer (522 failures in 13m47, all one connection error, then a 7m02 rerun). The Layered Mode test part also ignored the budget the TDD implementer and Test Verifier already follow: the lead ran the whole suite at verify and again at close, and the tests agent wrote a full per-endpoint set with an 80% coverage floor that contradicted the lead's own "no coverage target by default". Not measured: no run has used any of this; read the stage times in `_usage.md` and the `scope:` lines of the next Layered Mode runs.
+
+### Added
+
+- **`skills/orchestrator-layered/SKILL.md`**: a wait line for every stage that names the stage, round, wave, the agents called, the start time and how long the same stage took last time (from `_usage.md`), so a long stage can be told from a stuck one. A `## Needs Human` row opening with `Environment:` is asked first, alone, as "Test environment" with Fixed, run again / Accept as documented gap / Stop pipeline, and its answer goes to the lead in the same call as the contract answers.
+- **`skills/test-scope/SKILL.md`**: section 8, the environment probe: check once, with the cheapest command that fails the same way, that what the tests need outside the code answers, and run nothing when it does not.
+
+### Changed
+
+- **`agents/team/implementer-lead-agent.md`**: `verify` and `close` probe the test environment before any run and stop with an `Environment:` row instead of running a suite that can only fail. The whole suite now runs once, at the first `close` of the last planned wave; every other verify and close, fix rounds and post-gate passes included, runs the related tests and leaves `coverage` out. The TEST CONTRACT gains a test budget (one test per behaviour an `AC-n` or risk names, extend an existing file before adding one, parameterize, lowest level, cheap to run) and the plan's `## Test Cases` table says which criterion each case proves and which file it extends.
+- **`agents/team/teammate-tests-agent.md`**: writes by the same budget instead of a happy, error, edge and integration set per endpoint, and the 80% coverage floor is gone. A RED run that fails on the environment is reported, not rerun.
+- **`skills/test-scope/SKILL.md`**: the Layered Mode lead row moves its full run from verify and close of the first pass to the first close of the last planned wave, and the coverage rules cover the lead.
+- **`docs/workflow.md`**, **`docs/agents.md`**, **`docs/overview.md`**, **`docs/agent-files-team.md`**, **`docs/setup/claude-code.md`**: describe the new run scope, the environment check, the test budget and what the wait line shows.
+
+---
+
 ## v9.8.0 — November 19, 2026
 
 A quick fix often started with the area question (all areas, choose myself, decide each step) before anything else, and for a bug report that came before the bug triage, the one step that says whether the fix is contained. The question now comes after the triage, and a quick fix runs the minimum a person expects: development, code review and, when tests were written, the test review.

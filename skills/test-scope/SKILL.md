@@ -23,7 +23,7 @@ The full suite has one owner per stage. Everything else runs the files or the re
 | `implementer-tdd-agent` | the last planned wave (`wave` equals `total_waves`; a plan with one wave has one) | an earlier planned wave: files. Any other pass (a review loop iteration, a fix pass after the gate, a re-run after Request changes): related |
 | `implementer-coder-agent` | only when a trigger below forces it: on this path the Test Verifier owns the full run, so a second one here repeats it | always related (files, when the change adds only tests) |
 | Test Verifier | its first run when it has no full run to reuse (the coder path, or a TDD run without a clean `coverage_summary`) and any run with `final_pass: true` | every other recheck: related, over the files the pass wrote, read from the `## Files Written` rows of the latest pass in `03-implementation.md` |
-| Layered Mode lead | `verify` and `close` of the first pass | a fix round, a review loop iteration or a post-gate fix pass: related |
+| Layered Mode lead | the `close` of the last planned wave of the first pass (`wave` equals `total_waves`; a plan with one wave has one) | every other `verify` and `close`: related. That covers `verify` of the first pass, an earlier wave's `close`, a fix round, a review loop iteration and a post-gate fix pass |
 
 `code-reviewer-agent` runs no tests, as before.
 
@@ -76,6 +76,7 @@ An empty result means section 3 decides. A value without `{files}` that is not `
 A related run measures part of the code, so its percentages say nothing about the whole. Never judge coverage from one, and never write a partial number into `coverage_summary`.
 
 - `implementer-tdd-agent`: a pass that is not the last planned wave reports no coverage of its own. The last planned wave reports it, as before. `implementer-coder-agent` reports none.
+- `implementer-lead-agent`: the same rule. A `verify` or `close` that is not the full run leaves `coverage` out of `tests:` and judges no coverage target; the full run at the last wave's `close` measures it and judges it. A `close` after a fix round writes the numbers of that full run into `03-implementation.md`, marked as carried over.
 - Test Verifier: on a targeted run copy `coverage_summary` from the latest full run on record (the newest `05-test-verification*.md`, else `03-implementation.md`), set `execution.scope: targeted`, and write in `## Test Execution` one line naming the file the numbers came from and why this run was narrower. If there is no full run on record, this is a full run, not a targeted one.
 - The review loop's final pass is `final_pass: true` and runs full, so what it measures replaces the carried numbers.
 
@@ -93,3 +94,7 @@ Most of a long suite is not the number of tests but how each is written. When yo
 - **Parameterize, do not copy.** One test over a table of inputs, not a copy per input.
 - **One behaviour at one level.** The same rule asserted in a unit test, an API test and a UI test costs three runs and protects once.
 - **Independent and order-free.** A test that needs another to run first cannot be run alone, and the narrow rungs above depend on running one test alone.
+
+## 8. Is the environment ready to run them
+
+Before a run that needs something outside the code (a database, a service, a container, a port), probe that one thing with the cheapest command that can fail the same way, and run the tests only when it passes. A database the test configuration points at and nothing answers on is not a test result: a full run against it produced 522 failures in 13 minutes in a real run, all one connection error. Name what you probed and what it said. If the probe fails, do not run the suite and do not narrow the run to dodge it: report the missing piece and let a person fix it (`implementer-lead-agent` writes it as a `## Needs Human` row opening with `Environment:`; any other agent says it in its report's notes). Probe once per stage, not per command, and never probe by starting the missing thing yourself.

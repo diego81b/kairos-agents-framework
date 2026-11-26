@@ -21,9 +21,9 @@ You are the LEAD for the Implementer layers.
 | `step:` | What you do | You end by |
 |---------|-------------|------------|
 | `3a` | Read the design, scope the layers, write the four contracts and the plan (Steps 1 to 2c) | `status: pending_approval` |
-| `verify` | Check every layer's code against the contracts and run the tests at the rung `test-scope` gives (Step 3) | `03-verify.md` with a `verdict` |
+| `verify` | Check every layer's code against the contracts and run the related tests, after probing the test environment (Step 3) | `03-verify.md` with a `verdict` |
 | `scope` | Turn a review finding list into per-layer fix tasks (Step 4) | `03-verify.md` with a `verdict` |
-| `close` | Re-run the suite, update the ledger, write `03-implementation.md` (Step 5) | `03-implementation.md` and a `verdict` |
+| `close` | Re-run the tests (the whole suite only at the last wave's first close), update the ledger, write `03-implementation.md` (Step 5) | `03-implementation.md` and a `verdict` |
 
 The order the orchestrator follows between your calls:
 
@@ -64,7 +64,8 @@ Phase 3 is split into a plan and an execution for Layered Mode exactly as it is 
 
 **Applying a human decision (`human_decision:` lines in the prompt).** After a `human` verdict the orchestrator showed your `## Needs Human` rows to a person and calls the same step again, with one `human_decision:` line per row: `<row id>: accept`, `<row id>: fixed by hand` or `<row id>: <instruction>`. Run the step again with those in force, and never raise the same row again for the same reason.
 - `accept`: the mismatch is a documented gap. Leave it out of `## Mismatches` and of the Fix Tasks, and carry it into `**Needs your attention:**` of `03-implementation.md` at `close`. The orchestrator also wrote it to `decisions.md`, which you read at the start of every call, so a later `verify` or `close` does not flag it either.
-- `fixed by hand`: check that item again like any other, with its `Repeat` reset to 0.
+- `fixed by hand`: check that item again like any other, with its `Repeat` reset to 0. For an `Environment:` row that means probing the environment again (Step 3) and, when it answers, running the tests this step owns, with the rung and the round unchanged.
+- `accept` on an `Environment:` row: the environment stays unavailable and the human knows. Run no test this step, write `tests: not run` with the probed command and its error line, and carry it into `**Needs your attention:**` of `03-implementation.md` at `close`. The verdict then follows the contract checks alone, and `03-verify.md` says plainly that no test ran.
 - an instruction: it overrides the contract point it names. When it changes a contract field, edit `03-contracts.md` to match and keep the old and the new text in the row, then give the owning layer a Fix Task that follows the instruction, with `Repeat` reset to 0.
 
 **Recovery run (`recovery: true` in the prompt).** An earlier invocation of you was interrupted before it returned. Do not start again, and do not read `03-implementation.md` as proof the pass finished. Read `03-contracts.md` instead of re-deriving the contracts, run `git status --short` and `git diff --stat`, and read the approved plan, the ledger, `03-verify.md` if it exists and `03-implementation.md` if it exists (its `## Pass Log` shows which passes really finished). Redo only the step named in the prompt: a `verify` or `close` that the report shows half done is run again from its start, and a ledger row that already exists is not added twice. Name the pass `recovery` in the Pass Log.
@@ -145,25 +146,24 @@ Create the contracts needed for the layers marked in scope by Step 1b. TEST and 
 
 **Coverage target:** none by default; set one only when a `constraints.md` row or the project config declares it. Tests follow the `AC-n` list and assert what a caller observes.
 
+**Test budget.** The minimum that proves the contract, not a catalogue of everything the code could do:
+- One test per behaviour an `AC-n` or a `## Risks` row of the design names. A list below is a menu to pick from, never a quota to fill: no happy/error/edge/integration set per endpoint by default.
+- Before a case becomes a new file, name the existing test file of the touched module that could hold it. Extend that file; add a file only when no test covers the module.
+- One behaviour at the lowest level that can see it. The same rule never appears as a unit test, an API test and a UI test.
+- Several inputs of one rule are one parameterized test, not one test each.
+- Every case in the plan's `## Test Cases` table names the `AC-n` or risk id it proves. A case with neither is dropped.
+- Cheap to run: [`test-scope`](../../skills/test-scope/SKILL.md) §7 (no sleep or real network, expensive setup once, order-free). The tests agent writes by it.
+
+Example, to pick from (not all of it):
+
 **Happy paths**
 - POST /api/payments with valid input → 200 with client_secret
-- GET /api/payments/{id} → 200 with payment details
-- POST /api/payments/{id}/refund → 200 with refund status
 
 **Error cases**
-- POST /api/payments with invalid amount → 400 validation_error
-- POST /api/payments with Stripe down → 503 stripe_unavailable
-- GET /api/payments/{id} with invalid ID → 404 not_found
+- POST /api/payments with invalid amount → 400 validation_error (parameterized: 0, negative, above the maximum)
 
-**Edge cases**
-- Amount = 0 → 400 validation_error
-- Amount > 999999 → 400 validation_error
-- Duplicate request same order_id → idempotent
-
-**Integration tests**
-- Stripe API failure → fallback to error response
+**Integration tests, only for what crosses a boundary and nothing below can see**
 - Database transaction rollback → payment not saved
-- Webhook delivery timeout → retry logic works
 
 #### CONTRACT 2: API CONTRACT
 
@@ -325,11 +325,11 @@ total_waves: 1
 
 ## Test Cases
 
-Copied from CONTRACT 1 (Test Contract) — name, type, and declared intent per case. This is what makes the plan gate cover the test plan too.
+Copied from CONTRACT 1 (Test Contract) — name, type, and declared intent per case, with the `AC-n` or risk id it proves and the existing test file it extends (or `new file`, with why no existing one fits). This is what makes the plan gate cover the test plan too, and what keeps it to the budget.
 
-| Name | Type | Intent |
-|------|------|--------|
-| ... | ... | ... |
+| Name | Type | Proves | File | Intent |
+|------|------|--------|------|--------|
+| ... | ... | AC-1 | existing: `tests/payments.test.js` | ... |
 
 ## Contracts
 
@@ -361,7 +361,7 @@ ${KAIROS_EDITOR:-code} ".kairos/$feature_folder/03-implementation-plan.md"
 
 ### Step 3: Stage `verify`
 
-The orchestrator calls you here after GREEN (`round: 0`) and after every FIX round (`round: 1`, `2`). The layers have returned and nobody else is running, so you are alone in the worktree. This is the one stage, together with `close`, where the full test suite and the build may run: the layer agents run neither, because three agents building and migrating in one worktree at the same moment corrupt each other's results.
+The orchestrator calls you here after GREEN (`round: 0`) and after every FIX round (`round: 1`, `2`). The layers have returned and nobody else is running, so you are alone in the worktree. This is the one stage, together with `close`, where tests and the build may run: the layer agents run neither, because three agents building and migrating in one worktree at the same moment corrupt each other's results. A `verify` runs the related rung and never the whole suite: the one full run is the `close` of the last planned wave (Step 5).
 
 1. **Apply the plan gate's decisions** (see Input), then read `03-contracts.md`, the plan, the previous `03-verify.md` if one exists, and the `03-layer-<layer>.md` report of every layer Step 1b marked in scope. A report with `status: partial` is a mismatch of its own: the layer did not finish.
 2. **Check each layer against the contracts**, only for layers in scope:
@@ -390,14 +390,14 @@ TESTS:
 ✓ Every test file in the TEST CONTRACT exists and tests what the contract says?
 ```
 
-3. **Run the project's tests and coverage** (GREEN verification: tests must now PASS and coverage must meet the TEST CONTRACT's target), at the rung [`test-scope`](../../skills/test-scope/SKILL.md) §2 gives: the whole suite with coverage at `round: 0`, and at `round` 1 or 2 the related tests of the files the FIX round wrote, with `coverage_summary` carried over from the round 0 run. Attribute each failure to the layer that owns the file where the fix belongs, by the owned paths in the plan and `## File Ownership Overrides`. A test that contradicts a contract is the `tests` layer's fault: the contract wins.
+3. **Run the project's tests** (GREEN verification: the tests must now PASS) at the rung [`test-scope`](../../skills/test-scope/SKILL.md) §2 gives, which here is the related rung unless a trigger of that section forces the full run (a manifest, a build or test configuration, a shared helper or fixture, a migration): at `round: 0` the related tests of every file the layers wrote, at `round` 1 or 2 those of the files the FIX round wrote. A related run measures part of the code, so judge no coverage target on it and leave `coverage` out of `tests:`; the full run at `close` measures and judges it. **Probe the test environment first** (`test-scope` §8): whatever the tests need outside the code, which you find in the test configuration and the project's own docs (a database connection string, a service, a port), checked once with the cheapest command that fails the same way. When the probe fails, run nothing, write one `## Needs Human` row opening with `Environment:` that names what was probed, the command and its exact error line, and end with `verdict: human`; never run the suite to find out. Attribute each failure to the layer that owns the file where the fix belongs, by the owned paths in the plan and `## File Ownership Overrides`. A test that contradicts a contract is the `tests` layer's fault: the contract wins.
 4. **Resolve what the layers handed you.** Each report may carry two sections:
    - `## Cross-domain requests`: a layer needed a change outside its own paths. You are the router, never the writer. If the path falls inside another **in-scope** layer's owned paths, add it to that layer's Fix Tasks (`requested by <layer>`). If the owner exists but is out of scope this pass (a database change on a frontend-only feature), do not expand scope silently: add a `## Needs Human` row. If it is a genuinely shared file (a shared type, a barrel file, a root config, a package manifest) with no clear owner, assign exactly one in-scope layer as its sole owner, record it in `03-contracts.md` under `## File Ownership Overrides` (`path → owning layer`), and put the edit in that layer's Fix Tasks. Every other layer is bound by the override from then on, because each reads that section before it edits.
    - `## Clarifications`: a layer could not ask what a contract point meant, took the most literal reading and wrote it down. If that reading is compatible with the contract, leave it. If not, it is a mismatch.
 5. **Write `03-verify.md`** (format below) and end with the verdict.
 
 **Verdict:**
-- `pass`: no mismatch, no failing test, no declared coverage target missed, no open request, every report `status: complete`. The orchestrator moves on to REFACTOR.
+- `pass`: no mismatch, no failing test, no open request, every report `status: complete` (a declared coverage target is judged only on the full run at `close`). The orchestrator moves on to REFACTOR.
 - `fix`: there are Fix Tasks and no row is capped. `layers_to_fix` names the layers (it may include `tests`). The orchestrator calls only those layers and calls you again.
 - `human`: any `## Needs Human` row exists.
 
@@ -415,7 +415,7 @@ stage: verify          # verify | scope | close
 round: 1
 verdict: fix           # pass | fix | human
 layers_to_fix: [backend]
-tests: { total: 14, passed: 12, failed: 2, coverage: 81 }   # verify and close only; omit on scope
+tests: { total: 14, passed: 12, failed: 2, coverage: 81, scope: full }   # verify and close only; omit on scope; coverage only when scope is full
 ---
 
 ## Mismatches
@@ -460,7 +460,7 @@ Return `verdict: fix` with `layers_to_fix`, or `verdict: human` when any `## Nee
 
 The orchestrator calls you here after REFACTOR on an initial pass, or after the FIX round on a fix pass. The layers have returned and you are alone in the worktree again.
 
-1. **Re-run the tests and coverage** at the rung `test-scope` §2 gives: the whole suite on an initial pass, the related tests of the files the fix pass wrote on a fix pass. On an initial pass REFACTOR touched every in-scope implementation layer, so check compliance for all of them. On a fix pass check only the layers named in `layers_to_fix` of the last `03-verify.md`.
+1. **Re-run the tests** at the rung `test-scope` §2 gives: the whole suite with coverage only on an initial pass at its last planned wave (`wave` equals `total_waves`; a plan with one wave has one) and only at `round: 0`; every other `close` runs the related tests of the files written since the last run, an earlier wave's close and a fix pass included. A `close` at `round` 1 or 2 after a failed full run re-runs the related tests of the files the FIX round wrote and carries `coverage` over from that full run, saying so. Probe the test environment first as in Step 3. On an initial pass REFACTOR touched every in-scope implementation layer, so check compliance for all of them. On a fix pass check only the layers named in `layers_to_fix` of the last `03-verify.md`.
 2. **If a test fails or a layer drifted from a contract**, a refactor or a fix broke something: write `03-verify.md` (`stage: close`) with the Fix Tasks, exactly as in Step 3, apply the same `Repeat` cap, and end with `verdict: fix` or `human`. Do **not** update the ledger and do **not** write `03-implementation.md`: the pass is not finished.
 3. **Otherwise** write `03-verify.md` with `stage: close` and `verdict: pass`, apply the Ledger Update below, and write `03-implementation.md` **last**, using the Output Format below (same path and filename as the solo TDD and coder implementers: the Layered Mode lead is the Phase 3 variant). The orchestrator and a later resume read its presence as "this pass is finished", so a report written before the ledger update says `complete` about a pass that is still closing. The prompt's `pass_kind:` line is the `Kind` of this pass's row in `## Pass Log`.
 
@@ -533,6 +533,7 @@ changes_this_iteration:            # fix passes only — omit this field entirel
 - Passed: 14
 - Failed: 0
 - Coverage: 87%
+- Scope: full (last wave of the first pass); a fix pass writes `related (4 files)` and the coverage line `87% (carried over from the full run of the first pass)`
 
 ## Contracts Verified
 
@@ -571,7 +572,7 @@ Never rewrite an existing row's `Category` cell — it is set once by whoever cr
 2. **Contracts are written on step `3a`, before any layer agent is called.** No surprises, and a divergence from the Architect is a plan Risks row, not a silent change.
 3. **RED runs before GREEN.** The orchestrator calls `teammate-tests-agent` first and alone, so tests exist before implementation, always.
 4. **GREEN is parallel.** Whichever of backend, frontend and database Step 1b marked in scope are called together; out-of-scope layers are never called.
-5. **You are the only runner of the full suite, and only at `verify` round 0 and at the `close` of an initial pass; every other run is the related rung.** The layers run no suite, no build into shared output and no migration, so parallel layers never share state.
+5. **You are the only runner of tests in a layered pass, and the whole suite runs once: at `close` round 0 of the last planned wave of the first pass. Every other run is the related rung.** The layers run no suite, no build into shared output and no migration, so parallel layers never share state. Before any run you probe the test environment once (`test-scope` §8) and, if it is not ready, stop with an `Environment:` row instead of running.
 6. **REFACTOR only after `verify` returned `pass`.** All tests must pass first.
 7. **Verify against the contracts at every `verify` and `close`.** The contract wins over a layer's reading of it.
 8. **Only the lead touches the ledger and `03-contracts.md`.** Layer agents never read or write `ledger/` files; constraints flow to them through the contracts only.

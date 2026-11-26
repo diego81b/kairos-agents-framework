@@ -67,7 +67,7 @@ If `00-context.md` found: load it and attach its Context body section to every s
 
 If `00b-impact.md` found: load its frontmatter facts. Step 0e derives the pipeline from them and does not re-run the impact assessment.
 
-If `00c-bug-triage.md` found: load it and attach its Reproduction, Root Cause, and Evidence sections to every subagent prompt, together with its `severity` and `recommended_entry` fields. Triage has already run for this input, so Step 0e's Bug-Input Check does not fire. Attaching it is what stops each later phase re-deriving a cause a human has already approved — the `simple_fix` path is not the only consumer, a `full-pipeline` triage is exactly the case where pm-agent, architect-agent, and the implementer all need it.
+If `00c-bug-triage.md` found: load it and attach its Reproduction, Root Cause, and Evidence sections to every subagent prompt, together with its `severity` and `recommended_entry` fields. Triage has already run for this input, so Step 0e's Bug-Input Check does not fire. Attaching it stops each later phase re-deriving a cause a human has already approved.
 
 If `.kairos/_lessons.md` found: load it and attach **only** its `## Recurring Patterns` section to every subagent prompt — never the `## Feature Log` below it. `Recurring Patterns` is a small, capped (≤10 rows), curated table maintained exclusively by `improvement-advisor-agent`; `Feature Log` is an unbounded per-feature append log that would grow every prompt's size indefinitely if injected wholesale. This file lives at the project root (`.kairos/_lessons.md`), not inside any `<feature_folder>` — it is shared across every feature run in this project.
 
@@ -246,26 +246,26 @@ The Selection Rules below apply only inside the selected areas, and a decision p
   Each file is a `test` when its path matches the test-suite check's patterns (`*.test.*`, `*.spec.*`, `*_test.go`, `test_*.py`, `*Tests.cs`), and code otherwise. Pass the list in every invocation prompt as `Files to review (git diff against origin/<base>, no implementation record)`; the agents accept pasted paths in place of `03-implementation.md`. Print its size at the Start Gate (`Change surface: 7 files, 2 tests, git diff against origin/main`). An empty diff means there is nothing to review: say so, and stop that area before it starts.
 - **`delivery` without `review`**: nothing reads the review artifacts. The rows that read `05-test-verification.md` count as unknown and run their agent (the unknown-fact rule).
 
-**Bug-Input Check** (runs before the derivation below). Read the input you were given — the prompt, plus the issue body from Step 0d when there is one — and classify it. It reads as a **bug report** when it describes observed wrong behaviour against an expectation: a symptom plus what should have happened, a stack trace, an error message, reproduction steps, or "this used to work". A feature request describes something that does not exist yet.
+**Bug-Input Check** (runs before the derivation below). Read the input you were given — the prompt, plus the issue body from Step 0d when there is one — and classify it. It reads as a **bug report** when it describes observed wrong behaviour against an expectation: a symptom plus what should have happened, a stack trace, an error message, reproduction steps, or "this used to work". A feature request describes something that does not exist yet. The input's metadata line may carry a `Cause` or `Causa` field, separated by `·` (bold markers ignored). Only its value counts: `known` or `nota` means known, anything else or no field means unknown. Known makes **Continue without it** the recommended option below; the question is asked either way.
 
 If it reads as a bug report AND `.kairos/$feature_folder/00c-bug-triage.md` does not exist, offer triage once. If `AskUserQuestion` is available (Claude Code), call it — do not also print a typed menu:
 - `question`: `"This reads as a bug report and no triage has run for it. Run bug-triage-agent first?"`
 - `header`: `"Triage"`
-- `options` (exactly these 2, in this order):
-  - **Run triage first** `(Recommended)` — `bug-triage-agent` reproduces the defect, isolates the root cause with evidence, and says whether the fix is contained or structural, which then sets the effort the pipeline is derived from.
+- `options` (exactly these 2, in this order; `(Recommended)` goes on the first, or on the second when the cause is known):
+  - **Run triage first** — `bug-triage-agent` reproduces the defect, isolates the root cause with evidence, and says whether the fix is contained or structural, which then sets the effort the pipeline is derived from.
   - **Continue without it** — go straight to the derivation below.
 
 If `AskUserQuestion` is not available, print the same two options as a menu and wait for a typed reply.
 
-This one stays a question because the classification is read from prose, not from a fact, and a wrong guess costs a full reproduction run. In a run with `agent_decisions: ask`, print the **Before the first agent question** block (Deciding agent by agent, below) first, so this question reads as the first step of a sequence and not as the whole pipeline.
+This stays a question: the classification is read from prose, and a wrong guess costs a full reproduction run. In a run with `agent_decisions: ask`, print the **Before the first agent question** block (Deciding agent by agent, below) first, so this reads as the first step, not the whole pipeline.
 
 On **Run triage first**: invoke @kairos:bug-triage-agent (applying **Model override** under Calling Subagents first) with `mode: orchestrated` stated verbatim in the invocation prompt, alongside the bug report, the `feature_folder`, and whatever Step 0a loaded. In that mode it runs its normal process, writes `.kairos/$feature_folder/00c-bug-triage.md` itself, and returns **without** running a gate of its own — that gate is yours, and presenting it is not optional. When it returns, first check that it produced something: if it emitted an `🚨 AGENT ERROR` (its Input Validation asks for the expected behaviour when the report omits it, and in this mode it cannot ask), or `.kairos/$feature_folder/00c-bug-triage.md` does not exist on disk, do **not** stop the run — relay the error verbatim and offer the same two options again: supply what it asked for and re-dispatch with the same `mode: orchestrated`, or continue without triage. Otherwise present it through the normal HITL sequence in the HITL section, exactly as you would a phase artifact. Then:
 - `Approve` → attach the artifact to every later subagent prompt as Step 0a would have, print `💡 Triage: <severity> — recommended entry <recommended_entry>`, and continue. `recommended_entry` feeds Effort Resolution below; `not-a-defect` means there is nothing to build — say so and stop the run instead of deriving anything.
-- `Skip next` → not meaningful at this gate, there is no next phase to skip yet. Treat it as `Approve`.
+- `Skip next` → treat as `Approve`.
 - `Request changes` → re-invoke the same agent with the feedback and the same `mode: orchestrated`, then re-present. Same loop as any other change request.
 - `Stop pipeline` → stop here. The artifact stays on disk, and a later run picks it up at Step 0a.
 
-On **Continue without it**: continue unchanged. Do not ask again later in the run — a human who declines triage gets the normal flow, and the offer has done its job by being made at the one moment the entry point is chosen.
+On **Continue without it**: continue unchanged, and do not ask again later in the run.
 
 **Checklist path** (only when Step 0d set `template_kind = checklist`). A checklist is a selection a human already confirmed and saved, so it wins over the derivation. If `00b-impact.md` was loaded in Step 0a, print its `## Summary` block first as context. Then show the checklist:
 
