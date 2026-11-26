@@ -6,6 +6,18 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v9.9.0 — November 26, 2026
+
+### Added
+
+- **`skills/issue-text/SKILL.md`** — new §5: every finding the human **Defers** at a gate gets an entry in `.kairos/<feature_folder>/_findings.md`, written for someone who never saw the pipeline and shaped as a SMART issue (problem, reproduction from the artifacts only, why it matters, one proposed fix, a pass-or-fail `Done when`, the evidence behind it and whether it was run or only read, the technical trace last; no date and no estimate). Before, "track it outside the run" had no format, so the issue text came out in ledger ids and `file:line`, hard to show to a customer or to argue against.
+
+### Changed
+
+- **`agents/orchestrator-agent.md`** (and both mirrors) — **Defer** now means "tracked as an issue": it still writes the `⚠ deferred` row and also appends the entry above. KAIROS writes the text only and never files it on the tracker. After a gate that deferred a row it prints one line with the file's path. The file is 54 bytes smaller than in v9.8.2 (two restating sentences were cut to make room).
+- **`skills/orchestrator-closeout/SKILL.md`** — the end-of-run summary tells the person what to do with `_findings.md` (check the evidence, paste each entry as one issue, what to show a customer), the same block is printed on **Stop pipeline**, `## Accepted Risks` rows in `_tracking.md` point to the entry, and the cleanup never deletes it.
+- **`docs/workflow.md`** — documents the Defer behaviour and the file.
+
 ## v9.8.2 — November 24, 2026
 
 ### Changed
