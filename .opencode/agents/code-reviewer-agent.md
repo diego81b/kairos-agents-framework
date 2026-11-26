@@ -144,6 +144,9 @@ Apply [`coding-discipline`](../skills/coding-discipline/SKILL.md) — this check
 - Complexity proportional to what the requirement actually needs?
 - New abstraction justified by ≥2 real use cases, not a speculative "might need it later"?
 - No dead code, unused config options, or unreachable branches?
+- Plain code (`coding-discipline` principle 7)? No clever or dense constructs, no wrapper that only forwards, no boilerplate that the framework or an existing helper already covers, no interface or factory with one implementation?
+- Is a flow split into many small methods the reader must jump between, or does the diff refactor code the requirement did not ask to touch? Either is an Issues row.
+- Comments within `coding-discipline` principle 6? A comment that restates the code, cites an issue, a document or a KAIROS ID, or explains a unit test is an Issues row, one per file and not per comment: `medium` when it cites an issue, a document or a KAIROS ID, `low` otherwise. The fix is to delete it.
 - Simpler design exists that would satisfy the same constraints?
 - Does this diff push a file past a healthy size (~1000 total lines) without decomposing it first? A small diff can still do this even when the change itself looks contained.
 

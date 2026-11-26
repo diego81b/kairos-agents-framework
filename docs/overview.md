@@ -53,7 +53,7 @@ Each subagent:
 | 4 | **Code Reviewer** | Standards, security, performance, contract compliance | `04-review.md` |
 | 4b | **Security Reviewer** _(optional)_ | Adversarial security pass — IDOR, auth, injection, secrets, data exposure | `04b-security-review.md` |
 | 5 | **Test Verifier** | Coverage reported (threshold only if declared), over-testing, assertion quality | `05-test-verification.md` |
-| 5b | **QA Plan Agent** *(optional)* | Manual & exploratory cases, regression retest list, test data/environment, UAT sign-off | `05b-qa-plan.md` |
+| 5b | **QA Plan Agent** *(optional)* | Manual & exploratory cases, regression retest list, preparation needs, UAT sign-off | `05b-qa-plan.md` |
 | 6 | **Release Planner** | Deployment steps, rollback strategy, monitoring thresholds | `06-deployment-plan.md` |
 | 6b | **Documentation Agent** _(optional)_ | Feature-facing docs in the target project — README, API reference, CHANGELOG | `06b-documentation.md` |
 

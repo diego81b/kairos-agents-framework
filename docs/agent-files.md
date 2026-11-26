@@ -157,7 +157,7 @@ Test quality verification — coverage, assertion quality, edge-case coverage.
 
 ## QA Plan Agent
 
-Manual and exploratory verification planning — what the automated suite cannot cover, regression retest selection, test data and environment, UAT sign-off. Never sends a tester to the developer's tools. Writes the comment and, above three checks or for an epic, the file the Orchestrator delivers after you approve the plan.
+Manual and exploratory verification planning — what the automated suite cannot cover, regression retest selection, preparation needs, UAT sign-off. Never sends a tester to the developer's tools. Writes the comment and, above three checks or for an epic, the file the Orchestrator delivers after you approve the plan.
 
 <<< @/agents/qa-plan-agent.md{md}
 

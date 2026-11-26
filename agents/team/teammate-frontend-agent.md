@@ -35,7 +35,7 @@ Read from `.kairos/<feature_folder>/`:
 
 ## Your Process
 
-Work through [`coding-discipline`](../../skills/coding-discipline/SKILL.md) before writing any component code.
+Work through [`coding-discipline`](../../skills/coding-discipline/SKILL.md) before writing any component code. Before you return, delete the comments in your own diff that principle 6 rules out, and check the code against principle 7.
 
 For EACH ui_component:
 

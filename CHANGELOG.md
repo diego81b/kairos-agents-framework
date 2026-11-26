@@ -6,6 +6,26 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v9.10.0 — November 26, 2026
+
+### Added
+
+- **`agents/qa-plan-agent.md`** — every manual case carries a `Who` cell: `QA` when a tester alone can stage and check it, `QA + prep` when a developer prepares a state first. A `## Preparation` section ahead of the cases says whether a preparation phase exists or the cases are steps only (`none, the cases are steps only`). Regression retests get their own `## Regression Retests` section (`RT1..RT3`).
+- **`agents/test-verifier-agent.md`** — each `## Uncovered` row has a `Route`: `QA`, `QA + prep`, `Dev` or `—`. A `Dev` row a named test could close also becomes an `## Issues` row (category `coverage`, `medium`, at most 3), so it reaches the review gate and the fix pass instead of a tester.
+
+### Changed
+
+- **`agents/qa-plan-agent.md`** (mirrored) — the plan was long and slow because the same content was written three or four times. The tester's sections now sit together between `## Core` and `## Coverage Complement`, and `_qa-file.md` and `_qa-comment.md` are copied from the plan by command, not retyped. Evidence and constraint IDs live on the gate side (`Handled by` column in the complement, Cross-Environment Verification moved there). The agent gets `Edit` and corrects with edits, never a rewrite. `effort: medium` in the Claude Code frontmatter (the OpenCode and Kimi Code mirrors omit it). The file is 127 bytes smaller than in v9.9.1.
+- **`agents/orchestrator-agent.md`** (mirrored) — the `qa-plan-agent` row fires on an `## Uncovered` row routed `QA` or `QA + prep` (untagged counts), so a change whose only gaps are `Dev` ones skips the QA plan. The file is 14 bytes larger than in v9.9.0 (two phrases of the same row shortened).
+- **`skills/artifact-template/SKILL.md`**, **`docs/agents.md`**, **`docs/workflow.md`**, **`docs/overview.md`**, **`docs/agent-files.md`**, **`docs/setup/claude-code.md`** — the new section names, the `Who` cell, the routing and the one `effort:` exception.
+- **`skills/coding-discipline/SKILL.md`** — principle 6 now bans what-comments, doc blocks that repeat the signature, references to issues, documents or KAIROS IDs, banners and commented-out code, and says a unit test carries no explanatory comment (one line only for a non-obvious WHY). New principle 7: plain code, SOLID as judgement and not as a template, no boilerplate, no fragmenting a readable function into small methods, fit the project. Principle 1 now says a refactor needs a named requirement and the REFACTOR step never touches code outside the diff.
+- **`skills/code-simplification/SKILL.md`** — splitting a function needs a responsibility seam, not length, and duplication needs 3+ copies or one rule that changes together. Fragmenting is listed as an over-simplification.
+- **`agents/implementer-tdd-agent.md`, `agents/implementer-coder-agent.md`** — the REFACTOR step strips every comment principle 6 rules out (the coder had no such step), extracts functions and removes duplication only within principle 7, and optimizes only where a requirement or measurement asks. Mirrored in `.opencode/agents/` and `.kimi-code/agents/`.
+- **`agents/code-reviewer-agent.md`** — check 8 grades plain code, fragmentation, unrequested refactoring and comments; comment rows are one per file, `medium` when they cite an issue, a document or a KAIROS ID. Mirrored.
+- **`agents/team/teammate-*-agent.md`** — each layer agent deletes the comments of its own diff that principle 6 rules out and checks the code against principle 7 before it returns.
+
+---
+
 ## v9.9.0 — November 26, 2026
 
 ### Added
