@@ -141,4 +141,4 @@ Netlify, only from a version tag: `.github/workflows/deploy-docs.yml` POSTs the 
 
 ## Compatibility
 
-kairos-cli (the v10 runner, separate repo) implements the deterministic rules in code and pins a tagged KAIROS commit; its docs need aligning after each tag. Nothing there is edited from here.
+kairos-cli (the runner, separate repo with its own version line, independent of KAIROS's) implements the deterministic rules in code and pins a tagged KAIROS commit; its docs need aligning after each tag. Nothing there is edited from here.

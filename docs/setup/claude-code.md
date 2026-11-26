@@ -326,7 +326,7 @@ Contract mismatches found while the lead writes the contracts appear as rows in 
 | --- | --- |
 | **Claude Code plugin** | Yes. The Orchestrator coordinates the stages above. |
 | OpenCode, Kimi Code, Cursor, VS Code, JetBrains, Codex | Not offered. The `team/` agents are not mirrored there, and the Orchestrator offers the mode only on Claude Code. Use the single implementer. |
-| **kairos-cli** (the v10 runner, a separate project) | Not part of this repository, and Layered Mode there is a separate decision. A runner schedules waves natively, so it needs no Agent Teams: the same stages (contracts first, RED before GREEN, parallel GREEN per layer, one verify) are what its dispatcher would run. |
+| **kairos-cli** (the runner, a separate project with its own version line) | Not part of this repository, and Layered Mode there is a separate decision. A runner schedules waves natively, so it needs no Agent Teams: the same stages (contracts first, RED before GREEN, parallel GREEN per layer, one verify) are what its dispatcher would run. |
 
 ---
 
