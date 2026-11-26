@@ -14,8 +14,8 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ### Changed
 
-- **`agents/orchestrator-agent.md`** (and both mirrors) — **Defer** now means "tracked as an issue": it still writes the `⚠ deferred` row and also appends the entry above. KAIROS writes the text only and never files it on the tracker. The file is 17 bytes smaller.
-- **`skills/orchestrator-closeout/SKILL.md`** — the end-of-run summary tells the person what to do with `_findings.md` (check the evidence, paste each entry as one issue, what to show a customer), and the cleanup never deletes it.
+- **`agents/orchestrator-agent.md`** (and both mirrors) — **Defer** now means "tracked as an issue": it still writes the `⚠ deferred` row and also appends the entry above. KAIROS writes the text only and never files it on the tracker. After a gate that deferred a row it prints one line with the file's path. The file is 54 bytes smaller than in v9.8.2 (two restating sentences were cut to make room).
+- **`skills/orchestrator-closeout/SKILL.md`** — the end-of-run summary tells the person what to do with `_findings.md` (check the evidence, paste each entry as one issue, what to show a customer), the same block is printed on **Stop pipeline**, `## Accepted Risks` rows in `_tracking.md` point to the entry, and the cleanup never deletes it.
 - **`docs/workflow.md`** — documents the Defer behaviour and the file.
 
 ## v9.8.2 — November 24, 2026

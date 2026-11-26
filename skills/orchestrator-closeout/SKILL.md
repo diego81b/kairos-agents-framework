@@ -23,7 +23,7 @@ a. **Finalize** — read the actual files back off disk (never from chat memory 
    <every row of ledger/constraints.md still `🔴 open`, copied verbatim — omit this section if none remain. It is empty by construction when release-planner-agent ran; on a run without it, this is the only place an unmet `MUST` or `BLOCKING` row surfaces>
 
    ## Accepted Risks
-   <every deferred row from ledger/open-questions.md (`⚠ deferred`, or an older `🔴 open` row marked `deferred risk`/`deferred contract mismatch`), copied verbatim — risks the human chose to ship with. Omit this section if none>
+   <every deferred row from ledger/open-questions.md (`⚠ deferred`, or an older `🔴 open` row marked `deferred risk`/`deferred contract mismatch`), copied verbatim — risks the human chose to ship with. When `_findings.md` holds an entry for the row, end the row with `→ _findings.md: <the entry's title>`, added again whenever a later event rewrites the section. Omit this section if none>
 
    ```
 
@@ -33,7 +33,7 @@ a. **Finalize** — read the actual files back off disk (never from chat memory 
 
 b. **Present** — show a 3-5 line summary (same format as step 9). The file is already open in the editor from Step 0f; do not open it again.
 
-   **Deferred findings.** When `.kairos/$feature_folder/_findings.md` exists, add this block after the summary, naming the real path and the number of entries:
+   **Deferred findings.** When `.kairos/$feature_folder/_findings.md` exists, add this block after the summary, naming the real path and the number of entries. Print it on **Stop pipeline** too, where it is the only place the run says the file is there (the rest of Step 10 does not run then):
    ```
    N finding(s) were deferred and are written as issue text in <path>. What to do with them:
    1. Read each entry and check its Evidence still holds. It says whether it was run or only read.

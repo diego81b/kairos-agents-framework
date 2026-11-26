@@ -109,4 +109,5 @@ Rules:
 - **No time, no estimate.** No date, deadline, release target or effort in any entry: they would be guesses. The tracker's own fields carry owner and schedule, set by a person.
 - **Impact in words.** `serious` or `moderate`, never `high` or `medium`.
 - No `Size:`, `Effort:` or `Epic:` line, and the language and heading rules are §4's.
+- Where the person is told: one line after the batch that deferred it (`Finding written as issue text: <path>`), the end-of-run summary and a `Stop pipeline` (both in `orchestrator-closeout`), and the row's line in `_tracking.md`'s `## Accepted Risks`, which ends with `→ _findings.md: <title>`.
 - An entry is written when the row is deferred. A row the human later reopens leaves its entry in place and the orchestrator notes that in the log.
