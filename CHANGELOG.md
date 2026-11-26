@@ -6,6 +6,17 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
+## v10.0.0 — November 26, 2026
+
+KAIROS takes the 10.x line. No agent, skill, command or setting changes behaviour in this release: the number opens a line that later breaking changes can land on, and it separates KAIROS's version from the `kairos-cli` runner's, which keeps its own.
+
+### Changed
+
+- **`CLAUDE.md`** — cut from 141k to 30k characters so the three instruction files stay under Claude Code's 150k-character limit. The per-release rationale, rejected alternatives and "not measured" notes moved to `internal/design-history.md` (gitignored, maintainer machine only); the operative rules stay, condensed by theme (phase rules, derivation and gates, settings, artifacts and ledger, Layered Mode).
+- **`CLAUDE.md`**, **`docs/setup/claude-code.md`** — `kairos-cli` is no longer called "the v10 runner"; it is a separate project with its own version line.
+
+---
+
 ## v9.10.0 — November 26, 2026
 
 ### Added
