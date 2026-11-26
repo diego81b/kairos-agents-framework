@@ -33,6 +33,15 @@ a. **Finalize** — read the actual files back off disk (never from chat memory 
 
 b. **Present** — show a 3-5 line summary (same format as step 9). The file is already open in the editor from Step 0f; do not open it again.
 
+   **Deferred findings.** When `.kairos/$feature_folder/_findings.md` exists, add this block after the summary, naming the real path and the number of entries:
+   ```
+   N finding(s) were deferred and are written as issue text in <path>. What to do with them:
+   1. Read each entry. Fix by and Owner are proposals: set the owner, and change the event if you know a date.
+   2. One entry is one issue: paste it into the tracker as it stands. An entry you do not want to track, delete.
+   3. To show a customer, send Problem, Why it matters and Fix by. Reproduce, Done when and the developer line are for the team.
+   KAIROS files nothing for you and never reads this file back.
+   ```
+
 c. **Cleanup gate** — a separate prompt, only after (b). Before asking, check two things and use them to pick the recommended option:
    - `ls ".kairos/$feature_folder/07-retrospective.md" 2>/dev/null` — if absent, `retrospective-agent` has not run for this feature yet and still needs these files as its own input.
    - Whether any question or constraint is still open — the rows just copied into Open Questions and Open Constraints. Deferred risks do not count: nobody is going to answer them, and counting them would recommend keeping everything forever.

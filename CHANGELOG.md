@@ -10,12 +10,12 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ### Added
 
-- **`skills/issue-text/SKILL.md`** — new §5: every finding the human **Defers** at a gate gets an entry in `.kairos/<feature_folder>/_findings.md`, written for someone who never saw the pipeline (what happens, why it matters to the customer, two or three options with their cost, the technical trace last). Before, "track it outside the run" had no format, so the issue text came out in ledger ids and `file:line`, hard to show to a customer or to argue against.
+- **`skills/issue-text/SKILL.md`** — new §5: every finding the human **Defers** at a gate gets an entry in `.kairos/<feature_folder>/_findings.md`, written for someone who never saw the pipeline and shaped as a SMART issue (problem, reproduction from the artifacts only, why it matters, one proposed fix, a pass-or-fail `Done when`, a `Fix by` event, an owner to assign, the technical trace last). Before, "track it outside the run" had no format, so the issue text came out in ledger ids and `file:line`, hard to show to a customer or to argue against.
 
 ### Changed
 
 - **`agents/orchestrator-agent.md`** (and both mirrors) — **Defer** now means "tracked as an issue": it still writes the `⚠ deferred` row and also appends the entry above. KAIROS writes the text only and never files it on the tracker. The file is 17 bytes smaller.
-- **`skills/orchestrator-closeout/SKILL.md`** — the cleanup never deletes `_findings.md`.
+- **`skills/orchestrator-closeout/SKILL.md`** — the end-of-run summary tells the person what to do with `_findings.md` (set the owner, paste each entry as one issue, what to show a customer), and the cleanup never deletes it.
 - **`docs/workflow.md`** — documents the Defer behaviour and the file.
 
 ## v9.8.2 — November 24, 2026

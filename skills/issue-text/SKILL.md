@@ -71,23 +71,43 @@ Rules for each part:
 
 ## 5. Deferred findings: `_findings.md`
 
-A finding the human **Defers** at a gate is tracked outside the run, and "outside" means a separate issue. The orchestrator, the one agent that knows the disposition, appends one entry per Deferred row to `.kairos/<feature_folder>/_findings.md`, creating the file on the first one. It is text for a person to paste into a tracker or to show a customer: nothing in KAIROS files it or reads it back. Premise rows never reach it (Defer is not offered on them). Written for a reader who never saw the pipeline and may have to argue with the choice, so it holds no ledger id, no phase name and no artifact path as a sentence.
+A finding the human **Defers** at a gate is tracked outside the run, and "outside" means a separate issue. The orchestrator, the one agent that knows the disposition, appends one entry per Deferred row to `.kairos/<feature_folder>/_findings.md`, creating the file on the first one with the line `# Findings found while building: <the feature>`. It is text for a person to paste into a tracker or to show a customer: nothing in KAIROS files it or reads it back. Premise rows never reach it (Defer is not offered on them). The reader never saw the pipeline and may have to argue with the choice, so an entry holds no ledger id, no phase name and no artifact path outside its last line.
+
+Each entry is a SMART issue, one per finding, short enough to read in a minute:
+
+- **Specific:** one finding, one fix. A row whose fix touches unrelated places is written as several entries.
+- **Measurable:** a `Done when` that anyone can check as pass or fail.
+- **Achievable:** the proposed fix is the smallest change that closes the finding and fits one issue. No estimate in hours or days (§4).
+- **Relevant:** a `Why it matters` that names who is hit and what it costs.
+- **Time-bound:** a `Fix by` that names an event, never an invented date.
 
 ````markdown
-## <Title: what a user notices or what is at risk, in product words, under about 70 characters>
+## <Title: the problem in product words, under about 70 characters>
 
-**What happens:** <one or two sentences: what a user or the system does wrong today, and when it shows up>
+**Problem:** <one or two sentences: what happens, and what should happen instead>
 
-**Why it matters:** <the consequence for the customer or the business, concrete: who is hit, how often if known, what it costs. Say plainly if nobody is hit yet>
+**How to reproduce**
+1. <a step a person does in the product>
+2. <...>
+Result today: <what they see>. Expected: <what they should see>.
 
-**Found while:** <the feature or issue being built, and why this was not fixed in it>
+**Why it matters:** <who is hit, how often if known, what it costs. Say plainly when nobody is hit yet>
 
-**Options**
-- <recommended option first, marked "(recommended)"> — <what it changes and what it costs>
-- <second option> — <consequence>
-- Leave it as it is — <what keeps happening>
+**Proposed fix:** <the one change that closes it, in a sentence>. If left as it is: <what keeps happening>.
 
-**For the developer:** <`file:line`, the row id (`R3`) and the fix the review proposed, kept to a few lines>
+**Done when:** <one to three checks, pass or fail: the reproduction above gives the expected result, plus any behaviour the fix must not change>
+
+**Fix by:** <an event: `before this feature ships` for a serious row, `in the next release` for a moderate one, `at the next backlog review` for a minor one. A proposal: the owner confirms or changes it>
+
+**Owner:** to be assigned
+
+**For the developer:** <`file:line`, the row id (`R3`) and the reviewer's own fix text, a few lines>
 ````
 
-Rules: the three options are written even when the row's `Mitigation/Fix` holds only one; the second is the cheaper or smaller fix, and `Leave it as it is` is always the last. The Impact of the row is said in words (`serious`, `moderate`), never as `high` or `medium`. No `Size:`, `Effort:` or `Epic:` line and no hours, as in §4. Language and heading rules are §4's. An entry is written when the row is deferred, so a row the human later reopens leaves its entry in place and the orchestrator notes that in the log.
+Rules:
+
+- **Reproduce only what the artifacts show.** Steps come from the row's evidence: a test that fails, a trace the reviewer walked, a case the QA plan wrote. Never invent steps. When the finding was seen only by reading code, write `Not run: seen in code review. To check: <what to try>` in place of the steps and keep `Result today` and `Expected` as what the code does and should do.
+- **No ledger id as a sentence.** `Why it matters` and `Problem` use product words; ids appear only in the last line.
+- **Impact in words.** `serious` or `moderate`, never `high` or `medium`.
+- No `Size:`, `Effort:` or `Epic:` line, and the language and heading rules are §4's.
+- An entry is written when the row is deferred. A row the human later reopens leaves its entry in place and the orchestrator notes that in the log.
