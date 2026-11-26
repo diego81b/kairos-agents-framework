@@ -1,5 +1,5 @@
 ---
-description: Reference for pm-agent and architect-agent on how the _issues.md file is laid out when no development follows. Not a way to file issues.
+description: Reference for the layout of _issues.md (pm-agent, architect-agent, when no development follows) and of _findings.md (orchestrator, one entry per Deferred finding). Not a way to file issues.
 ---
 
 # Issue Text
@@ -68,3 +68,26 @@ Rules for each part:
 - No `Size:`, `Effort:`, `Areas:`, `Skip:` or `Epic:` line, in any issue. Each issue's own run measures size and effort, and the author has no second source for them. The epic does not exist when the text is written.
 - No estimate in hours or days.
 - The Summary's `What:` line of the author's artifact names the path of `_issues.md` and the number of issues, so the gate shows it.
+
+## 5. Deferred findings: `_findings.md`
+
+A finding the human **Defers** at a gate is tracked outside the run, and "outside" means a separate issue. The orchestrator, the one agent that knows the disposition, appends one entry per Deferred row to `.kairos/<feature_folder>/_findings.md`, creating the file on the first one. It is text for a person to paste into a tracker or to show a customer: nothing in KAIROS files it or reads it back. Premise rows never reach it (Defer is not offered on them). Written for a reader who never saw the pipeline and may have to argue with the choice, so it holds no ledger id, no phase name and no artifact path as a sentence.
+
+````markdown
+## <Title: what a user notices or what is at risk, in product words, under about 70 characters>
+
+**What happens:** <one or two sentences: what a user or the system does wrong today, and when it shows up>
+
+**Why it matters:** <the consequence for the customer or the business, concrete: who is hit, how often if known, what it costs. Say plainly if nobody is hit yet>
+
+**Found while:** <the feature or issue being built, and why this was not fixed in it>
+
+**Options**
+- <recommended option first, marked "(recommended)"> — <what it changes and what it costs>
+- <second option> — <consequence>
+- Leave it as it is — <what keeps happening>
+
+**For the developer:** <`file:line`, the row id (`R3`) and the fix the review proposed, kept to a few lines>
+````
+
+Rules: the three options are written even when the row's `Mitigation/Fix` holds only one; the second is the cheaper or smaller fix, and `Leave it as it is` is always the last. The Impact of the row is said in words (`serious`, `moderate`), never as `high` or `medium`. No `Size:`, `Effort:` or `Epic:` line and no hours, as in §4. Language and heading rules are §4's. An entry is written when the row is deferred, so a row the human later reopens leaves its entry in place and the orchestrator notes that in the log.
