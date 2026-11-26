@@ -36,9 +36,10 @@ b. **Present** — show a 3-5 line summary (same format as step 9). The file is 
    **Deferred findings.** When `.kairos/$feature_folder/_findings.md` exists, add this block after the summary, naming the real path and the number of entries:
    ```
    N finding(s) were deferred and are written as issue text in <path>. What to do with them:
-   1. Read each entry. Fix by and Owner are proposals: set the owner, and change the event if you know a date.
+   1. Read each entry and check its Evidence still holds. It says whether it was run or only read.
    2. One entry is one issue: paste it into the tracker as it stands. An entry you do not want to track, delete.
-   3. To show a customer, send Problem, Why it matters and Fix by. Reproduce, Done when and the developer line are for the team.
+   3. To show a customer, send Problem, Why it matters and Proposed fix. Reproduce, Evidence, Done when and the developer line are for the team.
+   4. Owner and schedule are yours to set in the tracker: the entries carry no date and no estimate.
    KAIROS files nothing for you and never reads this file back.
    ```
 
