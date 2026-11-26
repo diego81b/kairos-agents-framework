@@ -23,7 +23,7 @@ a. **Finalize** — read the actual files back off disk (never from chat memory 
    <every row of ledger/constraints.md still `🔴 open`, copied verbatim — omit this section if none remain. It is empty by construction when release-planner-agent ran; on a run without it, this is the only place an unmet `MUST` or `BLOCKING` row surfaces>
 
    ## Accepted Risks
-   <every deferred row from ledger/open-questions.md (`⚠ deferred`, or an older `🔴 open` row marked `deferred risk`/`deferred contract mismatch`), copied verbatim — risks the human chose to ship with. Omit this section if none>
+   <every deferred row from ledger/open-questions.md (`⚠ deferred`, or an older `🔴 open` row marked `deferred risk`/`deferred contract mismatch`), copied verbatim — risks the human chose to ship with. When `_findings.md` holds an entry for the row, end the row with `→ _findings.md: <the entry's title>`, added again whenever a later event rewrites the section. Omit this section if none>
 
    ```
 
@@ -33,10 +33,20 @@ a. **Finalize** — read the actual files back off disk (never from chat memory 
 
 b. **Present** — show a 3-5 line summary (same format as step 9). The file is already open in the editor from Step 0f; do not open it again.
 
+   **Deferred findings.** When `.kairos/$feature_folder/_findings.md` exists, add this block after the summary, naming the real path and the number of entries. Print it on **Stop pipeline** too, where it is the only place the run says the file is there (the rest of Step 10 does not run then):
+   ```
+   N finding(s) were deferred and are written as issue text in <path>. What to do with them:
+   1. Read each entry and check its Evidence still holds. It says whether it was run or only read.
+   2. One entry is one issue: paste it into the tracker as it stands. An entry you do not want to track, delete.
+   3. To show a customer, send Problem, Why it matters and Proposed fix. Reproduce, Evidence, Done when and the developer line are for the team.
+   4. Owner and schedule are yours to set in the tracker: the entries carry no date and no estimate.
+   KAIROS files nothing for you and never reads this file back.
+   ```
+
 c. **Cleanup gate** — a separate prompt, only after (b). Before asking, check two things and use them to pick the recommended option:
    - `ls ".kairos/$feature_folder/07-retrospective.md" 2>/dev/null` — if absent, `retrospective-agent` has not run for this feature yet and still needs these files as its own input.
    - Whether any question or constraint is still open — the rows just copied into Open Questions and Open Constraints. Deferred risks do not count: nobody is going to answer them, and counting them would recommend keeping everything forever.
-   - List the exact files a cleanup would remove: every `.md` file directly in `.kairos/$feature_folder/` except `_tracking.md`, `_usage.md`, `_issues.md` (the deliverable of an analysis-only run), `_recap.md` (a pre-v8.5.0 folder's) and `07-retrospective.md` — this includes any `-iter{N}` / `-recheck` variant the review loop and fix passes wrote, not just the base 00–06b names. `07-retrospective.md` is excluded for the same reason as `ledger/`: nothing folds its content forward, so deleting it on the very run where it's most likely to exist (Delete is only recommended once retrospective already ran) would destroy it outright. Never delete `ledger/` under any option, and never construct the `rm` from a glob — pass the exact listed paths.
+   - List the exact files a cleanup would remove: every `.md` file directly in `.kairos/$feature_folder/` except `_tracking.md`, `_usage.md`, `_issues.md` (the deliverable of an analysis-only run), `_findings.md` (the Deferred findings' issue text), `_recap.md` (a pre-v8.5.0 folder's) and `07-retrospective.md` — this includes any `-iter{N}` / `-recheck` variant the review loop and fix passes wrote, not just the base 00–06b names. `07-retrospective.md` is excluded for the same reason as `ledger/`: nothing folds its content forward, so deleting it on the very run where it's most likely to exist (Delete is only recommended once retrospective already ran) would destroy it outright. Never delete `ledger/` under any option, and never construct the `rm` from a glob — pass the exact listed paths.
 
    If `AskUserQuestion` is available:
    - `question`: `"Tracking file finalized. Delete the <N> intermediate phase file(s) it now summarizes?"`
