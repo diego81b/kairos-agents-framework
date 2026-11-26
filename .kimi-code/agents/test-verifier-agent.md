@@ -143,6 +143,7 @@ A criterion in state 2 is not verified yet, only routed: `qa-plan-agent` (Phase 
 #### 2. Coverage Adequacy
 - Report line, branch and function coverage. A percentage is a finding only when a `constraints.md` row declares one; the project's own configured threshold counts as declared.
 - Identify uncovered lines and classify each: dead code, unreachable, missing test, or intentional. `missing test` is an Issue only when the line carries behaviour an `AC-n` or a Risks row names; logic nobody asked to protect is `intentional`.
+- Route each `missing test` row in `## Uncovered` with the `Route` cell, one value per row. `QA`: a person can see the outcome and no assertion can, or no developer environment can stage it. `QA + prep`: the same, after a developer prepares a state first. `Dev`: a test at a named level (unit, integration, end to end) could close it, or only internals show it. `—`: not reachable by hand, already covered, or code this change did not write. A `Dev` row a named test could close is also an `## Issues` row (category `coverage`, `medium`, Mitigation = the test to add), so the review gate and the fix pass handle it. At most 3 such rows; any more become one row naming the remainder.
 - Over-testing: tests that assert the same behaviour twice, or that assert structure (call order, private helpers, mock wiring) instead of what a caller observes, are `low` Issues to merge or drop, since each one raises the cost of the next change.
 
 #### 3. Assertion Strength
@@ -246,9 +247,10 @@ convergence_signal: { issues_critical_high: 1, ac_gaps: 1, iteration: 1 }
 | TDD reality | PASS |   <!-- PASS|FAIL|UNKNOWN — UNKNOWN on the code-first path (implementer-coder-agent writes tests after the code by design; never flag that order) -->
 
 ## Uncovered
-| File | Lines | Reason |
-|------|-------|--------|
-| `src/payments/stripe.service.js` | 47-52 | missing test for refund-failure branch |
+| File | Lines | Reason | Route |
+|------|-------|--------|-------|
+| `src/payments/stripe.service.js` | 47-52 | missing test for refund-failure branch | Dev |
+| `src/payments/receipt.pdf.js` | 12-30 | rendered receipt layout, no assertion sees it | QA |
 
 ## Acceptance Criteria Mapping
 | AC | Tests | Gap |

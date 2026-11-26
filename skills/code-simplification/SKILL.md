@@ -62,6 +62,7 @@ CLEAR: readable branches
 Over-simplification is a real failure mode. Watch for:
 
 - Inlining too aggressively — removing a helper that gave a concept a name makes the call site harder to read
+- Fragmenting — splitting a flow that reads top to bottom into small private methods the reader must jump between
 - Combining unrelated logic — two simple functions merged into one complex function is not simpler
 - Removing an abstraction that exists for extensibility or testability, not complexity
 - Optimizing for line count instead of comprehension speed
@@ -91,10 +92,10 @@ BEFORE SIMPLIFYING, ANSWER:
 | Pattern | Signal | Simplification |
 |---------|--------|----------------|
 | Deep nesting (3+ levels) | Hard to follow control flow | Extract conditions into guard clauses — e.g. `if (data === null) throw ...; if (!data.isValid()) throw ...;` instead of nested `if/else` |
-| Long functions (50+ lines) | Multiple responsibilities | Split into focused functions with descriptive names |
+| Function mixing responsibilities | Two unrelated reasons to change in one body | Split along that seam only. Length alone is never the signal: a function that reads top to bottom stays whole |
 | Nested ternaries | Requires a mental stack to parse | Replace with if/else chains, switch, or a lookup |
 | Boolean parameter flags | `doThing(true, false, true)` | Replace with an options object or separate functions |
-| Repeated conditionals | Same `if` check in multiple places | Extract to a well-named predicate function |
+| Repeated conditionals | Same `if` check in 3+ places, or one rule that must change together | Extract to a well-named predicate function |
 
 **Naming and readability:**
 
@@ -109,7 +110,7 @@ BEFORE SIMPLIFYING, ANSWER:
 
 | Pattern | Signal | Simplification |
 |---------|--------|----------------|
-| Duplicated logic | Same 5+ lines in multiple places | Extract to a shared function |
+| Duplicated logic | Same 5+ lines in 3+ places, or one rule that must change together | Extract to a shared function. Two similar copies stay as they are |
 | Dead code | Unreachable branches, unused variables | Remove, after confirming it's truly dead |
 | Unnecessary abstraction | A wrapper that adds no value | Inline it, call the underlying function directly |
 | Over-engineered pattern | Factory-for-a-factory, strategy-with-one-strategy | Replace with the direct approach |

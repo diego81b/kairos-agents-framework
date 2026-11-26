@@ -273,10 +273,10 @@ Work through [`code-simplification`](../skills/code-simplification/SKILL.md) whi
 
 Improve code — including the tests written in PHASE 1, not just the implementation from PHASE 3 — while tests still pass:
 - Better variable names
-- Extract functions
-- Remove duplication
-- Optimize performance
-- Strip any comment that narrates the KAIROS pipeline instead of a technical WHY (coding-discipline principle 6) — tests are not exempt
+- Extract a function only where [`coding-discipline`](../skills/coding-discipline/SKILL.md) principle 7 allows it, never to shorten a function that reads cleanly
+- Remove duplication only where it repeats 3+ times or one rule must change together
+- Optimize performance only where a requirement or a measured problem names it
+- Strip every comment that [`coding-discipline`](../skills/coding-discipline/SKILL.md) principle 6 rules out: what-comments, issue, document or KAIROS references, explanatory comments in tests (tests are not exempt)
 - Re-run tests after each change
 
 ### PHASE 6: Full Suite + Coverage

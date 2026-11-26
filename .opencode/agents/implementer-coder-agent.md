@@ -244,8 +244,9 @@ Carry out the approved `## Test Decision`, after the code exists — this is the
 Work through [`code-simplification`](../skills/code-simplification/SKILL.md) while doing this — it maps concrete patterns (deep nesting, long functions, duplication, unclear names) to their fix. Where tests now cover the code, re-run them after each change; where none do, apply that skill's no-test rule.
 
 Review your own output before presenting it:
-- Improve clarity (variable names, function decomposition)
-- Remove duplication
+- Improve clarity (variable names; split a function only along a responsibility seam, per [`coding-discipline`](../skills/coding-discipline/SKILL.md) principle 7)
+- Remove duplication only where it repeats 3+ times or one rule must change together
+- Strip every comment that [`coding-discipline`](../skills/coding-discipline/SKILL.md) principle 6 rules out: what-comments, issue, document or KAIROS references, explanatory comments in tests
 - Confirm all integration points from the architecture spec are addressed
 - Check for obvious runtime errors or missing edge-case handling
 
