@@ -150,16 +150,18 @@ Brief description of the implementation strategy.
 
 ## Files to Create
 
-| Path | Purpose | Exports | Est. tokens |
-|------|---------|---------|-------------|
-| src/payments/stripe.service.js | Stripe integration service | createCharge, refund | 2400 |
+| Path | Kind | Purpose | Exports | Est. tokens |
+|------|------|---------|---------|-------------|
+| src/payments/stripe.service.js | code | Stripe integration service | createCharge, refund | 2400 |
 
 ## Files to Modify
 
-| Path | Changes | Est. tokens |
-|------|---------|-------------|
-| src/payments/payment.service.test.js | extend with the refund path | 600 |
-| src/app.js | register /payments router | 100 |
+| Path | Kind | Changes | Est. tokens |
+|------|------|---------|-------------|
+| src/payments/payment.service.test.js | test | extend with the refund path | 600 |
+| src/app.js | code | register /payments router | 100 |
+
+`Kind` is `code` or `test`, the same two values as `## Files Written`; anything that is not a test file is `code`. The orchestrator counts the `code` rows at the plan gate, so a test file is never listed as `code`.
 
 ## Dependencies
 

@@ -127,4 +127,6 @@ A `Description` or a `Question` in a Disposition table, an `open-questions.md` r
 
 A generic example. Not `Q2: where does T5 live (delivery of G13 after the scope dispose)?` but `Where should the generated report be delivered once the scope is disposed: next to the source file, or in the shared exports folder? Next to the source keeps one place per project; the shared folder needs a name rule (T5, G13).` The ids stay, the question stands alone.
 
+A `Mitigation/Fix` is either one concrete action (a `file:line`, at most three files, inside the diff) or an honest question to a person with its alternatives; never a vague direction (`improve error handling`, `consider refactoring`). The orchestrator decides from that difference, and a Fix that is neither is asked, not applied.
+
 No new column carries this: a legacy ledger has to resume as it is, and a `## Ledger Update` block parses the shape §5 shows. The rule is about the text of the cell, so it reaches every table without changing one. The orchestrator checks it again at the point of asking and rewrites a row it cannot ask as written (`orchestrator-agent.md`, Risk Disposition Loop), which is a safety net for artifacts written before this section, not a reason to write the row carelessly.
