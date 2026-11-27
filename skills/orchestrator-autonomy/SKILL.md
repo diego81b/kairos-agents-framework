@@ -32,6 +32,7 @@ Read by `orchestrator-agent` only. It decides how many questions a run asks. It 
 8. Failure states: a review loop exhausted with a row or an `AC-n` gap still standing, a stalled run, a failed contract check, a failing test.
 9. A `critical` row of any agent.
 10. Rows of a category the person declared (`SECURITY`, `PRIVACY`, `COMPLIANCE`), and every row at the architecture and plan gates while `domains` hold `auth` or `db`.
+11. A `test-verifier-agent` row that names an `AC-n` with no covering test and no `VERIFICATION` row. It skips the automatic Accept of `low` rows and the `quick_fix_mode` widening too, at every dial value.
 
 Fixed checkpoints, asked even when `on_signal` would continue: the Start Gate; the implementation plan gate for `medium` and `significant_rework` (a `simple_fix` plan may continue, section 6); the closing question. No dial value lifts the floor or a checkpoint, and no value lets a run go from the Start Gate to the close without a human answer.
 
@@ -59,11 +60,13 @@ S0 is a measure of how much work and how uncertain, not a predictor of rework.
 
 **U grows with:** a row decided without asking (`low` 1, `medium` 2, `high` 4); a gate continued without asking (release plan 2, architecture 4, implementation plan 3, review 5, bug triage or requirements 2). Waves continued by HITL step 1c cost nothing: they keep their own rule.
 
+**When C is counted.** At HITL step 5b of every gate, from the tables that gate read: each row of `medium` or more that was not counted at an earlier gate (`high` and `critical` both +2), each `AC-n` whose state changed, each answer that is not the `(Recommended)` option, each fix pass and each file outside the plan. Rows of `00b-impact.md` are in S0 (Hazard) and never counted again here. Write `attention` to `run.md` in the same edit as the log lines.
+
 Every C event and U cost is one `_tracking.md` log line, and the next gate that asks sums them in its digest.
 
 ## 4. Row auto-decision
 
-HITL step 2 reads this section once, before it asks anything, when `autonomy` is `balanced` or `trust`. The existing automatic Accept of `low` rows and the `quick_fix_mode` widening stay as they are, cost no U, and run first.
+HITL step 2 reads this section once, before it asks anything, when `autonomy` is `balanced` or `trust`. The existing automatic Accept of `low` rows and the `quick_fix_mode` widening stay as they are, cost no U, and run first, except for a row of floor item 11, which they skip.
 
 A remaining row is decided without asking only when **all** hold: no floor item of section 2 applies; `C + U + cost < T`, with the row's U cost counted first; the row is not a Premise row; the mechanical `(Recommended)` option of step 2 is not Escalate (a Fix that is empty or describes a choice); and the row is **self-contained**: it cites a `file:line` or a section of an artifact, its Fix is one concrete action touching at most three files, it leans on no other row of the same gate and on no open question (`see R4`, `depends on Q2`), and the author's `Needs your attention` line names nothing. A row that fails any of these goes to the prompt loop exactly as today, whatever its impact.
 
