@@ -53,7 +53,7 @@ For each key the first match wins. For `model.<agent>` the lookup runs per agent
 
 | Key | Order |
 |-----|-------|
-| `model.<agent>` | `.kairos-cfg/config` in the project, then `.kairos-cfg/models`, then `.kairos/.models`, then `~/.kairos-cfg/config`, then `~/.kairos-cfg/models`, then the agent's own `model:` |
+| `model.<agent>` | `.kairos-cfg/config` in the project, then `~/.kairos-cfg/config`, then the agent's own `model:` |
 | `manual-qa` | `.kairos-cfg/config`, then `.kairos-cfg/manual-qa`, then `.kairos/.manual-qa`, then the question |
 | `qa-dir` | `.kairos-cfg/config`, then `.kairos-cfg/qa-dir`, then `.kairos/.qa-dir`, then the question |
 | `test-changed` | `.kairos-cfg/config`, then the runner's own related-tests option (Jest, Vitest, pytest, Go), then the test files the change touches. It is never asked |
@@ -64,7 +64,7 @@ The Start Gate prints the model lines in effect with the place each came from (`
 
 ### Files from before v9.7.0
 
-Until 9.7.0 each setting had a file of its own (`.kairos-cfg/models`, `.kairos-cfg/manual-qa`, `.kairos-cfg/qa-dir` and, before 9.3.0, `.kairos/.models`, `.kairos/.manual-qa`, `.kairos/.qa-dir`). They keep working, the same way the v8.4.0 ledger move did: the old path is read and nothing has to be migrated. The orchestrator never moves or rewrites a file of yours. `config` wins over every older file, so a stale one cannot override what the team committed. A `models` file keeps its own format, `<agent>: <alias>` without the `model.` prefix. Answers KAIROS asks for itself (`manual-qa`, `qa-dir`) are still stored in `.kairos/`, which is local to the machine; to share one with the team, add it to `.kairos-cfg/config` and the question stops being asked.
+Until 9.10 the model lines could also live in per-setting files (`.kairos-cfg/models`, `.kairos/.models`, `~/.kairos-cfg/models`, and `.kairos-cfg/manual-qa`, `.kairos-cfg/qa-dir`). Version 10 no longer reads them: move the lines into `config` (`/kairos:setup` writes them for you). Answers KAIROS asks for itself (`manual-qa`, `qa-dir`) are still stored in `.kairos/`, which is local to the machine; to share one with the team, add it to `.kairos-cfg/config` and the question stops being asked.
 
 `/kairos:setup` is the one thing that writes the folder. It asks whether the models are for the project or for you, replaces only the `model.` lines of the right `config` (every other line stays), and removes the older model files at that scope so their lines cannot come back.
 

@@ -187,7 +187,7 @@ Update all three ledger files under `.kairos/<feature_folder>/ledger/`:
 
 Never rewrite an existing row's `Category` cell — it is set once by whoever created the row and is what downstream conditional checks key on. Only `Status`, `Updated by`, and `Note` change here. This agent adds no new constraint rows.
 
-**`decisions.md`** — Add deployment decisions (rollback strategy, canary percentage, feature flag choices). The table has six columns, `ID | Decision | Phase | Rationale | Constraint impact | Supersedes`; if it still has five (written before v8.4.0), add the `Supersedes` column first, with `—` in every existing row. Leave `Supersedes` as `—` on every row you add: only the orchestrator fills it, when a human accepts a decision conflict at the gate. A change of course is a new row, never an edit of an old one.
+**`decisions.md`** — Add deployment decisions (rollback strategy, canary percentage, feature flag choices). The table has six columns, `ID | Decision | Phase | Rationale | Constraint impact | Supersedes`. Leave `Supersedes` as `—` on every row you add: only the orchestrator fills it, when a human accepts a decision conflict at the gate. A change of course is a new row, never an edit of an old one.
 
 **`open-questions.md`** — Final answer pass. Any question still `🔴 open` after this phase must appear in the deployment plan as a known risk. A `⚠ deferred` row — or an older `🔴 open` row marked `deferred risk` or `deferred contract mismatch` — is a risk the human chose to ship with: list it in the plan's risks as accepted, never as a release blocker, and leave its status as it is.
 

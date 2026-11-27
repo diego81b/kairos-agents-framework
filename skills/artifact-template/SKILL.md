@@ -72,7 +72,7 @@ Everything after the Summary block is the phase's own. Section names, order, and
 
 | Artifact | Exempt from | Why |
 |----------|-------------|-----|
-| `_tracking.md` (orchestrator-written; `_recap.md` in folders from before v8.5.0) | §1 Summary | It is already a whole-pipeline summary, built from every artifact's own Summary; a summary of a summary adds nothing. |
+| `_tracking.md` (orchestrator-written) | §1 Summary | It is already a whole-pipeline summary, built from every artifact's own Summary; a summary of a summary adds nothing. |
 | `retrospective-agent`'s Friction Points table | §2 columns | It has no `Disposition` column — nothing downstream reads it; it is the evidence trail for the lessons below it. |
 | `improvement-advisor-agent`'s ADR files | §1 Summary | ADRs are a fixed external format (Status/Context/Decision/Consequences), not a phase artifact behind a gate. Its `_improvement-advisory.md` is not exempt. |
 | `implementer-lead-agent`'s `03-contracts.md` and `03-verify.md`, and each layer agent's `03-layer-<layer>.md` (Layered Mode) | §1 Summary | Supporting artifacts, not gated phase outputs: `03-contracts.md` is the lead's contracts, `03-layer-<layer>.md` is one layer agent's report and `03-verify.md` is the lead's verification result. The gate is on `03-implementation-plan.md` (whose own Summary covers the contracts) and later on `03-implementation.md`. |

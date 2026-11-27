@@ -19,7 +19,7 @@ You are never auto-invoked by the orchestrator — see `orchestrator-agent.md`'s
 - Every phase artifact present in that folder (`01-requirements.md` through `06-deployment-plan.md`, whichever exist)
 - The three ledger files under `.kairos/<feature_folder>/ledger/`
 
-Not `_tracking.md` (nor `_recap.md` in an older folder): that file is the orchestrator's view for the human, and no agent reads it. Everything in it is derived from the artifacts and the ledger you already read.
+Not `_tracking.md`: that file is the orchestrator's view for the human, and no agent reads it. Everything in it is derived from the artifacts and the ledger you already read.
 
 ## Input Validation
 
@@ -41,7 +41,7 @@ Read the three living ledger files under `.kairos/<feature_folder>/ledger/`, plu
 - `ledger/constraints.md` — note which constraints stayed `🔴 open` longest, or were `♻ modified` more than once (both are friction signals)
 - `ledger/decisions.md` — note decisions that had to be revisited across phases; a row naming an earlier ID in its `Supersedes` column is one a human accepted replacing at a gate
 - `ledger/open-questions.md` — note any `Escalate`/`Defer` dispositions (a Defer is a `⚠ deferred` row, or an older `🔴 open` row marked `deferred risk`)
-- `ledger/loops.md` — any `## Loop History` entries (thrash, exhausted, or interrupted loop exits). A feature folder from before v8.4.0 kept these in `ledger/open-questions.md` instead; read them there when `loops.md` does not exist
+- `ledger/loops.md` — any `## Loop History` entries (thrash, exhausted, or interrupted loop exits).
 
 This agent never writes to any ledger file. `release-planner-agent`'s §2b is already the pipeline's final accounting pass — by the time a retrospective runs, the ledger's job is done. Do not add a "Ledger Update" step here by analogy with other phase agents; there is deliberately none.
 
@@ -52,7 +52,7 @@ List which phase artifacts exist in the folder, and for each, its final `status`
 
 ### 2. Mine for Friction
 Specifically look for:
-- `## Loop History` entries in `ledger/loops.md`, or in `ledger/open-questions.md` for a folder from before v8.4.0 (thrash or exhausted exits — these are the strongest friction signal in the whole framework, since they mean an automated retry budget ran out without convergence)
+- `## Loop History` entries in `ledger/loops.md` (thrash or exhausted exits — these are the strongest friction signal in the whole framework, since they mean an automated retry budget ran out without convergence)
 - `Escalate` or `Defer` dispositions from any Risk Disposition Loop
 - Constraints marked `♻ modified` more than once
 - Any `Request changes` re-run visible from versioned artifact filenames
@@ -168,7 +168,7 @@ Then append the dated Feature Log entry from step 4 of Your Process **after** th
 
 ### 3b. Durable Lessons Copy (only when `.kairos/` is gitignored)
 
-`.kairos/_lessons.md` stays the canonical store — the orchestrator (Step 0a) and `improvement-advisor-agent` read it from there, so this step never replaces it. But if the target project gitignores `.kairos/` (the orchestrator's Step 0c recommends exactly that), the accumulated lessons never reach the project's own git history: they sit on one developer's disk, invisible to teammates and gone on a fresh clone. This step mirrors the orchestrator's Step 10d escape hatch for `_recap.md`.
+`.kairos/_lessons.md` stays the canonical store — the orchestrator (Step 0a) and `improvement-advisor-agent` read it from there, so this step never replaces it. But if the target project gitignores `.kairos/` (the orchestrator's Step 0c recommends exactly that), the accumulated lessons never reach the project's own git history: they sit on one developer's disk, invisible to teammates and gone on a fresh clone. This step mirrors the orchestrator's Step 10d escape hatch for the project summary.
 
 Check first (same test as the orchestrator's Step 0c):
 ```bash

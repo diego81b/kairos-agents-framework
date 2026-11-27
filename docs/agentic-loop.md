@@ -46,8 +46,6 @@ For `simple_fix` and `medium` the question is skipped. The preset appears on the
 
 Works with any Phase-3 implementer: TDD, code-first, or Layered Mode's lead agent. If Layered Mode is confirmed later, right before the plan, a budget of 3 is lowered to 2: each retry there is a lead scope call, a call per layer in scope and a lead close, so the ceiling is 2.
 
-Settings written before v8.5.0 had two budgets, one after review and one after tests (`phase4`/`phase3` in `ledger/run.md`, `Auto-fix after review`/`Auto-fix after tests` in an issue). They still work: the single loop takes the larger of the two.
-
 ## Why It Can't Loop Forever
 
 Three independent exits, checked every iteration:
@@ -62,7 +60,7 @@ Whichever way it exits, the review gate still runs. The loop never replaces it, 
 
 ## Where the State Lives
 
-Loop progress (iteration count, current issue list) is written to `ledger/loops.md` under `## Loop State`, not passed around in prompts. The orchestrator deletes that section once the loop exits, so later agents never see stale retry data. A loop that did not converge leaves a `## Loop History` entry in the same file, which the retrospective reads as a friction signal, and a line in `_tracking.md`'s log. Runs started before v8.4.0 kept both sections in `ledger/open-questions.md`; the orchestrator moves them into `loops.md` when it resumes such a run, and records a loop that was interrupted mid-run as `interrupted` instead of resuming it. A run started before v8.5.0 and resumed mid-review with two loop sections finishes with the single loop.
+Loop progress (iteration count, current issue list) is written to `ledger/loops.md` under `## Loop State`, not passed around in prompts. The orchestrator deletes that section once the loop exits, so later agents never see stale retry data. A loop that did not converge leaves a `## Loop History` entry in the same file, which the retrospective reads as a friction signal, and a line in `_tracking.md`'s log. When a run is resumed, the orchestrator records a loop that was interrupted mid-run as `interrupted` instead of resuming it.
 
 ## After the Gate: One Fix Pass
 

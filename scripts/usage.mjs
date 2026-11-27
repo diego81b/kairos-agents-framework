@@ -136,16 +136,12 @@ function readTranscript(file) {
 }
 
 // What the model should have been: the model settings first, in the order the orchestrator reads them
-// (project .kairos-cfg/config, project .kairos-cfg/models, .kairos/.models, ~/.kairos-cfg/config, then
-// ~/.kairos-cfg/models), then the agent's own `model:` frontmatter. The first source naming an agent wins;
-// an alias outside the four is ignored. `config` holds `model.<agent>: <alias>`; a `models` file holds
-// `<agent>: <alias>`.
+// (project .kairos-cfg/config, then ~/.kairos-cfg/config), then the agent's own `model:` frontmatter.
+// The first source naming an agent wins; an alias outside the four is ignored. `config` holds
+// `model.<agent>: <alias>`.
 const MODEL_FILES = [
   { file: path.join(process.cwd(), '.kairos-cfg', 'config'), source: '.kairos-cfg/config', keyed: true },
-  { file: path.join(process.cwd(), '.kairos-cfg', 'models'), source: '.kairos-cfg/models' },
-  { file: path.join(process.cwd(), '.kairos', '.models'), source: '.kairos/.models' },
-  { file: path.join(os.homedir(), '.kairos-cfg', 'config'), source: '~/.kairos-cfg/config', keyed: true },
-  { file: path.join(os.homedir(), '.kairos-cfg', 'models'), source: '~/.kairos-cfg/models' }
+  { file: path.join(os.homedir(), '.kairos-cfg', 'config'), source: '~/.kairos-cfg/config', keyed: true }
 ]
 const ALIASES = new Set(['opus', 'sonnet', 'haiku', 'fable'])
 function readModelsFiles() {

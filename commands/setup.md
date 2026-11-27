@@ -9,7 +9,7 @@ You are configuring which models the KAIROS pipeline agents use, for this projec
 
 ## How models are chosen
 
-Every core agent ships with a `model:` in its frontmatter (`opus` or `sonnet`). The orchestrator can override it per agent by passing a `model` parameter on the call, read from the `model.<agent>` lines of `config`: `.kairos-cfg/config` in the project (committed, shared with the team), then the files from before v9.7.0 (`.kairos-cfg/models`, `.kairos/.models`), then `~/.kairos-cfg/config` in the user's home directory, then `~/.kairos-cfg/models`, the first line naming an agent winning. Claude Code ranks that parameter above frontmatter, so the files work on a plugin install without touching the plugin cache and without project copies of the agents. It takes aliases only: `opus`, `sonnet`, `haiku`, `fable`. `inherit` and full model IDs are not accepted by the parameter; the Advanced path below covers them.
+Every core agent ships with a `model:` in its frontmatter (`opus` or `sonnet`). The orchestrator can override it per agent by passing a `model` parameter on the call, read from the `model.<agent>` lines of `config`: `.kairos-cfg/config` in the project (committed, shared with the team), then `~/.kairos-cfg/config` in the user's home directory, the first line naming an agent winning. Claude Code ranks that parameter above frontmatter, so the files work on a plugin install without touching the plugin cache and without project copies of the agents. It takes aliases only: `opus`, `sonnet`, `haiku`, `fable`. `inherit` and full model IDs are not accepted by the parameter; the Advanced path below covers them.
 
 ## Tier map (canonical defaults)
 
@@ -22,7 +22,7 @@ Not covered, frontmatter only: `orchestrator-agent` (the session's own model), t
 
 ## Step 1 — Look at what exists
 
-Read each model source that exists and show its model lines under its label: `project` (`model.` lines of `.kairos-cfg/config`, and the older `.kairos-cfg/models`), `local` (`.kairos/.models`) and `user` (`model.` lines of `~/.kairos-cfg/config`, and the older `~/.kairos-cfg/models`; resolve the home directory with Bash, `printf '%s' "${HOME:-$USERPROFILE}"`). Tell the user that applying a strategy replaces the `model.` lines at the scope they choose in Step 2 (every other line of `config` stays), so hand-written per-agent lines are lost, and that the older model files at that scope are removed, because they would otherwise bring their old lines back.
+Read each model source that exists and show its model lines under its label: `project` (`model.` lines of `.kairos-cfg/config`) and `user` (`model.` lines of `~/.kairos-cfg/config`; resolve the home directory with Bash, `printf '%s' "${HOME:-$USERPROFILE}"`). Tell the user that applying a strategy replaces the `model.` lines at the scope they choose in Step 2 (every other line of `config` stays), so hand-written per-agent lines are lost.
 
 ## Step 2 — Choose the scope and the strategy
 
@@ -33,14 +33,14 @@ Ask both in one `AskUserQuestion` call. First the scope:
 
 Then the strategy:
 
-1. **Default (Recommended)** — reasoning = `opus`, execution = `sonnet`. As shipped, so nothing needs to be written: remove the `model.` lines from `config` at the chosen scope (the file itself only when nothing else is left in it) and the older model files there (project: `.kairos-cfg/models` and `.kairos/.models`; home: `~/.kairos-cfg/models`), since model lines only exist to differ from the defaults, and go to Step 4.
+1. **Default (Recommended)** — reasoning = `opus`, execution = `sonnet`. As shipped, so nothing needs to be written: remove the `model.` lines from `config` at the chosen scope (the file itself only when nothing else is left in it), since model lines only exist to differ from the defaults, and go to Step 4.
 2. **Economy** — reasoning = `sonnet`, execution = `haiku`. Biggest token savings while keeping the two-tier split.
 3. **Custom** — ask once per tier (both questions in one `AskUserQuestion` call); accept `opus`, `sonnet`, `haiku` or `fable`.
 4. **Advanced** — you need `inherit`, a full model ID, or a model for an agent the file does not cover. Go to the Advanced path at the end and skip Steps 3-4.
 
 ## Step 3 — Write the model lines
 
-Create `.kairos-cfg/` at the chosen scope if it is missing (the project root, or the home directory). Expand each tier choice into one `model.<agent>: <alias>` line per covered agent (the 12 agents in the tier map) and write them into `.kairos-cfg/config` there: read the file if it exists, drop its `model.` lines, keep every other line as it is, add the new ones, and create the file when it is missing. Then remove the older model files at that scope (project: `.kairos-cfg/models` and `.kairos/.models`; home: `~/.kairos-cfg/models`). Never write a key, token or password into this folder: it is committed, and no setting needs one. Never touch `.gitignore`: `.kairos-cfg/` is meant to be committed.
+Create `.kairos-cfg/` at the chosen scope if it is missing (the project root, or the home directory). Expand each tier choice into one `model.<agent>: <alias>` line per covered agent (the 12 agents in the tier map) and write them into `.kairos-cfg/config` there: read the file if it exists, drop its `model.` lines, keep every other line as it is, add the new ones, and create the file when it is missing. Never write a key, token or password into this folder: it is committed, and no setting needs one. Never touch `.gitignore`: `.kairos-cfg/` is meant to be committed.
 
 ```
 # KAIROS settings: one "key: value" line each. The model lines are written by /kairos:setup, safe to edit by hand.

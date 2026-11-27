@@ -179,8 +179,7 @@ Auto-fix: 1
 
 - A flat checklist with no group headings selects the same agents as the grouped one.
 - Checking more than one implementer is an error: the orchestrator says so and derives the pipeline instead.
-- A checklist with no `Auto-fix:` line is read as it was before v8.5.0: `Effort:` still sets how thorough each agent is, but nothing is fixed automatically, every problem stops for you, and the implementation plan keeps its own gate even at `simple_fix`.
-- The older pair `Auto-fix after review: N` / `Auto-fix after tests: N` still works: the run uses the larger of the two numbers.
+- A checklist with no `Auto-fix:` line gets the effort presets like any other run: the `Effort:` line sets how thorough each agent is and the Auto-fix budget the preset gives. Add an `Auto-fix: N` line to set it yourself.
 
 A checklist that checks `implementer-coder-agent` now gets the code-first coder: where the touched code already has tests, it extends them. To keep a run free of tests, say so at the start gate.
 

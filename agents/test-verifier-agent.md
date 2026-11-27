@@ -327,7 +327,7 @@ In **Full Mode**, update all three ledger files under `.kairos/<feature_folder>/
 
 Never rewrite an existing row's `Category` cell — it is set once by whoever created the row and is what downstream conditional checks key on. Only `Status`, `Updated by`, and `Note` change here. Any new row you add carries a `Category` from [`constraint-taxonomy`](../skills/constraint-taxonomy/SKILL.md)'s closed vocabulary; apply its Writer Rule first if the table is still in the legacy 6-column form.
 
-**`decisions.md`** — Add test verification decisions (e.g. "Mutation testing added for payment core logic"). The table has six columns, `ID | Decision | Phase | Rationale | Constraint impact | Supersedes`; if it still has five (written before v8.4.0), add the `Supersedes` column first, with `—` in every existing row. Leave `Supersedes` as `—` on every row you add: only the orchestrator fills it, when a human accepts a decision conflict at the gate. A change of course is a new row, never an edit of an old one.
+**`decisions.md`** — Add test verification decisions (e.g. "Mutation testing added for payment core logic"). The table has six columns, `ID | Decision | Phase | Rationale | Constraint impact | Supersedes`. Leave `Supersedes` as `—` on every row you add: only the orchestrator fills it, when a human accepts a decision conflict at the gate. A change of course is a new row, never an edit of an old one.
 
 **`open-questions.md`** — Answer test-related questions. Add questions raised by coverage gaps.
 

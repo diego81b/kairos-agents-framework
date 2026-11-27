@@ -38,16 +38,11 @@ Name a line only when that agent will run: the triage line when the Bug-Input Ch
 **Manual QA setting** (once per project, and only at the gate that decides the `qa-plan-agent` row: the review gate normally, the Phase 3 gate when the review wave is skipped, Step 0e when `development` is not selected; never at the Start Gate). Whether a person verifies features by hand is a fact about the organisation, not the code, so no agent can report it. Asking it before any code was read, in a run that may never write a QA plan, is a question with no information behind it, so it waits until the answer can change the decision. Read the setting with this command before you decide anything, never from memory or from an earlier listing; it prints `<value> <file>` for the first usable file, `unusable <file>` for each file it skips, and nothing when no file exists:
 
 ```bash
-for f in .kairos-cfg/config .kairos-cfg/manual-qa .kairos/.manual-qa; do
+for f in .kairos-cfg/config .kairos/.manual-qa; do
   [ -f "$f" ] || continue
   case $f in *config) t=$(grep -i '^manual-qa:' "$f");; *) t=$(cat "$f");; esac
   [ -n "$t" ] || continue
   v=$(printf %s "$t" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]' | sed 's/^manual-qa://')
-  case "$v" in yes|no) echo "$v $f"; break;; *) echo "unusable $f";; esac
-done
-for f in .kairos-cfg/manual-qa .kairos/.manual-qa; do
-  [ -f "$f" ] || continue
-  v=$(tr -d '[:space:]' < "$f" | tr '[:upper:]' '[:lower:]')
   case "$v" in yes|no) echo "$v $f"; break;; *) echo "unusable $f";; esac
 done
 ```
