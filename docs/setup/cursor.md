@@ -21,7 +21,7 @@ cp path/to/kairos/agents/*.md .cursor/agents/
 cp -r path/to/kairos/skills/* .cursor/skills/
 ```
 
-Copy the `skills/` folder too. Agent bodies link to their shared skills as `../skills/<name>/SKILL.md`, a path resolved from the agent file's own folder, so from `.cursor/agents/` it lands in `.cursor/skills/`. The orchestrator reads five `orchestrator-*` skills in many runs and every phase agent opens with `agent-contract` and writes through `artifact-template`: without the folder they fail. If you use `.claude/agents/` instead, copy the skills to `.claude/skills/`.
+Copy the `skills/` folder too. Agent bodies link to their shared skills as `../skills/<name>/SKILL.md`, a path resolved from the agent file's own folder, so from `.cursor/agents/` it lands in `.cursor/skills/`. The orchestrator reads six `orchestrator-*` skills in many runs and every phase agent opens with `agent-contract` and writes through `artifact-template`: without the folder they fail. If you use `.claude/agents/` instead, copy the skills to `.claude/skills/`.
 
 Or, if you already use Claude Code, skip the agents copy — Cursor reads `.claude/agents/` directly.
 
@@ -134,7 +134,7 @@ Each agent that can write saves its validated output to `.kairos/<feature_folder
     └── ledger/                     ← constraints, decisions, open questions, run.md, loops.md
 ```
 
-Three project settings (`manual-qa`, `qa-dir`, `test-changed`) work here like on every host; see [Customizing KAIROS](/customizing). The `model.` lines do not, because Cursor takes the model from each agent's `model:` field.
+Four project settings (`autonomy`, `manual-qa`, `qa-dir`, `test-changed`) work here like on every host; see [Customizing KAIROS](/customizing). The `model.` lines do not, because Cursor takes the model from each agent's `model:` field.
 
 ## Parallel execution
 

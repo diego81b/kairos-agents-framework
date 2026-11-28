@@ -24,7 +24,7 @@ mkdir -p .codex/agents .codex/skills
 cp -r path/to/kairos/skills/* .codex/skills/
 ```
 
-Copy the `skills/` folder too. Agent bodies link to their shared skills as `../skills/<name>/SKILL.md`, and the orchestrator reads five `orchestrator-*` skills in many runs; every phase agent opens with `agent-contract` and writes through `artifact-template`. A TOML file holds the body as text, so the link has no agent-file folder to resolve from: Step 3 tells Codex where the folder is.
+Copy the `skills/` folder too. Agent bodies link to their shared skills as `../skills/<name>/SKILL.md`, and the orchestrator reads six `orchestrator-*` skills in many runs; every phase agent opens with `agent-contract` and writes through `artifact-template`. A TOML file holds the body as text, so the link has no agent-file folder to resolve from: Step 3 tells Codex where the folder is.
 
 ## Step 2 — Convert KAIROS agents to TOML
 
@@ -123,7 +123,7 @@ Codex spawns both agents simultaneously and returns a consolidated response.
 
 Each agent whose `tools:` include `Write` or `Edit` saves its own output to `.kairos/<feature_folder>/` through its "Write to Project" step, so the TOML needs no extra instruction. The sandbox mode has to allow writing in the workspace (`workspace-write`). The two read-only agents cannot write, so the orchestrator writes their artifacts, and it alone writes `ledger/run.md` and `_tracking.md`.
 
-Three project settings (`manual-qa`, `qa-dir`, `test-changed`) work here like on every host; see [Customizing KAIROS](/customizing). The `model.` lines do not, because Codex takes the model from each agent's `model` field.
+Four project settings (`autonomy`, `manual-qa`, `qa-dir`, `test-changed`) work here like on every host; see [Customizing KAIROS](/customizing). The `model.` lines do not, because Codex takes the model from each agent's `model` field.
 
 ## Feature comparison vs Claude Code
 

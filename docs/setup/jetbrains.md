@@ -27,7 +27,7 @@ cp path/to/kairos/agents/*.md .github/agents/
 cp -r path/to/kairos/skills/* .github/skills/
 ```
 
-Copy the `skills/` folder too. Agent bodies link to their shared skills as `../skills/<name>/SKILL.md`, a path resolved from the agent file's own folder, so from `.github/agents/` it lands in `.github/skills/`. The orchestrator reads five `orchestrator-*` skills in many runs and every phase agent opens with `agent-contract` and writes through `artifact-template`: without the folder they fail.
+Copy the `skills/` folder too. Agent bodies link to their shared skills as `../skills/<name>/SKILL.md`, a path resolved from the agent file's own folder, so from `.github/agents/` it lands in `.github/skills/`. The orchestrator reads six `orchestrator-*` skills in many runs and every phase agent opens with `agent-contract` and writes through `artifact-template`: without the folder they fail.
 
 ::: tip Shared with VS Code
 If you already set up KAIROS for VS Code, the `.github/agents/` files work in JetBrains too — no duplication needed.
@@ -82,7 +82,7 @@ Each agent whose `tools` include `Write` or `Edit` saves its own output to `.kai
 
 If your Copilot build does not expose file writing to agents, nothing lands in `.kairos/` and the run cannot resume: copy each artifact from the chat into `.kairos/<feature_folder>/` by hand, or use VS Code, where the page lists the write path. This page has not run the JetBrains plugin to confirm which case you get.
 
-Three project settings (`manual-qa`, `qa-dir`, `test-changed`) work here like on every host; see [Customizing KAIROS](/customizing). The `model.` lines do not, because the plugin takes the model from each agent's `model:` field.
+Four project settings (`autonomy`, `manual-qa`, `qa-dir`, `test-changed`) work here like on every host; see [Customizing KAIROS](/customizing). The `model.` lines do not, because the plugin takes the model from each agent's `model:` field.
 
 ## Feature comparison vs Claude Code
 

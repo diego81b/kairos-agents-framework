@@ -163,7 +163,7 @@ Approve · Request changes · Skip next · Stop pipeline
 
 **You must choose before the orchestrator proceeds.** This is the HITL checkpoint: it keeps downstream agents from working on bad input. Reply `open` to see the full artifact in your editor, and the same gate comes back.
 
-Three gates continue on their own when nothing needs a decision: the bug triage, the requirements and the last wave of Phase 3. They print what they accepted for you, and `every gate` in free text brings the question back. Gates that write outside `.kairos/` (the documentation draft, the QA plan) always ask.
+Three gates continue on their own when nothing needs a decision: the bug triage, the requirements and the last wave of Phase 3. They print what they accepted for you, and `every gate` in free text brings the question back. Gates that write outside `.kairos/` (the documentation draft, the QA plan) always ask. With `autonomy` on (the default since v10) a few more gates can continue and low-risk rows are decided for you, see [Configuring KAIROS](/customizing#fewer-questions-the-autonomy-dial).
 
 Each artifact is saved as soon as the agent finishes, before the gate: `.kairos/<feature_folder>/01-requirements.md` for this one.
 

@@ -39,6 +39,7 @@ export default defineConfig({
   themeConfig: {
     nav: [
       { text: 'Overview', link: '/overview' },
+      { text: "What's new", link: '/whats-new' },
       {
         text: 'Agents',
         items: [
@@ -70,6 +71,7 @@ export default defineConfig({
       {
         text: 'Getting Started',
         items: [
+          { text: "What's new in v10", link: '/whats-new' },
           { text: 'What is KAIROS?', link: '/overview' },
           { text: 'Use Cases', link: '/use-cases' }
         ]

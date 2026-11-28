@@ -140,7 +140,7 @@ Three gates continue on their own when no check finds anything to decide (the bu
 
 ## Step 7 — Copy the shared skills
 
-Agent bodies link to shared skill files relative to their own location. The orchestrator reads five `orchestrator-*` skills in many runs, every phase agent opens with [`agent-contract`](../skills/agent-contract/SKILL.md) and writes through [`artifact-template`](../skills/artifact-template/SKILL.md), and `architect-agent` works through [`contract-checklist`](../skills/contract-checklist/SKILL.md) before defining API contracts. Without the folder the orchestrator and the phase agents fail, so this step is required. That path is resolved from wherever the agent file actually lives, not from this repo's root — so from `.kimi-code/agents/architect-agent.md`, `../skills/contract-checklist/SKILL.md` resolves to `.kimi-code/skills/contract-checklist/SKILL.md`, not the top-level `skills/`. Kimi Code discovers skills from `.kimi-code/skills/` (project) or `~/.kimi-code/skills/` (user) — copy the whole shared skills folder there:
+Agent bodies link to shared skill files relative to their own location. The orchestrator reads six `orchestrator-*` skills in many runs, every phase agent opens with [`agent-contract`](../skills/agent-contract/SKILL.md) and writes through [`artifact-template`](../skills/artifact-template/SKILL.md), and `architect-agent` works through [`contract-checklist`](../skills/contract-checklist/SKILL.md) before defining API contracts. Without the folder the orchestrator and the phase agents fail, so this step is required. That path is resolved from wherever the agent file actually lives, not from this repo's root — so from `.kimi-code/agents/architect-agent.md`, `../skills/contract-checklist/SKILL.md` resolves to `.kimi-code/skills/contract-checklist/SKILL.md`, not the top-level `skills/`. Kimi Code discovers skills from `.kimi-code/skills/` (project) or `~/.kimi-code/skills/` (user) — copy the whole shared skills folder there:
 
 ```bash
 mkdir -p .kimi-code/skills
@@ -157,7 +157,7 @@ Kimi Code's `Agent` tool dispatches subagents and `AgentSwarm` runs them in para
 
 Every agent that can write has its own "Write to Project" step that saves its output to `.kairos/<feature_folder>/0X-*.md`; the pack's `tools:` lists include `Write` everywhere the canonical files do. The two read-only agents (`impact-assessment-agent`, `security-reviewer-agent`) have no `Write`, so the orchestrator writes their artifacts, and it alone writes `ledger/run.md` and `_tracking.md`.
 
-Three project settings work here like on every host: `manual-qa`, `qa-dir` and `test-changed` (see [Customizing KAIROS](/customizing)). The `model.` lines do not: use Step 3.
+Four project settings work here like on every host: `autonomy`, `manual-qa`, `qa-dir` and `test-changed` (see [Customizing KAIROS](/customizing)). The `model.` lines do not: use Step 3.
 
 ## Note on `${VAR}` placeholders in agent bodies
 

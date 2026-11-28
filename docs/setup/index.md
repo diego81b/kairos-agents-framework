@@ -53,7 +53,7 @@ HITL = Human-in-the-Loop. At each gate the orchestrator:
 2. Walks the risk rows one by one (Accept, Mitigate now, Escalate, Refute premise)
 3. Asks: **Approve**, **Request changes**, **Skip next** or **Stop pipeline**, and waits for your choice before calling the next agent
 
-Three gates continue on their own when no check finds anything to decide: the bug triage, the requirements and the last wave of Phase 3. They print what they accepted for you, and `every gate` brings the question back. Gates that write outside `.kairos/` (the documentation draft, the QA plan) always ask.
+Three gates continue on their own when no check finds anything to decide: the bug triage, the requirements and the last wave of Phase 3. They print what they accepted for you, and `every gate` brings the question back. Gates that write outside `.kairos/` (the documentation draft, the QA plan) always ask. With `autonomy` on (the default since v10) a few more gates can continue and low-risk rows are decided for you, see [Configuring KAIROS](/customizing#fewer-questions-the-autonomy-dial).
 
 This is automatic in Claude Code (defined in `agents/orchestrator-agent.md`). In other tools you enforce it manually by reading the output and deciding when to continue.
 

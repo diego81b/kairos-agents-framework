@@ -37,7 +37,7 @@ mkdir -p .opencode/skills
 cp -r path/to/kairos/skills/* .opencode/skills/
 ```
 
-This is what every agent body means by "Follow `[skill-name]`" — a plain relative file link the agent reads with its own `Read` tool, not a host-specific feature, so it works the same way regardless of whether OpenCode has its own native skill-discovery mechanism. Do not skip this step. The orchestrator links to five `orchestrator-*` skills that it reads in many runs (resume, run choices, write-back, Layered Mode, close-out), and every phase agent opens its Input Validation with `agent-contract` and writes its artifact through `artifact-template`. Without `skills/` the orchestrator and every phase agent report that they cannot find the file, not just two optional steps.
+This is what every agent body means by "Follow `[skill-name]`" — a plain relative file link the agent reads with its own `Read` tool, not a host-specific feature, so it works the same way regardless of whether OpenCode has its own native skill-discovery mechanism. Do not skip this step. The orchestrator links to six `orchestrator-*` skills that it reads in many runs (resume, run choices, write-back, Layered Mode, close-out), and every phase agent opens its Input Validation with `agent-contract` and writes its artifact through `artifact-template`. Without `skills/` the orchestrator and every phase agent report that they cannot find the file, not just two optional steps.
 
 ::: tip Keep `agents/` as source of truth
 `agents/` (Claude-Code-canonical) remains the source of truth. `.opencode/agents/*.md` is a derived mirror maintained by hand — any edit to an `agents/*.md` file must update its `.opencode/agents/` counterpart in the same change. If you maintain your own copy instead of pulling updates from this repo, re-copy after KAIROS updates.
@@ -190,7 +190,7 @@ KAIROS's Layered Mode (`agents/team/*.md`, a lead plus layer agents run in stage
 
 Every agent that can write has its own "Write to Project" step that saves its output to `.kairos/<feature_folder>/0X-*.md`, so no extra prompting is needed as long as `permission.edit` isn't set to `deny` or `ask` in a way that blocks the write. The two read-only agents (`impact-assessment-agent`, `security-reviewer-agent`) cannot write, so the orchestrator writes their artifacts, and it alone writes `ledger/run.md` and `_tracking.md`.
 
-Three project settings work here like on every host: `manual-qa`, `qa-dir` and `test-changed` (see [Customizing KAIROS](/customizing)). The `model.` lines do not: use the `opencode.json` mechanism of Step 2b.
+Four project settings work here like on every host: `autonomy`, `manual-qa`, `qa-dir` and `test-changed` (see [Customizing KAIROS](/customizing)). The `model.` lines do not: use the `opencode.json` mechanism of Step 2b.
 
 ## Feature comparison vs Claude Code
 

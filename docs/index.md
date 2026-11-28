@@ -19,7 +19,7 @@ features:
     details: "Entry points (Context Extractor, Impact Assessment, Bug Triage) plus the Orchestrator, PM Agent, Architect, two Implementers (TDD and code-first), Code Reviewer, Security Reviewer, Test Verifier, QA Plan Agent, Release Planner, and an optional Documentation Agent — plus three standalone agents outside the sequence (Retrospective, Improvement Advisor, Dependency Audit). Optional Layered Mode adds 5 agents, a lead and four layer agents run in stages (Claude Code only)."
   - icon: ⚡
     title: Gates That Hold a Decision
-    details: "Each phase ends at a gate you approve, and only three of them continue on their own, when the Orchestrator's checks find nothing for you to decide. Every risk and finding is dispositioned one row at a time, and real TDD is enforced — tests first, RED observed, coverage and assertion strength re-checked afterwards by a separate agent."
+    details: "Each phase ends at a gate you approve, and only gates with nothing left to decide continue on their own, within a limit you set with the autonomy dial. Every risk and finding is dispositioned one row at a time, and real TDD is enforced — tests first, RED observed, coverage and assertion strength re-checked afterwards by a separate agent."
   - icon: 🔧
     title: Any Tool, Any Stack
     details: Works with Claude Code, Cursor IDE, GitHub Copilot, JetBrains, VS Code, Codex CLI, OpenCode, and Kimi Code.

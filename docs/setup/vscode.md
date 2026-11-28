@@ -25,7 +25,7 @@ cp path/to/kairos/agents/*.md .github/agents/
 cp -r path/to/kairos/skills/* .github/skills/
 ```
 
-Copy the `skills/` folder too. Agent bodies link to their shared skills as `../skills/<name>/SKILL.md`, a path resolved from the agent file's own folder, so from `.github/agents/` it lands in `.github/skills/`. The orchestrator reads five `orchestrator-*` skills in many runs and every phase agent opens with `agent-contract` and writes through `artifact-template`: without the folder they fail. If you use `.claude/agents/` instead, copy the skills to `.claude/skills/`.
+Copy the `skills/` folder too. Agent bodies link to their shared skills as `../skills/<name>/SKILL.md`, a path resolved from the agent file's own folder, so from `.github/agents/` it lands in `.github/skills/`. The orchestrator reads six `orchestrator-*` skills in many runs and every phase agent opens with `agent-contract` and writes through `artifact-template`: without the folder they fail. If you use `.claude/agents/` instead, copy the skills to `.claude/skills/`.
 
 Or use `.claude/agents/` if you already have Claude Code set up.
 
@@ -105,7 +105,7 @@ Start it from a fresh chat with the Orchestrator selected, not by mentioning it 
 
 Each agent whose `tools` include `Write` or `Edit` saves its own output to `.kairos/<feature_folder>/` through its "Write to Project" step, with no extra instructions. The two read-only agents (`impact-assessment-agent`, `security-reviewer-agent`) cannot write, so the orchestrator writes their artifacts, and it alone writes `ledger/run.md` and `_tracking.md`.
 
-Three project settings (`manual-qa`, `qa-dir`, `test-changed`) work here like on every host; see [Customizing KAIROS](/customizing). The `model.` lines do not, because VS Code takes the model from each agent's `model:` field.
+Four project settings (`autonomy`, `manual-qa`, `qa-dir`, `test-changed`) work here like on every host; see [Customizing KAIROS](/customizing). The `model.` lines do not, because VS Code takes the model from each agent's `model:` field.
 
 ## Feature comparison vs Claude Code
 
