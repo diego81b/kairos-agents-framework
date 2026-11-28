@@ -29,11 +29,12 @@ Read by `orchestrator-agent` only. It decides how many questions a run asks. It 
 5. A Layered Mode `Contract divergence` row, and the Layered Mode cost question.
 6. Anything written outside `.kairos/` or posted to a tracker: the documentation draft, the issue write-back, QA delivery, the project summary, the size label.
 7. Destructive or irreversible acts: the phase-file cleanup (unless the person's own `cleanup:` setting answers it, which is a standing human answer and not a dial decision), a data migration or rollback row rated `high`.
-8. Failure states: a review loop exhausted with a row or an `AC-n` gap still standing, a stalled run, a failed contract check, a failing test.
+8. Failure states: a review loop exhausted with a `Work:` row of `high` or `critical` impact or an `AC-n` gap still standing, an `Unsure:` row kept open or an `AC-n` gap at the review gate ([`orchestrator-review`](../orchestrator-review/SKILL.md) §5), a stalled run, a failed contract check, a failing test.
 9. A `critical` row of any agent.
 10. A row of `medium` impact or more that names a constraint of a category the person declared (`SECURITY`, `PRIVACY`, `COMPLIANCE`): it skips the `quick_fix_mode` widening too. And every row at the architecture and plan gates while `domains` hold `auth` or `db`.
 11. A `test-verifier-agent` row that names an `AC-n` with no covering test and no `VERIFICATION` row. It skips the automatic Accept of `low` rows and the `quick_fix_mode` widening too, at every dial value.
 12. The readiness question of Step 0e (`Interview first`, `Proceed as written`, `Stop here`) and the interview questions ([`orchestrator-readiness`](../orchestrator-readiness/SKILL.md)).
+13. A reviewer row of cause `Extra:`, `Issue:`, `Design:` or `Unsure:`, `low` ones included: it skips both automatic Accepts and the auto-decision at every dial value ([`orchestrator-review`](../orchestrator-review/SKILL.md) §2).
 
 Fixed checkpoints, asked even when `on_signal` would continue: the Start Gate; the implementation plan gate for `medium` and `significant_rework` (a `simple_fix` plan may continue, section 6); the closing question. No dial value lifts the floor or a checkpoint, and no value lets a run go from the Start Gate to the close without a human answer.
 
@@ -57,7 +58,7 @@ Two numbers per run, kept in `run.md` under `attention`:
 
 S0 is a measure of how much work and how uncertain, not a predictor of rework.
 
-**C grows with** (one `attention | C +2 | <reason>` log line each): a risk, issue or finding row of `medium` or more raised after the start (`medium` +1, `high` +2); an `AC-n` changed +2, dropped +4; a file written outside the approved plan +1 each (cap 4 per pass); a new domain +3; a contract change the architecture said was none +4; each fix pass after the first +2; a fix pass larger than 30 percent of the diff under review +2; a `Scope:` row +2; a `revert` +3; an answer that is not the `(Recommended)` option +1; a Request changes +2.
+**C grows with** (one `attention | C +2 | <reason>` log line each): a risk, issue or finding row of `medium` or more raised after the start (`medium` +1, `high` +2); an `AC-n` changed +2, dropped +4; a file written outside the approved plan +1 each (cap 4 per pass); a new domain +3; a contract change the architecture said was none +4; each fix pass after the first +2; a fix pass larger than 30 percent of the diff under review +2; a `Scope:` row, or an `Issue:`, `Design:` or `Unsure:` review row, +2; a `revert` +3; an answer that is not the `(Recommended)` option +1; a Request changes +2.
 
 **U grows with:** a row decided without asking (`low` 1, `medium` 2, `high` 4); a gate continued without asking (release plan 2, architecture 4, implementation plan 3, review 5, bug triage or requirements 2). Waves continued by HITL step 1c cost nothing: they keep their own rule.
 
@@ -110,7 +111,7 @@ Beyond HITL step 1c (waves) and step 2b (bug triage, requirements, last wave), `
 1. **Release plan** (`06-deployment-plan.md`): status not `blocked`, no row asked at step 2, nothing about a migration or rollback rated `high`.
 2. **Architecture** (`02-architecture.md`): `promptable: yes`, `effort` not `significant_rework`, `contract_change` none, `domains` hold no `db` or `auth`, and the phase added no open question, `Scope:` decision or `BLOCKING` constraint.
 3. **Implementation plan** (3a), `simple_fix` only: step 2 asked nothing, no Escalate stands, the plan has no `## Test Decision` that skips tests, every `code` file is on the impact assessment's surface, Layered Mode is not chosen. The plan is not opened in the editor, and the log line names its path. `medium` and `significant_rework` always ask here.
-4. **Review gate**, `trust` only, `simple_fix` and `medium` only: no row remains to ask and no reviewer reports a status the loop could not close. Never for `significant_rework`.
+4. **Review gate**, `trust` only, `simple_fix` and `medium` only: no row remains to ask and no wave artifact's `status`, as recomputed by [`orchestrator-review`](../orchestrator-review/SKILL.md) §7, is still a blocking one. Never for `significant_rework`.
 
 Stay `ask` always: the documentation draft, the QA plan gate (a plan with `delivery: none` still shows its gate), any gate with a floor item.
 

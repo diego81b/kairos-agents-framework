@@ -142,6 +142,7 @@ findings_summary: { critical: 0, high: 1, medium: 2, low: 0, total: 3 }
 **Decision:** <the verdict — matches `status` in frontmatter, e.g. `VULNERABILITIES_FOUND — 1 high`>
 **Needs your attention:** <IDs of `critical`/`high` Findings rows, e.g. `F1 — see Findings`; `nothing above medium` if none. Never restate a secret's value here.>
 **Open:** <ledger IDs of the questions this phase leaves open, e.g. `Q3, Q7 — see ledger/open-questions.md`; `none` when it leaves none>
+**Could not verify:** <the count and one clause each, e.g. `2: no device for the biometric path; no data for the import size`; `0` when none. Each is also an `Unsure:` row>
 **Next:** test-verifier-agent
 
 ## Contract Enforcement
@@ -165,7 +166,7 @@ Follow [`artifact-template`](../skills/artifact-template/SKILL.md) for the `## S
 Table columns:
 - **ID** — `F1`, `F2`, … stable per finding.
 - **Description** — folds Category, File, and the attack scenario into one dense row: ``` `[category]` at `file:line` — attack scenario summary ```. Category is one of authorization|authentication|injection|secrets|data-exposure|input-validation|dependency|privacy|compliance. If a finding's attack scenario or evidence is too long for one row, keep a one-line Description with a "see below" pointer and add a short prose paragraph immediately under the table for that finding — the table itself must always have exactly these 5 columns so the orchestrator's Risk Disposition Loop can parse it.
-- **Impact** — severity: `critical` | `high` | `medium` | `low` (same rubric as the Important Notes).
+- **Impact** — severity: `critical` | `high` | `medium` | `low` (same rubric as the Important Notes). A finding's cause, written first in the Description, is `Work:` (the code does not enforce what the contract or the threat model requires, or is exploitable as written), `Design:` (a threat the architecture left open) or `Unsure:` (you could not verify it, and the row names who can); never the other four. End the Description with an `Evidence:` clause, as [`artifact-template`](../skills/artifact-template/SKILL.md) §7 says. This never narrows the review: a `high` finding is `Work:` whatever else is true, and the attack scenario stays the evidence.
 - **Mitigation/Fix** — the concrete remediation for this finding.
 - **Disposition** — leave empty. The orchestrator's Risk Disposition Loop fills it (Accept / Mitigate now / Escalate / Defer) when orchestrator-invoked.
 

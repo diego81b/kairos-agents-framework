@@ -76,7 +76,7 @@ Any other effort value runs the Full process for every check, unchanged — exce
 ## Your Checks
 
 ### 1. Correctness
-- Does the implementation actually match `01-requirements.md` / `02-architecture.md`, not just the shape of the API?
+- Does the implementation actually match `01-requirements.md` / `02-architecture.md`, not just the shape of the API? Trace every changed production file to an `AC-n` or a plan row: one that traces to neither is an `Extra:` row.
 - Are edge cases (null, empty, boundary values) handled in the code itself — not only asserted by a test?
 - Are error paths handled, not just the happy path?
 - For every externally supplied value the unit validates, parses, or converts: what does a malformed value do — wrong format, not merely empty or missing? A presence check (`[Required]`, `NotNull`, `required`) guarantees non-empty, never well-formed. Follow the resulting exception to the handler that catches it: does it become the documented error response, or escape as an unhandled 500 because the call sits outside the `try`?
@@ -167,6 +167,7 @@ convergence_signal: { issues_critical_high: 2, iteration: 1 }
 **Decision:** <the verdict — matches `status` in frontmatter, e.g. `NEEDS_FIXES — 2 high issues`>
 **Needs your attention:** <IDs of `critical`/`high` Issues rows, e.g. `I1, I4 — see Issues`; `nothing above medium` if none>
 **Open:** <ledger IDs of the questions this phase leaves open, e.g. `Q3, Q7 — see ledger/open-questions.md`; `none` when it leaves none>
+**Could not verify:** <the count and one clause each, e.g. `2: no device for the biometric path; no data for the import size`; `0` when none. Each is also an `Unsure:` row>
 **Next:** test-verifier-agent
 
 ## Checks
@@ -203,6 +204,8 @@ Follow [`artifact-template`](../skills/artifact-template/SKILL.md) for the `## S
 Follow [`artifact-bookkeeping`](../skills/artifact-bookkeeping/SKILL.md) for the exact recount and `status` derivation rule.
 
 Before adding an issue to the table, verify it isn't a false positive: trace the actual code path (e.g. confirm input flagged as unvalidated isn't actually validated by upstream middleware) rather than flagging from pattern match alone.
+
+Every row opens its Description with an anchor and a cause (`Work:`, `Extra:`, `Issue:`, `Design:`, `Pre-existing:`, `Taste:`, `Unsure:`) and ends with an `Evidence:` clause, as [`artifact-template`](../skills/artifact-template/SKILL.md) §7 says. Judge the change against what was agreed, not against the code you would have written: a style or simplification point with no anchor is `Taste:`, never above `medium`. On a recheck or a `final_pass: true` run, report only rows about the fix itself.
 
 If an issue's reasoning doesn't fit one row, keep a one-line Description with a "see below" pointer and add a short prose paragraph immediately under the table for that issue — the table itself keeps exactly these 5 columns so the disposition loop can still parse it.
 
@@ -258,13 +261,13 @@ Freshly-surfaced Issues table rows are written by the orchestrator's Risk Dispos
 
 ```markdown
 convergence_signal:
-  issues_critical_high: <critical + high Issues rows, excluding every row whose Description starts with `Pre-existing:`>
+  issues_critical_high: <critical + high Issues rows that start with `Work:` or carry no cause prefix>
   iteration: <iteration number from Loop State>
 ```
 
 Do NOT create `## Loop State` yourself — only update it if the orchestrator already placed it there. In Review Wave Mode skip this write entirely: the same two values are in your frontmatter's `convergence_signal`, which is where the orchestrator reads them.
 
-**`issues_critical_high` never counts a `Pre-existing:` row**, in the frontmatter or here. That count is what drives the orchestrator's automatic review loop, and a defect the change did not introduce is not something the retry budget exists to fix: it still reaches the human at the gate, with its own Impact, where it can be fixed now or deferred. `issues_summary` and `status` still count every row, `Pre-existing:` ones included, so the gate shows the unit's real state.
+**`issues_critical_high` counts only `Work:` rows and rows with no cause prefix**, in the frontmatter or here. That count is what drives the orchestrator's automatic review loop, and a defect the change did not introduce (`Pre-existing:`), a row that is a decision for a person (`Extra:`, `Issue:`, `Design:`) and one you could not settle (`Unsure:`) are not something the retry budget exists to fix: each still reaches the human at the gate, with its own Impact. `issues_summary` and `status` still count every row, `Pre-existing:` ones included, so the gate shows the unit's real state.
 
 ### 3. Open in Editor
 When the orchestrator invoked you, skip this step — its gate prints the `## Summary` block and offers the full file on request, so force-opening it here puts the whole document in front of a human who only needed four lines. Open it on a standalone run, where no gate does that for you.

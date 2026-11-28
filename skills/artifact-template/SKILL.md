@@ -12,7 +12,7 @@ It governs four things only — the head block, the column sets of Disposition t
 
 ## 1. The Summary block
 
-Every artifact body opens with `## Summary` as its first section — after the `# <Title>` heading where the phase uses one, immediately after the frontmatter where it doesn't — and nothing else comes before the phase's own sections. Five bold labels, in this order, one line each, always all five present:
+Every artifact body opens with `## Summary` as its first section — after the `# <Title>` heading where the phase uses one, immediately after the frontmatter where it doesn't — and nothing else comes before the phase's own sections. Five bold labels, in this order, one line each, always all five present (a reviewer adds a sixth after `Open`, section 7):
 
 ```markdown
 ## Summary
@@ -25,7 +25,7 @@ Every artifact body opens with `## Summary` as its first section — after the `
 
 Rules:
 
-- **Seven lines maximum**, heading included. This block is what the orchestrator prints at the gate (HITL step 3), which is capped at ~7 lines. A block that runs long defeats its own purpose.
+- **Seven lines maximum**, heading included (a reviewer's six labels plus the heading make seven). This block is what the orchestrator prints at the gate (HITL step 3), which is capped at ~7 lines. A block that runs long defeats its own purpose.
 - **`Needs your attention` carries row IDs, never restated descriptions** — `R1, R3 — see Risks` or `F2 — see Findings`. The Risk Disposition Loop edits those rows after this file is written; a restated description drifts out of sync the moment it does, and a reader who wants the detail is one scroll away. Cap at three IDs, then `and N more`. Write `nothing above medium` when no row is `critical` or `high`, or `none` when the phase has no Impact-rated table at all — never leave the line out.
 - **`Open` carries `ledger/open-questions.md` row IDs**, never restated questions and never IDs invented locally — `Q3, Q7 — see ledger`. That file is the authoritative list; a question this phase raised has a row there before this line names it. Cap at three IDs, then `and N more`. Write `none` when this phase left nothing open — never leave the line out. (`impact-assessment-agent` is the one exception: it runs before the ledger exists and names its own `## Open Questions` table's IDs instead.)
 - **An open point written in prose but not in `open-questions.md` does not exist.** This is the rule that makes the line above honest. A question raised in a paragraph of the body, and nowhere else, is invisible to every later phase, to the orchestrator's end-of-run ledger audit, and to `_tracking.md` — it reaches nobody. Before writing the Summary, check that every unresolved question the body raises has a ledger row; raise the row if it doesn't, then name it here.
@@ -130,3 +130,39 @@ A generic example. Not `Q2: where does T5 live (delivery of G13 after the scope 
 A `Mitigation/Fix` is either one concrete action (a `file:line`, at most three files, inside the diff) or an honest question to a person with its alternatives; never a vague direction (`improve error handling`, `consider refactoring`). The orchestrator decides from that difference, and a Fix that is neither is asked, not applied.
 
 No new column carries this: a legacy ledger has to resume as it is, and a `## Ledger Update` block parses the shape §5 shows. The rule is about the text of the cell, so it reaches every table without changing one. The orchestrator checks it again at the point of asking and rewrites a row it cannot ask as written (`orchestrator-agent.md`, Risk Disposition Loop), which is a safety net for artifacts written before this section, not a reason to write the row carelessly.
+
+## 7. Review rows: anchor, cause, evidence
+
+Read by `code-reviewer-agent`, `test-verifier-agent` and `security-reviewer-agent`. A review wave is judged against what was agreed, not against ideal code, so a reviewer asks in this order: (a) does the diff meet each `AC-n`, (b) does it stay inside the agreement, (c) is it correct and safe where it changed, (d) everything else is optional. Impact says how bad a row is; it does not say whose job it is. Each row therefore carries an anchor and a cause.
+
+**Anchor.** What the row is measured against, cited in the Description: an `AC-n`, a constraint `Cn`, a decision `Dn`, a plan row, a quoted sentence of the issue, or, for a plain defect, the `file:line` and the path that fails. A row that cites none says why no agreement covers it.
+
+**Cause**, one per row, as the first word of the Description (the precedent is `Pre-existing:`; columns and frontmatter do not change, and an unprefixed row behaves as before):
+
+| Prefix | Meaning |
+|---|---|
+| `Work:` | An agreement exists and the change does not meet it, or is defective where it changed: an `AC-n` unmet, a regression, a correctness or security defect in changed code, a test that does not prove a declared intent. The anchor is cited. |
+| `Extra:` | The change did something nobody agreed: a changed file or behaviour with no `AC-n` or plan row, or an out-of-scope item touched. |
+| `Issue:` | The agreement is silent or ambiguous about a behaviour a user sees or a rule the issue should have stated, so the change cannot be blamed. |
+| `Design:` | The analysis or architecture decision led here and the change followed it. The anchor is the decision or plan row. |
+| `Pre-existing:` | The diff did not cause it. |
+| `Taste:` | No agreed anchor and no defect: style, naming, simplification, tests beyond one per behaviour, refactor, performance with no stated target. Never above `medium`. |
+| `Unsure:` | You cannot tell the cause or cannot verify it (environment missing, behaviour depends on data you cannot see). |
+
+`Extra:`, `Issue:` and `Design:` rows are decisions for a person, so their `Mitigation/Fix` holds the alternatives (§6): for `Extra:`, keep it (add the criterion) or take it out of the diff; for `Issue:`, add the criterion and fix it, accept it as it is, or move it to a later slice; for `Design:`, change the design, accept, or later slice. A `Work:` row's Fix is one concrete action. `security-reviewer-agent` writes `Work:`, `Design:` (a threat the architecture left open) and `Unsure:` only, and is never narrowed by this section: a `high` security row is a `Work:` row whatever else is true.
+
+**Evidence before the label.** A cause is a claim, so test it with a check that costs seconds and can prove it wrong. `Unsure:` is never where you stop because a check is tedious: run it, or name the datum that would settle it and who holds it.
+
+| Claim | The check that can refute it | If it fails |
+|---|---|---|
+| `Issue:` | Search `01-requirements.md`, the issue text and `decisions.md` for the behaviour's words and for the file or screen | An `AC-n` or `Dn` covers it: `Work:` or `Design:` |
+| `Work:` | Name the `AC-n`, `Cn`, `Dn`, plan row or quoted sentence it breaks; for a plain defect the `file:line` and the failing path | Neither: `Taste:` or `Unsure:` |
+| `Design:` | Open the decision's rationale and check the change followed it | It deviated: `Work:` |
+| `Pre-existing:` | `git diff -U0`: is the cited line inside a hunk, and does the changed code feed the failing path | Inside a hunk or on a changed path: `Work:` |
+| `Extra:` | Search the plan's file tables and the `AC-n` list for the file or behaviour | Found: not `Extra:` |
+
+End the Description with one `Evidence:` clause: the lookup and what it returned (`Evidence: searched 01-requirements for "draft", no match`). A run with no `01-requirements.md` has no `AC-n` to cite, so the anchor is a decision, a constraint, a quoted sentence or the `file:line`. The orchestrator re-checks the mechanical part with no model (the cited id exists, the `file:line` exists, a `Pre-existing:` line is outside every hunk) and reads a row that fails as `Unsure:`.
+
+**`Could not verify:`.** A sixth Summary line, right after `Open`: the count and one clause each of what you could not check (`2: no device for the biometric path; no data for the import size`), or `0`. Each item is also an `Unsure:` row.
+
+**On a recheck or a `final_pass: true` run**, report only rows about the fix itself: `Work:`, `Extra:`, `Issue:`, `Design:` and `Unsure:`. A `Taste:` row found there is not a row: it is counted in one `Held back: N` clause at the end of `What`. A fix that fixed the row is not a reason to find ten more.

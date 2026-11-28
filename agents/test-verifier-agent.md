@@ -233,6 +233,7 @@ convergence_signal: { issues_critical_high: 1, ac_gaps: 1, iteration: 1 }
 **Decision:** <the verdict — matches `status` in frontmatter, e.g. `NEEDS_FIXES — 1 high issue, 1 AC gap`>
 **Needs your attention:** <IDs of `critical`/`high` Issues rows plus any Acceptance Criteria gap, e.g. `I1, AC-3 — see below`; `nothing above medium` if none>
 **Open:** <ledger IDs of the questions this phase leaves open, e.g. `Q3, Q7 — see ledger/open-questions.md`; `none` when it leaves none>
+**Could not verify:** <the count and one clause each, e.g. `2: no device for the biometric path; no data for the import size`; `0` when none. Each is also an `Unsure:` row>
 **Next:** release-planner-agent
 
 ## Checks
@@ -274,6 +275,8 @@ If an issue's reasoning doesn't fit one row, keep a one-line Description with a 
 Follow [`artifact-bookkeeping`](../skills/artifact-bookkeeping/SKILL.md) for the exact recount, `status` derivation, and AC-coverage counting rule.
 
 Before adding a finding to the Issues table, verify it isn't a false positive: re-check the actual test and SUT code, not just the pattern that triggered the flag.
+
+Every row opens its Description with an anchor and a cause and ends with an `Evidence:` clause, as [`artifact-template`](../skills/artifact-template/SKILL.md) §7 says. An `AC-n` in state 3, a test that does not prove a declared intent and a weak assertion on an `AC-n` are `Work:` rows. A test beyond one per behaviour an `AC-n` or risk names, and a coverage percent with no declared threshold, are `Taste:` rows, never above `medium`. An environment you could not probe is an `Unsure:` row that names who holds the missing datum. `issues_critical_high` and `ac_gaps` drive the automatic loop and count `Work:` and unprefixed rows only. On a recheck or a `final_pass: true` run, report only rows about the fix itself.
 
 `status` rules:
 - `READY` — zero `critical` and zero `high` issues, coverage check is `PASS`, and zero Acceptance Criteria gaps (when the Success Criteria list was available — see Input Validation above). A criterion routed to manual verification under a declared `VERIFICATION` row is not a gap and does not block `READY`.
@@ -336,7 +339,7 @@ Never rewrite an existing row's `Category` cell — it is set once by whoever cr
 ```markdown
 convergence_signal:
   ac_gaps: <count of gapIds from the Acceptance Criteria Mapping table — state-3 rows only, never a criterion routed to manual verification by a declared `VERIFICATION` row; 0 if the Success Criteria list was unavailable>
-  issues_critical_high: <critical + high Issues rows>
+  issues_critical_high: <critical + high Issues rows that start with `Work:` or carry no cause prefix>
   iteration: <iteration number from Loop State>
 ```
 
