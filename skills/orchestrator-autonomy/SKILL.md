@@ -33,6 +33,7 @@ Read by `orchestrator-agent` only. It decides how many questions a run asks. It 
 9. A `critical` row of any agent.
 10. A row of `medium` impact or more that names a constraint of a category the person declared (`SECURITY`, `PRIVACY`, `COMPLIANCE`): it skips the `quick_fix_mode` widening too. And every row at the architecture and plan gates while `domains` hold `auth` or `db`.
 11. A `test-verifier-agent` row that names an `AC-n` with no covering test and no `VERIFICATION` row. It skips the automatic Accept of `low` rows and the `quick_fix_mode` widening too, at every dial value.
+12. The readiness question of Step 0e (`Interview first`, `Proceed as written`, `Stop here`) and the interview questions ([`orchestrator-readiness`](../orchestrator-readiness/SKILL.md)).
 
 Fixed checkpoints, asked even when `on_signal` would continue: the Start Gate; the implementation plan gate for `medium` and `significant_rework` (a `simple_fix` plan may continue, section 6); the closing question. No dial value lifts the floor or a checkpoint, and no value lets a run go from the Start Gate to the close without a human answer.
 
@@ -51,7 +52,7 @@ Two numbers per run, kept in `run.md` under `attention`:
 |---|---|---|
 | Footprint | size `XS` 0, `S` 1, `M` 3, `L` 5, `XL` 8 | `00b-impact.md` `size` |
 | Reach | +1 per domain beyond the first; +3 for each of `auth` and `db`; +3 `contract_change: yes`; +2 `test_suite: no` | `00b-impact.md` frontmatter |
-| Uncertainty | +2 per fact reported `unknown`; +1 per `Open` row (cap 4) | `00b-impact.md` |
+| Uncertainty | +2 per fact reported `unknown`; +1 per `Open` row (cap 4); +3 when `readiness` is `waived` | `00b-impact.md`, `run.md` |
 | Hazard | its risk rows: `critical` 4, `high` 2, `medium` 1; cap 8 | `00b-impact.md` `risk_counts` |
 
 S0 is a measure of how much work and how uncertain, not a predictor of rework.
@@ -91,7 +92,7 @@ A row decided here is written exactly as the person's pick would have been (Disp
 
 ## 5. Drift
 
-**Baseline** = what a person last approved. Record it in `run.md` at the Start Gate (`size`, `effort`, `domains`, the files `00b-impact.md` names, the number of `AC-n`, `contract_change`, and C), replace the file list with the plan's at the approval of the implementation plan gate, and replace the whole baseline only on **Accept and re-measure**. Measured against the declared size instead, the alarm would fire almost every run: growth past the declared size is the norm.
+**Baseline** = what a person last approved. Record it in `run.md` at the Start Gate (`size`, `effort`, `domains`, the files `00b-impact.md` names, the number of `AC-n`, `contract_change`, the `Scope Contract` of `00d-interview.md` when there is one, and C), replace the file list with the plan's at the approval of the implementation plan gate, and replace the whole baseline only on **Accept and re-measure**. Measured against the declared size instead, the alarm would fire almost every run: growth past the declared size is the norm.
 
 **Measure** after the impact assessment, at the plan (3a), at the last wave, at the review gate and after each fix pass, from numbers already in artifacts: production files in the plan and in `## Files Written` (the `Kind` column; `code` rows count), files on neither plan list, plan files absent from `02-architecture.md`, `AC-n` states in `_tracking.md`, `Scope:` decisions, `contract_change` in the diff.
 
@@ -100,7 +101,7 @@ A row decided here is written exactly as the person's pick would have been (Disp
 
 Held in `run.md` as `drift: green | yellow | red`. A change of level is one log line (`drift | green to yellow | plan lists 6 production files, approved 2`). A size declared higher than the work is only a line in the digest.
 
-**The drift question** states what moved in plain words with the numbers and the artifact each came from, and offers: **Accept and re-measure** (Recommended when the added work follows from an answer the person gave; re-runs `impact-assessment-agent` with the new facts, which re-derives the pipeline and updates the `size:` label, then sets the new baseline; only at a gate, never inside a wave), **Cut it back** (a Request changes at the current phase with the out-of-scope items as feedback), **Split it** (the extra work becomes `_findings.md` entries, a `Scope:` decision cuts it from this run, the baseline stays), **Stop pipeline**. With the dial at `ask` a red level only prints the drift line.
+**The drift question** states what moved in plain words with the numbers and the artifact each came from, and offers: **Accept and re-measure** (Recommended when the added work follows from an answer the person gave; re-runs `impact-assessment-agent` with the new facts, which re-derives the pipeline and updates the `size:` label, runs the delta interview of [`orchestrator-readiness`](../orchestrator-readiness/SKILL.md) §5 when the run has a Scope Contract, then sets the new baseline; only at a gate, never inside a wave), **Cut it back** (a Request changes at the current phase with the out-of-scope items as feedback), **Split it** (the extra work becomes `_findings.md` entries, a `Scope:` decision cuts it from this run, the baseline stays), **Stop pipeline**. With the dial at `ask` a red level only prints the drift line.
 
 ## 6. Gates that may continue
 

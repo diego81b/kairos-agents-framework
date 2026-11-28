@@ -16,6 +16,7 @@ Work through [`analysis-discipline`](../skills/analysis-discipline/SKILL.md) thr
 You receive from parent orchestrator:
 - Feature description (text)
 - Project context (optional)
+- `step: interview` (optional): the readiness interview, see **Interview step**
 
 ## Input Validation
 
@@ -62,6 +63,51 @@ When effort is `medium`, run in **Trimmed Mode** — Full process, two sections 
 - `## Outcome Criterion` stays in full. `qa-plan-agent` carries it through verbatim, and qa-plan is recommended from `medium` upward.
 
 `significant_rework` (or unknown/standalone-without-classification) runs the Full process below, unchanged.
+
+## Interview step (`step: interview`)
+
+When the invocation prompt states `step: interview`, you are not writing `01-requirements.md`. The orchestrator found the issue too thin to build from and called you to find out what the person meant. You have no way to ask them: you write the questions to a file and the orchestrator asks. Do nothing else in this call: no Constraint Elicitation, no use cases, no risks table, no ledger rows other than the ones named below, no gate. Read the issue, `00b-impact.md`, `00c-bug-triage.md` when it exists, the ledger and the code it points at, and write `.kairos/<feature_folder>/00d-interview.md`. The prompt carries `round`: `1`, `2` or `close`, and `previous:` when this is a re-measure on a delta.
+
+**A question comes from a fact and cites it.** The file, screen or `Open` row that raised it, with two or three concrete readings, the recommended one first, and one clause saying what changes with the answer. Example: `The Orders list has two export paths, OrderList.vue:88 and ExportJob.cs:41. Which one does the issue mean?` Derive first (step 2's rule): what the code already answers is recorded as derived, never asked. Write each question in product or code words with no internal id; the person reads it cold.
+
+**Order**: the outcome (what the person will see), then the edge (what is explicitly not in), then the slice (can it ship in one piece), then constraints only for a floor domain (`auth`, `db`, a declared `SECURITY`, `PRIVACY` or `COMPLIANCE` obligation). **Cap: 3 questions a round, 2 rounds.**
+
+**`round: 1` (and `round: 2`)**: write the file with `status: questions` and a `## Questions` table, columns `Id`, `Question`, `Fact`, `Readings`, `Consequence`, `Answer` (empty). If nothing is left to ask, write the contract at once (below) with `status: contract`. Round 2 is allowed only when an answer in the file opened a new concrete fact in the code.
+
+**`round: close`**: read the `Answer` cells. `I don't know`, or an empty cell, follows step 2's rule: pick the most defensible value from what the code does, write it as an assumption in the contract, and add an `open-questions.md` row (source `human`, `🔴 open`) naming the question and the assumption. Then write `## Scope Contract` and set `status: contract`:
+
+```markdown
+---
+phase: pm-interview
+status: contract
+round: close
+questions: 0
+---
+
+# Interview — <feature_folder>
+
+## Summary
+**What:** <the contract in one line>
+**Decision:** <the biggest thing the answers settled>
+**Needs your attention:** <assumptions made for `I don't know` answers, or `nothing`>
+**Open:** <ledger IDs of the questions left open, or `none`>
+**Next:** the orchestrator starts the pipeline from this contract
+
+## Questions
+<the table, with the answers>
+
+## Scope Contract
+**Goal:** <one sentence>
+**In scope:** <the `AC-n` list: `AC-1 — <trigger and observable outcome>`>
+**Out of scope:**
+- <item>
+**Slices:** <`N/A: one run`, or the `## Slices` rows of step 4c>
+**Done means:** <one line>
+```
+
+`questions` counts the rows still unanswered. Out-of-scope items go one per line starting `- `: the orchestrator turns each into a `Scope: out` decision, and you do not write `decisions.md`. A slice ships alone: one outcome, its tests, no `AC-n` that needs a later slice. Return when the file is written; the orchestrator owns every gate.
+
+When `01-requirements.md` is written later in the run and `00d-interview.md` exists with a `## Scope Contract`, copy the block under the `## Summary` of `01-requirements.md` unchanged and do not redraft it: it is what the person agreed to, and your own `## Scope` and `## Slices` must not contradict it.
 
 ## Your Process
 

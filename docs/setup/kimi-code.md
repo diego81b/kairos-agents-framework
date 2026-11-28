@@ -72,7 +72,7 @@ Note what's **not** in the converted file: any Claude/Anthropic model id. Unlike
 
 ## Step 3 — Configure Kimi models (optional)
 
-The Claude Code pack's model lines (`model.<agent>` in `.kairos-cfg/config`, and the older `models` files) have no effect here: the orchestrator ignores it and says so at the Start Gate. The `model_preference` mapping below is the model setting on Kimi Code.
+The Claude Code pack's model lines (`model.<agent>` in `.kairos-cfg/config`) have no effect here: the orchestrator ignores it and says so at the Start Gate. The `model_preference` mapping below is the model setting on Kimi Code.
 
 `model_preference` only differentiates agents when Kimi Code's secondary-model experiment is enabled and a secondary model is configured. In `~/.kimi-code/config.toml`:
 
@@ -140,7 +140,7 @@ Three gates continue on their own when no check finds anything to decide (the bu
 
 ## Step 7 — Copy the shared skills
 
-Agent bodies link to shared skill files relative to their own location. The orchestrator reads six `orchestrator-*` skills in many runs, every phase agent opens with [`agent-contract`](../skills/agent-contract/SKILL.md) and writes through [`artifact-template`](../skills/artifact-template/SKILL.md), and `architect-agent` works through [`contract-checklist`](../skills/contract-checklist/SKILL.md) before defining API contracts. Without the folder the orchestrator and the phase agents fail, so this step is required. That path is resolved from wherever the agent file actually lives, not from this repo's root — so from `.kimi-code/agents/architect-agent.md`, `../skills/contract-checklist/SKILL.md` resolves to `.kimi-code/skills/contract-checklist/SKILL.md`, not the top-level `skills/`. Kimi Code discovers skills from `.kimi-code/skills/` (project) or `~/.kimi-code/skills/` (user) — copy the whole shared skills folder there:
+Agent bodies link to shared skill files relative to their own location. The orchestrator reads seven `orchestrator-*` skills in many runs, every phase agent opens with [`agent-contract`](../skills/agent-contract/SKILL.md) and writes through [`artifact-template`](../skills/artifact-template/SKILL.md), and `architect-agent` works through [`contract-checklist`](../skills/contract-checklist/SKILL.md) before defining API contracts. Without the folder the orchestrator and the phase agents fail, so this step is required. That path is resolved from wherever the agent file actually lives, not from this repo's root — so from `.kimi-code/agents/architect-agent.md`, `../skills/contract-checklist/SKILL.md` resolves to `.kimi-code/skills/contract-checklist/SKILL.md`, not the top-level `skills/`. Kimi Code discovers skills from `.kimi-code/skills/` (project) or `~/.kimi-code/skills/` (user) — copy the whole shared skills folder there:
 
 ```bash
 mkdir -p .kimi-code/skills

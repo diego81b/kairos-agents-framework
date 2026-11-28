@@ -63,7 +63,7 @@ No exceptions. A pull request that modifies an agent without a matching changelo
 >
 > The shared [Test Scope](skills/test-scope/SKILL.md) skill — how much of the test suite to run at each stop, which stage owns the full run, and the `test-changed` setting — is read by both Implementers, Test Verifier and the Layered Mode lead. The shared [Issue Text](skills/issue-text/SKILL.md) skill — the layout of `_issues.md`, the text PM and Architect write when a run stops after analysis — is read by those two agents.
 >
-> Six `orchestrator-*` skills (`-resume`, `-run-choices`, `-writeback`, `-layered`, `-closeout`, `-autonomy`) hold the parts of the orchestrator that fire in some runs only, each left in the agent as a stub that says when to read the skill. Only the orchestrator reads them.
+> Seven `orchestrator-*` skills (`-resume`, `-run-choices`, `-writeback`, `-layered`, `-closeout`, `-autonomy`, `-readiness`) hold the parts of the orchestrator that fire in some runs only, each left in the agent as a stub that says when to read the skill. Only the orchestrator reads them.
 
 ---
 

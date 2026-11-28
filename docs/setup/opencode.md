@@ -37,7 +37,7 @@ mkdir -p .opencode/skills
 cp -r path/to/kairos/skills/* .opencode/skills/
 ```
 
-This is what every agent body means by "Follow `[skill-name]`" — a plain relative file link the agent reads with its own `Read` tool, not a host-specific feature, so it works the same way regardless of whether OpenCode has its own native skill-discovery mechanism. Do not skip this step. The orchestrator links to six `orchestrator-*` skills that it reads in many runs (resume, run choices, write-back, Layered Mode, close-out), and every phase agent opens its Input Validation with `agent-contract` and writes its artifact through `artifact-template`. Without `skills/` the orchestrator and every phase agent report that they cannot find the file, not just two optional steps.
+This is what every agent body means by "Follow `[skill-name]`" — a plain relative file link the agent reads with its own `Read` tool, not a host-specific feature, so it works the same way regardless of whether OpenCode has its own native skill-discovery mechanism. Do not skip this step. The orchestrator links to seven `orchestrator-*` skills that it reads in many runs (resume, run choices, write-back, Layered Mode, close-out), and every phase agent opens its Input Validation with `agent-contract` and writes its artifact through `artifact-template`. Without `skills/` the orchestrator and every phase agent report that they cannot find the file, not just two optional steps.
 
 ::: tip Keep `agents/` as source of truth
 `agents/` (Claude-Code-canonical) remains the source of truth. `.opencode/agents/*.md` is a derived mirror maintained by hand — any edit to an `agents/*.md` file must update its `.opencode/agents/` counterpart in the same change. If you maintain your own copy instead of pulling updates from this repo, re-copy after KAIROS updates.
@@ -90,7 +90,7 @@ permission:
 
 ## Step 2b — Customize models without forking the pack (optional)
 
-The Claude Code pack's model lines (`model.<agent>` in `.kairos-cfg/config`, and the older `models` files) have no effect here: OpenCode's agent call takes no per-call model, so the orchestrator ignores the file and says so at the Start Gate. Use the `opencode.json` mechanism below instead.
+The Claude Code pack's model lines (`model.<agent>` in `.kairos-cfg/config`) have no effect here: OpenCode's agent call takes no per-call model, so the orchestrator ignores the file and says so at the Start Gate. Use the `opencode.json` mechanism below instead.
 
 OpenCode is a gateway to many providers, and hardcoding one `provider/model-id` per agent in the mirror can't fit everyone. You don't need to edit the shipped `.opencode/agents/*.md` files to change models: OpenCode's `opencode.json` **configures agents by name**, so a config entry overrides the matching markdown agent's `model:` while the pack files stay pristine (and re-copyable after KAIROS updates without losing your model choices). Put it in your project root (`opencode.json`, safe to commit) or globally (`~/.config/opencode/opencode.json`):
 

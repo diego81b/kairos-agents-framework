@@ -27,7 +27,7 @@ cp path/to/kairos/agents/*.md .github/agents/
 cp -r path/to/kairos/skills/* .github/skills/
 ```
 
-Copy the `skills/` folder too. Agent bodies link to their shared skills as `../skills/<name>/SKILL.md`, a path resolved from the agent file's own folder, so from `.github/agents/` it lands in `.github/skills/`. The orchestrator reads six `orchestrator-*` skills in many runs and every phase agent opens with `agent-contract` and writes through `artifact-template`: without the folder they fail.
+Copy the `skills/` folder too. Agent bodies link to their shared skills as `../skills/<name>/SKILL.md`, a path resolved from the agent file's own folder, so from `.github/agents/` it lands in `.github/skills/`. The orchestrator reads seven `orchestrator-*` skills in many runs and every phase agent opens with `agent-contract` and writes through `artifact-template`: without the folder they fail.
 
 ::: tip Shared with VS Code
 If you already set up KAIROS for VS Code, the `.github/agents/` files work in JetBrains too — no duplication needed.

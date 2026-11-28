@@ -24,7 +24,7 @@ mkdir -p .codex/agents .codex/skills
 cp -r path/to/kairos/skills/* .codex/skills/
 ```
 
-Copy the `skills/` folder too. Agent bodies link to their shared skills as `../skills/<name>/SKILL.md`, and the orchestrator reads six `orchestrator-*` skills in many runs; every phase agent opens with `agent-contract` and writes through `artifact-template`. A TOML file holds the body as text, so the link has no agent-file folder to resolve from: Step 3 tells Codex where the folder is.
+Copy the `skills/` folder too. Agent bodies link to their shared skills as `../skills/<name>/SKILL.md`, and the orchestrator reads seven `orchestrator-*` skills in many runs; every phase agent opens with `agent-contract` and writes through `artifact-template`. A TOML file holds the body as text, so the link has no agent-file folder to resolve from: Step 3 tells Codex where the folder is.
 
 ## Step 2 — Convert KAIROS agents to TOML
 

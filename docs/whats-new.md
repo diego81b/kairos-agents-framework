@@ -21,6 +21,10 @@ The tracking file gains an `Autonomy` line and an `Auto-decisions` section, and 
 
 Everything you can set lives in `.kairos-cfg/config`: the models, the dial, the manual QA answer, the QA plan folder, the related-tests command and two close-out answers (`cleanup` and `project-summary`, so the two questions at the end of a run can be answered once for good). One `key: value` per line, committed with the project, written by `/kairos:setup` for the model lines. [Configuring KAIROS](/customizing) now opens with the five things most people want to change, lists every key with the place that wins, and ends with a troubleshooting table.
 
+## A thin issue gets interviewed once
+
+Before the pipeline starts, KAIROS checks whether the issue says enough to build from: does it state an observable result, does it name a screen, endpoint, entity, role, file or job, and did the impact assessment find the facts it needed. When at least two are missing it says which and asks: **Interview first**, **Proceed as written** or **Stop here**. The interview is at most three questions a round and two rounds, each one citing the file or screen that raised it, with two or three readings and a recommended one. The answers become a **Scope Contract** in `00d-interview.md`: goal, acceptance criteria, what is out of scope, slices. Every later agent receives it, an out-of-scope item is recorded as a decision, and touching one stops the run, so the contract is also what the drift alarm measures against. Waiving the interview is your call and costs the run some of its room to decide on its own. It is a question at every dial value.
+
 ## A plan that says what each file is
 
 Both implementers' plan tables now carry a `Kind` column (`code` or `test`, the same two values as the files each implementer reports as written) on every file they list. KAIROS counts the production files in a plan to tell whether the work grew past the issue, which is how the drift alarm knows. You do not set it; you will see it when you read a plan.

@@ -18,7 +18,7 @@ The table has one row per **agent call**, never an aggregate per agent type; the
 If `node` is missing, say so and stop: the script has no dependencies but needs Node 18 or later. If the script reports nothing found, relay that and do not estimate anything.
 
 After the table, add at most three lines, and only from the table:
-- every row whose Check column is not `ok` or `-`: the agent, the model it ran on and the model it was expected to run on. A mismatch means a model line (`model.<agent>` in `.kairos-cfg/config`, the home folder's, or an older `models` file) or the agent's `model:` was not the model that answered;
+- every row whose Check column is not `ok` or `-`: the agent, the model it ran on and the model it was expected to run on. A mismatch means a model line (`model.<agent>` in `.kairos-cfg/config`, the home folder's) or the agent's `model:` was not the model that answered;
 - which agent spent the most output tokens;
 - that cache-read tokens are billed far below the others, so a large cache-read figure is not a large cost.
 

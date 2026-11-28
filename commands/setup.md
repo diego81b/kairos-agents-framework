@@ -58,7 +58,7 @@ Preserve the file's line endings if it already existed. Never edit an agent file
 
 ## Step 4 — Report
 
-Print the models in effect, reading the sources again: agent → model, where each line came from (`project`, `local`, `user`, or `shipped` when none names the agent), marking each line that differs from the shipped model. A file at the other scope may still set lines the chosen strategy did not touch (a Default at the project scope leaves the user's file in force): say so by name. Then remind the user:
+Print the models in effect, reading the sources again: agent → model, where each line came from (`project`, `user`, or `shipped` when none names the agent), marking each line that differs from the shipped model. A file at the other scope may still set lines the chosen strategy did not touch (a Default at the project scope leaves the user's file in force): say so by name. Then remind the user:
 
 - The orchestrator reads the settings before every dispatch, so a run in progress picks up an edit at its next call.
 - It is Claude Code only. OpenCode and Kimi Code ignore them (their own model settings are on their setup pages).
@@ -120,4 +120,4 @@ Print the resulting 17-row table (agent → model). Then remind the user:
 
 - Project copies are local forks of the agent files: after a KAIROS update, re-copy the agents (or re-run `/kairos:setup` after materializing fresh copies) and re-apply.
 - If copies were materialized from the plugin in B, the pipeline now runs on the **project** orchestrator: invoke `@orchestrator-agent` (bare name), not `@kairos:orchestrator-agent` — the scoped plugin orchestrator would route to the plugin's agents with the shipped models.
-- A model line (`model.<agent>` in `.kairos-cfg/config`, an older `models` file or the home folder's) still outranks these frontmatter edits for the agents it names. Delete the line if you want the frontmatter value to apply.
+- A model line (`model.<agent>` in `.kairos-cfg/config` or the home folder's) still outranks these frontmatter edits for the agents it names. Delete the line if you want the frontmatter value to apply.
