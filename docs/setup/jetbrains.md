@@ -82,7 +82,7 @@ Each agent whose `tools` include `Write` or `Edit` saves its own output to `.kai
 
 If your Copilot build does not expose file writing to agents, nothing lands in `.kairos/` and the run cannot resume: copy each artifact from the chat into `.kairos/<feature_folder>/` by hand, or use VS Code, where the page lists the write path. This page has not run the JetBrains plugin to confirm which case you get.
 
-Four project settings (`autonomy`, `manual-qa`, `qa-dir`, `test-changed`) work here like on every host; see [Customizing KAIROS](/customizing). The `model.` lines do not, because the plugin takes the model from each agent's `model:` field.
+Six project settings (`autonomy`, `manual-qa`, `qa-dir`, `test-changed`, `cleanup`, `project-summary`) work here like on every host; see [Customizing KAIROS](/customizing). The `model.` lines do not, because the plugin takes the model from each agent's `model:` field.
 
 ## Feature comparison vs Claude Code
 

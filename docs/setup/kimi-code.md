@@ -157,7 +157,7 @@ Kimi Code's `Agent` tool dispatches subagents and `AgentSwarm` runs them in para
 
 Every agent that can write has its own "Write to Project" step that saves its output to `.kairos/<feature_folder>/0X-*.md`; the pack's `tools:` lists include `Write` everywhere the canonical files do. The two read-only agents (`impact-assessment-agent`, `security-reviewer-agent`) have no `Write`, so the orchestrator writes their artifacts, and it alone writes `ledger/run.md` and `_tracking.md`.
 
-Four project settings work here like on every host: `autonomy`, `manual-qa`, `qa-dir` and `test-changed` (see [Customizing KAIROS](/customizing)). The `model.` lines do not: use Step 3.
+Six project settings work here like on every host: `autonomy`, `manual-qa`, `qa-dir`, `test-changed`, `cleanup` and `project-summary` (see [Customizing KAIROS](/customizing)). The `model.` lines do not: use Step 3.
 
 ## Note on `${VAR}` placeholders in agent bodies
 

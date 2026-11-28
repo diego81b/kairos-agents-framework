@@ -123,7 +123,7 @@ Codex spawns both agents simultaneously and returns a consolidated response.
 
 Each agent whose `tools:` include `Write` or `Edit` saves its own output to `.kairos/<feature_folder>/` through its "Write to Project" step, so the TOML needs no extra instruction. The sandbox mode has to allow writing in the workspace (`workspace-write`). The two read-only agents cannot write, so the orchestrator writes their artifacts, and it alone writes `ledger/run.md` and `_tracking.md`.
 
-Four project settings (`autonomy`, `manual-qa`, `qa-dir`, `test-changed`) work here like on every host; see [Customizing KAIROS](/customizing). The `model.` lines do not, because Codex takes the model from each agent's `model` field.
+Six project settings (`autonomy`, `manual-qa`, `qa-dir`, `test-changed`, `cleanup`, `project-summary`) work here like on every host; see [Customizing KAIROS](/customizing). The `model.` lines do not, because Codex takes the model from each agent's `model` field.
 
 ## Feature comparison vs Claude Code
 

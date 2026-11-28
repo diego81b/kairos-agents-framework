@@ -134,7 +134,7 @@ Each agent that can write saves its validated output to `.kairos/<feature_folder
     └── ledger/                     ← constraints, decisions, open questions, run.md, loops.md
 ```
 
-Four project settings (`autonomy`, `manual-qa`, `qa-dir`, `test-changed`) work here like on every host; see [Customizing KAIROS](/customizing). The `model.` lines do not, because Cursor takes the model from each agent's `model:` field.
+Six project settings (`autonomy`, `manual-qa`, `qa-dir`, `test-changed`, `cleanup`, `project-summary`) work here like on every host; see [Customizing KAIROS](/customizing). The `model.` lines do not, because Cursor takes the model from each agent's `model:` field.
 
 ## Parallel execution
 

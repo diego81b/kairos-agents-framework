@@ -190,7 +190,7 @@ KAIROS's Layered Mode (`agents/team/*.md`, a lead plus layer agents run in stage
 
 Every agent that can write has its own "Write to Project" step that saves its output to `.kairos/<feature_folder>/0X-*.md`, so no extra prompting is needed as long as `permission.edit` isn't set to `deny` or `ask` in a way that blocks the write. The two read-only agents (`impact-assessment-agent`, `security-reviewer-agent`) cannot write, so the orchestrator writes their artifacts, and it alone writes `ledger/run.md` and `_tracking.md`.
 
-Four project settings work here like on every host: `autonomy`, `manual-qa`, `qa-dir` and `test-changed` (see [Customizing KAIROS](/customizing)). The `model.` lines do not: use the `opencode.json` mechanism of Step 2b.
+Six project settings work here like on every host: `autonomy`, `manual-qa`, `qa-dir`, `test-changed`, `cleanup` and `project-summary` (see [Customizing KAIROS](/customizing)). The `model.` lines do not: use the `opencode.json` mechanism of Step 2b.
 
 ## Feature comparison vs Claude Code
 

@@ -19,7 +19,7 @@ The tracking file gains an `Autonomy` line and an `Auto-decisions` section, and 
 
 ## One configuration file
 
-Everything you can set lives in `.kairos-cfg/config`: the models, the dial, the manual QA answer, the QA plan folder and the related-tests command. One `key: value` per line, committed with the project, written by `/kairos:setup` for the model lines. [Configuring KAIROS](/customizing) now opens with the five things most people want to change, lists every key with the place that wins, and ends with a troubleshooting table.
+Everything you can set lives in `.kairos-cfg/config`: the models, the dial, the manual QA answer, the QA plan folder, the related-tests command and two close-out answers (`cleanup` and `project-summary`, so the two questions at the end of a run can be answered once for good). One `key: value` per line, committed with the project, written by `/kairos:setup` for the model lines. [Configuring KAIROS](/customizing) now opens with the five things most people want to change, lists every key with the place that wins, and ends with a troubleshooting table.
 
 ## A plan that says what each file is
 

@@ -43,7 +43,7 @@ b. **Present** — show a 3-5 line summary (same format as step 9). The file is 
    KAIROS files nothing for you and never reads this file back.
    ```
 
-c. **Cleanup gate** — a separate prompt, only after (b). Before asking, check two things and use them to pick the recommended option:
+c. **Cleanup gate** — a separate prompt, only after (b). Read the `cleanup` setting first (see **Settings files**; the person's own standing answer, so it is not a decision of the autonomy dial): `keep` skips the question and logs `cleanup | keep (setting)`; `delete` skips it only when the conditions that mark **Delete phase files, keep tracking** `(Recommended)` below hold, and then deletes the listed files and logs `cleanup | delete (setting)`; when they do not hold, `delete` keeps everything and prints one line naming the unmet condition (`Cleanup kept: <condition>; cleanup: delete applies only when ...`); `ask`, an unusable value or no line asks as below. Before asking, check two things and use them to pick the recommended option:
    - `ls ".kairos/$feature_folder/07-retrospective.md" 2>/dev/null` — if absent, `retrospective-agent` has not run for this feature yet and still needs these files as its own input.
    - Whether any question or constraint is still open — the rows just copied into Open Questions and Open Constraints. Deferred risks do not count: nobody is going to answer them, and counting them would recommend keeping everything forever.
    - List the exact files a cleanup would remove: every `.md` file directly in `.kairos/$feature_folder/` except `_tracking.md`, `_usage.md`, `_issues.md` (the deliverable of an analysis-only run), `_findings.md` (the Deferred findings' issue text) and `07-retrospective.md` — this includes any `-iter{N}` / `-recheck` variant the review loop and fix passes wrote, not just the base 00–06b names. `07-retrospective.md` is excluded for the same reason as `ledger/`: nothing folds its content forward, so deleting it on the very run where it's most likely to exist (Delete is only recommended once retrospective already ran) would destroy it outright. Never delete `ledger/` under any option, and never construct the `rm` from a glob — pass the exact listed paths.
@@ -59,7 +59,7 @@ c. **Cleanup gate** — a separate prompt, only after (b). Before asking, check 
 
    If `Bash` is unavailable, or the delete command is denied: report `⚠️ Cleanup skipped — could not delete files.` and stop there — never work around it with another mechanism. Log the choice in `## Log` either way.
 
-d. **Project Summary (optional)** — `.kairos/` may now be gitignored (Step 0c), so `_tracking.md` may not survive in the project's own git history. Ask whether to also persist a sanitized copy inside the project itself, outside `.kairos/`:
+d. **Project Summary (optional)** — `.kairos/` may now be gitignored (Step 0c), so `_tracking.md` may not survive in the project's own git history. Read the `project-summary` setting first: `no` skips the question and logs `project summary | no (setting)`; `yes` skips only this yes/no and goes to **On Yes** below, so the draft gate still runs, because it writes outside `.kairos/`; `ask`, an unusable value or no line asks. Ask whether to also persist a sanitized copy inside the project itself, outside `.kairos/`:
    - `question`: `"Also save a sanitized summary inside the project (outside .kairos/), so there's a durable record even if .kairos/ is gitignored?"`
    - `header`: `"Project Summary"`
    - `options`:

@@ -46,7 +46,7 @@ KAIROS has five places where you can change how it behaves, from the narrowest t
 
 `.kairos-cfg/` is where you configure. It holds one file, `config`, with one `key: value` line per setting, and it is meant to be committed. KAIROS never writes it, `/kairos:setup` is the only thing that does, and the Gitignore check leaves it alone because the check only looks for `.kairos/`.
 
-There is a `.kairos-cfg/` in the project and one in your home directory (`~` on macOS and Linux, `%USERPROFILE%` on Windows). The home one holds only the `model.` lines: where a QA plan is saved, whether a person verifies by hand and how much a run asks are facts about one project, so a personal default for them would be wrong in the next repository.
+There is a `.kairos-cfg/` in the project and one in your home directory (`~` on macOS and Linux, `%USERPROFILE%` on Windows). The home one holds only the `model.` lines and the two close-out lines (`cleanup`, `project-summary`): where a QA plan is saved, whether a person verifies by hand and how much a run asks are facts about one project, so a personal default for them would be wrong in the next repository, while the close-out answers describe you and apply everywhere.
 
 **Never put a secret in either folder.** A project `.kairos-cfg/` ends up in git and a home one is a plain file. No setting needs a credential: API keys and tokens stay in your operating system's keychain or in your tool's own login. KAIROS reads only `config` and ignores everything else in the folder and any key it does not know.
 
@@ -58,6 +58,8 @@ There is a `.kairos-cfg/` in the project and one in your home directory (`~` on 
 |-----|---------|------|---------------|
 | `model.<agent>` | yes | yes | the model for one agent, aliases `opus`, `sonnet`, `haiku`, `fable` |
 | `autonomy` | yes | no | `ask`, `shadow`, `balanced` or `trust`: how many questions a run asks. Default `balanced` |
+| `cleanup` | yes | yes | at the end of a run: `keep` leaves the phase files, `delete` removes them without asking but only when no retrospective is still due, no question is open and every area ran (otherwise it keeps and says why), `ask` (default) asks |
+| `project-summary` | yes | yes | at the end of a run: `yes` skips the question and goes straight to the draft, which you still approve, `no` skips it, `ask` (default) asks |
 | `manual-qa` | yes | no | `yes` or `no`: does a person verify features by hand in this project |
 | `qa-dir` | yes | no | where QA plans are written in the repository, relative to the project root, never absolute and never containing `..` |
 | `test-changed` | yes | no | the project's own command for running only the tests related to some files, with `{files}` standing for the changed files (`npm test -- --findRelatedTests {files}`); or `off`, which makes every check run the whole suite. See [Test scope](/workflow#test-scope) |
@@ -74,6 +76,7 @@ For each key the first match wins. For `model.<agent>` the lookup runs per agent
 |-----|-------|
 | `model.<agent>` | `.kairos-cfg/config` in the project, then `~/.kairos-cfg/config`, then the agent's own `model:` |
 | `autonomy` | a phrase in the launch prompt, then `.kairos-cfg/config` in the project (never the home folder), then `balanced` |
+| `cleanup`, `project-summary` | `.kairos-cfg/config` in the project, then `~/.kairos-cfg/config`, then the question |
 | `manual-qa` | `.kairos-cfg/config`, then `.kairos/.manual-qa`, then the question |
 | `qa-dir` | `.kairos-cfg/config`, then `.kairos/.qa-dir`, then the question |
 | `test-changed` | `.kairos-cfg/config`, then the runner's own related-tests option (Jest, Vitest, pytest, Go), then the test files the change touches. It is never asked |
@@ -123,7 +126,7 @@ It never invents a decision. It only executes the recommended option the agent w
 | `autonomy: balanced`, and it still asks everything | The issue is large or surprised the run, so the limit was reached. Read the `Autonomy` line in `_tracking.md`: `room` is what is left. Rows on the never-decided list stay with you at any value |
 | KAIROS decided a row you wanted to see | Say `revert R3` at the next gate. If you want none of it, set `autonomy: ask` |
 | The same question comes back every issue (`manual-qa`, `qa-dir`) | The answer is stored in `.kairos/` on this machine only. Add it to the project `config` and it stops being asked, for the whole team |
-| `autonomy` in my home file does nothing | Home files read only the `model.` lines. Put `autonomy` in the project file |
+| `autonomy` in my home file does nothing | Home files read only `model.`, `cleanup` and `project-summary`. Put `autonomy` in the project file |
 | A settings file from before v10 stopped working | Version 10 reads only `config`. Move the lines into it |
 
 ## Which hosts read what

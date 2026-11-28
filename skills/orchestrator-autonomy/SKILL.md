@@ -28,7 +28,7 @@ Read by `orchestrator-agent` only. It decides how many questions a run asks. It 
 4. Decision conflict and Constraint conflict rows (step 1b), and any row or answer that changes scope (a `Scope:` decision) or a product decision.
 5. A Layered Mode `Contract divergence` row, and the Layered Mode cost question.
 6. Anything written outside `.kairos/` or posted to a tracker: the documentation draft, the issue write-back, QA delivery, the project summary, the size label.
-7. Destructive or irreversible acts: the phase-file cleanup, a data migration or rollback row rated `high`.
+7. Destructive or irreversible acts: the phase-file cleanup (unless the person's own `cleanup:` setting answers it, which is a standing human answer and not a dial decision), a data migration or rollback row rated `high`.
 8. Failure states: a review loop exhausted with a row or an `AC-n` gap still standing, a stalled run, a failed contract check, a failing test.
 9. A `critical` row of any agent.
 10. A row of `medium` impact or more that names a constraint of a category the person declared (`SECURITY`, `PRIVACY`, `COMPLIANCE`): it skips the `quick_fix_mode` widening too. And every row at the architecture and plan gates while `domains` hold `auth` or `db`.
