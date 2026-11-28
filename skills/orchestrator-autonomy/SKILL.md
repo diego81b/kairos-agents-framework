@@ -22,7 +22,7 @@ Read by `orchestrator-agent` only. It decides how many questions a run asks. It 
 
 ## 2. The floor: always asked, whatever the dial says
 
-1. Security rows rated `high` or `critical`, and any security row at any impact.
+1. Security rows rated `medium` or more. A `low` security row keeps the automatic Accept: three were accepted in the first real runs and none came back.
 2. Premise refutation rows.
 3. Escalate rows, and their follow-up question.
 4. Decision conflict and Constraint conflict rows (step 1b), and any row or answer that changes scope (a `Scope:` decision) or a product decision.
@@ -31,7 +31,7 @@ Read by `orchestrator-agent` only. It decides how many questions a run asks. It 
 7. Destructive or irreversible acts: the phase-file cleanup, a data migration or rollback row rated `high`.
 8. Failure states: a review loop exhausted with a row or an `AC-n` gap still standing, a stalled run, a failed contract check, a failing test.
 9. A `critical` row of any agent.
-10. Rows of a category the person declared (`SECURITY`, `PRIVACY`, `COMPLIANCE`), and every row at the architecture and plan gates while `domains` hold `auth` or `db`.
+10. A row of `medium` impact or more that names a constraint of a category the person declared (`SECURITY`, `PRIVACY`, `COMPLIANCE`): it skips the `quick_fix_mode` widening too. And every row at the architecture and plan gates while `domains` hold `auth` or `db`.
 11. A `test-verifier-agent` row that names an `AC-n` with no covering test and no `VERIFICATION` row. It skips the automatic Accept of `low` rows and the `quick_fix_mode` widening too, at every dial value.
 
 Fixed checkpoints, asked even when `on_signal` would continue: the Start Gate; the implementation plan gate for `medium` and `significant_rework` (a `simple_fix` plan may continue, section 6); the closing question. No dial value lifts the floor or a checkpoint, and no value lets a run go from the Start Gate to the close without a human answer.
@@ -66,7 +66,7 @@ Every C event and U cost is one `_tracking.md` log line, and the next gate that 
 
 ## 4. Row auto-decision
 
-HITL step 2 reads this section once, before it asks anything, when `autonomy` is `balanced` or `trust`. The existing automatic Accept of `low` rows and the `quick_fix_mode` widening stay as they are, cost no U, and run first, except for a row of floor item 11, which they skip.
+HITL step 2 reads this section once, before it asks anything, when `autonomy` is `balanced` or `trust`. The existing automatic Accept of `low` rows and the `quick_fix_mode` widening stay as they are, cost no U, and run first, except for a row of floor item 10 or 11, which the widening skips (item 11 also the `low` rule).
 
 A remaining row is decided without asking only when **all** hold: no floor item of section 2 applies; `C + U + cost < T`, with the row's U cost counted first; the row is not a Premise row; the mechanical `(Recommended)` option of step 2 is not Escalate (a Fix that is empty or describes a choice); and the row is **self-contained**: it cites a `file:line` or a section of an artifact, its Fix is one concrete action touching at most three files, it leans on no other row of the same gate and on no open question (`see R4`, `depends on Q2`), and the author's `Needs your attention` line names nothing. A row that fails any of these goes to the prompt loop exactly as today, whatever its impact.
 
@@ -95,8 +95,8 @@ A row decided here is written exactly as the person's pick would have been (Disp
 
 **Measure** after the impact assessment, at the plan (3a), at the last wave, at the review gate and after each fix pass, from numbers already in artifacts: production files in the plan and in `## Files Written` (the `Kind` column; `code` rows count), files on neither plan list, plan files absent from `02-architecture.md`, `AC-n` states in `_tracking.md`, `Scope:` decisions, `contract_change` in the diff.
 
-- **Yellow**: C rose 4 or more since the baseline. No phase-level gate continues from now on; rows may still be decided inside the room.
-- **Red**: C rose 8 or more, or one binary fact: an out-of-scope item touched, an `AC-n` dropped, a contract change the architecture said was none. The room is zero and the current gate asks the drift question first.
+- **Yellow**: C rose 6 or more since the baseline, not counting rows and answers a person decided at a gate (those are supervised, and the meter already holds them), or one soft fact: a file outside the approved plan, a `Scope:` row, an `AC-n` changed. None of the gates of section 6 continues while it holds (the base rules of HITL steps 1c and 2b are unchanged); rows may still be decided inside the room. It clears when a person answers a gate whose digest carried the drift line with anything but **Stop pipeline**: that answer sets the baseline's C to the current C and closes the soft facts; the rest of the baseline stays. Without this, C only grows and the level would stay yellow from the first `medium` row to the release plan.
+- **Red**: C rose 8 or more, or one binary fact: an out-of-scope item touched, an `AC-n` dropped, a contract change the architecture said was none. The room is zero, no gate continues (base rules included) and the current gate asks the drift question first.
 
 Held in `run.md` as `drift: green | yellow | red`. A change of level is one log line (`drift | green to yellow | plan lists 6 production files, approved 2`). A size declared higher than the work is only a line in the digest.
 
