@@ -6,14 +6,33 @@ All notable changes to KAIROS Framework are documented in this file.
 
 ---
 
-## v10.0.0 — November 26, 2026
+## v10.0.0 — November 28, 2026
 
-KAIROS takes the 10.x line. No agent, skill, command or setting changes behaviour in this release: the number opens a line that later breaking changes can land on, and it separates KAIROS's version from the `kairos-cli` runner's, which keeps its own.
+**BREAKING CHANGE:** a run with no setting now behaves as `autonomy: balanced`, so a team that upgrades sees fewer questions without changing a line, and old feature folders and per-setting files stop being read. To get the 9.x behaviour back, add `autonomy: ask` to `.kairos-cfg/config` (or say `ask all` in the launch prompt); to finish a folder written before v8.5, use 9.10. `docs/whats-new.md` is the reader's version of this entry.
+
+KAIROS also separates its version line from the `kairos-cli` runner's, which keeps its own.
+
+### Added
+
+- **`skills/orchestrator-autonomy/SKILL.md`** (new, not mirrored) — the autonomy dial (`ask`, `shadow`, `balanced` default, `trust`), the attention meter (work score, criticality, unsupervised load), the floor of decisions that are never made for the person, the row auto-decision table, drift (green, yellow, red, with a baseline of what a person last approved), the gates that may continue, tracing in `_tracking.md` (`Autonomy` line, `## Auto-decisions`), `revert R<n>` and shadow logging. The orchestrator carries stubs only.
+- **`agents/orchestrator-agent.md`** (mirrored) — `autonomy` setting and launch phrases; `cleanup` and `project-summary` settings that answer the two close-out questions once for good (project or home `.kairos-cfg/config`; `cleanup: delete` only when no retrospective is due, no question is open and every area ran).
+- **`skills/orchestrator-readiness/SKILL.md`** (new, not mirrored), **`agents/pm-agent.md`** (mirrored) — a thin issue (two of: no observable outcome, no named surface, unknown facts) is interviewed once before the pipeline starts: `pm-agent` with `step: interview` writes up to three questions per round (two rounds at most) into `00d-interview.md`, the orchestrator asks them, and the answers become a Scope Contract (goal, `AC-n`, out of scope, slices) that every later agent receives and the drift alarm measures against. Waiving is recorded and costs the run room to decide alone. The question is on the floor at every dial value.
+- **`skills/orchestrator-review/SKILL.md`** (new, not mirrored), **`skills/artifact-template/SKILL.md`** §7, **`agents/code-reviewer-agent.md`**, **`agents/test-verifier-agent.md`**, **`agents/security-reviewer-agent.md`** (mirrored) — every reviewer row opens with a cause (`Work:`, `Extra:`, `Issue:`, `Design:`, `Pre-existing:`, `Taste:`, `Unsure:`), cites an anchor and ends with an `Evidence:` clause; the Summary gains `Could not verify:`. The orchestrator checks anchors with no model, marks `(Recommended)` by cause, prints `Review found:` and `Contract:` at the review gate, asks once about an `Unsure:` row or an `AC-n` still in `gap`, labels **Approve** `Approve and finish now` when nothing is left to settle, and recomputes a reviewer `status` that the gate's own answers made stale.
+- **`agents/implementer-tdd-agent.md`**, **`agents/implementer-coder-agent.md`** (mirrored) — both plan file tables carry a `Kind` column (`code` or `test`) so the orchestrator can count production files at the plan gate. `skills/artifact-template/SKILL.md` §6 asks for a `Mitigation/Fix` that is one concrete action or an explicit question.
+- **`docs/whats-new.md`** — new page for v10, linked from the sidebar.
 
 ### Changed
 
+- **`agents/orchestrator-agent.md`** (mirrored) — the default `autonomy` is `balanced`. A test-verifier row that names an `AC-n` with no covering test and no `VERIFICATION` row is asked at every value, and no longer accepted by `quick_fix_mode`; a row of medium impact or more on a `SECURITY`, `PRIVACY` or `COMPLIANCE` constraint skips the same shortcut; `issues_critical_high` and `ac_gaps` count `Work:` and unprefixed rows only, so the automatic fix loop no longer works on `Extra:`, `Issue:`, `Design:`, `Unsure:`, `Taste:` or `Pre-existing:` rows. The file ends 81 bytes smaller than in 9.10.0 (the ceiling is 220,000).
+- **`agents/orchestrator-agent.md`** (mirrored) — a saved checklist with no `Auto-fix` line takes the auto-fix budget of its effort, like every other path.
+- **`docs/customizing.md`** — rewritten: opens with the five things most people change, lists every key with the place that wins, ends with a troubleshooting table. The gate, setting and skill counts the new skills made stale are updated in `docs/overview.md`, `docs/workflow.md`, `docs/agent-files.md` and every `docs/setup/*.md`.
+
 - **`CLAUDE.md`** — cut from 141k to 30k characters so the three instruction files stay under Claude Code's 150k-character limit. The per-release rationale, rejected alternatives and "not measured" notes moved to `internal/design-history.md` (gitignored, maintainer machine only); the operative rules stay, condensed by theme (phase rules, derivation and gates, settings, artifacts and ledger, Layered Mode).
 - **`CLAUDE.md`**, **`docs/setup/claude-code.md`** — `kairos-cli` is no longer called "the v10 runner"; it is a separate project with its own version line.
+
+### Removed
+
+- **`agents/orchestrator-agent.md`** (mirrored), **`skills/orchestrator-resume/SKILL.md`** — the legacy fallbacks: the older per-setting files (`.kairos-cfg/models`, `.kairos/.models`, `~/.kairos-cfg/models`, `.kairos-cfg/manual-qa`, `.kairos-cfg/qa-dir`) are no longer read, so move their lines into `.kairos-cfg/config`; a feature folder written before v8.5 (`_recap.md`, `ledger/audit-log.md`, or phase files with no `ledger/run.md`) is not resumed, and the orchestrator prints one line telling the person to finish it with 9.10 or remove it; the v8.4 and v8.5 migrations, the `template_legacy` path and the two-budget fallback are gone.
 
 ---
 
